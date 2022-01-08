@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -89,8 +91,8 @@ namespace DataCore.Adapter.Tests {
                     Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
                 }
 
-                var keysActual = store.GetKeysAsStrings().ToArray();
-                Assert.AreEqual(keys.Length, keysActual.Length);
+                var keysActual = await store.GetKeysAsStrings().ToEnumerable();
+                Assert.AreEqual(keys.Length, keysActual.Count());
 
                 foreach (var key in keys) {
                     Assert.IsTrue(keysActual.Contains(key), $"Missing key: {key}");
@@ -144,8 +146,42 @@ namespace DataCore.Adapter.Tests {
                 var result = await scopedStore.WriteJsonAsync(TestContext.TestName, now);
                 Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
 
-                var keys = scopedStore.GetKeysAsStrings().ToArray();
+                var keys = await scopedStore.GetKeysAsStrings().ToEnumerable();
                 Assert.IsTrue(keys.Contains(TestContext.TestName));
+            }
+            finally {
+                if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldHandleParallelWrites() {
+            var store = CreateStore();
+            try {
+                var tasks = new List<Task<KeyValueStoreOperationStatus>>();
+                var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+
+                for (var i = 0; i < 100; i++) {
+                    tasks.Add(Task.Run(async () => {
+                        var key = new byte[128];
+                        var value = new byte[1024];
+
+                        rng.GetNonZeroBytes(key);
+                        rng.GetNonZeroBytes(value);
+
+                        return await store.WriteAsync(key, value);
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
+
+                for (var i = 0; i < tasks.Count; i++) {
+                    var task = tasks[i];
+                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, task.Result, $"Unexpected result for task {i}.");
+                }
             }
             finally {
                 if (store is IDisposable disposable) {

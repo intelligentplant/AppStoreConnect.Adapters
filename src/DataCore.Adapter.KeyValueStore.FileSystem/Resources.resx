@@ -120,6 +120,12 @@
   <data name="Log_ErrorDeletingFile" xml:space="preserve">
     <value>Error while deleting file '{FilePath}'.</value>
   </data>
+  <data name="Log_ErrorDeserializingIndex" xml:space="preserve">
+    <value>Error while deserializing index.</value>
+  </data>
+  <data name="Log_ErrorProcessingIndexSave" xml:space="preserve">
+    <value>Error while saving index to file.</value>
+  </data>
   <data name="Log_ErrorReadingFromFile" xml:space="preserve">
     <value>Error while reading from file '{FilePath}'.</value>
   </data>

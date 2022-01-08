@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.KeyValueStore.FileSystem</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.KeyValueStore.FileSystem</PackageId>
     <Description>File system-based key-value store for App Store Connect adapters.</Description>
@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="$(NitoAsyncExCoordinationVersion)" />
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
   </ItemGroup>
 
   <ItemGroup>

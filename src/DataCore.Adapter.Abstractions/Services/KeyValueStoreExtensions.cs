@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
     /// <summary>
@@ -53,7 +54,7 @@ namespace DataCore.Adapter.Services {
         ///   The <see cref="IKeyValueStore"/>.
         /// </param>
         /// <param name="prefix">
-        ///   
+        ///   Only keys with this prefix will be returned.
         /// </param>
         /// <returns>
         ///   The keys, converted to strings.
@@ -67,12 +68,12 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static IEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) {
+        public static async IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            foreach (var key in store.GetKeys(prefix)) {
+            await foreach (var key in store.GetKeysAsync(prefix).ConfigureAwait(false)) {
                 string result;
                 try {
                     result = Encoding.UTF8.GetString(key);
@@ -103,7 +104,7 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static IEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) {
+        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) {
             return store.GetKeysAsStrings(default);
         }
 

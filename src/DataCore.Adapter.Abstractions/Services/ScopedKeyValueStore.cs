@@ -57,8 +57,8 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
-        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
-            return Inner.GetKeys(prefix);
+        protected override IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            return Inner.GetKeysAsync(prefix);
         }
 
     }

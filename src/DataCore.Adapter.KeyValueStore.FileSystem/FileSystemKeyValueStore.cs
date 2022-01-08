@@ -2,7 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -16,13 +21,47 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
     /// <summary>
     /// <see cref="IKeyValueStore"/> implementation that persists files to disk.
     /// </summary>
-    public class FileSystemKeyValueStore : Services.KeyValueStore {
+    public class FileSystemKeyValueStore : Services.KeyValueStore, IDisposable {
 
+        /// <summary>
+        /// SHA256 for creating distinct, fixed-length file names.
+        /// </summary>
+        private static readonly SHA256 s_hash = SHA256.Create();
+
+        /// <summary>
+        /// File that persists the lookup index.
+        /// </summary>
+        private const string IndexFileName = "index.data";
+
+        /// <summary>
+        /// Flags if the store has been disposed.
+        /// </summary>
+        private bool _disposed;
+
+        /// <summary>
+        /// Cancellation token source that fires when the store is disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <summary>
+        /// Cancellation token from <see cref="_disposedTokenSource"/>.
+        /// </summary>
+        private readonly CancellationToken _disposedToken;
 
         /// <summary>
         /// The base directory for the persisted files.
         /// </summary>
         private readonly DirectoryInfo _baseDirectory;
+
+        /// <summary>
+        /// The number of hash buckets to distribute the files across.
+        /// </summary>
+        private readonly int _hashBuckets;
+
+        /// <summary>
+        /// GZip compression level to use when writing data to disk.
+        /// </summary>
+        private readonly CompressionLevel _compressionLevel;
 
         /// <summary>
         /// The logger for the store.
@@ -33,6 +72,23 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// Holds read/write locks for each individual key (file).
         /// </summary>
         private readonly ConcurrentDictionary<string, AsyncReaderWriterLock> _fileLocks = new ConcurrentDictionary<string, AsyncReaderWriterLock>();
+
+        /// <summary>
+        /// Lookup from key to file name.
+        /// </summary>
+        private ConcurrentDictionary<string, string> _fileIndex = default!;
+
+        /// <summary>
+        /// Loads the index from disk on the first call to the store.
+        /// </summary>
+        private readonly Lazy<Task> _indexLoader;
+
+        /// <summary>
+        /// Indicates if an index save is pending.
+        /// </summary>
+        private int _indexSavePending;
+
+        private readonly ManualResetEventSlim _saveInProgress = new ManualResetEventSlim();
 
 
         /// <summary>
@@ -52,6 +108,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 throw new ArgumentNullException(nameof(options));
             }
 
+            _disposedToken = _disposedTokenSource.Token;
             _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
             var path = string.IsNullOrWhiteSpace(options.Path)
@@ -62,10 +119,17 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 path = Path.Combine(AppContext.BaseDirectory, path);
             }
             _baseDirectory = new DirectoryInfo(path);
-            _baseDirectory.Create();
+            _hashBuckets = options.HashBuckets <= 0 
+                ? FileSystemKeyValueStoreOptions.DefaultHashBuckets 
+                : options.HashBuckets;
+            _compressionLevel = options.CompressionLevel;
 
             CleanUpTempFiles();
             RestoreBackupFiles();
+
+            _indexLoader = new Lazy<Task>(async () => {
+                await LoadIndexAsync().ConfigureAwait(false);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
@@ -95,16 +159,122 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
 
         /// <summary>
-        /// Gets the file name to use for the specified key without the file extension.
+        /// Deletes all temporary files that have not yet been deleted.
         /// </summary>
-        /// <param name="key">
-        ///   The key.
+        private void CleanUpTempFiles() {
+            if (!_baseDirectory.Exists) {
+                return;
+            }
+
+            foreach (var file in _baseDirectory.GetFiles("*.tmp", SearchOption.AllDirectories)) {
+                file.Delete();
+            }
+        }
+
+
+        /// <summary>
+        /// Restores all backup files.
+        /// </summary>
+        private void RestoreBackupFiles() {
+            if (!_baseDirectory.Exists) {
+                return;
+            }
+
+            foreach (var file in _baseDirectory.GetFiles("*.bak", SearchOption.AllDirectories)) {
+                // Remove the .bak extension to restore the original file.
+                file.MoveTo(file.FullName.Substring(0, file.FullName.Length - 4));
+            }
+        }
+
+
+        /// <summary>
+        /// Loads the file index.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will load the file index.
+        /// </returns>
+        private async ValueTask LoadIndexAsync() {
+            // Always use fastest possible compression for index.
+            var readResult = await ReadFileAsync(IndexFileName).ConfigureAwait(false);
+
+            if (readResult.Status != KeyValueStoreOperationStatus.OK || readResult.Value == null || readResult.Value.Length == 0) {
+                _fileIndex = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+                return;
+            }
+
+            try {
+                var index = JsonSerializer.Deserialize<Dictionary<string, string>>(readResult.Value);
+                _fileIndex = new ConcurrentDictionary<string, string>(index, StringComparer.Ordinal);
+            }
+            catch (Exception e) {
+                _logger.LogError(e, Resources.Log_ErrorDeserializingIndex);
+                _fileIndex = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+            }
+        }
+
+
+        /// <summary>
+        /// Serializes the index and saves it to disk.
+        /// </summary>
+        /// <param name="delay">
+        ///   The delay to apply before saving the index.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will cause the index to be saved immediately, event if 
+        ///   the delay has not completed.
         /// </param>
         /// <returns>
-        ///   The file name without the extension.
+        ///   A task that will save the index.
         /// </returns>
-        private string GetFileNameForKeyNoExtension(KVKey key) {
-            return ConvertBytesToHexString(key);
+        private async Task SaveIndexAsync(TimeSpan delay, CancellationToken cancellationToken) {
+            if (_disposed) {
+                return;
+            }
+
+            _saveInProgress.Reset();
+
+            try {
+                // If the cancellation token fires before the delay has completed, we will save
+                // the index immediately, as this indicates that the store is being disposed.
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { }
+
+            await SaveIndexCoreAsync().ConfigureAwait(false);
+            _saveInProgress.Set();
+        }
+
+
+        /// <summary>
+        /// Serializes the index and saves it to disk.
+        /// </summary>
+        /// <returns>
+        ///   A task that will save the index.
+        /// </returns>
+        private async ValueTask SaveIndexCoreAsync() {
+            try {
+                var bytes = JsonSerializer.SerializeToUtf8Bytes(_fileIndex);
+
+                // Always use fastest possible compression for index.
+                await WriteFileAsync(IndexFileName, bytes, CompressionLevel.Fastest).ConfigureAwait(false);
+            }
+            catch (Exception e) {
+                _logger.LogError(e, Resources.Log_ErrorProcessingIndexSave);
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the specified bytes to base64url encoding.
+        /// </summary>
+        /// <param name="bytes">
+        ///   The bytes.
+        /// </param>
+        /// <returns>
+        ///   The base64url representation of the bytes.
+        /// </returns>
+        private string ToBase64Url(byte[] bytes) {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('/', '_').Replace('+', '-');
         }
 
 
@@ -115,47 +285,58 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         ///   The key.
         /// </param>
         /// <returns>
-        ///   The file name.
+        ///   A <see cref="ValueTask{TResult}"/> that will return the name of the file for the key 
+        ///   (relative to the base directory).
         /// </returns>
-        private string GetFileNameForKey(KVKey key) {
-            return string.Concat(GetFileNameForKeyNoExtension(key), ".data");
+        private async ValueTask<string> GetFileNameForKeyAsync(KVKey key) {
+            await _indexLoader.Value.ConfigureAwait(false);
+            var keyAsHex = ConvertBytesToHexString(key);
+
+            var dirty = false;
+            var result = _fileIndex.GetOrAdd(keyAsHex, _ => {
+                dirty = true;
+                lock (s_hash) {
+                    return Path.Combine(
+                        Math.Abs((keyAsHex.GetHashCode() % _hashBuckets)).ToString("X"), 
+                        string.Concat(
+                            ToBase64Url(s_hash.ComputeHash(key)), 
+                            ".data"
+                        )
+                    );
+                }
+            });
+
+            if (dirty && Interlocked.CompareExchange(ref _indexSavePending, 1, 0) == 0) {
+                _ = Task.Run(async () => {
+                    try {
+                        await SaveIndexAsync(TimeSpan.FromSeconds(1), _disposedToken).ConfigureAwait(false);
+                    }
+                    finally {
+                        _indexSavePending = 0;
+                    }
+                });
+            }
+
+            return result;
         }
 
 
         /// <summary>
-        /// Gets the key associated with the specified file.
+        /// Writes a file to disk.
         /// </summary>
-        /// <param name="file">
-        ///   The file.
+        /// <param name="fileName">
+        ///   The file name (relative to <see cref="_baseDirectory"/>).
+        /// </param>
+        /// <param name="value">
+        ///   The file content.
+        /// </param>
+        /// <param name="compressionLevel">
+        ///   The GZip compression level to use.
         /// </param>
         /// <returns>
-        ///   The key for the file.
+        ///   The operation status.
         /// </returns>
-        private KVKey GetKeyFromFileName(FileInfo file) {
-            var fileNameNoExtension = file.Name.Substring(0, file.Name.Length - file.Extension.Length);
-            return ConvertHexStringToBytes(fileNameNoExtension);
-        }
-
-
-        private void CleanUpTempFiles() {
-            foreach (var file in _baseDirectory.GetFiles("*.tmp")) {
-                file.Delete();
-            }
-        }
-
-
-        private void RestoreBackupFiles() {
-            foreach (var file in _baseDirectory.GetFiles("*.bak")) {
-                // Remove the .bak extension to restore the original file.
-                file.MoveTo(file.FullName.Substring(0, file.FullName.Length - 4));
-            }
-        }
-
-
-        /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
-            var fileName = GetFileNameForKey(key);
-
+        private async ValueTask<KeyValueStoreOperationStatus> WriteFileAsync(string fileName, byte[] value, CompressionLevel compressionLevel) {
             var @lock = GetOrAddLockForFile(fileName);
             using (await @lock.WriterLockAsync().ConfigureAwait(false)) {
                 var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
@@ -166,11 +347,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
                     if (!file.Exists) {
                         // Fast path when file does not exist yet.
-                        using (var stream = file.OpenWrite()) {
-                            await stream.WriteAsync(value, 0, value.Length).ConfigureAwait(false);
-                            await stream.FlushAsync().ConfigureAwait(false);
-                        }
-
+                        await WriteFileAsync(file, value, compressionLevel).ConfigureAwait(false);
                         return KeyValueStoreOperationStatus.OK;
                     }
 
@@ -178,10 +355,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
                     // Save the data to a temporary file.
                     var tempFile = new FileInfo(Path.Combine(_baseDirectory.FullName, string.Concat("~", Guid.NewGuid().ToString(), ".tmp")));
-                    using (var stream = tempFile.OpenWrite()) {
-                        await stream.WriteAsync(value, 0, value.Length).ConfigureAwait(false);
-                        await stream.FlushAsync().ConfigureAwait(false);
-                    }
+                    await WriteFileAsync(tempFile, value, compressionLevel).ConfigureAwait(false);
 
                     // We will create a backup of the original file prior to writing to it in case
                     // something goes wrong.
@@ -222,9 +396,32 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         }
 
 
-        /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
-            var fileName = GetFileNameForKey(key);
+        private async Task WriteFileAsync(FileInfo file, byte[] content, CompressionLevel compressionLevel) {
+            using (var stream = file.OpenWrite()) {
+                if (compressionLevel == CompressionLevel.NoCompression) {
+                    await stream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+                    await stream.FlushAsync().ConfigureAwait(false);
+                }
+                else {
+                    using (var gzStream = new GZipStream(stream, compressionLevel, true)) {
+                        await gzStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
+                        await gzStream.FlushAsync().ConfigureAwait(false);
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Reads a file from disk.
+        /// </summary>
+        /// <param name="fileName">
+        ///   The file name (relative to <see cref="_baseDirectory"/>).
+        /// </param>
+        /// <returns>
+        ///   The operation status.
+        /// </returns>
+        private async ValueTask<KeyValueStoreReadResult> ReadFileAsync(string fileName) {
             var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
             var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
 
@@ -246,11 +443,8 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 var f = file.Exists ? file : backupFile;
 
                 try {
-                    using (var stream = f.OpenRead())
-                    using (var ms = new MemoryStream()) {
-                        await stream.CopyToAsync(ms).ConfigureAwait(false);
-                        return new KeyValueStoreReadResult(KeyValueStoreOperationStatus.OK, ms.ToArray());
-                    }
+                    var bytes = await ReadFileAsync(f).ConfigureAwait(false);
+                    return new KeyValueStoreReadResult(KeyValueStoreOperationStatus.OK, bytes);
                 }
                 catch (Exception e) {
                     _logger.LogError(e, Resources.Log_ErrorReadingFromFile, f.FullName);
@@ -260,9 +454,35 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         }
 
 
+        private async Task<byte[]> ReadFileAsync(FileInfo file) {
+            using (var stream = file.OpenRead())
+            using (var gzStream = new GZipStream(stream, CompressionMode.Decompress, true))
+            using (var ms = new MemoryStream()) {
+                await gzStream.CopyToAsync(ms).ConfigureAwait(false);
+                return ms.ToArray();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
+            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
+            return await WriteFileAsync(fileName, value, _compressionLevel).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
+            await _indexLoader.Value.ConfigureAwait(false);
+            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
+            return await ReadFileAsync(fileName).ConfigureAwait(false);
+        }
+
+
         /// <inheritdoc/>
         protected override async ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
-            var fileName = GetFileNameForKey(key);
+            await _indexLoader.Value.ConfigureAwait(false);
+            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
             var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
             var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
             if (!file.Exists && !backupFile.Exists) {
@@ -312,25 +532,37 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
 
         /// <inheritdoc/>
-        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
-            var files = prefix == null || prefix.Value.Length == 0
-                ? _baseDirectory.EnumerateFiles("*.data")
-                : _baseDirectory.EnumerateFiles($"{GetFileNameForKeyNoExtension(prefix.Value)}*.data");
+        protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            await _indexLoader.Value.ConfigureAwait(false);
 
-            foreach (var file in files) {
-                if (file.Name.Length == file.Extension.Length) {
-                    // This file is just called .json
-                    continue;
-                }
+            var prefixAsHex = prefix == null || prefix.Value.Length == 0
+                ? null
+                : ConvertBytesToHexString(prefix.Value);
 
-                // Get key from the file name.
-                var key = GetKeyFromFileName(file);
-                if (key.Length == 0) {
-                    continue;
-                }
+            var keys = prefix == null || prefix.Value.Length == 0
+                ? _fileIndex.Keys
+                : _fileIndex.Keys.Where(x => x.StartsWith(prefixAsHex, StringComparison.Ordinal));
 
-                yield return key;
+            foreach (var key in keys) {
+                yield return ConvertHexStringToBytes(key);
             }
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            if (_disposed) {
+                return;
+            }
+
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+
+            // Wait for ongoing save to complete.
+            _saveInProgress.Wait();
+            _saveInProgress.Dispose();
+
+            _disposed = true;
         }
 
     }

@@ -57,7 +57,8 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
-        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
+        protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            await Task.Yield();
             foreach (var item in _values.Keys) {
                 var bytes = ConvertHexStringToBytes(item);
                 if (prefix != null && prefix.Value.Length > 0 && !StartsWithPrefix(prefix.Value.Value, bytes)) {

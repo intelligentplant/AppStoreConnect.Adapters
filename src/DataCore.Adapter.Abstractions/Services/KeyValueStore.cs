@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Services {
         }
 
 
-        IEnumerable<KVKey> IKeyValueStore.GetKeys(KVKey? prefix) {
+        async IAsyncEnumerable<KVKey> IKeyValueStore.GetKeysAsync(KVKey? prefix) {
             if (prefix != null && prefix.Value.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Services {
                     : AddPrefix(_prefix.Value, prefix.Value);
             }
 
-            foreach (var key in GetKeys(compositePrefix)) {
+            await foreach (var key in GetKeysAsync(compositePrefix)) {
                 if (compositePrefix == null) {
                     yield return key;
                 }
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.Services {
         /// <returns>
         ///   The matching keys.
         /// </returns>
-        protected abstract IEnumerable<KVKey> GetKeys(KVKey? prefix);
+        protected abstract IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix);
 
 
         /// <summary>

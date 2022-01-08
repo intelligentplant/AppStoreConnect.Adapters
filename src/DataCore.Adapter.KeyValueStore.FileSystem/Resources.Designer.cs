@@ -70,6 +70,24 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while deserializing index..
+        /// </summary>
+        internal static string Log_ErrorDeserializingIndex {
+            get {
+                return ResourceManager.GetString("Log_ErrorDeserializingIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error while saving index to file..
+        /// </summary>
+        internal static string Log_ErrorProcessingIndexSave {
+            get {
+                return ResourceManager.GetString("Log_ErrorProcessingIndexSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error while reading from file &apos;{FilePath}&apos;..
         /// </summary>
         internal static string Log_ErrorReadingFromFile {

@@ -548,15 +548,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
+        protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            await Task.Yield();
             var session = GetPooledSession();
             try {
                 using (var iterator = session.Iterate()) {
                     while (iterator.GetNext(out var recordInfo)) {
-                        var span = iterator.GetKey().AsReadOnlySpan();
+                        var key = iterator.GetKey().AsSpan().ToArray();
 
-                        if (prefix == null || prefix.Value.Length == 0 || span.StartsWith(prefix.Value.Value)) {
-                            yield return span.ToArray();
+                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, key)) {
+                            yield return key;
                         }
                     }
                 }
