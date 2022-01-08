@@ -226,7 +226,9 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <inheritdoc/>
-        protected override IEnumerable<KVKey> GetKeys(KVKey? prefix) {
+        protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            await Task.Yield();
+
             var hexPrefix = prefix == null || prefix.Value.Length == 0 
                 ? null 
                 : ConvertBytesToHexString(prefix);

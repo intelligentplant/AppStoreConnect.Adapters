@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Services {
         /// <returns>
         ///   The keys.
         /// </returns>
-        IEnumerable<KVKey> GetKeys(KVKey? prefix);
+        IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix);
 
     }
 }
