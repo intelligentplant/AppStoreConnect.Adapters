@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,17 +13,22 @@ namespace DataCore.Adapter.Tests {
 
     public abstract class KeyValueStoreTests<T> : TestsBase where T : IKeyValueStore {
 
-        protected abstract T CreateStore();
+        protected abstract T CreateStore(CompressionLevel compressionLevel);
 
 
-        [TestMethod]
-        public async Task ShouldWriteValueToStore() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldWriteValueToStore(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
-            var store = CreateStore();
+            var store = CreateStore(compressionLevel);
             try {
-                var result = await store.WriteJsonAsync(TestContext.TestName, now);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
+                await store.WriteJsonAsync(TestContext.TestName, now);
             }
             finally {
                 if (store is IDisposable disposable) {
@@ -32,18 +38,22 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ShouldReadValueFromStore() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldReadValueFromStore(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
-            var store = CreateStore();
+            var store = CreateStore(compressionLevel);
             try {
-                var result = await store.WriteJsonAsync(TestContext.TestName, now);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
-
+                await store.WriteJsonAsync(TestContext.TestName, now);
+                
                 var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, value.Status);
-                Assert.AreEqual(now, value.Value);
+                Assert.AreEqual(now, value);
             }
             finally {
                 if (store is IDisposable disposable) {
@@ -53,24 +63,28 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ShouldDeleteValueFromStore() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldDeleteValueFromStore(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
-            var store = CreateStore();
+            var store = CreateStore(compressionLevel);
             try {
-                var result = await store.WriteJsonAsync(TestContext.TestName, now);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
-
+                await store.WriteJsonAsync(TestContext.TestName, now);
+                
                 var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, value.Status);
-                Assert.AreEqual(now, value.Value);
+                Assert.AreEqual(now, value);
 
                 var delete = await store.DeleteAsync(TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, delete);
+                Assert.IsTrue(delete);
+
                 var value2 = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.NotFound, value2.Status);
-                Assert.AreEqual(default(DateTime), value2.Value);
+                Assert.AreEqual(default(DateTime), value2);
             }
             finally {
                 if (store is IDisposable disposable) {
@@ -80,15 +94,20 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ShouldListKeys() {
-            var store = CreateStore();
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldListKeys(CompressionLevel compressionLevel) {
+            var store = CreateStore(compressionLevel);
             try {
                 var keys = Enumerable.Range(1, 10).Select(x => $"key:{x}").ToArray();
 
                 foreach (var key in keys) {
-                    var result = await store.WriteJsonAsync(key, 0);
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
+                    await store.WriteJsonAsync(key, 0);
                 }
 
                 var keysActual = await store.GetKeysAsStrings().ToEnumerable();
@@ -106,26 +125,29 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ScopedStoreShouldAddKeyPrefix() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ScopedStoreShouldAddKeyPrefix(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
-            var store = CreateStore();
+            var store = CreateStore(compressionLevel);
             try {
                 var scopedStore = store
                     .CreateScopedStore("INNER 1:")
                     .CreateScopedStore("INNER 2:");
 
-                var result = await scopedStore.WriteJsonAsync(TestContext.TestName, now);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
-
+                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                
                 var value = await scopedStore.ReadJsonAsync<DateTime>(TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, value.Status);
-                Assert.AreEqual(now, value.Value);
+                Assert.AreEqual(now, value);
 
                 var value2 = await store.ReadJsonAsync<DateTime>("INNER 1:INNER 2:" + TestContext.TestName);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, value2.Status);
-                Assert.AreEqual(now, value2.Value);
+                Assert.AreEqual(now, value2);
             }
             finally {
                 if (store is IDisposable disposable) {
@@ -135,17 +157,22 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ScopedStoreShouldRemoveKeyPrefix() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ScopedStoreShouldRemoveKeyPrefix(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
-            var store = CreateStore();
+            var store = CreateStore(compressionLevel);
             try {
                 var scopedStore = store.CreateScopedStore("INNER:");
 
-                var result = await scopedStore.WriteJsonAsync(TestContext.TestName, now);
-                Assert.AreEqual(KeyValueStoreOperationStatus.OK, result);
-
+                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                
                 var keys = await scopedStore.GetKeysAsStrings().ToEnumerable();
                 Assert.IsTrue(keys.Contains(TestContext.TestName));
             }
@@ -157,11 +184,17 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [TestMethod]
-        public async Task ShouldHandleParallelWrites() {
-            var store = CreateStore();
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldHandleParallelWrites(CompressionLevel compressionLevel) {
+            var store = CreateStore(compressionLevel);
             try {
-                var tasks = new List<Task<KeyValueStoreOperationStatus>>();
+                var tasks = new List<Task>();
                 var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
 
                 for (var i = 0; i < 100; i++) {
@@ -172,7 +205,7 @@ namespace DataCore.Adapter.Tests {
                         rng.GetNonZeroBytes(key);
                         rng.GetNonZeroBytes(value);
 
-                        return await store.WriteAsync(key, value);
+                        await store.WriteAsync(key, value);
                     }));
                 }
 
@@ -180,7 +213,7 @@ namespace DataCore.Adapter.Tests {
 
                 for (var i = 0; i < tasks.Count; i++) {
                     var task = tasks[i];
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, task.Result, $"Unexpected result for task {i}.");
+                    Assert.IsTrue(task.IsCompleted && !task.IsCanceled && !task.IsFaulted, $"Unexpected result for task {i}.");
                 }
             }
             finally {

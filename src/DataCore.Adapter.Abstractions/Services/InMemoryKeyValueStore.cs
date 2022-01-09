@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
@@ -12,7 +13,7 @@ namespace DataCore.Adapter.Services {
     /// <remarks>
     ///   This implementation does not provide any persistence of data.
     /// </remarks>
-    public sealed class InMemoryKeyValueStore : KeyValueStore, IDisposable {
+    public sealed class InMemoryKeyValueStore : KeyValueStore<KeyValueStoreOptions>, IDisposable {
 
         /// <summary>
         /// The value store.
@@ -23,49 +24,50 @@ namespace DataCore.Adapter.Services {
         /// <summary>
         /// Creats a new <see cref="InMemoryKeyValueStore"/> object.
         /// </summary>
-        public InMemoryKeyValueStore() : base(default) { }
+        public InMemoryKeyValueStore(CompressionLevel compressionLevel = CompressionLevel.NoCompression) 
+            : base(new KeyValueStoreOptions() { CompressionLevel = compressionLevel }, null) { }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
-            var keyAsString = ConvertBytesToHexString(key);
+        protected override ValueTask WriteAsync(KVKey key, byte[] value) {
+            var keyAsString = System.Text.Encoding.UTF8.GetString(key);
             _values[keyAsString] = value;
-            return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.OK);
+            return default;
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
-            var keyAsString = ConvertBytesToHexString(key);
+        protected override ValueTask<byte[]?> ReadAsync(KVKey key) {
+            var keyAsString = System.Text.Encoding.UTF8.GetString(key);
             if (!_values.TryGetValue(keyAsString, out var value)) {
-                return new ValueTask<KeyValueStoreReadResult>(new KeyValueStoreReadResult(KeyValueStoreOperationStatus.NotFound, default));
+                return new ValueTask<byte[]?>((byte[]?) null);
             }
 
-            return new ValueTask<KeyValueStoreReadResult>(new KeyValueStoreReadResult(KeyValueStoreOperationStatus.OK, value));
+            return new ValueTask<byte[]?>(value);
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
-            var keyAsString = ConvertBytesToHexString(key);
-            if (!_values.TryRemove(keyAsString, out _)) {
-                return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.NotFound);
-            }
-
-            return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.OK);
+        protected override ValueTask<bool> DeleteAsync(KVKey key) {
+            var keyAsString = System.Text.Encoding.UTF8.GetString(key);
+            return new ValueTask<bool>(_values.TryRemove(keyAsString, out _));
         }
 
 
         /// <inheritdoc/>
         protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
             await Task.Yield();
+
+            var utf8Prefix = prefix == null || prefix.Value.Length == 0
+                ? null
+                : System.Text.Encoding.UTF8.GetString(prefix.Value);
+
             foreach (var item in _values.Keys) {
-                var bytes = ConvertHexStringToBytes(item);
-                if (prefix != null && prefix.Value.Length > 0 && !StartsWithPrefix(prefix.Value.Value, bytes)) {
+                if (utf8Prefix != null && !item.StartsWith(utf8Prefix, StringComparison.Ordinal)) {
                     continue;
                 }
 
-                yield return bytes;
+                yield return System.Text.Encoding.UTF8.GetBytes(item);
             };
         }
 

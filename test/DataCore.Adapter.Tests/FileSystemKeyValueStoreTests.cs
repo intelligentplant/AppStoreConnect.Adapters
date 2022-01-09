@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.KeyValueStore.FileSystem;
@@ -31,33 +32,37 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static FileSystemKeyValueStore CreateStore(string baseDirectory) {
+        private static FileSystemKeyValueStore CreateStore(string baseDirectory, CompressionLevel compressionLevel) {
             return new FileSystemKeyValueStore(new FileSystemKeyValueStoreOptions() {
-                Path = baseDirectory
+                Path = baseDirectory,
+                CompressionLevel = compressionLevel
             });
         }
 
 
-        protected override FileSystemKeyValueStore CreateStore() {
-            return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()));
+        protected override FileSystemKeyValueStore CreateStore(CompressionLevel compressionLevel) {
+            return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()), compressionLevel);
         }
 
 
-        [TestMethod]
-        public async Task ShouldShareDataBetweenStores() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldShareDataBetweenStores(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
             var baseDir = Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString());
 
-            var store1 = CreateStore(baseDir);
-            var writeResult = await store1.WriteJsonAsync(TestContext.TestName, now);
+            var store1 = CreateStore(baseDir, compressionLevel);
+            await store1.WriteJsonAsync(TestContext.TestName, now);
 
-            Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
-
-            var store2 = CreateStore(baseDir);
+            var store2 = CreateStore(baseDir, compressionLevel);
             var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
 
-            Assert.AreEqual(KeyValueStoreOperationStatus.OK, readResult.Status);
-            Assert.AreEqual(now, readResult.Value);
+            Assert.AreEqual(now, readResult);
 
             var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
         }

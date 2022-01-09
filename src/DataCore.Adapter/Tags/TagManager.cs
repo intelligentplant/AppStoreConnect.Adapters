@@ -195,23 +195,23 @@ namespace DataCore.Adapter.Tags {
             var completed = true;
 
             try {
-                if (readResult.Value == null) {
+                if (readResult == null) {
                     return;
                 }
 
-                foreach (var tagId in readResult.Value) {
+                foreach (var tagId in readResult) {
                     if (cancellationToken.IsCancellationRequested) {
                         return;
                     }
 
                     // "tags:{id}" key contains the the definition with ID {id}.
                     var tagReadResult = await _keyValueStore.ReadJsonAsync<TagDefinition>(string.Concat("tags:", tagId), _jsonOptions).ConfigureAwait(false);
-                    if (tagReadResult.Value == null) {
+                    if (tagReadResult == null) {
                         continue;
                     }
 
-                    _tagsById[tagReadResult.Value.Id] = tagReadResult.Value;
-                    _tagsByName[tagReadResult.Value.Name] = tagReadResult.Value;
+                    _tagsById[tagReadResult.Id] = tagReadResult;
+                    _tagsByName[tagReadResult.Name] = tagReadResult;
                 }
             }
             catch {
@@ -337,38 +337,37 @@ namespace DataCore.Adapter.Tags {
             await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
             // "tags:{id}" key contains the the definition with ID {id}.
-            var result = await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
-            if (result == KeyValueStoreOperationStatus.OK) {
-                // Check if we are renaming the tag.
-                if (_tagsById.TryGetValue(tag.Id, out var oldTag) && !string.Equals(oldTag.Name, tag.Name, StringComparison.OrdinalIgnoreCase)) {
-                    // Name has changed; remove lookup for old tag name.
-                    _tagsByName.TryRemove(oldTag.Name, out _);
-                }
+            await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
 
-                // Flags if the keys in _tagsById have been modified by this operation. We will
-                // assume that they have by default, and then set to false if we are doing an
-                // update on an existing tag, to prevent us from updating the list of tag IDs in
-                // the data store unless we have to.
-                var indexHasChanged = true;
+            // Check if we are renaming the tag.
+            if (_tagsById.TryGetValue(tag.Id, out var oldTag) && !string.Equals(oldTag.Name, tag.Name, StringComparison.OrdinalIgnoreCase)) {
+                // Name has changed; remove lookup for old tag name.
+                _tagsByName.TryRemove(oldTag.Name, out _);
+            }
 
-                // Add/update entry in _tagsById lookup.
-                _ = _tagsById.AddOrUpdate(tag.Id, tag, (key, existing) => {
-                    // This is an update of an existing entry.
-                    indexHasChanged = false;
-                    return tag;
-                });
+            // Flags if the keys in _tagsById have been modified by this operation. We will
+            // assume that they have by default, and then set to false if we are doing an
+            // update on an existing tag, to prevent us from updating the list of tag IDs in
+            // the data store unless we have to.
+            var indexHasChanged = true;
 
-                // Add/update entry in _tagsByName lookup.
-                _tagsByName[tag.Name] = tag;
+            // Add/update entry in _tagsById lookup.
+            _ = _tagsById.AddOrUpdate(tag.Id, tag, (key, existing) => {
+                // This is an update of an existing entry.
+                indexHasChanged = false;
+                return tag;
+            });
 
-                if (indexHasChanged) {
-                    // "tags" key contains an array of the defined tag IDs.
-                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
-                    await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
-                }
-                else {
-                    await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
-                }
+            // Add/update entry in _tagsByName lookup.
+            _tagsByName[tag.Name] = tag;
+
+            if (indexHasChanged) {
+                // "tags" key contains an array of the defined tag IDs.
+                await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
+            }
+            else {
+                await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -410,7 +409,7 @@ namespace DataCore.Adapter.Tags {
             // "tags:{id}" key contains the the definition with ID {id}.
             var result = await _keyValueStore.DeleteAsync(string.Concat("tags:", tag.Id)).ConfigureAwait(false);
 
-            if (result == KeyValueStoreOperationStatus.OK) {
+            if (result) {
                 _tagsById.TryRemove(tag.Id, out _);
                 _tagsByName.TryRemove(tag.Name, out _);
 
@@ -420,7 +419,7 @@ namespace DataCore.Adapter.Tags {
                 await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
             }
 
-            return result == KeyValueStoreOperationStatus.OK;
+            return result;
         }
 
 

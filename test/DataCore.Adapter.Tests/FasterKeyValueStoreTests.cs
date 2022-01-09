@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,8 +17,8 @@ namespace DataCore.Adapter.Tests {
 
     [TestClass]
     public class FasterKeyValueStoreTests : KeyValueStoreTests<FasterKeyValueStore> {
-        protected override FasterKeyValueStore CreateStore() {
-            return new FasterKeyValueStore(new FasterKeyValueStoreOptions());
+        protected override FasterKeyValueStore CreateStore(CompressionLevel compressionLevel) {
+            return new FasterKeyValueStore(new FasterKeyValueStoreOptions() { CompressionLevel = compressionLevel });
         }
 
 
@@ -32,9 +33,8 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    var writeResult = await store1.WriteJsonAsync(TestContext.TestName, now);
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
-
+                    await store1.WriteJsonAsync(TestContext.TestName, now);
+                    
                     // Checkpoint should be created when we dispose because we have specified a
                     // checkpoint manager.
                 }
@@ -43,8 +43,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
                     var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, readResult.Status);
-                    Assert.AreEqual(now, readResult.Value);
+                    Assert.AreEqual(now, readResult);
                 }
             }
             finally {
@@ -62,9 +61,8 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    var writeResult = await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
-
+                    await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
+                    
                     // Create checkpoint - should succeed
                     var cp1 = await store.TakeFullCheckpointAsync();
                     Assert.IsTrue(cp1);
@@ -73,9 +71,8 @@ namespace DataCore.Adapter.Tests {
                     var cp2 = await store.TakeFullCheckpointAsync();
                     Assert.IsFalse(cp2);
 
-                    writeResult = await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
-                    Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
-
+                    await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
+                    
                     // Create a final checkpoint - should succeed
                     var cp3 = await store.TakeFullCheckpointAsync();
                     Assert.IsTrue(cp3);

@@ -36,9 +36,9 @@ namespace DataCore.Adapter.Services {
         ///   The value.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the status of the operation.
+        ///   A <see cref="ValueTask"/> that will process the operation.
         /// </returns>
-        ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value);
+        ValueTask WriteAsync(KVKey key, byte[] value);
 
 
         /// <summary>
@@ -48,10 +48,10 @@ namespace DataCore.Adapter.Services {
         ///   The key for the value.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return a <see cref="KeyValueStoreReadResult"/> 
-        ///   containing the operation status and value.
+        ///   A <see cref="ValueTask{TResult}"/> that will return the value of the key, or 
+        ///   <see langword="null"/> if the key does not exist.
         /// </returns>
-        ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key);
+        ValueTask<byte[]?> ReadAsync(KVKey key);
 
 
         /// <summary>
@@ -61,9 +61,10 @@ namespace DataCore.Adapter.Services {
         ///   The key for the value.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the status of the operation.
+        ///   A <see cref="ValueTask{TResult}"/> that will return <see langword="true"/> if the key 
+        ///   was deleted, or <see langword="false"/> otherwise.
         /// </returns>
-        ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key);
+        ValueTask<bool> DeleteAsync(KVKey key);
 
 
         /// <summary>

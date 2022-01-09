@@ -6,7 +6,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
     /// <summary>
     /// Options for <see cref="FileSystemKeyValueStore"/>.
     /// </summary>
-    public class FileSystemKeyValueStoreOptions {
+    public class FileSystemKeyValueStoreOptions : Services.KeyValueStoreOptions {
 
         /// <summary>
         /// Default path to save files to.
@@ -31,10 +31,13 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// </summary>
         public int HashBuckets { get; set; } = DefaultHashBuckets;
 
+
         /// <summary>
-        /// The GZip compression level to use when saving value to the files.
+        /// Creates a new <see cref="FileSystemKeyValueStoreOptions"/> object.
         /// </summary>
-        public CompressionLevel CompressionLevel { get; set; } = CompressionLevel.Fastest;
+        public FileSystemKeyValueStoreOptions() {
+            CompressionLevel = CompressionLevel.NoCompression;
+        }
 
     }
 

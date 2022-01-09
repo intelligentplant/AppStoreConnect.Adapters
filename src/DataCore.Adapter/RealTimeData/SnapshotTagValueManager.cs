@@ -89,24 +89,24 @@ namespace DataCore.Adapter.RealTimeData {
 
             async ValueTask<string> GetTagId() {
                 var nameToIdResult = await _keyValueStore.ReadJsonAsync<string>($"name-to-id:{tagNameOrId}", _jsonOptions).ConfigureAwait(false);
-                if (nameToIdResult.Status != KeyValueStoreOperationStatus.OK || string.IsNullOrEmpty(nameToIdResult.Value)) {
+                if (string.IsNullOrEmpty(nameToIdResult)) {
                     // Assume that tagNameOrId is the tag ID.
                     return tagNameOrId;
                 }
 
-                return nameToIdResult.Value!;
+                return nameToIdResult!;
             }
 
             var tagId = await GetTagId().ConfigureAwait(false);
             var valueResult = await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
 
-            if (valueResult.Status == KeyValueStoreOperationStatus.OK && valueResult.Value != null) {
+            if (valueResult != null) {
                 // Update lookups.
-                _valuesById[valueResult.Value.TagId] = valueResult.Value;
-                _valuesById[valueResult.Value.TagName] = valueResult.Value;
+                _valuesById[valueResult.TagId] = valueResult;
+                _valuesById[valueResult.TagName] = valueResult;
             }
 
-            return valueResult.Value;
+            return valueResult;
         }
 
 
