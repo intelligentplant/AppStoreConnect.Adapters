@@ -185,22 +185,22 @@ namespace DataCore.Adapter.AssetModel {
             var completed = true;
 
             try {
-                if (readResult.Value == null) {
+                if (readResult == null) {
                     return;
                 }
 
-                foreach (var nodeId in readResult.Value) {
+                foreach (var nodeId in readResult) {
                     if (cancellationToken.IsCancellationRequested) {
                         return;
                     }
 
                     // "nodes:{id}" key contains the the definition with ID {id}.
                     var nodeReadResult = await _keyValueStore.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId), _jsonOptions).ConfigureAwait(false);
-                    if (nodeReadResult.Value == null) {
+                    if (nodeReadResult == null) {
                         continue;
                     }
 
-                    _nodesById[nodeReadResult.Value.Id] = nodeReadResult.Value;
+                    _nodesById[nodeReadResult.Id] = nodeReadResult;
                 }
             }
             catch {
@@ -349,29 +349,28 @@ namespace DataCore.Adapter.AssetModel {
 
             try {
                 // "nodes:{id}" key contains the definition with ID {id}.
-                var result = await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node, _jsonOptions).ConfigureAwait(false);
-                if (result == KeyValueStoreOperationStatus.OK) {
-                    // Flags if the keys in _nodesById have been modified by this operation. We will
-                    // assume that they have by default, and then set to false if we are doing an
-                    // update on an existing tag, to prevent us from updating the list of node IDs in
-                    // the data store unless we have to.
-                    var indexHasChanged = true;
+                await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node, _jsonOptions).ConfigureAwait(false);
 
-                    // Add/update entry in _nodesById lookup.
-                    _ = _nodesById.AddOrUpdate(node.Id, node, (key, existing) => {
-                        // This is an update of an existing entry.
-                        indexHasChanged = false;
-                        return node;
-                    });
+                // Flags if the keys in _nodesById have been modified by this operation. We will
+                // assume that they have by default, and then set to false if we are doing an
+                // update on an existing tag, to prevent us from updating the list of node IDs in
+                // the data store unless we have to.
+                var indexHasChanged = true;
 
-                    if (indexHasChanged) {
-                        // "nodes" key contains an array of the defined node IDs.
-                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
-                        await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
-                    }
-                    else {
-                        await OnConfigurationChangeAsync(node, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
-                    }
+                // Add/update entry in _nodesById lookup.
+                _ = _nodesById.AddOrUpdate(node.Id, node, (key, existing) => {
+                    // This is an update of an existing entry.
+                    indexHasChanged = false;
+                    return node;
+                });
+
+                if (indexHasChanged) {
+                    // "nodes" key contains an array of the defined node IDs.
+                    await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
+                }
+                else {
+                    await OnConfigurationChangeAsync(node, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
                 }
 
                 if (node.Parent != null) {
@@ -475,7 +474,7 @@ namespace DataCore.Adapter.AssetModel {
                 // "nodes:{id}" key contains the definition with ID {id}.
                 var result = await _keyValueStore.DeleteAsync(string.Concat("nodes:", node.Id)).ConfigureAwait(false);
 
-                if (result == KeyValueStoreOperationStatus.OK) {
+                if (result) {
                     _nodesById.TryRemove(node.Id, out _);
 
                     // "nodes" key contains an array of the defined node IDs.
@@ -503,7 +502,7 @@ namespace DataCore.Adapter.AssetModel {
                     }
                 }
 
-                return result == KeyValueStoreOperationStatus.OK;
+                return result;
             }
             finally {
                 if (requiresLock) {

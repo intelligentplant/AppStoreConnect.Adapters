@@ -28,17 +28,17 @@ namespace DataCore.Adapter.Services {
         ///   The <see cref="JsonSerializerOptions"/> to use.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        ///   A <see cref="ValueTask"/> that will perform the operation.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
-        public static async ValueTask<KeyValueStoreOperationStatus> WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonSerializerOptions? options = null) {
+        public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            return await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, options)).ConfigureAwait(false);
+            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, options)).ConfigureAwait(false);
         }
 
 
@@ -63,15 +63,15 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
-        public static async ValueTask<KeyValueStoreReadResult<TValue>> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonSerializerOptions? options = null) {
+        public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
             var result = await store.ReadAsync(key).ConfigureAwait(false);
-            return result.Status == KeyValueStoreOperationStatus.OK
-                ? new KeyValueStoreReadResult<TValue>(result.Status, JsonSerializer.Deserialize<TValue>(result.Value, options))
-                : new KeyValueStoreReadResult<TValue>(result.Status, default);
+            return result == null
+                ? default
+                : JsonSerializer.Deserialize<TValue>(result, options);
         }
 
     }
