@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.KeyValueStore.Sqlite;
@@ -31,9 +32,10 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static SqliteKeyValueStore CreateStore(string fileName) {
+        private static SqliteKeyValueStore CreateStore(string fileName, CompressionLevel compressionLevel) {
             return new SqliteKeyValueStore(new SqliteKeyValueStoreOptions() { 
-                ConnectionString = $"Data Source={fileName};Cache=Shared"
+                ConnectionString = $"Data Source={fileName};Cache=Shared",
+                CompressionLevel = compressionLevel
             });
         }
 
@@ -43,26 +45,29 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override SqliteKeyValueStore CreateStore() {
-            return CreateStore(GetDatabaseFileName());
+        protected override SqliteKeyValueStore CreateStore(CompressionLevel compressionLevel) {
+            return CreateStore(GetDatabaseFileName(), compressionLevel);
         }
 
 
-        [TestMethod]
-        public async Task ShouldShareDataBetweenStores() {
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldShareDataBetweenStores(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
             var path = GetDatabaseFileName();
 
-            var store1 = CreateStore(path);
-            var writeResult = await store1.WriteJsonAsync(TestContext.TestName, now);
+            var store1 = CreateStore(path, compressionLevel);
+            await store1.WriteJsonAsync(TestContext.TestName, now);
 
-            Assert.AreEqual(KeyValueStoreOperationStatus.OK, writeResult);
-
-            var store2 = CreateStore(path);
+            var store2 = CreateStore(path, compressionLevel);
             var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
 
-            Assert.AreEqual(KeyValueStoreOperationStatus.OK, readResult.Status);
-            Assert.AreEqual(now, readResult.Value);
+            Assert.AreEqual(now, readResult);
 
             var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
         }
