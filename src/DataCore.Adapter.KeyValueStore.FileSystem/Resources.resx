@@ -117,19 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Log_ErrorDeletingFile" xml:space="preserve">
-    <value>Error while deleting file '{FilePath}'.</value>
+  <data name="Log_ErrorDuringIndexLoad" xml:space="preserve">
+    <value>Error while loading index.</value>
   </data>
-  <data name="Log_ErrorDeserializingIndex" xml:space="preserve">
-    <value>Error while deserializing index.</value>
-  </data>
-  <data name="Log_ErrorProcessingIndexSave" xml:space="preserve">
-    <value>Error while saving index to file.</value>
-  </data>
-  <data name="Log_ErrorReadingFromFile" xml:space="preserve">
-    <value>Error while reading from file '{FilePath}'.</value>
-  </data>
-  <data name="Log_ErrorWritingToFile" xml:space="preserve">
-    <value>Error while writing to file '{FilePath}'.</value>
+  <data name="Log_ErrorDuringIndexSave" xml:space="preserve">
+    <value>Error while saving index.</value>
   </data>
 </root>

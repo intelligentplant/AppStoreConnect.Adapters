@@ -13,7 +13,9 @@ namespace DataCore.Adapter.Services {
     ///   <see cref="KeyValueStoreExtensions.CreateScopedStore(IKeyValueStore, KVKey)"/> 
     ///   extension method.
     /// </remarks>
-    public class ScopedKeyValueStore : KeyValueStore {
+    public class ScopedKeyValueStore : IKeyValueStore {
+
+        internal KVKey Prefix { get; }
 
         /// <summary>
         /// The inner <see cref="IKeyValueStore"/>.
@@ -33,32 +35,44 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="inner"/> is <see langword="null"/>.
         /// </exception>
-        public ScopedKeyValueStore(KVKey prefix, IKeyValueStore inner) : base(prefix) {
+        public ScopedKeyValueStore(KVKey prefix, IKeyValueStore inner) {
+            if (prefix.Value.Length == 0) {
+                throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
+            }
+            Prefix = prefix;
             Inner = inner ?? throw new ArgumentNullException(nameof(inner));
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
-            return Inner.WriteAsync(key, value);
+        public ValueTask WriteAsync(KVKey key, byte[] value) {
+            var k = KeyValueStore.AddPrefix(Prefix, key);
+            return Inner.WriteAsync(k, value);
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
-            return Inner.ReadAsync(key);
+        public ValueTask<byte[]?> ReadAsync(KVKey key) {
+            var k = KeyValueStore.AddPrefix(Prefix, key);
+            return Inner.ReadAsync(k);
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
-            return Inner.DeleteAsync(key);
+        public ValueTask<bool> DeleteAsync(KVKey key) {
+            var k = KeyValueStore.AddPrefix(Prefix, key);
+            return Inner.DeleteAsync(k);
         }
 
 
         /// <inheritdoc/>
-        protected override IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
-            return Inner.GetKeysAsync(prefix);
+        public async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            var k = prefix == null 
+                ? Prefix
+                : KeyValueStore.AddPrefix(Prefix, prefix.Value);
+            await foreach (var item in Inner.GetKeysAsync(k).ConfigureAwait(false)) {
+                yield return KeyValueStore.RemovePrefix(Prefix, item);
+            }
         }
 
     }

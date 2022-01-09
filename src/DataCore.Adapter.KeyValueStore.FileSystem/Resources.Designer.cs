@@ -61,47 +61,20 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error while deleting file &apos;{FilePath}&apos;..
+        ///   Looks up a localized string similar to Error while loading index..
         /// </summary>
-        internal static string Log_ErrorDeletingFile {
+        internal static string Log_ErrorDuringIndexLoad {
             get {
-                return ResourceManager.GetString("Log_ErrorDeletingFile", resourceCulture);
+                return ResourceManager.GetString("Log_ErrorDuringIndexLoad", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error while deserializing index..
+        ///   Looks up a localized string similar to Error while saving index..
         /// </summary>
-        internal static string Log_ErrorDeserializingIndex {
+        internal static string Log_ErrorDuringIndexSave {
             get {
-                return ResourceManager.GetString("Log_ErrorDeserializingIndex", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while saving index to file..
-        /// </summary>
-        internal static string Log_ErrorProcessingIndexSave {
-            get {
-                return ResourceManager.GetString("Log_ErrorProcessingIndexSave", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while reading from file &apos;{FilePath}&apos;..
-        /// </summary>
-        internal static string Log_ErrorReadingFromFile {
-            get {
-                return ResourceManager.GetString("Log_ErrorReadingFromFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while writing to file &apos;{FilePath}&apos;..
-        /// </summary>
-        internal static string Log_ErrorWritingToFile {
-            get {
-                return ResourceManager.GetString("Log_ErrorWritingToFile", resourceCulture);
+                return ResourceManager.GetString("Log_ErrorDuringIndexSave", resourceCulture);
             }
         }
     }

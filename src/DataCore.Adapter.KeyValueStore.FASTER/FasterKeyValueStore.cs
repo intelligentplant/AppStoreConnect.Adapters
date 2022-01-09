@@ -17,7 +17,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public class FasterKeyValueStore : Services.KeyValueStore, IDisposable, IAsyncDisposable {
+    public class FasterKeyValueStore : KeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -29,11 +29,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        private readonly ILogger _logger;
 
         /// <summary>
         /// Indicates if trace logging can be performed.
@@ -111,13 +106,12 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) {
+        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) : base(options, logger) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _logger = (ILogger) logger! ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            _logTrace = _logger.IsEnabled(LogLevel.Trace);
+            _logTrace = Logger.IsEnabled(LogLevel.Trace);
 
             var logSettings = CreateLogSettings(options);
 
@@ -125,7 +119,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             var checkpointManager = options.CheckpointManagerFactory?.Invoke();
             if (checkpointManager == null) {
-                _logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
+                Logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
             }
 
             _fasterKVStore = new FasterKV<SpanByte, SpanByte>(
@@ -145,7 +139,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (FasterException e) {
                     // Exception will be thrown if there is not a checkpoint to recover from.
-                    _logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
+                    Logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
                 }
 
                 _canRecordCheckpoints = !_readOnly;
@@ -255,7 +249,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    _logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                    Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
                 }
             }
         }
@@ -348,12 +342,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     var safeReadOnlyRegionByteSize = logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress;
                     if (safeReadOnlyRegionByteSize < _logCompactionThresholdBytes) {
                         if (_logTrace) {
-                            _logger.LogTrace(string.Format(
-                                CultureInfo.CurrentCulture,
+                            Logger.LogTrace(
                                 Resources.Log_SkippingLogCompaction, 
                                 safeReadOnlyRegionByteSize, 
                                 _logCompactionThresholdBytes
-                            ));
+                            );
                         }
                         _numConsecutiveLogCompactions = 0;
                         continue;
@@ -373,31 +366,29 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     _numConsecutiveLogCompactions++;
 
                     if (_logTrace) {
-                        _logger.LogTrace(string.Format(
-                            CultureInfo.CurrentCulture,
+                        Logger.LogTrace(
                             Resources.Log_LogCompacted,
                             safeReadOnlyRegionByteSize,
                             logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress,
                             _numConsecutiveLogCompactions
-                        ));
+                        );
                     }
 
                     if (_numConsecutiveLogCompactions >= ConsecutiveCompactOperationsBeforeThresholdIncrease) {
                         _logCompactionThresholdBytes *= 2;
                         if (_logTrace) {
-                            _logger.LogTrace(string.Format(
-                                CultureInfo.CurrentCulture,
+                            Logger.LogTrace(
                                 Resources.Log_LogCompactionThresholdIncreased, 
                                 _logCompactionThresholdBytes / 2, 
                                 _logCompactionThresholdBytes
-                            ));
+                            );
                         }
                         _numConsecutiveLogCompactions = 0;
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    _logger.LogError(e, Resources.Log_CompactionError);
+                    Logger.LogError(e, Resources.Log_CompactionError);
                 }
             }
         }
@@ -462,7 +453,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
+        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
@@ -479,8 +470,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 // Mark the cache as dirty.
                 Interlocked.Exchange(ref _checkpointIsRequired, 1);
-
-                return ToKeyValueOperationStatus(result.Status);
             }
             finally {
                 ReturnPooledSession(session);
@@ -489,7 +478,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
+        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
             ThrowIfDisposed();
 
             Status status;
@@ -508,19 +497,18 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 ReturnPooledSession(session);
             }
 
+            if (status != Status.OK) {
+                return null;
+            }
+
             using (spanByteAndMemory.Memory) {
-                return new KeyValueStoreReadResult(
-                    ToKeyValueOperationStatus(status),
-                    status == Status.OK
-                        ? spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray()
-                        : default
-                    );
+                return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
             }
         }
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
+        protected override async ValueTask<bool> DeleteAsync(KVKey key) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
@@ -539,7 +527,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     Interlocked.Exchange(ref _checkpointIsRequired, 1);
                 }
 
-                return ToKeyValueOperationStatus(result.Status);
+                return result.Status == Status.OK;
             }
             finally {
                 ReturnPooledSession(session);
@@ -564,28 +552,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             }
             finally {
                 ReturnPooledSession(session);
-            }
-        }
-
-
-        /// <summary>
-        /// Converts a FASTER <see cref="Status"/> to an <see cref="OperationStatus"/>.
-        /// </summary>
-        /// <param name="status">
-        ///   The FASTER <see cref="Status"/>.
-        /// </param>
-        /// <returns>
-        ///   The equivalent <see cref="OperationStatus"/>.
-        /// </returns>
-        private static KeyValueStoreOperationStatus ToKeyValueOperationStatus(Status status) {
-            switch (status) {
-                case Status.ERROR:
-                    return KeyValueStoreOperationStatus.Error;
-                case Status.NOTFOUND:
-                    return KeyValueStoreOperationStatus.NotFound;
-                case Status.OK:
-                default:
-                    return KeyValueStoreOperationStatus.OK;
             }
         }
 

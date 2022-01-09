@@ -41,9 +41,19 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            return store is KeyValueStore baseStore
-                ? baseStore.CreateScopedStore(prefix)
-                : new ScopedKeyValueStore(prefix, store);
+            if (prefix.Length == 0) {
+                throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
+            }
+
+            if (store is ScopedKeyValueStore scoped) {
+                // This store is already an instance of ScopedKeyValueStore. Instead of wrapping
+                // the scoped store and recursively applying key prefixes in every operation, we
+                // will wrap the inner store and concatenate the prefix for this store with the
+                // prefix passed to this method.
+                return new ScopedKeyValueStore(KeyValueStore.AddPrefix(scoped.Prefix, prefix), scoped.Inner);
+            }
+
+            return new ScopedKeyValueStore(prefix, store);
         }
 
 

@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Services {
 
@@ -13,83 +17,82 @@ namespace DataCore.Adapter.Services {
     public abstract class KeyValueStore : IKeyValueStore {
 
         /// <summary>
-        /// The prefix to apply to all keys in the store.
+        /// The logger for the store.
         /// </summary>
-        private readonly KVKey? _prefix;
+        protected ILogger Logger { get; }
 
 
         /// <summary>
-        /// Creates a new <see cref="KeyValueStore"/> with the specified key prefix.
+        /// Creates a new <see cref="KeyValueStore"/>.
         /// </summary>
-        /// <param name="prefix">
-        ///   The prefix to use.
+        /// <param name="logger">
+        ///   The logger for the store.
         /// </param>
-        protected KeyValueStore(KVKey? prefix) { 
-            if (prefix != null && prefix.Value.Length == 0) {
-                throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
-            }
-            _prefix = prefix;
+        protected KeyValueStore(ILogger? logger = null) {
+            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
 
-        /// <summary>
-        /// Creates a new <see cref="KeyValueStore"/> with no key prefix.
-        /// </summary>
-        protected KeyValueStore() : this(null) { }
-
-
-        async ValueTask<KeyValueStoreOperationStatus> IKeyValueStore.WriteAsync(KVKey key, byte[] value) {
+        async ValueTask IKeyValueStore.WriteAsync(KVKey key, byte[] value) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
             if (value == null) {
                 throw new ArgumentNullException(nameof(value));
             }
-            return await WriteAsync(_prefix == null ? key : AddPrefix(_prefix.Value, key), value).ConfigureAwait(false);
+
+            var compressionLevel = GetCompressionLevel();
+
+            await WriteAsync(
+                key, 
+                value.Length == 0 || compressionLevel == CompressionLevel.NoCompression
+                    ? value 
+                    : await CompressDataAsync(value, compressionLevel).ConfigureAwait(false)
+                ).ConfigureAwait(false);
         }
 
 
-        async ValueTask<KeyValueStoreReadResult> IKeyValueStore.ReadAsync(KVKey key) {
+        async ValueTask<byte[]?> IKeyValueStore.ReadAsync(KVKey key) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
-            return await ReadAsync(_prefix == null ? key : AddPrefix(_prefix.Value, key)).ConfigureAwait(false);
+
+            var compressionLevel = GetCompressionLevel();
+
+            var result = await ReadAsync(key).ConfigureAwait(false);
+            if (result == null || result.Length == 0 || compressionLevel == CompressionLevel.NoCompression) {
+                return result;
+            }
+
+            return await DecompressDataAsync(result).ConfigureAwait(false);
         }
 
 
-        async ValueTask<KeyValueStoreOperationStatus> IKeyValueStore.DeleteAsync(KVKey key) {
+        async ValueTask<bool> IKeyValueStore.DeleteAsync(KVKey key) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
-            return await DeleteAsync(_prefix == null ? key : AddPrefix(_prefix.Value, key));
+
+            return await DeleteAsync(key).ConfigureAwait(false);
         }
 
 
-        async IAsyncEnumerable<KVKey> IKeyValueStore.GetKeysAsync(KVKey? prefix) {
+        IAsyncEnumerable<KVKey> IKeyValueStore.GetKeysAsync(KVKey? prefix) {
             if (prefix != null && prefix.Value.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
 
-            KVKey? compositePrefix;
-
-            if (_prefix == null) {
-                compositePrefix = prefix;
-            }
-            else {
-                compositePrefix = prefix == null
-                    ? _prefix
-                    : AddPrefix(_prefix.Value, prefix.Value);
-            }
-
-            await foreach (var key in GetKeysAsync(compositePrefix)) {
-                if (compositePrefix == null) {
-                    yield return key;
-                }
-                else {
-                    yield return RemovePrefix(compositePrefix.Value, key);
-                }
-            }
+            return GetKeysAsync(prefix);
         }
+
+
+        /// <summary>
+        /// Gets the compression level to use for store data.
+        /// </summary>
+        /// <returns>
+        /// The compression level.
+        /// </returns>
+        protected abstract CompressionLevel GetCompressionLevel();
 
 
         /// <summary>
@@ -102,9 +105,9 @@ namespace DataCore.Adapter.Services {
         ///   The value. Guaranteed to be non-null.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        ///   A <see cref="ValueTask"/> that will perform the operation.
         /// </returns>
-        protected abstract ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value);
+        protected abstract ValueTask WriteAsync(KVKey key, byte[] value);
 
 
         /// <summary>
@@ -114,9 +117,10 @@ namespace DataCore.Adapter.Services {
         ///   The key. Guaranteed to have a non-null, non-empty <see cref="KVKey.Value"/>.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        ///   A <see cref="ValueTask{TResult}"/> that will return the value of the key, or 
+        ///   <see langword="null"/> if the key does not exist.
         /// </returns>
-        protected abstract ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key);
+        protected abstract ValueTask<byte[]?> ReadAsync(KVKey key);
 
 
         /// <summary>
@@ -126,9 +130,10 @@ namespace DataCore.Adapter.Services {
         ///   The key. Guaranteed to have a non-null, non-empty <see cref="KVKey.Value"/>.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        ///   A <see cref="ValueTask{TResult}"/> that will return <see langword="true"/> if the key 
+        ///   was deleted, or <see langword="false"/> otherwise.
         /// </returns>
-        protected abstract ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key);
+        protected abstract ValueTask<bool> DeleteAsync(KVKey key);
 
 
         /// <summary>
@@ -144,33 +149,45 @@ namespace DataCore.Adapter.Services {
 
 
         /// <summary>
-        /// Creates a new <see cref="IKeyValueStore"/> from the current store that applies the a 
-        /// prefix on all operations.
+        /// Compresses data using GZip compression at the specified compression level.
         /// </summary>
-        /// <param name="prefix">
-        ///   The prefix to apply.
+        /// <param name="data">
+        ///   The data to compress.
+        /// </param>
+        /// <param name="compressionLevel">
+        ///   The compression level to use.
         /// </param>
         /// <returns>
-        ///   A new <see cref="IKeyValueStore"/> that wraps the current store.
+        ///   A <see cref="Task{TResult}"/> that will compress the data and return the result.
         /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="prefix"/> has a <see cref="KVKey.Value"/> that is <see langword="null"/> 
-        ///   or zero-length.
-        /// </exception>
-        public IKeyValueStore CreateScopedStore(KVKey prefix) {
-            if (prefix.Length == 0) {
-                throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
+        private async Task<byte[]> CompressDataAsync(byte[] data, CompressionLevel compressionLevel) {
+            using (var destination = new MemoryStream())
+            using (var zip = new GZipStream(destination, compressionLevel, true)) {
+                await zip.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+                // Need to call Close on GZipStream to ensure that all buffered bytes are written;
+                // calling Flush/FlushAsync is not enough!
+                zip.Close();
+                return destination.ToArray();
             }
+        }
 
-            if (this is ScopedKeyValueStore scoped) {
-                // This store is already an instance of ScopedKeyValueStore. Instead of wrapping
-                // the scoped store and recursively applying key prefixes in every operation, we
-                // will wrap the inner store and concatenate the prefix for this store with the
-                // prefix passed to this method.
-                return new ScopedKeyValueStore(_prefix == null ? prefix : AddPrefix(_prefix.Value, prefix), scoped.Inner);
+
+        /// <summary>
+        /// Decompresses data using GZip compression.
+        /// </summary>
+        /// <param name="data">
+        ///   The data to decompress.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will decompress the data and return the result.
+        /// </returns>
+        private async Task<byte[]> DecompressDataAsync(byte[] data) {
+            using (var source = new MemoryStream(data))
+            using (var zip = new GZipStream(source, CompressionMode.Decompress, true))
+            using (var destination = new MemoryStream()) {
+                await zip.CopyToAsync(destination).ConfigureAwait(false);
+                return destination.ToArray();
             }
-
-            return new ScopedKeyValueStore(prefix, this);
         }
 
 
@@ -309,6 +326,41 @@ namespace DataCore.Adapter.Services {
 
             return bytes;
         }
+
+    }
+
+
+
+    /// <summary>
+    /// Base implementation of <see cref="IKeyValueStore"/>.
+    /// </summary>
+    /// <remarks>
+    ///   Inherit from this class instead of implementing <see cref="IKeyValueStore"/> directly.
+    /// </remarks>
+    public abstract class KeyValueStore<TOptions> : KeyValueStore where TOptions : KeyValueStoreOptions, new() {
+
+        /// <summary>
+        /// The options for the store.
+        /// </summary>
+        protected TOptions Options { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="KeyValueStore"/> with the specified key prefix.
+        /// </summary>
+        /// <param name="options">
+        ///   Store options.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger for the store.
+        /// </param>
+        protected KeyValueStore(TOptions? options, ILogger? logger = null) : base(logger) { 
+            Options = options ?? new TOptions();
+        }
+
+
+        /// <inheritdoc/>
+        protected override CompressionLevel GetCompressionLevel() => Options.CompressionLevel;
 
     }
 }

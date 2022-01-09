@@ -7,7 +7,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Options for <see cref="FasterKeyValueStore"/>.
     /// </summary>
-    public class FasterKeyValueStoreOptions {
+    public class FasterKeyValueStoreOptions : Services.KeyValueStoreOptions {
 
         /// <summary>
         /// Specifies if the <see cref="FasterKeyValueStore"/> is read-only.

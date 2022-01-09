@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -14,7 +13,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
     /// <summary>
     /// <see cref="IKeyValueStore"/> that uses a Sqlite database to store values.
     /// </summary>
-    public class SqliteKeyValueStore : Services.KeyValueStore {
+    public class SqliteKeyValueStore : KeyValueStore<SqliteKeyValueStoreOptions> {
 
         /// <summary>
         /// Sqlite error code when the database file is unavailable.
@@ -25,11 +24,6 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// The Sqlite connection string.
         /// </summary>
         private readonly string _connectionString;
-
-        /// <summary>
-        /// The logger for the store.
-        /// </summary>
-        private readonly ILogger _logger;
 
 
         /// <summary>
@@ -44,12 +38,10 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public SqliteKeyValueStore(SqliteKeyValueStoreOptions options, ILogger<SqliteKeyValueStore>? logger = null) {
+        public SqliteKeyValueStore(SqliteKeyValueStoreOptions options, ILogger<SqliteKeyValueStore>? logger = null) : base(options, logger) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
-
-            _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
             _connectionString = string.IsNullOrWhiteSpace(options.ConnectionString)
                 ? SqliteKeyValueStoreOptions.DefaultConnectionString
@@ -131,96 +123,74 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> WriteAsync(KVKey key, byte[] value) {
+        protected override ValueTask WriteAsync(KVKey key, byte[] value) {
             var hexKey = ConvertBytesToHexString(key);
 
-            try {
-                using (var connection = new SqliteConnection(_connectionString)) {
-                    connection.Open();
+            using (var connection = new SqliteConnection(_connectionString)) {
+                connection.Open();
 
-                    using (var transaction = connection.BeginTransaction())
-                    using (var command = connection.CreateCommand()) {
-                        command.Transaction = transaction;
+                using (var transaction = connection.BeginTransaction())
+                using (var command = connection.CreateCommand()) {
+                    command.Transaction = transaction;
 
-                        // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
-                        command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
-                        command.Parameters.AddWithValue("$key", hexKey);
-                        command.Parameters.AddWithValue("$value", value);
+                    // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
+                    command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
+                    command.Parameters.AddWithValue("$key", hexKey);
+                    command.Parameters.AddWithValue("$value", value);
 
-                        command.ExecuteNonQuery();
-                        transaction.Commit();
-
-                        return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.OK);
-                    }
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    return default;
                 }
-            }
-            catch (Exception e) {
-                _logger.LogError(e, Resources.Log_ErrorWritingValue, hexKey);
-                return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.Error);
             }
         }
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<KeyValueStoreReadResult> ReadAsync(KVKey key) {
+        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
             var hexKey = ConvertBytesToHexString(key);
 
-            try {
-                using (var connection = new SqliteConnection(_connectionString)) {
-                    connection.Open();
+            using (var connection = new SqliteConnection(_connectionString)) {
+                connection.Open();
 
-                    using (var command = connection.CreateCommand()) {
-                        command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
-                        command.Parameters.AddWithValue("$key", hexKey);
+                using (var command = connection.CreateCommand()) {
+                    command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
+                    command.Parameters.AddWithValue("$key", hexKey);
 
-                        using (var reader = command.ExecuteReader()) {
-                            if (!reader.Read()) {
-                                return new KeyValueStoreReadResult(KeyValueStoreOperationStatus.NotFound, default);
-                            }
+                    using (var reader = command.ExecuteReader()) {
+                        if (!reader.Read()) {
+                            return null;
+                        }
 
-                            using (var stream = reader.GetStream(0))
-                            using (var ms = new MemoryStream()){
-                                await stream.CopyToAsync(ms).ConfigureAwait(false);
-                                return new KeyValueStoreReadResult(KeyValueStoreOperationStatus.OK, ms.ToArray());
-                            }
+                        using (var stream = reader.GetStream(0))
+                        using (var ms = new MemoryStream()) {
+                            await stream.CopyToAsync(ms).ConfigureAwait(false);
+                            return ms.ToArray();
                         }
                     }
                 }
             }
-            catch (Exception e) {
-                _logger.LogError(e, Resources.Log_ErrorReadingValue, hexKey);
-                return new KeyValueStoreReadResult(KeyValueStoreOperationStatus.Error, default);
-            }
         }
 
 
         /// <inheritdoc/>
-        protected override ValueTask<KeyValueStoreOperationStatus> DeleteAsync(KVKey key) {
+        protected override ValueTask<bool> DeleteAsync(KVKey key) {
             var hexKey = ConvertBytesToHexString(key);
 
-            try {
-                using (var connection = new SqliteConnection(_connectionString)) {
-                    connection.Open();
+            using (var connection = new SqliteConnection(_connectionString)) {
+                connection.Open();
 
-                    using (var transaction = connection.BeginTransaction())
-                    using (var command = connection.CreateCommand()) {
-                        command.Transaction = transaction;
-                        command.CommandText = @"DELETE FROM kvstore WHERE key = $key";
-                        command.Parameters.AddWithValue("$key", hexKey);
+                using (var transaction = connection.BeginTransaction())
+                using (var command = connection.CreateCommand()) {
+                    command.Transaction = transaction;
+                    command.CommandText = @"DELETE FROM kvstore WHERE key = $key";
+                    command.Parameters.AddWithValue("$key", hexKey);
 
-                        var count = command.ExecuteNonQuery();
-                        transaction.Commit();
+                    var count = command.ExecuteNonQuery();
+                    transaction.Commit();
 
-                        return new ValueTask<KeyValueStoreOperationStatus>(count == 0
-                            ? KeyValueStoreOperationStatus.NotFound
-                            : KeyValueStoreOperationStatus.OK
-                        );
-                    }
+                    return new ValueTask<bool>(count != 0);
                 }
-            }
-            catch (Exception e) {
-                _logger.LogError(e, Resources.Log_ErrorDeletingValue, hexKey);
-                return new ValueTask<KeyValueStoreOperationStatus>(KeyValueStoreOperationStatus.Error);
             }
         }
 

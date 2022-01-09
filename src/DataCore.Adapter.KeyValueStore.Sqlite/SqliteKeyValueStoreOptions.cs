@@ -3,7 +3,7 @@
     /// <summary>
     /// Options for <see cref="SqliteKeyValueStore"/>.
     /// </summary>
-    public class SqliteKeyValueStoreOptions {
+    public class SqliteKeyValueStoreOptions : Services.KeyValueStoreOptions {
 
         /// <summary>
         /// Default Sqlite connection string.

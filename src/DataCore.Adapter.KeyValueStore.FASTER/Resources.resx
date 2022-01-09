@@ -133,22 +133,15 @@
     <value>An error occurred while recovering the FASTER log from the last checkpoint.</value>
   </data>
   <data name="Log_LogCompacted" xml:space="preserve">
-    <value>FASTER log compacted. Safe read-only region size before: {0} bytes. After: {1} bytes. Consecutive compactions: {2}.</value>
-    <comment>{0} - size before compaction
-{1} - size after compaction
-{2} - consecutive compaction iterations</comment>
+    <value>FASTER log compacted. Safe read-only region size before: {SizeBefore} bytes. After: {SizeAfter} bytes. Consecutive compactions: {ConsecutiveIterations}.</value>
   </data>
   <data name="Log_LogCompactionThresholdIncreased" xml:space="preserve">
-    <value>FASTER log compaction threshold increased. Before: {0} bytes. After: {1} bytes.</value>
-    <comment>{0} - old limit
-{1} - new limit</comment>
+    <value>FASTER log compaction threshold increased. Before: {SizeBefore} bytes. After: {SizeAfter} bytes.</value>
   </data>
   <data name="Log_NoCheckpointManagerProvided" xml:space="preserve">
     <value>Checkpoint management is disabled; backup and restore of data will not be performed.</value>
   </data>
   <data name="Log_SkippingLogCompaction" xml:space="preserve">
-    <value>Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {1} bytes</value>
-    <comment>{0} - current size
-{1} - limit</comment>
+    <value>Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {Size} bytes</value>
   </data>
 </root>
