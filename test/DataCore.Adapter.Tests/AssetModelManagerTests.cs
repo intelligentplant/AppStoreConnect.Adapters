@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -309,6 +311,65 @@ namespace DataCore.Adapter.Tests {
                 await manager.AddOrUpdateNodeAsync(node2);
 
                 Assert.IsTrue(notificationReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldUseCustomSorting() {
+            var node1 = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName + "_1")
+                .Build();
+
+            var node2 = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName + "_2")
+                .Build();
+
+            var node3 = new AssetModelNodeBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName("$" + TestContext.TestName + "_3")
+                .Build();
+
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, CustomNodeNameComparer.Instance)) {
+                await manager.InitAsync();
+
+                await manager.AddOrUpdateNodeAsync(node1);
+                await manager.AddOrUpdateNodeAsync(node2);
+                await manager.AddOrUpdateNodeAsync(node3);
+
+                var nodes = await manager.BrowseAssetModelNodes(new DefaultAdapterCallContext(), new BrowseAssetModelNodesRequest() {
+                    PageSize = 10
+                }, default).ToEnumerable();
+
+                Assert.AreEqual(3, nodes.Count());
+
+                // node 3 should be first, because its name starts with '$'. The other two nodes
+                // should be sorted alphabetically.
+                Assert.AreEqual(node3.Id, nodes.ElementAt(0).Id);
+                Assert.AreEqual(node1.Id, nodes.ElementAt(1).Id);
+                Assert.AreEqual(node2.Id, nodes.ElementAt(2).Id);
+            }
+        }
+
+
+        private class CustomNodeNameComparer : IComparer<string> {
+
+            public static IComparer<string> Instance { get; } = new CustomNodeNameComparer();
+
+
+            public int Compare(string x, string y) {
+                if (x.StartsWith("$") && y.StartsWith("$")) {
+                    return StringComparer.OrdinalIgnoreCase.Compare(x, y);
+                }
+                if (x.StartsWith("$")) {
+                    return -1;
+                }
+                if (y.StartsWith("$")) {
+                    return 1;
+                }
+                return StringComparer.OrdinalIgnoreCase.Compare(x, y);
             }
         }
 

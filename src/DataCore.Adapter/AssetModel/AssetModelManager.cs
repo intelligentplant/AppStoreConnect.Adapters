@@ -70,6 +70,11 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         private readonly Func<ConfigurationChange, CancellationToken, ValueTask>? _onConfigurationChange;
 
+        /// <summary>
+        /// Comparer for sorting nodes by name.
+        /// </summary>
+        private readonly IComparer<string> _nodeNameComparer;
+
         /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
@@ -86,10 +91,14 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="onConfigurationChange">
         ///   An optional callback that will be invoked when a node is added, updated, or deleted.
         /// </param>
+        /// <param name="nodeNameComparer">
+        ///   An optional <see cref="IComparer{T}"/> for sorting node names.
+        /// </param>
         public AssetModelManager(
             IKeyValueStore keyValueStore,
             IBackgroundTaskService? backgroundTaskService = null,
-            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
+            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
+            IComparer<string>? nodeNameComparer = null
         ) {
             if (keyValueStore == null) {
                 throw new ArgumentNullException(nameof(keyValueStore));
@@ -97,6 +106,7 @@ namespace DataCore.Adapter.AssetModel {
 
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
+            _nodeNameComparer = nodeNameComparer ?? StringComparer.OrdinalIgnoreCase;
             _keyValueStore = keyValueStore.CreateScopedStore("asset-model-manager:");
 
             _jsonOptions.AddDataCoreAdapterConverters();
@@ -605,7 +615,7 @@ namespace DataCore.Adapter.AssetModel {
 
             if (request.ParentId == null) {
                 // Browse top-level nodes.
-                foreach (var item in _nodesById.Values.Where(x => x.Parent == null).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request)) {
+                foreach (var item in _nodesById.Values.Where(x => x.Parent == null).OrderBy(x => x.Name, _nodeNameComparer).SelectPage(request)) {
                     if (cancellationToken.IsCancellationRequested) {
                         break;
                     }
@@ -622,7 +632,7 @@ namespace DataCore.Adapter.AssetModel {
                 yield break;
             }
 
-            foreach (var item in _nodesById.Values.Where(x => string.Equals(x.Parent, request.ParentId, StringComparison.Ordinal)).OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request)) {
+            foreach (var item in _nodesById.Values.Where(x => string.Equals(x.Parent, request.ParentId, StringComparison.Ordinal)).OrderBy(x => x.Name, _nodeNameComparer).SelectPage(request)) {
                 if (cancellationToken.IsCancellationRequested) {
                     break;
                 }
@@ -681,7 +691,7 @@ namespace DataCore.Adapter.AssetModel {
 
             await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
-            foreach (var item in _nodesById.Values.Where(x => string.IsNullOrEmpty(request.Name) || x.Name.Like(request.Name!)).Where(x => string.IsNullOrEmpty(request.Description) || x.Description.Like(request.Description!))) {
+            foreach (var item in _nodesById.Values.Where(x => string.IsNullOrEmpty(request.Name) || x.Name.Like(request.Name!)).Where(x => string.IsNullOrEmpty(request.Description) || x.Description.Like(request.Description!)).OrderBy(x => x.Name, _nodeNameComparer).SelectPage(request)) {
                 if (cancellationToken.IsCancellationRequested) {
                     break;
                 }
