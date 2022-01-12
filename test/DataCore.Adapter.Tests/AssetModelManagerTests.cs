@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Services;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,7 +23,7 @@ namespace DataCore.Adapter.Tests {
                 .WithName(TestContext.TestName)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
                 await manager.AddOrUpdateNodeAsync(node);
 
@@ -47,7 +48,7 @@ namespace DataCore.Adapter.Tests {
                 .WithParent(node1.Id)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -70,7 +71,7 @@ namespace DataCore.Adapter.Tests {
                 .WithChildren(true)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -97,7 +98,7 @@ namespace DataCore.Adapter.Tests {
                 .WithParent(node1.Id)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -134,7 +135,7 @@ namespace DataCore.Adapter.Tests {
                 .WithParent(node1.Id)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -186,7 +187,7 @@ namespace DataCore.Adapter.Tests {
                 .WithParent(node1.Id)
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore())) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -248,7 +249,7 @@ namespace DataCore.Adapter.Tests {
                 return default;
             };
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore(), onNotificationReceived)) {
                 await manager.InitAsync();
                 await manager.AddOrUpdateNodeAsync(node);
 
@@ -273,7 +274,7 @@ namespace DataCore.Adapter.Tests {
                 return default;
             };
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore(), onNotificationReceived)) {
                 await manager.InitAsync();
                 await manager.AddOrUpdateNodeAsync(node);
                 await manager.DeleteNodeAsync(node.Id);
@@ -303,7 +304,7 @@ namespace DataCore.Adapter.Tests {
                 return default;
             };
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore(), onNotificationReceived)) {
                 await manager.InitAsync();
                 // Create
                 await manager.AddOrUpdateNodeAsync(node1);
@@ -332,7 +333,7 @@ namespace DataCore.Adapter.Tests {
                 .WithName("$" + TestContext.TestName + "_3")
                 .Build();
 
-            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, CustomNodeNameComparer.Instance)) {
+            using (var manager = ActivatorUtilities.CreateInstance<AssetModelManager>(AssemblyInitializer.ApplicationServices, new InMemoryKeyValueStore(), CustomNodeNameComparer.Instance)) {
                 await manager.InitAsync();
 
                 await manager.AddOrUpdateNodeAsync(node1);
