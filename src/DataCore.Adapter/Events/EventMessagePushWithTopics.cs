@@ -92,7 +92,7 @@ namespace DataCore.Adapter.Events {
             }
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
-                var subscription = CreateSubscription<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, ctSource.Token);
+                var subscription = await CreateSubscriptionAsync<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, ctSource.Token).ConfigureAwait(false);
                 if (request.Topics != null && request.Topics.Any()) {
                     await OnTopicsAddedToSubscriptionInternal(subscription, request.Topics, ctSource.Token).ConfigureAwait(false);
                 }
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Events {
             int id, 
             int channelCapacity,
             CancellationToken[] cancellationTokens, 
-            Action cleanup, 
+            Func<ValueTask> cleanup, 
             object? state
         ) {
             var request = (CreateEventMessageTopicSubscriptionRequest) state!;
@@ -136,15 +136,15 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionAdded(EventSubscriptionChannel subscription) {
-            base.OnSubscriptionAdded(subscription);
+        protected override async ValueTask OnSubscriptionAddedAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) {
+            await base.OnSubscriptionAddedAsync(subscription, cancellationToken).ConfigureAwait(false);
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) {
-            base.OnSubscriptionCancelled(subscription);
+        protected override async ValueTask OnSubscriptionCancelledAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) {
+            await base.OnSubscriptionCancelledAsync(subscription, cancellationToken).ConfigureAwait(false);
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
             if (subscription != null) {
                 OnTopicsRemovedFromSubscriptionInternal(subscription, subscription.Topics);
