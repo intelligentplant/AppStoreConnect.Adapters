@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
@@ -21,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// uses an <see cref="IKeyValueStore"/> to persist snapshot tag values between adapter or host 
     /// restarts.
     /// </summary>
-    public class SnapshotTagValueManager : SnapshotTagValuePush, IReadSnapshotTagValues {
+    public class SnapshotTagValueManager : SnapshotTagValuePushBase, IReadSnapshotTagValues {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -44,9 +45,9 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly ConcurrentDictionary<string, TagValueQueryResult> _valuesById = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// Cached tag values, indexed by tag name.
+        /// Lazy init method.
         /// </summary>
-        private readonly ConcurrentDictionary<string, TagValueQueryResult> _valuesByName = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
+        private readonly Lazy<Task> _init;
 
 
         /// <summary>
@@ -76,94 +77,138 @@ namespace DataCore.Adapter.RealTimeData {
 
             _keyValueStore = keyValueStore.CreateScopedStore("snapshot-tag-value-manager:");
             _jsonOptions.AddDataCoreAdapterConverters();
-        }
 
-
-        private async ValueTask<TagValueQueryResult?> ReadValueAsync(string tagNameOrId) {
-            if (_valuesByName.TryGetValue(tagNameOrId, out var sample)) {
-                return sample;
-            }
-            if (_valuesById.TryGetValue(tagNameOrId, out sample)) {
-                return sample;
-            }
-
-            async ValueTask<string> GetTagId() {
-                var nameToIdResult = await _keyValueStore.ReadJsonAsync<string>($"name-to-id:{tagNameOrId}", _jsonOptions).ConfigureAwait(false);
-                if (string.IsNullOrEmpty(nameToIdResult)) {
-                    // Assume that tagNameOrId is the tag ID.
-                    return tagNameOrId;
-                }
-
-                return nameToIdResult!;
-            }
-
-            var tagId = await GetTagId().ConfigureAwait(false);
-            var valueResult = await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
-
-            if (valueResult != null) {
-                // Update lookups.
-                _valuesById[valueResult.TagId] = valueResult;
-                _valuesById[valueResult.TagName] = valueResult;
-            }
-
-            return valueResult;
-        }
-
-
-        /// <inheritdoc/>
-        public override async ValueTask<bool> ValueReceived(TagValueQueryResult message, CancellationToken cancellationToken = default) {
-            if (_disposed) {
-                throw new ObjectDisposedException(GetType().FullName);
-            }
-            if (message == null) {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            return await ValueReceivedCore(message, true, cancellationToken).ConfigureAwait(false);
+            _init = new Lazy<Task>(() => InitAsync(DisposedToken), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
 
         /// <summary>
-        /// Emits a sample to subscribers and optionally updates the cache entry for the sample's 
-        /// tag.
+        /// Initialises the <see cref="SnapshotTagValueManager"/> by loading values for known tags 
+        /// into the in-memory cache.
         /// </summary>
-        /// <param name="sample">
-        ///   The sample. 
-        /// </param>
-        /// <param name="updateCache">
-        ///   When <see langword="true"/>, the cache entries associated with the sample will be 
-        ///   updated.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that returns a flag indicating if the sample was 
-        ///   pushed to any subscribers.
+        ///   A <see cref="Task"/> that will perform the operation.
         /// </returns>
-        private async ValueTask<bool> ValueReceivedCore(TagValueQueryResult sample, bool updateCache, CancellationToken cancellationToken) {
-            if (updateCache) {
-                _valuesByName[sample.TagId] = sample;
-                _valuesByName[sample.TagName] = sample;
-
-                await _keyValueStore.WriteJsonAsync($"value:{sample.TagId}", sample, _jsonOptions).ConfigureAwait(false);
-                await _keyValueStore.WriteJsonAsync($"name-to-id:{sample.TagName}", sample.TagId, _jsonOptions).ConfigureAwait(false);
+        private async Task InitAsync(CancellationToken cancellationToken) {
+            var tagIds = await LoadTagsIdsAsync().ConfigureAwait(false);
+            if (tagIds == null || cancellationToken.IsCancellationRequested) {
+                return;
             }
 
-            return await base.ValueReceived(sample, cancellationToken).ConfigureAwait(false);
+            foreach (var tagId in tagIds) {
+                if (cancellationToken.IsCancellationRequested || string.IsNullOrWhiteSpace(tagId)) {
+                    continue;
+                }
+
+                var value = await LoadTagValueAsync(tagId).ConfigureAwait(false);
+                if (value == null) {
+                    continue;
+                }
+
+                _valuesById[tagId] = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Loads tag IDs that have associated snapshot values from the data store.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the tag IDs.
+        /// </returns>
+        private async ValueTask<string[]?> LoadTagsIdsAsync() {
+            return await _keyValueStore.ReadJsonAsync<string[]>("tags", _jsonOptions).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Saves tag IDs that have associated snapshot values to the data store.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will save the tag IDs.
+        /// </returns>
+        private async ValueTask SaveTagsIdsAsync() {
+            await _keyValueStore.WriteJsonAsync("tags", _valuesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Loads the snapshot value for the specified tag from the data store.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the value.
+        /// </returns>
+        private async ValueTask<TagValueQueryResult?> LoadTagValueAsync(string tagId) {
+            return await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Deletes the snapshot value for the specified tag to the data store.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will save the value.
+        /// </returns>
+        private async ValueTask SaveTagValueAsync(TagValueQueryResult value) {
+            await _keyValueStore.WriteJsonAsync($"value:{value.TagId}", value, _jsonOptions).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Deletes the snapshot value for the specified tag from the data store.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will delete the value.
+        /// </returns>
+        private async ValueTask DeleteTagValueAsync(string tagId) {
+            await _keyValueStore.DeleteAsync($"value:{tagId}").ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Gets the snapshot value for the specified tag from the cache, or from the underlying 
+        /// key-value store.
+        /// </summary>
+        /// <param name="tagIdentifier">
+        ///   The tag identifier.
+        /// </param>
+        /// <returns>
+        ///   The snapshot value, if available.
+        /// </returns>
+        private TagValueQueryResult? GetSnapshotTagValue(TagIdentifier tagIdentifier) {
+            if (_valuesById.TryGetValue(tagIdentifier.Id, out var value)) {
+                return value;
+            }
+
+            return null;
         }
 
 
         /// <inheritdoc/>
         protected override async Task OnTagsAdded(IEnumerable<TagIdentifier> tags, CancellationToken cancellationToken) {
             await base.OnTagsAdded(tags, cancellationToken).ConfigureAwait(false);
+
+            await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
             foreach (var item in tags) {
                 if (cancellationToken.IsCancellationRequested) {
                     break;
                 }
-                var sample = await ReadValueAsync(item.Id).ConfigureAwait(false);
+                var sample = GetSnapshotTagValue(item);
                 if (sample != null) {
-                    await ValueReceivedCore(sample, false, cancellationToken).ConfigureAwait(false);
+                    await PublishValueToSubscribersAsync(sample, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -187,21 +232,118 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            await Task.Yield();
+            if (request.Tags == null) {
+                yield break;
+            }
 
-            foreach (var item in request.Tags ?? Array.Empty<string>()) {
-                if (cancellationToken.IsCancellationRequested) {
-                    break;
-                }
-                if (string.IsNullOrWhiteSpace(item)) {
-                    continue;
-                }
+            await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
-                var sample = await ReadValueAsync(item).ConfigureAwait(false);
+            await foreach (var tag in ResolveTags(context, request.Tags, cancellationToken).ConfigureAwait(false)) {
+                var sample = GetSnapshotTagValue(tag);
                 if (sample != null) {
                     yield return sample;
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Deletes the snapshot value for a tag.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that returns <see langword="true"/> if the value 
+        ///   for the tag was deleted, or <see langword="false"/> if the tag did not have a 
+        ///   snapshot value to delete.
+        /// </returns>
+        /// <exception cref="ObjectDisposedException">
+        ///   The <see cref="SnapshotTagValueManager"/> has been disposed.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        public async ValueTask<bool> DeleteSnapshotTagValueAsync(TagIdentifier tag, CancellationToken cancellationToken) {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+            if (tag == null) {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
+            await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            if (!_valuesById.TryRemove(tag.Id, out _)) {
+                return false;
+            }
+
+            await SaveTagsIdsAsync().ConfigureAwait(false);
+            await DeleteTagValueAsync(tag.Id).ConfigureAwait(false);
+
+            return true;
+        }
+
+
+        /// <inheritdoc/>
+        protected override async IAsyncEnumerable<TagIdentifier> ResolveTags(
+            IAdapterCallContext context,
+            IEnumerable<string> tags,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        ) {
+            if (Options.TagResolver == null) {
+                // No tag resolver defined; we will try and resolve using the in-memory values in
+                // the cache.
+                await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+                foreach (var value in _valuesById.Values.Where(x => tags.Contains(x.TagName, StringComparer.OrdinalIgnoreCase) || tags.Contains(x.TagId, StringComparer.OrdinalIgnoreCase))) {
+                    yield return new TagIdentifier(value.TagId, value.TagName);
+                }
+
+                yield break;
+            }
+
+            // Tag resolver defined; delegate to the base implementation.
+            await foreach (var item in base.ResolveTags(context, tags, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<bool> AddOrUpdateCachedValueAsync(TagIdentifier tag, TagValueQueryResult value, CancellationToken cancellationToken) {
+            await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+
+            var isNewValue = true;
+            _valuesById.AddOrUpdate(tag.Id, value, (id, val) => {
+                isNewValue = false;
+                return value;
+            });
+
+            await SaveTagValueAsync(value).ConfigureAwait(false);
+            if (isNewValue) {
+                await SaveTagsIdsAsync().ConfigureAwait(false);
+            }
+
+            return true;
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<TagValueQueryResult?> GetCachedValueAsync(TagIdentifier tag, CancellationToken cancellationToken) {
+            await _init.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            return GetSnapshotTagValue(tag);
+        }
+
+
+        /// <inheritdoc/>
+        protected override ValueTask<bool> RemoveCachedValueAsync(TagIdentifier tag, CancellationToken cancellationToken) {
+            // Always return false; cached values can only be deleted by explicit calls to
+            // DeleteSnapshotTagValueAsync.
+            return new ValueTask<bool>(false);
         }
 
 
@@ -211,7 +353,6 @@ namespace DataCore.Adapter.RealTimeData {
 
             if (disposing && !_disposed) {
                 _valuesById.Clear();
-                _valuesByName.Clear();
             }
 
             _disposed = true;
