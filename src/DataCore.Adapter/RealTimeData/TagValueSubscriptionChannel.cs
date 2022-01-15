@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 using DataCore.Adapter.Tags;
 
@@ -50,7 +51,7 @@ namespace DataCore.Adapter.RealTimeData {
             IBackgroundTaskService backgroundTaskService,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
-            Action cleanup,
+            Func<ValueTask> cleanup,
             int channelCapacity = 0
         ) : base(
             id,

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
-
-using DataCore.Adapter.Diagnostics;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -61,7 +56,7 @@ namespace DataCore.Adapter.Events {
             int id, 
             int channelCapacity,
             CancellationToken[] cancellationTokens, 
-            Action cleanup, 
+            Func<ValueTask> cleanup, 
             object? state
         ) {
             var request = (CreateEventMessageSubscriptionRequest) state!;
@@ -98,7 +93,7 @@ namespace DataCore.Adapter.Events {
             ValidationExtensions.ValidateObject(request);
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
-                var subscription = CreateSubscription<IEventMessagePush>(context, nameof(Subscribe), request, ctSource.Token);
+                var subscription = await CreateSubscriptionAsync<IEventMessagePush>(context, nameof(Subscribe), request, ctSource.Token).ConfigureAwait(false);
                 await foreach(var item in subscription.ReadAllAsync(ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
@@ -107,16 +102,16 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionAdded(EventSubscriptionChannel subscription) {
+        protected override async ValueTask OnSubscriptionAddedAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) {
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            base.OnSubscriptionAdded(subscription);
+            await base.OnSubscriptionAddedAsync(subscription, cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) { 
+        protected override async ValueTask OnSubscriptionCancelledAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) { 
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
-            base.OnSubscriptionCancelled(subscription);
+            await base.OnSubscriptionCancelledAsync(subscription, cancellationToken).ConfigureAwait(false);
         }
 
 
