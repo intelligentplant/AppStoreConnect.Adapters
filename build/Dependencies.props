@@ -50,7 +50,7 @@
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
     <CsvHelperVersion>22.1.2</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>8.0.1</IntelligentPlantBackgroundTasksVersion>
+    <IntelligentPlantBackgroundTasksVersion>8.1.0</IntelligentPlantBackgroundTasksVersion>
     <JaahasHttpRequestTransformerVersion>2.2.0</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <NitoAsyncExCoordinationVersion>5.1.2</NitoAsyncExCoordinationVersion>
