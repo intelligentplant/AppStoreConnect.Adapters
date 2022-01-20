@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AssetModel {
     ///   The <see cref="AssetModelManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public class AssetModelManager : IAssetModelBrowse, IAssetModelSearch, IDisposable {
+    public class AssetModelManager : IAssetModelBrowse, IAssetModelSearch, IFeatureHealthCheck, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -702,6 +702,17 @@ namespace DataCore.Adapter.AssetModel {
 
 
         /// <inheritdoc/>
+        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var data = new Dictionary<string, string>() {
+                [Resources.HealthChecks_Data_NodeCount] = _nodesById.Count.ToString(context?.CultureInfo)
+            };
+
+            var result = HealthCheckResult.Healthy(GetType().Name, data: data);
+            return Task.FromResult(result);
+        }
+
+
+        /// <inheritdoc/>
         public void Dispose() {
             if (_disposed) {
                 return;
@@ -715,5 +726,6 @@ namespace DataCore.Adapter.AssetModel {
 
             GC.SuppressFinalize(this);
         }
+
     }
 }

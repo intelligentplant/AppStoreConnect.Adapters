@@ -23,7 +23,7 @@ namespace DataCore.Adapter.Tags {
     ///   The <see cref="TagManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public class TagManager : ITagSearch, IDisposable {
+    public class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
         
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -506,6 +506,17 @@ namespace DataCore.Adapter.Tags {
                 }
                 yield return item;
             }
+        }
+
+
+        /// <inheritdoc/>
+        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
+            var data = new Dictionary<string, string>() {
+                [Resources.HealthChecks_Data_TagCount] = _tagsById.Count.ToString(context?.CultureInfo)
+            };
+
+            var result = HealthCheckResult.Healthy(GetType().Name, data: data);
+            return Task.FromResult(result);
         }
 
 
