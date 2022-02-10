@@ -136,7 +136,7 @@ private IAsyncEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<stri
 }
 ```
 
-If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.CompletedTask` to make the implementation asynchronous:
+If your implementation runs synchronously (e.g. if the return values are held in an in-memory collection), you can use `Task.Yield` to make the implementation asynchronous:
 
 ```csharp
 async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
@@ -147,7 +147,7 @@ async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotT
 ) {
     ValidateInvocation(context, request);
 
-    await Task.CompletedTask.ConfigureAwait(false);
+    await Task.Yield();
 
     using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
         foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
@@ -236,6 +236,8 @@ If your source implements some of these capabilities but not others, you can use
 
 
 ## Extension Features
+
+**WARNING: EXTENSION FEATURE IMPLEMENTATION WILL FEATURE MULTIPLE BREAKING CHANGES IN v3.0**
 
 > The [Writing an Extension Feature](/docs/tutorials/writing-an-extension-feature) tutorial provides a walk-through example of how to write an extension feature for an adapter.
 
