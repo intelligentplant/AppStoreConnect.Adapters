@@ -9,11 +9,11 @@
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" Version="$(_AdapterPackageVersion)" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" Version="$(_AdapterPackageVersion)" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" Version="$(_AdapterPackageVersion)" />
-    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.0.1" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc4" />
+    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="$(OpenTelemetryApiVersion)" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryHostingVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryInstrumentationVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryInstrumentationVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="$(OpenTelemetryInstrumentationVersion)" />
   </ItemGroup>
 
 </Project>
