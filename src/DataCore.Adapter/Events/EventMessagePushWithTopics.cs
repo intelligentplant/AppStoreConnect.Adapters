@@ -360,6 +360,9 @@ namespace DataCore.Adapter.Events {
         /// <param name="topics">.
         ///   The subscription topics
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   A task that will process the operation.
         /// </returns>
