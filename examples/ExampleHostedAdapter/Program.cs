@@ -6,7 +6,7 @@ using OpenTelemetry.Trace;
 [assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
 // The ID of the hosted adapter.
-const string AdapterId = "fdb421d7-03b2-49e8-880a-224e8e5f04ef";
+const string AdapterId = "$default";
 
 var builder = WebApplication.CreateBuilder(args);
 

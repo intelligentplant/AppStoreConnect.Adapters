@@ -11,9 +11,7 @@
   },
   "sourceName": "ExampleHostedAdapter",
   "preferNameDirectory": true,
-  "guids": [
-    "fdb421d7-03b2-49e8-880a-224e8e5f04ef"
-  ],
+  "guids": [],
   "symbols": {
     "Framework": {
       "type": "parameter",
