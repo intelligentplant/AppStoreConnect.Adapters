@@ -29,35 +29,22 @@ Alternatively, you can install the template from source by checking out this rep
 dotnet new --install .\
 ```
 
+# Creating an Adapter and Host using Visual Studio
 
-# Creating a Hosted Adapter using a Template
+Once the template package has been installed, search for `Industrial App Store` in Visual Studio's "Create a new project" window or choose `Industrial App Store` from the project types list:
 
-To create a new project for an adapter that is hosted using an ASP.NET Core application, run the following commands:
+![Visual Studio template selection window](./img/template_selection.png)
 
-```
-mkdir MyNewAdapter
-cd MyNewAdapter
-dotnet new aschostedadapter
-```
+After selecting the "Industrial App Store Connect Adapter Host" template, you will be prompted to select a project location and then optionally enter some details about your adapter that will be applied to the template:
 
-This will create a new adapter hosted in an ASP.NET Core application that App Store Connect can connect to using REST API calls, SignalR, or gRPC. The `README.md` file for the new project provides additional instructions for completing the setup.
+![Visual Studio template parameters window](./img/template_parameters.png)
 
-You can open the project in Visual Studio by double clicking it. In the future, you will be able to [use the template from inside Visual Studio](https://devblogs.microsoft.com/dotnet/net-cli-templates-in-visual-studio/).
+The template will create a new adapter hosted in a minimal API ASP.NET Core application that App Store Connect can connect to using REST API calls or SignalR. The `README.md` file for the new project provides additional information about the adapter.
 
 
-## Creating a Visual Studio Solution
+# Creating an Adapter and Host using `dotnet new`
 
-The above steps create a `.csproj` file and associated source files that can be compiled and run using the `dotnet` command. To create a Visual Studio solution file containing the project, you can follow these steps instead:
-
-Create solution file:
-
-```
-mkdir MyAdapterSolution
-cd MyAdapterSolution
-dotnet new sln
-```
-
-Create project:
+If you are not using Visual Studio, you can create a new C# project using the `dotnet new` command from the command line as follows:
 
 ```
 mkdir MyNewAdapter
@@ -65,24 +52,14 @@ cd MyNewAdapter
 dotnet new aschostedadapter
 ```
 
-Add project to solution:
+The template will create a new adapter hosted in a minimal API ASP.NET Core application that App Store Connect can connect to using REST API calls or SignalR. The `README.md` file for the new project provides additional information about the adapter.
 
-```
-cd ..
-dotnet sln add ./MyNewAdapter/MyNewAdapter.csproj
-```
 
 ## Specifying Project Parameters
 
 When creating the project, you can provide command line parameters to pre-populate some project properties. Run `dotnet new aschostedadapter --help` to see all of the available options. 
 
-Example:
-
-```
-# Specifies the local HTTPS port to use instead of randomly choosing a port.
-
-dotnet new aschostedadapter --port 43789
-```
+Examples:
 
 ```
 # Specifies adapter metadata.
