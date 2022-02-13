@@ -49,7 +49,6 @@ builder.Services
 // Register OpenTelemetry trace instrumentation. This can be safely removed if not required.
 builder.Services.AddOpenTelemetryTracing(otel => otel
     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(AdapterId))
-    .AddDataCoreAdapterInstrumentation() // Records requests made to the adapter.
     .AddAspNetCoreInstrumentation() // Records incoming HTTP requests made to the adapter host.
     .AddHttpClientInstrumentation() // Records outgoing HTTP requests made by the adapter host.
     .AddSqlClientInstrumentation() // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
