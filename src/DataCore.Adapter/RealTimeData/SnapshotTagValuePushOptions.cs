@@ -61,7 +61,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <para>
         /// It is generally not required to specify a value for this property. An example of when 
         /// it would be desirable to provide a delegate would be if you wanted to allow wildcard 
-        /// subscriptions, as the default implementation of <see cref="SnapshotTagValuePushBase.HasSubscribers"/> 
+        /// subscriptions, as the default implementation of <see cref="SnapshotTagValuePushBase.HasSubscribersAsync"/> 
         /// only checks to see if there is a subscription that exactly matches a given 
         /// <see cref="TagIdentifier"/>.
         /// </para>

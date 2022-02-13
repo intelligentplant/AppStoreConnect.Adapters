@@ -11,7 +11,7 @@
   
   <!-- Common build properties -->
   <PropertyGroup>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant Ltd.</Company>

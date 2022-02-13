@@ -7,7 +7,7 @@ namespace ExampleHostedAdapter {
     public class ExampleHostedAdapterOptions : AdapterOptions {
 
         // Add properties required to configure your adapter e.g. connection endpoints, 
-        // credentials, etc. The Startup.cs file is configured to bind adapter options
+        // credentials, etc. The Program.cs file is configured to bind adapter options
         // via the app configuration (e.g. appsettings.json).
 
     }

@@ -48,7 +48,7 @@ namespace DataCore.Adapter.Tags {
         /// <summary>
         /// The <see cref="IKeyValueStore"/> where the tag definitions are persisted.
         /// </summary>
-        private readonly IKeyValueStore _keyValueStore;
+        private readonly IKeyValueStore? _keyValueStore;
 
         /// <summary>
         /// Options for serializing/deserializing tags.
@@ -83,7 +83,8 @@ namespace DataCore.Adapter.Tags {
         /// Creates a new <see cref="TagManager"/> object.
         /// </summary>
         /// <param name="keyValueStore">
-        ///   The <see cref="IKeyValueStore"/> where the tag definitions will be persisted to.
+        ///   The <see cref="IKeyValueStore"/> where the tag definitions will be persisted to. 
+        ///   Specify <see langword="null"/> if persistence of tag definitions is not required.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the tag manager.
@@ -96,18 +97,14 @@ namespace DataCore.Adapter.Tags {
         ///   An optional callback that will be invoked when a tag is added, updated, or deleted.
         /// </param>
         public TagManager(
-            IKeyValueStore keyValueStore, 
+            IKeyValueStore? keyValueStore = null, 
             IBackgroundTaskService? backgroundTaskService = null, 
             IEnumerable<AdapterProperty>? tagPropertyDefinitions = null,
             Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
         ) {
-            if (keyValueStore == null) {
-                throw new ArgumentNullException(nameof(keyValueStore));
-            }
-
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
-            _keyValueStore = keyValueStore.CreateScopedStore("tag-manager:");
+            _keyValueStore = keyValueStore?.CreateScopedStore("tag-manager:");
 
             _tagPropertyDefinitions = tagPropertyDefinitions?.ToArray() ?? Array.Empty<AdapterProperty>();
             _initTask = new Lazy<Task>(() => InitAsyncCore(_disposedTokenSource.Token), LazyThreadSafetyMode.ExecutionAndPublication);
@@ -180,6 +177,11 @@ namespace DataCore.Adapter.Tags {
             ThrowOnDisposed();
 
             if (_isInitialised) {
+                return;
+            }
+
+            if (_keyValueStore == null) {
+                _isInitialised = true;
                 return;
             }
 
@@ -336,8 +338,10 @@ namespace DataCore.Adapter.Tags {
 
             await _initTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
 
-            // "tags:{id}" key contains the the definition with ID {id}.
-            await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
+            if (_keyValueStore != null) {
+                // "tags:{id}" key contains the the definition with ID {id}.
+                await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
+            }
 
             // Check if we are renaming the tag.
             if (_tagsById.TryGetValue(tag.Id, out var oldTag) && !string.Equals(oldTag.Name, tag.Name, StringComparison.OrdinalIgnoreCase)) {
@@ -362,8 +366,10 @@ namespace DataCore.Adapter.Tags {
             _tagsByName[tag.Name] = tag;
 
             if (indexHasChanged) {
-                // "tags" key contains an array of the defined tag IDs.
-                await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                if (_keyValueStore != null) {
+                    // "tags" key contains an array of the defined tag IDs.
+                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                }
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
             }
             else {
@@ -407,7 +413,9 @@ namespace DataCore.Adapter.Tags {
             }
 
             // "tags:{id}" key contains the the definition with ID {id}.
-            var result = await _keyValueStore.DeleteAsync(string.Concat("tags:", tag.Id)).ConfigureAwait(false);
+            var result = _keyValueStore == null 
+                ? true 
+                : await _keyValueStore.DeleteAsync(string.Concat("tags:", tag.Id)).ConfigureAwait(false);
 
             if (result) {
                 _tagsById.TryRemove(tag.Id, out _);
@@ -415,8 +423,10 @@ namespace DataCore.Adapter.Tags {
 
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
-                // "tags" key contains an array of the defined tag IDs.
-                await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                if (_keyValueStore != null) {
+                    // "tags" key contains an array of the defined tag IDs.
+                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                }
             }
 
             return result;
