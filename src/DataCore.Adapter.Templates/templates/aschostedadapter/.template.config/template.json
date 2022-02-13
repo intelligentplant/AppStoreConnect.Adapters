@@ -36,7 +36,7 @@
       "type": "parameter",
       "datatype": "text",
       "description": "The display name for the adapter type.",
-      "defaultValue": "My Adapter",
+      "defaultValue": "My Adapter Type",
       "replaces": "My Adapter"
     },
     "AdapterTypeNameUriSuffix": {
@@ -65,7 +65,7 @@
       "type": "parameter",
       "datatype": "text",
       "description": "The description for the adapter type.",
-      "defaultValue": "My App Store Connect adapter",
+      "defaultValue": "Adapter for connecting to system XYZ",
       "replaces": "A brief description of the adapter type"
     },
     "VendorName": {
