@@ -12,6 +12,14 @@ Different systems expose different features. For example, an MQTT broker can be 
 
 Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-, SignalR-, or [gRPC](https://grpc.io/)-based API. Hosting is also possible in other frameworks via gRPC (see notes at the end of this README).
 
+
+# Getting Started
+
+Install the project template for creating App Store Connect adapters for Visual Studio 2022, Visual Studio 2019, and the [dotnet new](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new) command by following the instructions [here](/src/DataCore.Adapter.Templates).
+
+Using the project template, you can easily create a working adapter in just a couple of minutes. See [here](/docs/writing-an-adapter.md) for information about writing an adapter.
+
+
 # Summary of Projects
 
 Some of the core projects in the repository are:
@@ -81,69 +89,16 @@ Package versions are defined in a [common build properties file](/build/Dependen
 See [here](/docs/writing-an-adapter.md) for information about writing an adapter.
 
 
-# ASP.NET Core Hosting Quick Start
-
-> An alternative to following the instructions below is to generate a project from a template using the `dotnet new` command. See [here](/src/DataCore.Adapter.Templates) for more information.
-
-1. Create a new ASP.NET Core project.
-2. Add NuGet package references to [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc) and [IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) to your project.
-3. Implement an [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) that can communicate with the system you want to connect App Store Connect to. Detailed information is available [here](/docs/writing-an-adapter.md).
-4. If you want to apply authorization policies to the adapter or to individual adapter features, extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class. More details are available [here](/src/DataCore.Adapter.AspNetCore.Common/README.md).
-5. In your `Startup.cs` file, configure adapter services in the `ConfigureServices` method:
-
-```csharp
-// Register the adapter and required services.
-
-services
-    .AddDataCoreAdapterAspNetCoreServices()
-    .AddHostInfo(HostInfo.Create(
-        "My Host",
-        "A brief description of the hosting application",
-        "0.9.0-alpha", // SemVer v2
-        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-        AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-    ))
-    .AddAdapter<MyAdapter>();
-    //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-
-// To add authentication and authorization for adapter API operations, extend 
-// the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
-// above to register your handler.
-
-// Add the adapter API controllers to the MVC registration.
-
-services.AddMvc()
-    .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-    .AddDataCoreAdapterMvc();
-
-// Add the adapter hub to the SignalR registration.
-services
-    .AddSignalR()
-    .AddDataCoreAdapterSignalR();
-```
-
-6. In your `Startup.cs` file, add adapter Web API controller and SignalR hub endpoints in the `Configure` method:
-
-```csharp
-app.UseRouting();
-
-app.UseEndpoints(endpoints => {
-    endpoints.MapControllers();
-    endpoints.MapDataCoreAdapterHubs();
-});
-```
-
-
 # Authentication
 
-App Store Connect can authenticate with adapter hosts via bearer token, client certificate, or Windows authentication. Adapter hosts can of course apply any authentication schemes that are valid in the host framework!
+App Store Connect can authenticate with adapter hosts via bearer token, client certificate, or Windows authentication.
 
 
 # Authorization
 
 App Store Connect applies its own authorization before dispatching queries to an adapter, so a given Industrial App Store user will only be able to access data if they have been granted the appropriate permissions in App Store Connect.
 
-To implement authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services in your startup file. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
+To implement authorization in an ASP.NET Core host application, you can extend the [FeatureAuthorizationHandler](/src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) class and register it when configuring adapter services at startup time. Your class then be automatically detected and used by the default `IAdapterAuthorizationService` implementation:
 
 ```csharp
 services
@@ -155,42 +110,8 @@ services
 Additionally, all methods on adapter feature interfaces are passed an [IAdapterCallContext](/src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) object containing (among other things) the identity of the calling user. Adapters can apply their own custom authorization based on this information e.g. to apply per-tag authorization on historical tag data queries.
 
 
-# Telemetry
-
-Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The activity source name is defined using the `DiagnosticSourceName` constant in the [ActivitySourceExtensions](/src/DataCore.Adapter.OpenTelemetry/ActivitySourceExtensions.cs) class in the [DataCore.Adapter.OpenTelemetry](/src/DataCore.Adapter.OpenTelemetry) project. The `ActivitySource` instance itself is defined on the `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class in the [DataCore.Adapter](/src/DataCore.Adapter) project.
-
-Traces can be enabled and collected using the packages provided by the [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-dotnet) project.
-
-For example, to enable trace collection and export to the console from an ASP.NET Core application that is hosting adapters via API controllers, SignalR, or gRPC:
-
-1. Add references to the following NuGet packages: 
-    - [OpenTelemetry.Extensions.Hosting](https://www.nuget.org/packages/OpenTelemetry.Extensions.Hosting)
-    - [OpenTelemetry.Instrumentation.AspNetCore](https://www.nuget.org/packages/OpenTelemetry.Instrumentation.AspNetCore)
-    - [OpenTelemetry.Exporter.Console](https://www.nuget.org/packages/OpenTelemetry.Exporter.Console)
-    - [IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry](IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry).
-2. Add the following code to your `ConfigureServices` method in your `Startup` class:
-
-```csharp
-// Add OpenTelemetry tracing
-services.AddOpenTelemetryTracing(builder => {
-    builder
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("My Application"))
-        .AddAspNetCoreInstrumentation()
-        .AddDataCoreAdapterInstrumentation()
-        .AddConsoleExporter();
-});
-```
-
-To export to another destination (e.g. [Jaeger](https://www.jaegertracing.io/)), follow the instructions on the [OpenTelemetry GitHub repository](https://github.com/open-telemetry/opentelemetry-dotnet).
-
-
 # Building
 
 Run [build.ps1](./build.ps1) or [build.sh](./build.sh) to bootstrap and build the solution using [Cake](https://cakebuild.net/).
 
 Signing of assemblies (by specifying the `--sign-output` flag when running the build script) requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
-
-
-# Development and Hosting Without .NET
-
-If you want to write and host an adapter without using .NET, you can expose your adapter via [gRPC](https://grpc.io/). Protobuf definitions for the gRPC adapter services can be found [here](/src/Protos). Additionally, the [swagger.json](/swagger.json) specification can be used to build a compatible HTTP API using the framework of your choice.

@@ -3,7 +3,7 @@
   "author": "Intelligent Plant",
   "classifications": [ "Industrial App Store", "Web", "MVC", "IoT" ],
   "identity": "IntelligentPlant.AppStoreConnect.Adapter.AppStoreConnectAdapterHost",
-  "name": "Industrial App Store Connect Adapter Host (ASP.NET Core)",
+  "name": "Industrial App Store Connect Adapter Host",
   "shortName": "aschostedadapter",
   "tags": {
     "language": "C#",
@@ -11,9 +11,7 @@
   },
   "sourceName": "ExampleHostedAdapter",
   "preferNameDirectory": true,
-  "guids": [
-    "fdb421d7-03b2-49e8-880a-224e8e5f04ef"
-  ],
+  "guids": [],
   "symbols": {
     "Framework": {
       "type": "parameter",
@@ -38,7 +36,7 @@
       "type": "parameter",
       "datatype": "text",
       "description": "The display name for the adapter type.",
-      "defaultValue": "My Adapter",
+      "defaultValue": "My Adapter Type",
       "replaces": "My Adapter"
     },
     "AdapterTypeNameUriSuffix": {
@@ -67,7 +65,7 @@
       "type": "parameter",
       "datatype": "text",
       "description": "The description for the adapter type.",
-      "defaultValue": "My App Store Connect adapter",
+      "defaultValue": "Adapter for connecting to system XYZ",
       "replaces": "A brief description of the adapter type"
     },
     "VendorName": {

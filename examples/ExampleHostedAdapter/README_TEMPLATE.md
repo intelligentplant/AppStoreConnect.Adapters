@@ -36,7 +36,7 @@ You can connect to the adapter host using REST API calls or SignalR. Use SignalR
 To connect a local App Store Connect instance to your adapter using the REST API, configure a new `App Store Connect Adapter (HTTP Proxy)` data source in the App Store Connect UI, using the following settings:
 
 - `Address`: https://localhost:44300/
-- `Adapter ID`: fdb421d7-03b2-49e8-880a-224e8e5f04ef
+- `Adapter ID`: $default
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
 
@@ -46,6 +46,6 @@ Note that you must disable SSL certificate verification during local development
 To connect a local App Store Connect instance to your adapter using an ASP.NET Core SignalR proxy, configure a new `App Store Connect Adapter (SignalR Proxy)` data source in the App Store Connect UI, using the following settings:
 
 - `Address`: https://localhost:44300/
-- `Adapter ID`: fdb421d7-03b2-49e8-880a-224e8e5f04ef
+- `Adapter ID`: $default
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.

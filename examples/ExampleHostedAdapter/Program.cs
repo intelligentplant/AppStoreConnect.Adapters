@@ -6,7 +6,7 @@ using OpenTelemetry.Trace;
 [assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
 // The ID of the hosted adapter.
-const string AdapterId = "fdb421d7-03b2-49e8-880a-224e8e5f04ef";
+const string AdapterId = "$default";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,7 +49,6 @@ builder.Services
 // Register OpenTelemetry trace instrumentation. This can be safely removed if not required.
 builder.Services.AddOpenTelemetryTracing(otel => otel
     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(AdapterId))
-    .AddDataCoreAdapterInstrumentation() // Records requests made to the adapter.
     .AddAspNetCoreInstrumentation() // Records incoming HTTP requests made to the adapter host.
     .AddHttpClientInstrumentation() // Records outgoing HTTP requests made by the adapter host.
     .AddSqlClientInstrumentation() // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
