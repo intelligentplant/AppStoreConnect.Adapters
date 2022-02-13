@@ -10,13 +10,16 @@ const string AdapterId = "$default";
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
+    .AddLocalization();
+
+builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(
         name: "ASP.NET Core Minimal API Example",
         description: "Example ASP.NET Core adapter host using minimal API syntax"
      )
     .AddServices(svc => svc.Configure<WaveGeneratorAdapterOptions>(
-        builder.Configuration.GetSection($"AppStoreConnect:Adapter:Settings")
+        builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
      ))
     .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGeneratorAdapter>(sp, AdapterId));
 
@@ -37,13 +40,25 @@ builder.Services
     .AddAdapterHealthChecks();
 
 builder.Services.AddOpenTelemetryTracing(otel => otel
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Adapter API"))
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(System.Net.Dns.GetHostName()))
     .AddAspNetCoreInstrumentation()
     .AddDataCoreAdapterInstrumentation()
     .AddJaegerExporter()
     .AddConsoleExporter());
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment()) {
+    app.UseDeveloperExceptionPage();
+}
+else {
+    // The default HSTS value is 30 days. You may want to change this for production
+    // scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseRequestLocalization();
 
 app.MapControllers();
 app.MapDataCoreAdapterHubs();
