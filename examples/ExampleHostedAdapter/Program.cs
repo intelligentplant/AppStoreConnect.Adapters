@@ -41,20 +41,29 @@ builder.Services
 builder.Services
     .AddGrpc();
 
-// Register adapter health checks.
+// Register adapter health checks. See https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks
+// for more information about ASP.NET Core health checks.
 builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
 // Register OpenTelemetry trace instrumentation. This can be safely removed if not required.
 builder.Services.AddOpenTelemetryTracing(otel => otel
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(AdapterId))
-    .AddAspNetCoreInstrumentation() // Records incoming HTTP requests made to the adapter host.
-    .AddHttpClientInstrumentation() // Records outgoing HTTP requests made by the adapter host.
-    .AddSqlClientInstrumentation() // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
-    .AddDataCoreAdapterInstrumentation() // Records activities created by adapters and adapter hosting packages.
-    .AddJaegerExporter()); // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
+    // Specify an OpenTelemetry service instance ID in AddDataCoreAdapterApiService below to
+    // override the use of the DNS host name for the local machine.
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
+    // Records incoming HTTP requests made to the adapter host.
+    .AddAspNetCoreInstrumentation()
+    // Records outgoing HTTP requests made by the adapter host.
+    .AddHttpClientInstrumentation()
+    // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
+    .AddSqlClientInstrumentation()
+    // Records activities created by adapters and adapter hosting packages.
+    .AddDataCoreAdapterInstrumentation()
+    // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
+    .AddJaegerExporter());
 
+// Build the app and the request pipeline.
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment()) {

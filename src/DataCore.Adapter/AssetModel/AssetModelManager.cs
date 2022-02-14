@@ -38,7 +38,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The <see cref="IKeyValueStore"/> where the node definitions are persisted.
         /// </summary>
-        private readonly IKeyValueStore _keyValueStore;
+        private readonly IKeyValueStore? _keyValueStore;
 
         /// <summary>
         /// Options for serializing/deserializing nodes.
@@ -83,7 +83,8 @@ namespace DataCore.Adapter.AssetModel {
         /// Creates a new <see cref="AssetModelManager"/> object.
         /// </summary>
         /// <param name="keyValueStore">
-        ///   The <see cref="IKeyValueStore"/> where the nodes will be persisted to.
+        ///   The <see cref="IKeyValueStore"/> where the nodes will be persisted to. Specify 
+        ///   <see langword="null"/> if persistence is not required.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the asset model manager.
@@ -95,19 +96,15 @@ namespace DataCore.Adapter.AssetModel {
         ///   An optional <see cref="IComparer{T}"/> for sorting node names.
         /// </param>
         public AssetModelManager(
-            IKeyValueStore keyValueStore,
+            IKeyValueStore? keyValueStore = null,
             IBackgroundTaskService? backgroundTaskService = null,
             Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
             IComparer<string>? nodeNameComparer = null
         ) {
-            if (keyValueStore == null) {
-                throw new ArgumentNullException(nameof(keyValueStore));
-            }
-
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
             _nodeNameComparer = nodeNameComparer ?? StringComparer.OrdinalIgnoreCase;
-            _keyValueStore = keyValueStore.CreateScopedStore("asset-model-manager:");
+            _keyValueStore = keyValueStore?.CreateScopedStore("asset-model-manager:");
 
             _jsonOptions.AddDataCoreAdapterConverters();
 
@@ -187,7 +184,10 @@ namespace DataCore.Adapter.AssetModel {
             _nodesById.Clear();
 
             // "nodes" key contains an array of the defined node IDs.
-            var readResult = await _keyValueStore.ReadJsonAsync<string[]>("nodes", _jsonOptions).ConfigureAwait(false);
+            var readResult = _keyValueStore == null 
+                ? null 
+                : await _keyValueStore.ReadJsonAsync<string[]>("nodes", _jsonOptions).ConfigureAwait(false);
+            
             if (cancellationToken.IsCancellationRequested) {
                 return;
             }
@@ -205,7 +205,7 @@ namespace DataCore.Adapter.AssetModel {
                     }
 
                     // "nodes:{id}" key contains the the definition with ID {id}.
-                    var nodeReadResult = await _keyValueStore.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId), _jsonOptions).ConfigureAwait(false);
+                    var nodeReadResult = await _keyValueStore!.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId), _jsonOptions).ConfigureAwait(false);
                     if (nodeReadResult == null) {
                         continue;
                     }
@@ -358,8 +358,10 @@ namespace DataCore.Adapter.AssetModel {
             }
 
             try {
-                // "nodes:{id}" key contains the definition with ID {id}.
-                await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node, _jsonOptions).ConfigureAwait(false);
+                if (_keyValueStore != null) {
+                    // "nodes:{id}" key contains the definition with ID {id}.
+                    await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node, _jsonOptions).ConfigureAwait(false);
+                }
 
                 // Flags if the keys in _nodesById have been modified by this operation. We will
                 // assume that they have by default, and then set to false if we are doing an
@@ -375,8 +377,10 @@ namespace DataCore.Adapter.AssetModel {
                 });
 
                 if (indexHasChanged) {
-                    // "nodes" key contains an array of the defined node IDs.
-                    await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    if (_keyValueStore != null) {
+                        // "nodes" key contains an array of the defined node IDs.
+                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    }
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
                 }
                 else {
@@ -481,14 +485,18 @@ namespace DataCore.Adapter.AssetModel {
             }
 
             try {
-                // "nodes:{id}" key contains the definition with ID {id}.
-                var result = await _keyValueStore.DeleteAsync(string.Concat("nodes:", node.Id)).ConfigureAwait(false);
+                var result = _keyValueStore == null 
+                    ? true
+                    // "nodes:{id}" key contains the definition with ID {id}.
+                    : await _keyValueStore.DeleteAsync(string.Concat("nodes:", node.Id)).ConfigureAwait(false);
 
                 if (result) {
                     _nodesById.TryRemove(node.Id, out _);
 
-                    // "nodes" key contains an array of the defined node IDs.
-                    await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    if (_keyValueStore != null) {
+                        // "nodes" key contains an array of the defined node IDs.
+                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    }
 
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
