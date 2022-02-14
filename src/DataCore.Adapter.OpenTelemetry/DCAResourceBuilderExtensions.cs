@@ -23,7 +23,8 @@ namespace OpenTelemetry.Resources {
         ///   The <see cref="ResourceBuilder"/>.
         /// </param>
         /// <param name="serviceInstanceId">
-        ///   The instance ID for the service.
+        ///   The instance ID for the service. Specify <see langword="null"/> to use the DNS host 
+        ///   name of the local machine.
         /// </param>
         /// <returns>
         ///   The <see cref="ResourceBuilder"/>.
@@ -32,7 +33,7 @@ namespace OpenTelemetry.Resources {
             return builder.AddService(
                 serviceName: AdapterApiServiceName, 
                 serviceVersion: Assembly.GetEntryAssembly().GetInformationalVersion(), 
-                serviceInstanceId: serviceInstanceId
+                serviceInstanceId: serviceInstanceId ?? System.Net.Dns.GetHostName()
             );
         }
 
