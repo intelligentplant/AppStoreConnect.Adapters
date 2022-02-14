@@ -40,7 +40,7 @@ builder.Services
     .AddAdapterHealthChecks();
 
 builder.Services.AddOpenTelemetryTracing(otel => otel
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(System.Net.Dns.GetHostName()))
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
     .AddAspNetCoreInstrumentation()
     .AddDataCoreAdapterInstrumentation()
     .AddJaegerExporter()
