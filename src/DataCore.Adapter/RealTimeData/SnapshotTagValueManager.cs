@@ -19,7 +19,7 @@ namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// <see cref="IReadSnapshotTagValues"/> and <see cref="ISnapshotTagValuePush"/> provider that 
-    /// uses an <see cref="IKeyValueStore"/> to persist snapshot tag values between adapter or host 
+    /// can an <see cref="IKeyValueStore"/> to persist snapshot tag values between adapter or host 
     /// restarts.
     /// </summary>
     public class SnapshotTagValueManager : SnapshotTagValuePushBase, IReadSnapshotTagValues {
@@ -32,7 +32,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The <see cref="IKeyValueStore"/> to use.
         /// </summary>
-        private readonly IKeyValueStore _keyValueStore;
+        private readonly IKeyValueStore? _keyValueStore;
 
         /// <summary>
         /// Options for serializing/deserializing tag values.
@@ -60,22 +60,19 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The <see cref="IBackgroundTaskService"/> to use when running snapshot subscriptions.
         /// </param>
         /// <param name="keyValueStore">
-        ///   The <see cref="IKeyValueStore"/> to persist snapshot values to.
+        ///   The <see cref="IKeyValueStore"/> to persist snapshot values to. Specify 
+        ///   <see langword="null"/> if persistence of tag values is not required.
         /// </param>
         /// <param name="logger">
         ///   The <see cref="ILogger"/> to use.
         /// </param>
         public SnapshotTagValueManager(
-            SnapshotTagValueManagerOptions? options,
-            IBackgroundTaskService? backgroundTaskService,
-            IKeyValueStore keyValueStore,
-            ILogger? logger
+            SnapshotTagValueManagerOptions? options = null,
+            IBackgroundTaskService? backgroundTaskService = null,
+            IKeyValueStore? keyValueStore = null,
+            ILogger? logger = null
         ) : base(options, backgroundTaskService, logger) {
-            if (keyValueStore == null) {
-                throw new ArgumentNullException(nameof(keyValueStore));
-            }
-
-            _keyValueStore = keyValueStore.CreateScopedStore("snapshot-tag-value-manager:");
+            _keyValueStore = keyValueStore?.CreateScopedStore("snapshot-tag-value-manager:");
             _jsonOptions.AddDataCoreAdapterConverters();
 
             _init = new Lazy<Task>(() => InitAsync(DisposedToken), LazyThreadSafetyMode.ExecutionAndPublication);
@@ -120,6 +117,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask{TResult}"/> that will return the tag IDs.
         /// </returns>
         private async ValueTask<string[]?> LoadTagsIdsAsync() {
+            if (_keyValueStore == null) {
+                return null;
+            }
             return await _keyValueStore.ReadJsonAsync<string[]>("tags", _jsonOptions).ConfigureAwait(false);
         }
 
@@ -131,6 +131,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask"/> that will save the tag IDs.
         /// </returns>
         private async ValueTask SaveTagsIdsAsync() {
+            if (_keyValueStore == null) {
+                return;
+            }
             await _keyValueStore.WriteJsonAsync("tags", _valuesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
         }
 
@@ -145,6 +148,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask{TResult}"/> that will return the value.
         /// </returns>
         private async ValueTask<TagValueQueryResult?> LoadTagValueAsync(string tagId) {
+            if (_keyValueStore == null) {
+                return null;
+            }
             return await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
         }
 
@@ -159,6 +165,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask"/> that will save the value.
         /// </returns>
         private async ValueTask SaveTagValueAsync(TagValueQueryResult value) {
+            if (_keyValueStore == null) {
+                return;
+            }
             await _keyValueStore.WriteJsonAsync($"value:{value.TagId}", value, _jsonOptions).ConfigureAwait(false);
         }
 
@@ -173,6 +182,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A <see cref="ValueTask"/> that will delete the value.
         /// </returns>
         private async ValueTask DeleteTagValueAsync(string tagId) {
+            if (_keyValueStore == null) {
+                return;
+            }
             await _keyValueStore.DeleteAsync($"value:{tagId}").ConfigureAwait(false);
         }
 
