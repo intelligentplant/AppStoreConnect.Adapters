@@ -40,7 +40,7 @@ public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
 ) {
     ValidateInvocation(context, request);
 
-    await Task.CompletedTask.ConfigureAwait(false);
+    await Task.Yield();
 
     var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
@@ -83,7 +83,7 @@ The `ValidateInvocation` method is inherited from our base class. It will throw 
 Next, we `await` on `Task.CompletedTask`:
 
 ```csharp
-await Task.CompletedTask.ConfigureAwait(false);
+await Task.Yield();
 ```
 
 This step is only necessary to satisfy compiler warning `CS1998`, as the rest of our implementation is actually synchronous; if we were `await`-ing on another call inside our method, it would not be required.

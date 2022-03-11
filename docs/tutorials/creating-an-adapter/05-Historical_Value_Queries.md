@@ -21,7 +21,7 @@ If you are interfacing with an industrial plant historian, the historian may alr
 To start off, we will update our adapter class to declare that it implements `IReadRawTagValues`:
 
 ```csharp
-public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
+public class Adapter : AdapterBase, IReadSnapshotTagValues, IReadRawTagValues {
     // -- snip --
 }
 ```
@@ -37,8 +37,6 @@ Next, we will implement the `ReadRawTagValues` method:
         ) {
             ValidateInvocation(context, request);
 
-            await Task.CompletedTask.ConfigureAwait(false);
-
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
                     if (ctSource.Token.IsCancellationRequested) {
@@ -47,7 +45,8 @@ Next, we will implement the `ReadRawTagValues` method:
                     if (string.IsNullOrWhiteSpace(tag)) {
                         continue;
                     }
-                    if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+                    var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                    if (tagDef == null) {
                         continue;
                     }
 
@@ -60,7 +59,7 @@ Next, we will implement the `ReadRawTagValues` method:
                         if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
                             continue;
                         }
-                        yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+                        yield return CalculateValueForTag(tagDef, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
                     } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
                 }
             }
@@ -84,7 +83,7 @@ do {
     if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
         continue;
     }
-    yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+    yield return CalculateValueForTag(tagDef, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
 } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
 ```
 
@@ -110,6 +109,13 @@ public Adapter(
     backgroundTaskService, 
     logger
 ) {
+    _tagManager = new TagManager(
+        backgroundTaskService: BackgroundTaskService,
+        tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+    );
+
+    AddFeatures(_tagManager);
+
     AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
         AdapterId = id,
         PollingInterval = TimeSpan.FromSeconds(1),
