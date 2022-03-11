@@ -87,7 +87,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// An action to perform when the subscription is cancelled or disposed.
         /// </summary>
-        private readonly Action _cleanup;
+        private readonly Func<ValueTask> _cleanup;
 
         /// <summary>
         /// Registeration of <see cref="_cleanup"/> with <see cref="_cancellationTokenSource"/>.
@@ -131,7 +131,7 @@ namespace DataCore.Adapter {
             IBackgroundTaskService backgroundTaskService,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
-            Action cleanup,
+            Func<ValueTask> cleanup,
             int channelCapacity = 0
         ) {
             Id = id;
@@ -164,12 +164,14 @@ namespace DataCore.Adapter {
                 : CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens);
             CancellationToken = _cancellationTokenSource.Token;
 
-            _cleanup = () => {
+            _cleanup = async () => {
                 _inChannel.Writer.TryComplete();
                 _outChannel.Writer.TryComplete();
-                cleanup?.Invoke();
+                if (cleanup != null) { 
+                    await cleanup.Invoke().ConfigureAwait(false);
+                };
             };
-            _ctRegistration = CancellationToken.Register(_cleanup);
+            _ctRegistration = CancellationToken.Register(() => backgroundTaskService.QueueBackgroundWorkItem(async ct => await _cleanup.Invoke().ConfigureAwait(false)));
 
             backgroundTaskService.QueueBackgroundWorkItem(RunIngressLoop, null, true, CancellationToken);
 

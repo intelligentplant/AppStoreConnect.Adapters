@@ -40,7 +40,7 @@ public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
 ) {
     ValidateInvocation(context, request);
 
-    await Task.CompletedTask.ConfigureAwait(false);
+    await Task.Yield();
 
     var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
@@ -80,10 +80,10 @@ ValidateInvocation(context, request);
 
 The `ValidateInvocation` method is inherited from our base class. It will throw an exception if the context or request objects are `null`, or if the request object fails validation using the [System.Componentmodel.DataAnnotations.Validator](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validator) class.
 
-Next, we `await` on `Task.CompletedTask`:
+Next, we `await` on `Task.Yield()`:
 
 ```csharp
-await Task.CompletedTask.ConfigureAwait(false);
+await Task.Yield();
 ```
 
 This step is only necessary to satisfy compiler warning `CS1998`, as the rest of our implementation is actually synchronous; if we were `await`-ing on another call inside our method, it would not be required.

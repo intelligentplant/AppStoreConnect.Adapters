@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,11 +15,9 @@ using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 
 namespace MyAdapter {
-    public class Adapter : AdapterBase<MyAdapterOptions>, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
+    public class Adapter : AdapterBase<MyAdapterOptions>, IReadSnapshotTagValues, IReadRawTagValues {
 
-        private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
-
-        private readonly ConcurrentDictionary<string, TagDefinition> _tagsByName = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
+        private readonly TagManager _tagManager;
 
 
         public Adapter(
@@ -35,6 +31,13 @@ namespace MyAdapter {
             backgroundTaskService, 
             logger
         ) {
+            _tagManager = new TagManager(
+                backgroundTaskService: BackgroundTaskService,
+                tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+            );
+
+            AddFeatures(_tagManager);
+
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
                 AdapterId = id,
                 PollingInterval = TimeSpan.FromSeconds(1),
@@ -50,7 +53,7 @@ namespace MyAdapter {
         }
 
 
-        private void CreateTags() {
+        private async Task CreateTagsAsync(CancellationToken cancellationToken) {
             var i = 0;
             foreach (var waveType in new[] { "Sinusoid", "Sawtooth", "Square", "Triangle" }) {
                 ++i;
@@ -63,15 +66,8 @@ namespace MyAdapter {
                     .WithProperties(CreateWaveTypeProperty(waveType))
                     .Build();
 
-                _tagsById[tag.Id] = tag;
-                _tagsByName[tag.Name] = tag;
+                await _tagManager.AddOrUpdateTagAsync(tag, cancellationToken).ConfigureAwait(false);
             }
-        }
-
-
-        private void DeleteTags() {
-            _tagsById.Clear();
-            _tagsByName.Clear();
         }
 
 
@@ -141,15 +137,13 @@ namespace MyAdapter {
         }
 
 
-        protected override Task StartAsync(CancellationToken cancellationToken) {
-            CreateTags();
+        protected override async Task StartAsync(CancellationToken cancellationToken) {
+            await CreateTagsAsync(cancellationToken).ConfigureAwait(false);
             AddProperty("Startup Time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-            return Task.CompletedTask;
         }
 
 
         protected override Task StopAsync(CancellationToken cancellationToken) {
-            DeleteTags();
             return Task.CompletedTask;
         }
 
@@ -164,70 +158,6 @@ namespace MyAdapter {
         }
 
 
-        public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
-            IAdapterCallContext context,
-            GetTagPropertiesRequest request,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
-
-            foreach (var item in new[] { CreateWaveTypeProperty(null) }.OrderBy(x => x.Name).SelectPage(request)) {
-                yield return item;
-            }
-        }
-
-
-        public async IAsyncEnumerable<TagDefinition> GetTags(
-            IAdapterCallContext context,
-            GetTagsRequest request,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
-
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                foreach (var tag in request.Tags) {
-                    if (ctSource.Token.IsCancellationRequested) {
-                        break;
-                    }
-                    if (string.IsNullOrWhiteSpace(tag)) {
-                        continue;
-                    }
-
-                    if (_tagsById.TryGetValue(tag, out var t) || _tagsByName.TryGetValue(tag, out t)) {
-                        yield return t;
-                    }
-                }
-            }
-        }
-
-
-        public async IAsyncEnumerable<TagDefinition> FindTags(
-            IAdapterCallContext context,
-            FindTagsRequest request,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
-
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                foreach (var tag in _tagsById.Values.ApplyFilter(request)) {
-                    if (ctSource.Token.IsCancellationRequested) {
-                        break;
-                    }
-                    yield return tag;
-                }
-            }
-        }
-
-
         public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context,
             ReadSnapshotTagValuesRequest request,
@@ -235,8 +165,6 @@ namespace MyAdapter {
             CancellationToken cancellationToken
         ) {
             ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
 
             var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 
@@ -248,11 +176,12 @@ namespace MyAdapter {
                     if (string.IsNullOrWhiteSpace(tag)) {
                         continue;
                     }
-                    if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+                    var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                    if (tagDef == null) {
                         continue;
                     }
 
-                    yield return CalculateValueForTag(t, sampleTime);
+                    yield return CalculateValueForTag(tagDef, sampleTime);
                 }
             }
         }
@@ -266,8 +195,6 @@ namespace MyAdapter {
         ) {
             ValidateInvocation(context, request);
 
-            await Task.CompletedTask.ConfigureAwait(false);
-
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
                     if (ctSource.Token.IsCancellationRequested) {
@@ -276,7 +203,8 @@ namespace MyAdapter {
                     if (string.IsNullOrWhiteSpace(tag)) {
                         continue;
                     }
-                    if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+                    var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                    if (tagDef == null) {
                         continue;
                     }
 
@@ -289,7 +217,7 @@ namespace MyAdapter {
                         if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
                             continue;
                         }
-                        yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+                        yield return CalculateValueForTag(tagDef, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
                     } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
                 }
             }

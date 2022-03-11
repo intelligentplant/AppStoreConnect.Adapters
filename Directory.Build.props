@@ -11,7 +11,7 @@
   
   <!-- Common build properties -->
   <PropertyGroup>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Intelligent Plant</Authors>
     <Company>Intelligent Plant Ltd.</Company>
@@ -30,7 +30,7 @@
     building via build.ps1 or build.sh. It is defined here to allow Visual Studio to build with 
     the solution with the correct version number.
     -->
-    <Version>2.3.1</Version>
+    <Version>2.4.0-rc1</Version>
   </PropertyGroup>
 
   <Choose>

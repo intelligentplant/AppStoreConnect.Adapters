@@ -17,7 +17,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public class FasterKeyValueStore : IKeyValueStore, IDisposable, IAsyncDisposable {
+    public class FasterKeyValueStore : KeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -29,11 +29,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        private readonly ILogger _logger;
 
         /// <summary>
         /// Indicates if trace logging can be performed.
@@ -60,11 +55,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// the store.
         /// </summary>
         private readonly ConcurrentQueue<ClientSession<SpanByte, SpanByte, SpanByte, SpanByteAndMemory, Empty, SpanByteFunctions<Empty>>> _sessionPool = new();
-
-        /// <summary>
-        /// Serializer for store values.
-        /// </summary>
-        private readonly IFasterKeyValueStoreSerializer _serializer;
 
         /// <summary>
         /// Flags if the store should run in read-only mode.
@@ -116,13 +106,12 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) {
+        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) : base(options, logger) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _logger = (ILogger) logger! ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            _logTrace = _logger.IsEnabled(LogLevel.Trace);
+            _logTrace = Logger.IsEnabled(LogLevel.Trace);
 
             var logSettings = CreateLogSettings(options);
 
@@ -130,7 +119,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             var checkpointManager = options.CheckpointManagerFactory?.Invoke();
             if (checkpointManager == null) {
-                _logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
+                Logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
             }
 
             _fasterKVStore = new FasterKV<SpanByte, SpanByte>(
@@ -142,7 +131,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             );
 
             _clientSessionBuilder = _fasterKVStore.For(new SpanByteFunctions<Empty>());
-            _serializer = options.Serializer ?? new JsonFasterKeyValueStoreSerializer();
             _readOnly = options.ReadOnly;
 
             if (checkpointManager != null) {
@@ -151,7 +139,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (FasterException e) {
                     // Exception will be thrown if there is not a checkpoint to recover from.
-                    _logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
+                    Logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
                 }
 
                 _canRecordCheckpoints = !_readOnly;
@@ -261,7 +249,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    _logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                    Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
                 }
             }
         }
@@ -354,12 +342,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     var safeReadOnlyRegionByteSize = logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress;
                     if (safeReadOnlyRegionByteSize < _logCompactionThresholdBytes) {
                         if (_logTrace) {
-                            _logger.LogTrace(string.Format(
-                                CultureInfo.CurrentCulture,
+                            Logger.LogTrace(
                                 Resources.Log_SkippingLogCompaction, 
                                 safeReadOnlyRegionByteSize, 
                                 _logCompactionThresholdBytes
-                            ));
+                            );
                         }
                         _numConsecutiveLogCompactions = 0;
                         continue;
@@ -379,31 +366,29 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     _numConsecutiveLogCompactions++;
 
                     if (_logTrace) {
-                        _logger.LogTrace(string.Format(
-                            CultureInfo.CurrentCulture,
+                        Logger.LogTrace(
                             Resources.Log_LogCompacted,
                             safeReadOnlyRegionByteSize,
                             logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress,
                             _numConsecutiveLogCompactions
-                        ));
+                        );
                     }
 
                     if (_numConsecutiveLogCompactions >= ConsecutiveCompactOperationsBeforeThresholdIncrease) {
                         _logCompactionThresholdBytes *= 2;
                         if (_logTrace) {
-                            _logger.LogTrace(string.Format(
-                                CultureInfo.CurrentCulture,
+                            Logger.LogTrace(
                                 Resources.Log_LogCompactionThresholdIncreased, 
                                 _logCompactionThresholdBytes / 2, 
                                 _logCompactionThresholdBytes
-                            ));
+                            );
                         }
                         _numConsecutiveLogCompactions = 0;
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    _logger.LogError(e, Resources.Log_CompactionError);
+                    Logger.LogError(e, Resources.Log_CompactionError);
                 }
             }
         }
@@ -468,18 +453,14 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreOperationStatus> WriteAsync<TValue>(byte[] key, TValue? value) {
+        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
-                var valueSpanByte = SpanByte.FromFixedSpan(_serializer.Serialize(value));
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
+                var valueSpanByte = SpanByte.FromFixedSpan(value);
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
@@ -489,8 +470,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 // Mark the cache as dirty.
                 Interlocked.Exchange(ref _checkpointIsRequired, 1);
-
-                return ToKeyValueOperationStatus(result.Status);
             }
             finally {
                 ReturnPooledSession(session);
@@ -499,18 +478,15 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreReadResult<TValue>> ReadAsync<TValue>(byte[] key) {
+        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
             ThrowIfDisposed();
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
 
             Status status;
             SpanByteAndMemory spanByteAndMemory;
 
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
                 SpanByte valueSpanByte = default;
 
                 var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
@@ -521,29 +497,24 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 ReturnPooledSession(session);
             }
 
+            if (status != Status.OK) {
+                return null;
+            }
+
             using (spanByteAndMemory.Memory) {
-                return new KeyValueStoreReadResult<TValue>(
-                    ToKeyValueOperationStatus(status),
-                    status == Status.OK
-                        ? _serializer.Deserialize<TValue>(spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).Span)
-                        : default
-                    );
+                return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
             }
         }
 
 
         /// <inheritdoc/>
-        public async ValueTask<KeyValueStoreOperationStatus> DeleteAsync(byte[] key) {
+        protected override async ValueTask<bool> DeleteAsync(KVKey key) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-
             var session = GetPooledSession();
             try {
-                var keySpanByte = SpanByte.FromFixedSpan(key);
+                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
 
                 var result = await session.DeleteAsync(ref keySpanByte).ConfigureAwait(false);
 
@@ -556,7 +527,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     Interlocked.Exchange(ref _checkpointIsRequired, 1);
                 }
 
-                return ToKeyValueOperationStatus(result.Status);
+                return result.Status == Status.OK;
             }
             finally {
                 ReturnPooledSession(session);
@@ -565,39 +536,22 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public IEnumerable<byte[]> GetKeys() {
+        protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
+            await Task.Yield();
             var session = GetPooledSession();
             try {
                 using (var iterator = session.Iterate()) {
                     while (iterator.GetNext(out var recordInfo)) {
-                        yield return iterator.GetKey().AsReadOnlySpan().ToArray();
+                        var key = iterator.GetKey().AsSpan().ToArray();
+
+                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, key)) {
+                            yield return key;
+                        }
                     }
                 }
             }
             finally {
                 ReturnPooledSession(session);
-            }
-        }
-
-
-        /// <summary>
-        /// Converts a FASTER <see cref="Status"/> to an <see cref="OperationStatus"/>.
-        /// </summary>
-        /// <param name="status">
-        ///   The FASTER <see cref="Status"/>.
-        /// </param>
-        /// <returns>
-        ///   The equivalent <see cref="OperationStatus"/>.
-        /// </returns>
-        private static KeyValueStoreOperationStatus ToKeyValueOperationStatus(Status status) {
-            switch (status) {
-                case Status.ERROR:
-                    return KeyValueStoreOperationStatus.Error;
-                case Status.NOTFOUND:
-                    return KeyValueStoreOperationStatus.NotFound;
-                case Status.OK:
-                default:
-                    return KeyValueStoreOperationStatus.OK;
             }
         }
 

@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -59,7 +58,7 @@ namespace DataCore.Adapter.Events {
             EventMessageSubscriptionType subscriptionType,
             TimeSpan publishInterval,
             CancellationToken[] cancellationTokens,
-            Action cleanup,
+            Func<ValueTask> cleanup,
             int channelCapacity = 0
         ) : base(
             id,

@@ -1,5 +1,7 @@
 # Tutorial - Writing an Adapter Extension Feature
 
+**WARNING: EXTENSION FEATURE IMPLEMENTATION WILL FEATURE MULTIPLE BREAKING CHANGES IN v3.0**
+
 ## Introduction
 
 This tutorial demonstrates how to create an extension feature for an App Store Connect adapter. Extension features allow vendor-specific functionality to be added to an adapter.

@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTelemetry.Api" Version="$(OpenTelemetryApiVersion)" />
+    <PackageReference Include="OpenTelemetry" Version="$(OpenTelemetryApiVersion)" />
   </ItemGroup>
 
   <ItemGroup>

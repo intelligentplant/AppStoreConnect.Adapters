@@ -5,57 +5,58 @@
   <!-- Microsoft Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
-    <SystemNetHttpJsonVersion>5.0.0</SystemNetHttpJsonVersion>
-    <SystemTextJsonVersion>5.0.1</SystemTextJsonVersion>
-    <SystemThreadingChannelsVersion>5.0.0</SystemThreadingChannelsVersion>
+    <SystemNetHttpJsonVersion>6.0.0</SystemNetHttpJsonVersion>
+    <SystemTextJsonVersion>6.0.2</SystemTextJsonVersion>
+    <SystemThreadingChannelsVersion>6.0.0</SystemThreadingChannelsVersion>
     <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
     <!-- 
       Microsoft.AspNetCore metapackage is referenced by .NET Framework 4.8 unit tests. 
     -->
     <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>5.0.7</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>5.0.7</MicrosoftAspNetCoreSignalRProtocolsMessagePackVersion>
+    <MicrosoftAspNetCoreSignalRClientVersion>6.0.3</MicrosoftAspNetCoreSignalRClientVersion>
     <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
     <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
-    <MicrosoftBclAsyncInterfacesVersion>5.0.0</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftBclAsyncInterfacesVersion>6.0.0</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftDataSqliteVersion>6.0.3</MicrosoftDataSqliteVersion>
     <!-- 
       Microsoft.Extensions.Hosting and Microsoft.Extensions.Http are referenced by the 
       DataCore.Adapter.Tests.Helpers project for .NET Standard 2.0 targeting. 
     -->
     <MicrosoftExtensionsHostingVersion>2.2.0</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsHttpVersion>2.2.0</MicrosoftExtensionsHttpVersion>
-    <MicrosoftFASTERCoreVersion>1.9.5</MicrosoftFASTERCoreVersion>
+    <MicrosoftFASTERCoreVersion>1.9.15</MicrosoftFASTERCoreVersion>
   </PropertyGroup>
   
   <!-- gRPC Packages -->
   <PropertyGroup>
-    <GoogleProtobufVersion>3.14.0</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.36.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.37.0</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.36.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.37.0</GrpcToolsVersion>
+    <GoogleProtobufVersion>3.19.4</GoogleProtobufVersion>
+    <GrpcAspNetCoreServerVersion>2.43.0</GrpcAspNetCoreServerVersion>
+    <GrpcCoreVersion>2.44.0</GrpcCoreVersion>
+    <GrpcNetClientVersion>2.43.0</GrpcNetClientVersion>
+    <GrpcToolsVersion>2.44.0</GrpcToolsVersion>
   </PropertyGroup>
   
   <!-- Dev/Test/Benchmark Packages -->
   <PropertyGroup>
     <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <JaahasMSBuildExtensionsVersion>1.0.4</JaahasMSBuildExtensionsVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.10.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftSourceLinkGitHubVersion>1.0.0</MicrosoftSourceLinkGitHubVersion>
-    <MSTestTestAdapterVersion>2.2.5</MSTestTestAdapterVersion>
-    <MSTestTestFrameworkVersion>2.2.5</MSTestTestFrameworkVersion>
+    <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.1.1</MicrosoftSourceLinkGitHubVersion>
+    <MSTestTestAdapterVersion>2.2.8</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion>2.2.8</MSTestTestFrameworkVersion>
   </PropertyGroup>
   
   <!-- Other Packages -->
   <PropertyGroup>
     <CastleCoreVersion>4.4.1</CastleCoreVersion>
-    <CsvHelperVersion>22.1.2</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>8.0.0</IntelligentPlantBackgroundTasksVersion>
-    <JaahasHttpRequestTransformerVersion>2.0.0</JaahasHttpRequestTransformerVersion>
+    <CsvHelperVersion>27.2.1</CsvHelperVersion>
+    <IntelligentPlantBackgroundTasksVersion>8.1.0</IntelligentPlantBackgroundTasksVersion>
+    <JaahasHttpRequestTransformerVersion>2.2.0</JaahasHttpRequestTransformerVersion>
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <NSwagAspNetCoreVersion>13.10.2</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>5.8.1</NuGetVersioningVersion>
-    <OpenTelemetryApiVersion>1.0.1</OpenTelemetryApiVersion>
+    <NitoAsyncExCoordinationVersion>5.1.2</NitoAsyncExCoordinationVersion>
+    <NSwagAspNetCoreVersion>13.15.10</NSwagAspNetCoreVersion>
+    <NuGetVersioningVersion>6.1.0</NuGetVersioningVersion>
+    <OpenTelemetryApiVersion>1.2.0-rc2</OpenTelemetryApiVersion>
+    <OpenTelemetryHostingVersion>1.0.0-rc9</OpenTelemetryHostingVersion>
+    <OpenTelemetryInstrumentationVersion>1.0.0-rc9</OpenTelemetryInstrumentationVersion>
   </PropertyGroup>
 </Project>

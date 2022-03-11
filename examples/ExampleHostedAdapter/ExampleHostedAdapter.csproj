@@ -1,19 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="$(_AdapterPackageVersion)" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" Version="$(_AdapterPackageVersion)" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" Version="$(_AdapterPackageVersion)" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" Version="$(_AdapterPackageVersion)" />
-    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.0.1" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc4" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc4" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="$(OpenTelemetryApiVersion)" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryHostingVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryInstrumentationVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryInstrumentationVersion)" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="$(OpenTelemetryInstrumentationVersion)" />
   </ItemGroup>
 
 </Project>

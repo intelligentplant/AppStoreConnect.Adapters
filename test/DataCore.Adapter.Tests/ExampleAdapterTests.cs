@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
@@ -36,6 +37,27 @@ namespace DataCore.Adapter.Tests {
         protected override GetTagsRequest CreateGetTagsRequest(TestContext context) {
             return new GetTagsRequest() {
                 Tags = new[] { context.TestName }
+            };
+        }
+
+
+        protected override BrowseAssetModelNodesRequest CreateBrowseAssetModelNodesRequest(TestContext context) {
+            return new BrowseAssetModelNodesRequest();
+        }
+
+
+        protected override GetAssetModelNodesRequest CreateGetAssetModelNodesRequest(TestContext context) {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+
+            return new GetAssetModelNodesRequest() { 
+                Nodes = new[] { ExampleAdapter.GetNodeId("Beta"), ExampleAdapter.GetNodeId("Delta") }
+            };
+        }
+
+
+        protected override FindAssetModelNodesRequest CreateFindAssetModelNodesRequest(TestContext context) {
+            return new FindAssetModelNodesRequest() { 
+                Name = "Gam*"
             };
         }
 

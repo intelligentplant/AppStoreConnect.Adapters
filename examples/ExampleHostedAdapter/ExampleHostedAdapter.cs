@@ -1,17 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
+﻿
 using DataCore.Adapter;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-// The [VendorInfo] attribute is used to add vendor information to all adapters in this assembly.
-[assembly: VendorInfo("My Company", "https://my-company.com")]
 
 namespace ExampleHostedAdapter {
 
@@ -31,19 +28,75 @@ namespace ExampleHostedAdapter {
     )]
     public partial class ExampleHostedAdapter : AdapterBase<ExampleHostedAdapterOptions> {
 
+        private static readonly AdapterProperty s_tagCreatedAtPropertyDefinition = new AdapterProperty("UTC Created At", DateTime.MinValue, "The UTC creation time for the tag");
+
+        private readonly TagManager _tagManager;
+
+        private readonly PollingSnapshotTagValuePush _snapshotPush;
+
+
         public ExampleHostedAdapter(
             string id, 
             IOptionsMonitor<ExampleHostedAdapterOptions> options,
             IBackgroundTaskService taskScheduler,
             ILogger<ExampleHostedAdapter> logger
-        ) : base(id, options, taskScheduler, logger) {  }
+        ) : base(id, options, taskScheduler, logger) {
+
+            // The TagManager implements the ITagSearch adapter feature on our adapter's behalf,
+            // meaning that our adapter allows callers to discover available tags (measurements)
+            // that can be read. In our example we use a fixed set of tags created at startup time,
+            // but your implementation might e.g. query a database to get a list of available
+            // measurements. In this circumstance, you can implement ITagSearch directly instead
+            // of using the TagManager.
+            //
+            // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
+            _tagManager = new TagManager(
+                // If you want to persist definitions between restarts, pass e.g. a Microsoft FASTER or
+                // JSON file-based IKeyValueStore implementation here instead of null.
+                null,
+                BackgroundTaskService,
+                new[] { s_tagCreatedAtPropertyDefinition }
+            );
+
+            // Tell the adapter to advertise that it supports all of the adapter features
+            // implemented by the TagManager object.
+            AddFeatures(_tagManager);
+
+            // The PollingSnapshotTagValuePush class implements the ISnapshotTagValuePush, meaning
+            // that callers can subscribe to be notified of snapshot value changes. Under the hood,
+            // PollingSnapshotTagValuePushOptions functions by periocially polling the snapshot
+            // value for tags with subscribers. If your adapter receives push notifications of new
+            // values from an external source (such as an MQTT broker), you can use the
+            // SnapshotTagValuePush class instead, and pass new values to it as they arrive.
+            //
+            // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
+            _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
+                AdapterId = Descriptor.Id,
+                PollingInterval = TimeSpan.FromSeconds(5),
+                TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+            }, BackgroundTaskService, Logger);
+
+            // Tell the adapter to advertise that it supports all of the adapter features
+            // implemented by the PollingSnapshotTagValuePush object.
+            AddFeatures(_snapshotPush);
+        }
 
 
         // The StartAsync method is called when the adapter is being started up. Use this method to 
         // initialise any required connections to external systems (e.g. connecting to a database, 
         // MQTT broker, industrial plant historian, etc).
-        protected override Task StartAsync(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
+        protected override async Task StartAsync(CancellationToken cancellationToken) {
+            // Initialise our tag manager and register a test tag.
+            await _tagManager.InitAsync(cancellationToken).ConfigureAwait(false);
+
+            var testTag = new TagDefinitionBuilder("test", "Test Tag")
+                .WithDescription("An example tag that can be polled for snapshot (current) values.")
+                .WithDataType(VariantType.Double)
+                .WithSupportsReadSnapshotValues()
+                .WithProperty(s_tagCreatedAtPropertyDefinition.Name, DateTime.UtcNow)
+                .Build();
+
+            await _tagManager.AddOrUpdateTagAsync(testTag, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -93,7 +146,8 @@ namespace ExampleHostedAdapter {
         // Your adapter implements both IDisposable and IAsyncDisposable.
         // 
         // Override the Dispose(bool) and DisposeAsyncCore() methods if you need to dispose of
-        // managed or unmanaged resources. 
+        // managed or unmanaged resources. You do not need to manually dispose of any object that
+        // has been registered with the adapter as a feature provider.
         //
         // When IDisposable.Dispose() is called on your adapter, Dispose(true) will be called.
         //

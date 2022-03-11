@@ -79,7 +79,6 @@ namespace DataCore.Adapter.AspNetCoreExample {
             services.AddGrpc();
 
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.WriteIndented = true;
                 })
@@ -87,8 +86,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services
                 .AddSignalR()
-                .AddDataCoreAdapterSignalR()
-                .AddMessagePackProtocol();
+                .AddDataCoreAdapterSignalR();
 
             services
                 .AddHealthChecks()
@@ -97,7 +95,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add OpenTelemetry tracing
             services.AddOpenTelemetryTracing(builder => {
                 builder
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Adapter API", serviceVersion: version, serviceInstanceId: System.Net.Dns.GetHostName()))
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
                     .AddJaegerExporter();

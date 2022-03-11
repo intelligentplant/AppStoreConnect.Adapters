@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+    <TargetFrameworks>net6.0;net48</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +22,8 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.FileSystem\DataCore.Adapter.KeyValueStore.FileSystem.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.Sqlite\DataCore.Adapter.KeyValueStore.Sqlite.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
@@ -41,7 +43,7 @@
   
   -->
   <Choose>
-    <!-- .NET Core 3.1/.NET 5.0 references -->
+    <!-- .NET/.NET Core references -->
     <When Condition=" '$(TargetFramework)' != 'net48' ">
       <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -63,22 +65,16 @@
     <Otherwise>
       <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore" Version="$(MicrosoftAspNetCoreVersion)" />
+        <!-- Explicit Sqlite reference required on .NET Framework because the package reference 
+             from Microsoft.Data.Sqlite on the Sqlite key-value store project seems to not be 
+             transitive, so tests fail. This does not happen against .NET for some reason... -->
+        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.0.7" />
       </ItemGroup>
       <ItemGroup>
         <ProjectReference Include="..\..\src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj" />
       </ItemGroup>
     </Otherwise>
   </Choose>
-  
-  <!--  
-  Since we are using v5.0.x of the SignalR MessagePack library, we need to include a reference to 
-  v5.0.x of System.Text.Encodings.Web when running on netcoreapp3.1 or the ASP.NET Core web server 
-  will throw a runtime error. 
-  -->
-  
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />

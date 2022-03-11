@@ -32,7 +32,7 @@ Our options class will allow the period and amplitude of the wave functions to b
 Next, we need to change the base class for our adapter from `AdapterBase` to `AdapterBase<MyAdapterOptions>`, and change our constructor signature to call one of the available `AdapterBase<TOptions>` constructors:
 
 ```csharp
-public class Adapter : AdapterBase<MyAdapterOptions>, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
+public class Adapter : AdapterBase<MyAdapterOptions>, IReadSnapshotTagValues, IReadRawTagValues {
     // -- snip --
 
     public Adapter(
@@ -46,6 +46,13 @@ public class Adapter : AdapterBase<MyAdapterOptions>, ITagSearch, IReadSnapshotT
         backgroundTaskService, 
         logger
     ) {
+        _tagManager = new TagManager(
+            backgroundTaskService: BackgroundTaskService,
+            tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+        );
+
+        AddFeatures(_tagManager);
+
         AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
             AdapterId = id,
             PollingInterval = TimeSpan.FromSeconds(1),

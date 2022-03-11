@@ -9,9 +9,9 @@ _The full code for this chapter can be found [here](/examples/tutorials/creating
 
 Adapters can interface with tens of thousands of different measurements, which may be changing value very rapidly. It can often be inefficient to poll large numbers of tags for snapshot values. Instead of polling, it is far more efficient to create a persistent connection to the adapter, choose tags that we want to subscribe to, and have the adapter push those values back to us as they change. 
 
-Snapshot tag value subscriptions are implemented using the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) interface. In this chapter, we will implement this feature in our adapter, using one of the helper classes available to us in the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package. This highlights an important aspect of adapter feature implementations: the adapter does not have to directly implement a feature interface itself. Instead, the implementation can be delegated to another class.
+Snapshot tag value subscriptions are implemented using the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) interface.
 
-Two helper classes can be used when implementing `ISnapshotTagValuePush`. The first, [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs), is used when the system you are connecting to defines its own native subscription system. The `SnapshotTagValuePush` constructor accepts an options parameter where you can define callbacks to be invoked when a subscription is added or removed for a given tag. Alternatively, you can extend `SnapshotTagValuePush` and override its `ResolveTags`, `OnTagsAddedToSubscription`, and `OnTagsRemovedFromSubscription` methods to perform the bootstrapping required to interface with the native subscription mechanism. You can then call the `ValueReceived` method to send a value for a tag to all subscribers to that tag. 
+Two helper classes from the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package can be used when implementing `ISnapshotTagValuePush`. The first, [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs), is used when the system you are connecting to defines its own native subscription system. The `SnapshotTagValuePush` constructor accepts an options parameter where you can define callbacks to be invoked when a subscription is added or removed for a given tag. Alternatively, you can extend `SnapshotTagValuePush` and override its `ResolveTags`, `OnTagsAddedToSubscription`, and `OnTagsRemovedFromSubscription` methods to perform the bootstrapping required to interface with the native subscription mechanism. You can then call the `ValueReceived` method to send a value for a tag to all subscribers to that tag. 
 
 The second helper class is [PollingSnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs). This class extends `SnapshotTagValuePush` by periodically polling the snapshot value of all tags that all callers have subscribed to and pushing the new values to the subscribed callers. `PollingSnapshotTagValuePush` is only compatible with adapters that implement `ITagInfo` (in order to resolve tag IDs or names that callers subscribe to) and `IReadSnapshotTagValues` (in order to poll for new values). Since we are just generating random values in our adapter, and we have already implemented both of the required features, this second helper class is a good fit for us.
 
@@ -31,6 +31,13 @@ public Adapter(
     backgroundTaskService, 
     logger
 ) {
+    _tagManager = new TagManager(
+        backgroundTaskService: BackgroundTaskService,
+        tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+    );
+
+    AddFeatures(_tagManager);
+
     AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
         AdapterId = id,
         PollingInterval = TimeSpan.FromSeconds(1),
@@ -132,7 +139,7 @@ Run the program and wait until it receives a few value updates, and then press `
     - 0.91354545764246864 @ 2020-09-18T10:00:11.0000000Z [Good Quality]
 ```
 
-Note that the URI for `ISnapshotTagValuePush` is included in the adapter's features, even though we did not explicitly implement this interface on our adapter class!
+Note that the URI for `ISnapshotTagValuePush` is included in the adapter's features.
 
 
 ## Next Steps
