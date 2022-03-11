@@ -80,7 +80,7 @@ ValidateInvocation(context, request);
 
 The `ValidateInvocation` method is inherited from our base class. It will throw an exception if the context or request objects are `null`, or if the request object fails validation using the [System.Componentmodel.DataAnnotations.Validator](https://docs.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.validator) class.
 
-Next, we `await` on `Task.CompletedTask`:
+Next, we `await` on `Task.Yield()`:
 
 ```csharp
 await Task.Yield();

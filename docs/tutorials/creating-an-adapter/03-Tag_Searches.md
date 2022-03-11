@@ -288,7 +288,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - 0.33333333333361187 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 ```
 
-Note that the URIs for the `ITagSearch` and `ITagInfo` interfaces have been added to our adapter's feature set.
+Note that the URIs for the `ITagSearch` and `ITagInfo` interfaces have been added to our adapter's feature set, even though we did not explicitly implement these interfaces on our adapter class!
 
 
 ## Next Steps

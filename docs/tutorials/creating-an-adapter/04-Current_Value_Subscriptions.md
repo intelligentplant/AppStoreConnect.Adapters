@@ -139,7 +139,7 @@ Run the program and wait until it receives a few value updates, and then press `
     - 0.91354545764246864 @ 2020-09-18T10:00:11.0000000Z [Good Quality]
 ```
 
-Note that the URI for `ISnapshotTagValuePush` is included in the adapter's features, even though we did not explicitly implement this interface on our adapter class!
+Note that the URI for `ISnapshotTagValuePush` is included in the adapter's features.
 
 
 ## Next Steps

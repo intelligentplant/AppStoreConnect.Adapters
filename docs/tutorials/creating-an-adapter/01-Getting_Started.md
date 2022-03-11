@@ -17,7 +17,7 @@ cd MyAdapter
 dotnet new console
 ```
 
-The project can target .NET Framework 4.8, .NET Core 3.1, or .NET 5.0 or later.
+The project can target .NET Framework 4.8, or .NET Core 3.1 or later.
 
 Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
 
