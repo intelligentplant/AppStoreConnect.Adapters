@@ -21,7 +21,7 @@ If you are interfacing with an industrial plant historian, the historian may alr
 To start off, we will update our adapter class to declare that it implements `IReadRawTagValues`:
 
 ```csharp
-public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
+public class Adapter : AdapterBase, IReadSnapshotTagValues, IReadRawTagValues {
     // -- snip --
 }
 ```
@@ -37,8 +37,6 @@ Next, we will implement the `ReadRawTagValues` method:
         ) {
             ValidateInvocation(context, request);
 
-            await Task.CompletedTask.ConfigureAwait(false);
-
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
                 foreach (var tag in request.Tags) {
                     if (ctSource.Token.IsCancellationRequested) {
@@ -47,7 +45,8 @@ Next, we will implement the `ReadRawTagValues` method:
                     if (string.IsNullOrWhiteSpace(tag)) {
                         continue;
                     }
-                    if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+                    var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                    if (tagDef == null) {
                         continue;
                     }
 
@@ -60,7 +59,7 @@ Next, we will implement the `ReadRawTagValues` method:
                         if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
                             continue;
                         }
-                        yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+                        yield return CalculateValueForTag(tagDef, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
                     } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
                 }
             }
@@ -84,7 +83,7 @@ do {
     if (request.BoundaryType == RawDataBoundaryType.Inside && (ts < request.UtcStartTime || ts > request.UtcEndTime)) {
         continue;
     }
-    yield return CalculateValueForTag(t, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+    yield return CalculateValueForTag(tagDef, ts, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
 } while (!ctSource.Token.IsCancellationRequested && ts < request.UtcEndTime && (request.SampleCount < 1 || sampleCount <= request.SampleCount));
 ```
 
@@ -92,7 +91,7 @@ The `ReadRawTagValuesRequest` class includes a `BoundaryType` property, which a 
 
 At this point, we have added the ability to ask for raw historical values from our adapter, but we have not implemented the other historical query features (`IReadPlotTagValues`, `IReadTagValuesAtTimes`, and `IReadProcessedTagValues`). We could implement these features ourselves - this would be a good idea if we were connecting to an underlying source that natively supported them - but we also have a second option: since we are using the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package, we can take advantage of the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) helper class.
 
-The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `IAsyncEnumerable<T>` in adapter features, this can be done without requiring an extensive memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
+The `ReadHistoricalTagValues` class provides implementations of the remaining historical query features for any adapter that implements the `ITagInfo` and `IReadRawTagValues` features. The implementation relies on retrieving raw tag values as part of every historical query and then transforming them. Due to the extensive use of `IAsyncEnumerable<T>` in adapter features, this can be done without requiring too great a memory overhead, but a native implementation would always be expected to perform better, since the computation of values is done by the source, rather than having to retrieve potentially large numbers of raw values in order to perform the calculation inside the adapter itself.
 
 Registering `ReadHistoricalTagValues` is a simple change to our adapter's constructor:
 
@@ -110,6 +109,13 @@ public Adapter(
     backgroundTaskService, 
     logger
 ) {
+    _tagManager = new TagManager(
+        backgroundTaskService: BackgroundTaskService,
+        tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+    );
+
+    AddFeatures(_tagManager);
+
     AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
         AdapterId = id,
         PollingInterval = TimeSpan.FromSeconds(1),

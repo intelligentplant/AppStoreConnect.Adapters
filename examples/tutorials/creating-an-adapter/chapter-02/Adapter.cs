@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +23,7 @@ namespace MyAdapter {
             string description = null,
             IBackgroundTaskService backgroundTaskService = null,
             ILogger<Adapter> logger = null
-        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) { }
+        ) : base(id, name, description, backgroundTaskService, logger) { }
 
 
         private static DateTime CalculateSampleTime(DateTime queryTime) {
@@ -69,7 +67,7 @@ namespace MyAdapter {
         ) {
             ValidateInvocation(context, request);
 
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             var sampleTime = CalculateSampleTime(DateTime.UtcNow);
 

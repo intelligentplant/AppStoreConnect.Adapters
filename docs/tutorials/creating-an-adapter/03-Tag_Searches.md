@@ -7,25 +7,40 @@ _This is part 3 of a tutorial series about creating an adapter. The introduction
 
 _The full code for this chapter can be found [here](/examples/tutorials/creating-an-adapter/chapter-03)._
 
-In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` interface. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will implement the [ITagSearch](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagSearch.cs) interface to make these tags discoverable. We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags. We will also add some additional wave functions to our adapter, and allow each tag to specify which function it uses to calculate its values.
+In the [previous chapter](./02-Reading_Current_Values.md), we implemented the `IReadSnapshotTagValues` interface. Our initial implementation returns a value for any tag specified by the caller. In a real-world implementation, we would ordinarily have a limited selection of tags to query. In this chapter, we will define a fixed set of tags that a caller can query, and we will use the [ITagSearch](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagSearch.cs) interface to make these tags discoverable.
 
-First of all, we will extend our `Adapter` class to implement the `ITagSearch` interface:
+We will also update our `IReadSnapshotTagValues` implementation so that we only return values for known tags. We will also add some additional wave functions to our adapter, and allow each tag to specify which function it uses to calculate its values.
+
+We will implement `ITagSearch` using the [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) helper class from the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) NuGet package. This highlights an important aspect of adapter feature implementations: the adapter does not have to directly implement a feature interface itself. Instead, the implementation can be delegated to another class.
+
+We can add the feature to our adapter by declaring a new field updating our constructor like so:
 
 ```csharp
-public class Adapter : AdapterBase, ITagSearch, IReadSnapshotTagValues {
-    // -- snip --
+private readonly TagManager _tagManager;
+
+public Adapter(
+    string id,
+    string name,
+    string description = null,
+    IBackgroundTaskService backgroundTaskService = null,
+    ILogger<Adapter> logger = null
+) : base(
+    id, 
+    name, 
+    description, 
+    backgroundTaskService, 
+    logger
+) {
+    _tagManager = new TagManager(
+        backgroundTaskService: BackgroundTaskService,
+        tagPropertyDefinitions: new[] { CreateWaveTypeProperty(null) }
+    );
+
+    AddFeatures(_tagManager);
 }
 ```
 
-The `ITagSearch` feature uses the [TagDefinition](/src/DataCore.Adapter.Core/RealTimeData/TagDefinition.cs) class to describe available tags. Tags can be identified using both the tag name, and a unique tag identifier. The recommended behaviour for adapters is that tag names and identifiers should be case-insensitive wherever possible. We will add two dictionaries to our adapter, to index tag definitions by both ID and name:
-
-```csharp
-private readonly ConcurrentDictionary<string, TagDefinition> _tagsById = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
-
-private readonly ConcurrentDictionary<string, TagDefinition> _tagsByName = new ConcurrentDictionary<string, TagDefinition>(StringComparer.OrdinalIgnoreCase);
-```
-
-Next, we will add some helper methods to create our tag definitions when the adapter starts up, and clean up when the adapter is shut down:
+Next, we will add some helper methods to create our tag definitions when the adapter starts up:
 
 ```csharp
 private AdapterProperty CreateWaveTypeProperty(string waveType) {
@@ -33,7 +48,7 @@ private AdapterProperty CreateWaveTypeProperty(string waveType) {
 }
 
 
-private void CreateTags() {
+private async Task CreateTagsAsync(CancellationToken cancellationToken) {
     var i = 0;
     foreach (var waveType in new[] { "Sinusoid", "Sawtooth", "Square", "Triangle" }) {
         ++i;
@@ -46,118 +61,23 @@ private void CreateTags() {
             .WithProperties(CreateWaveTypeProperty(waveType))
             .Build();
 
-        _tagsById[tag.Id] = tag;
-        _tagsByName[tag.Name] = tag;
+        await _tagManager.AddOrUpdateTagAsync(tag, cancellationToken).ConfigureAwait(false);
     }
 }
-
-
-private void DeleteTags() {
-    _tagsById.Clear();
-    _tagsByName.Clear();
-}
 ```
 
-Our `StartAsync` and `StopAsync` methods are updated as follows:
+Our `StartAsync` method is updated as follows:
 
 ```csharp
-protected override Task StartAsync(CancellationToken cancellationToken) {
-    CreateTags();
+protected override async Task StartAsync(CancellationToken cancellationToken) {
+    await CreateTagsAsync(cancellationToken).ConfigureAwait(false);
     AddProperty("Startup Time", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-    return Task.CompletedTask;
-}
-
-
-protected override Task StopAsync(CancellationToken cancellationToken) {
-    DeleteTags();
-    return Task.CompletedTask;
 }
 ```
 
-The `CreateWaveTypeProperty` method creates a property for our tag definitions that describes the type of the wave function used by the tag. The `CreateTags` method populates our `_tagsById` and `_tagsByName` maps with 4 tag definitions, and the `DeleteTags` method removes all entries from these two maps.
+The `CreateWaveTypeProperty` method creates a property for our tag definitions that describes the type of the wave function used by the tag. The `CreateTagsAsync` method populates our `_tagManager` with 4 tag definitions.
 
 Tags are defined as `TagDefinition` objects. A `TagDefinition` can hold a variety of information about a tag in addition to the ID and name, including: a description, engineering units, data type, discrete tag states (if required), custom properties, and labels/categories. We use the `TagDefinitionBuilder` class to simplify the construction of our `TagDefinition` instances.
-
-Next, we must implement the `ITagSearch` feature. `ITagSearch` actually extends another interface, named [ITagInfo](/src/DataCore.Adapter.Abstractions/RealTimeData/ITagInfo.cs). `ITagInfo` allows callers to request information about tags if they know the ID or name of the tag, whereas `ITagSearch` allows search queries that match against a tag's name, description, and so on. The `GetTags` method (from `ITagInfo`) is implemented as follows:
-
-```csharp
-public async IAsyncEnumerable<TagDefinition> GetTags(
-    IAdapterCallContext context,
-    GetTagsRequest request,
-    [EnumeratorCancellation]
-    CancellationToken cancellationToken
-) {
-    ValidateInvocation(context, request);
-
-    await Task.CompletedTask.ConfigureAwait(false);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        foreach (var tag in request.Tags) {
-            if (ctSource.Token.IsCancellationRequested) {
-                break;
-            }
-            if (string.IsNullOrWhiteSpace(tag)) {
-                continue;
-            }
-
-            if (_tagsById.TryGetValue(tag, out var t) || _tagsByName.TryGetValue(tag, out t)) {
-                yield return t;
-            }
-        }
-    }
-}
-```
-
-In our loop, we perform some simple validation on each tag in the request, and then return the definition for a tag if it exists in either of our lookups.
-
-Next, we implement the `GetTagProperties` and `FindTags` methods. The `GetTagProperties` method is used to provide callers with details of the properties that can be defined on our adapter's tag definitions:
-
-```csharp
-public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
-    IAdapterCallContext context,
-    GetTagPropertiesRequest request,
-    [EnumeratorCancellation]
-    CancellationToken cancellationToken
-) {
-    ValidateInvocation(context, request);
-
-    await Task.CompletedTask.ConfigureAwait(false);
-
-    foreach (var item in new[] { CreateWaveTypeProperty(null) }.OrderBy(x => x.Name).SelectPage(request)) {
-        yield return item;
-    }
-}
-```
-
-The `GetTagPropertiesRequest` class implements the [IPageableAdapterRequest](/src/DataCore.Adapter.Core/Common/IPageableAdapterRequest.cs) interface, meaning that it specifies a page size and page number to apply to the tag properties. The `SelectPage` extension method allows us to apply the paging specified in an `IPageableAdapterRequest` to any `IOrderedEnumerable<T>`.
-
-`GetTagProperties` is important, because we can opt to allow callers to `FindTags` to include search filters that match against custom tag properties. In this case, `GetTagProperties` is the way that the available properties can be discovered.
-
-Next, we implement the `FindTags` method:
-
-```csharp
-public async IAsyncEnumerable<TagDefinition> FindTags(
-    IAdapterCallContext context,
-    FindTagsRequest request,
-    [EnumeratorCancellation]
-    CancellationToken cancellationToken
-) {
-    ValidateInvocation(context, request);
-
-    await Task.CompletedTask.ConfigureAwait(false);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        foreach (var tag in _tagsById.Values.ApplyFilter(request)) {
-            if (ctSource.Token.IsCancellationRequested) {
-                break;
-            }
-            yield return tag;
-        }
-    }
-}
-```
-
-Since we are working with in-memory `TagDefinition` objects, we can take advantage of the `ApplyFilter` extension method in our tag search. `ApplyFilter` takes a `FindTagsRequest` object and applies the filters to our set of tag definitions. Filters can be exact matches, or they can include single-character or multi-character wildcards (`?` and `*` respectively). For example, it could contain a `Name` filter with a value of `"*_01"`, meaning that it would match against any tag name ending with `_01`. `ApplyFilter` will automatically sort matching tags by name and then apply the paging settings specified in the search filter.
 
 We have configured our adapter to create tags with 4 different wave types (`Sinusoid`, `Sawtooth`, `Square`, and `Triangle`). We'll add some more helper methods to the adapter to calculate values for our additional wave types, and also a method (`CalculateValueForTag`) to select the correct calculation method for a tag based on the `Wave Type` property in the `TagDefinition`:
 
@@ -234,8 +154,6 @@ public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
 ) {
     ValidateInvocation(context, request);
 
-    await Task.CompletedTask.ConfigureAwait(false);
-
     var sampleTime = CalculateSampleTime(DateTime.UtcNow);
     var rnd = new Random(sampleTime.GetHashCode());
 
@@ -247,11 +165,12 @@ public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             if (string.IsNullOrWhiteSpace(tag)) {
                 continue;
             }
-            if (!_tagsById.TryGetValue(tag, out var t) && !_tagsByName.TryGetValue(tag, out t)) {
+            var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+            if (tagDef == null) {
                 continue;
             }
 
-            yield return CalculateValueForTag(t, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
+            yield return CalculateValueForTag(tagDef, sampleTime, rnd.NextDouble() < 0.9 ? TagValueStatus.Good : TagValueStatus.Bad);
         }
     }
 }
@@ -369,7 +288,7 @@ Now, after displaying the initial adapter information, the `Run` method will sea
     - 0.33333333333361187 @ 2020-09-18T09:59:25.0000000Z [Bad Quality]
 ```
 
-Note that the URIs for the `ITagSearch` and `ITagInfo` interfaces have been added to our adapter's feature set.
+Note that the URIs for the `ITagSearch` and `ITagInfo` interfaces have been added to our adapter's feature set, even though we did not explicitly implement these interfaces on our adapter class!
 
 
 ## Next Steps
