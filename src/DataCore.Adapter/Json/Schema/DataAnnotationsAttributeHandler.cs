@@ -79,7 +79,10 @@ namespace DataCore.Adapter.Json.Schema {
 
             var requiredAttr = context.Attributes.OfType<System.ComponentModel.DataAnnotations.RequiredAttribute>().FirstOrDefault();
             if (requiredAttr != null) {
-                context.Intents.Add(new RequiredIntent());
+                // required is handled differently by the schema generator. By adding a
+                // RequiredAttribute to the context, the underlying ObjectSchemaGenerator
+                // will mark this member as required.
+                context.Attributes.Add(new RequiredAttribute());
             }
         }
 

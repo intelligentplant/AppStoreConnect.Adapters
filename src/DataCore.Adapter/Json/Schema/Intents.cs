@@ -225,16 +225,4 @@ namespace DataCore.Adapter.Json.Schema {
         }
     }
 
-
-    /// <summary>
-    /// Adds a <c>required</c> keyword to a schema.
-    /// </summary>
-    public class RequiredIntent : ISchemaKeywordIntent {
-
-        /// <inheritdoc/>
-        public void Apply(JsonSchemaBuilder builder) {
-            builder.Required();
-        }
-    }
-
 }
