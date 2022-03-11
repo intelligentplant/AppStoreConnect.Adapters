@@ -59,9 +59,9 @@ namespace MyAdapter {
                 var healthFeature = adapter.GetFeature<IHealthCheck>();
                 var health = await healthFeature.CheckHealthAsync(context, cancellationToken);
                 Console.WriteLine("  Health:");
-                Console.WriteLine($"    - <{health.Status}> {health.Description}");
+                Console.WriteLine($"    - <{health.Status}> {health.DisplayName}: {health.Description ?? "no description provided"}");
                 foreach (var item in health.InnerResults) {
-                    Console.WriteLine($"      - <{item.Status}> {item.Description}");
+                    Console.WriteLine($"      - <{item.Status}> {item.DisplayName}: {item.Description ?? "no description provided"}");
                 }
                 Console.WriteLine();
 

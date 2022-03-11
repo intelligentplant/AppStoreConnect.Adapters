@@ -436,7 +436,7 @@ namespace DataCore.Adapter {
                 uri,
                 adapterAttribute?.GetName(),
                 adapterAttribute?.GetDescription(),
-                type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? type.Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? type.Assembly.GetName().Version?.ToString(),
+                type.Assembly.GetInformationalVersion(),
                 vendorAttribute?.CreateVendorInfo() ?? (string.IsNullOrWhiteSpace(companyName) ? null : new VendorInfo(companyName, null))
             );
         }

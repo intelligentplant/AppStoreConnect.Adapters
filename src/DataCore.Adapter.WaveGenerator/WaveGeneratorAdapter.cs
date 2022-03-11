@@ -14,6 +14,7 @@ using DataCore.Adapter.Tags;
 using IntelligentPlant.BackgroundTasks;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.WaveGenerator {
 
@@ -66,6 +67,35 @@ namespace DataCore.Adapter.WaveGenerator {
         /// function string.
         /// </summary>
         private static readonly Regex s_waveGeneratorLiteralRegex = new Regex(@"(?<name>[A-Za-z0-9\s]+?)=(?<value>[^;]+);?");
+
+
+        /// <summary>
+        /// Creates a new <see cref="WaveGeneratorAdapter"/> instance.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> for the adapter.
+        /// </param>
+        /// <param name="logger">
+        ///   The <see cref="ILogger"/> for the adapter.
+        /// </param>
+        public WaveGeneratorAdapter(
+            string id,
+            IOptions<WaveGeneratorAdapterOptions> options,
+            IBackgroundTaskService? backgroundTaskService = null,
+            ILogger<WaveGeneratorAdapter>? logger = null
+        ) : base(id, options, backgroundTaskService, logger) {
+            AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
+                PollingInterval = GetSampleInterval(),
+                TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+            }, BackgroundTaskService, Logger));
+            AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
+        }
 
 
         /// <summary>

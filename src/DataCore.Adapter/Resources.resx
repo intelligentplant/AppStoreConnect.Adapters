@@ -217,6 +217,9 @@
   <data name="HealthChecks_Data_CorrelationId" xml:space="preserve">
     <value>Correlation ID</value>
   </data>
+  <data name="HealthChecks_Data_NodeCount" xml:space="preserve">
+    <value>Node Count</value>
+  </data>
   <data name="HealthChecks_Data_PassiveSubscriberCount" xml:space="preserve">
     <value>Passive Subscriber Count</value>
   </data>

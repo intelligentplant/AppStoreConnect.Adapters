@@ -153,7 +153,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.AddSingleton(sp => HostInfo.Create(
                 name, 
                 description,
-                version,
+                version ?? Assembly.GetEntryAssembly()?.GetInformationalVersion(),
                 vendor ?? sp.GetService<VendorInfo>() ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo()
             ));
             return builder;

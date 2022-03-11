@@ -7,7 +7,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Options for <see cref="FasterKeyValueStore"/>.
     /// </summary>
-    public class FasterKeyValueStoreOptions {
+    public class FasterKeyValueStoreOptions : Services.KeyValueStoreOptions {
 
         /// <summary>
         /// Specifies if the <see cref="FasterKeyValueStore"/> is read-only.
@@ -130,12 +130,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// 
         /// </remarks>
         public long CompactionThresholdBytes { get; set; } = 0;
-
-        /// <summary>
-        /// The <see cref="IFasterKeyValueStoreSerializer"/> to use. Specify <see langword="null"/> to 
-        /// use a default <see cref="JsonFasterKeyValueStoreSerializer"/> instance.
-        /// </summary>
-        public IFasterKeyValueStoreSerializer? Serializer { get; set; }
 
     }
 }

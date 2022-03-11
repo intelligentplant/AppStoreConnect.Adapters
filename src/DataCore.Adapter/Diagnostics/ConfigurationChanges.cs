@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace DataCore.Adapter.Diagnostics {
             int id, 
             int channelCapacity,
             CancellationToken[] cancellationTokens, 
-            Action cleanup,
+            Func<ValueTask> cleanup,
             object? state
         ) {
             return new ConfigurationChangesSubscription(
@@ -62,9 +63,10 @@ namespace DataCore.Adapter.Diagnostics {
 
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<ConfigurationChange> Subscribe(
+        public async IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 
             ConfigurationChangesSubscriptionRequest request, 
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
             if (_isDisposed) {
@@ -79,18 +81,20 @@ namespace DataCore.Adapter.Diagnostics {
 
             ValidationExtensions.ValidateObject(request);
 
-            var subscription = CreateSubscription(
+            var subscription = await CreateSubscriptionAsync(
                 context, 
                 string.Concat(WellKnownFeatures.Diagnostics.ConfigurationChanges, nameof(Subscribe)), 
                 null, 
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
 
             if (request.ItemTypes != null && request.ItemTypes.Any()) {
                 subscription.AddTopics(request.ItemTypes);
             }
 
-            return subscription.ReadAllAsync(cancellationToken);
+            await foreach (var item in subscription.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -151,7 +155,7 @@ namespace DataCore.Adapter.Diagnostics {
             IAdapterCallContext context, 
             IBackgroundTaskService backgroundTaskService, 
             CancellationToken[] cancellationTokens, 
-            Action cleanup, 
+            Func<ValueTask> cleanup, 
             int capacity
         ) : base(id, context, backgroundTaskService, TimeSpan.Zero, cancellationTokens, cleanup, capacity) { }
 

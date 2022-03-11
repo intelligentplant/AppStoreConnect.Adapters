@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 using DataCore.Adapter;
 using DataCore.Adapter.RealTimeData;
@@ -15,15 +11,16 @@ namespace ExampleHostedAdapter {
     // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
 
     partial class ExampleHostedAdapter : IReadSnapshotTagValues {
+
         public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
             ReadSnapshotTagValuesRequest request, 
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            // Always call ValidateInvocation in an adapter feature method to ensure that the call
+            // context and request object(s) are valid!
             ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
 
             var now = DateTime.UtcNow;
 
@@ -37,7 +34,8 @@ namespace ExampleHostedAdapter {
                         break;
                     }
 
-                    if (!TryGetTagByIdOrName(tag, out var tagDef)) {
+                    var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                    if (tagDef == null) {
                         continue;
                     }
 
@@ -48,5 +46,6 @@ namespace ExampleHostedAdapter {
                 }
             }
         }
+
     }
 }

@@ -19,7 +19,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -106,7 +106,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FASTER log compacted. Safe read-only region size before: {0} bytes. After: {1} bytes. Consecutive compactions: {2}..
+        ///   Looks up a localized string similar to FASTER log compacted. Safe read-only region size before: {SizeBefore} bytes. After: {SizeAfter} bytes. Consecutive compactions: {ConsecutiveIterations}..
         /// </summary>
         internal static string Log_LogCompacted {
             get {
@@ -115,7 +115,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FASTER log compaction threshold increased. Before: {0} bytes. After: {1} bytes..
+        ///   Looks up a localized string similar to FASTER log compaction threshold increased. Before: {SizeBefore} bytes. After: {SizeAfter} bytes..
         /// </summary>
         internal static string Log_LogCompactionThresholdIncreased {
             get {
@@ -133,7 +133,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {1} bytes.
+        ///   Looks up a localized string similar to Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {Size} bytes.
         /// </summary>
         internal static string Log_SkippingLogCompaction {
             get {

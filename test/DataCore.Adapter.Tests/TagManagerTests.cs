@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.KeyValueStore.FASTER;
 using DataCore.Adapter.Tags;
 
@@ -321,6 +323,89 @@ namespace DataCore.Adapter.Tests {
             }
             finally {
                 tmpPath.Delete();
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitCreatedConfigurationChange() {
+            var tag = new TagDefinitionBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.Tag, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Created && change.ItemId.Equals(tag.Id, StringComparison.Ordinal) && change.ItemName.Equals(tag.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                await manager.AddOrUpdateTagAsync(tag);
+
+                Assert.IsTrue(notificationReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitDeletedConfigurationChange() {
+            var tag = new TagDefinitionBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.Tag, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Deleted && change.ItemId.Equals(tag.Id, StringComparison.Ordinal) && change.ItemName.Equals(tag.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                await manager.AddOrUpdateTagAsync(tag);
+                await manager.DeleteTagAsync(tag.Id);
+
+                Assert.IsTrue(notificationReceived);
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldEmitUpdatedConfigurationChange() {
+            var tag1 = new TagDefinitionBuilder()
+                .WithId(Guid.NewGuid().ToString())
+                .WithName(TestContext.TestName)
+                .Build();
+
+            var tag2 = new TagDefinitionBuilder(tag1)
+                .WithName(TestContext.TestName + "_UPDATED")
+                .Build();
+
+            var notificationReceived = false;
+
+            Func<ConfigurationChange, CancellationToken, ValueTask> onNotificationReceived = (change, ct) => {
+                if (change.ItemType.Equals(ConfigurationChangeItemTypes.Tag, StringComparison.Ordinal) && change.ChangeType == ConfigurationChangeType.Updated && change.ItemId.Equals(tag2.Id, StringComparison.Ordinal) && change.ItemName.Equals(tag2.Name, StringComparison.Ordinal)) {
+                    notificationReceived = true;
+                }
+                return default;
+            };
+
+            using (var manager = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, onNotificationReceived)) {
+                await manager.InitAsync();
+                // Create
+                await manager.AddOrUpdateTagAsync(tag1);
+                // Update
+                await manager.AddOrUpdateTagAsync(tag2);
+
+                Assert.IsTrue(notificationReceived);
             }
         }
 

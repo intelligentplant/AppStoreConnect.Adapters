@@ -1,0 +1,36 @@
+﻿{
+  "$schema": "http://json.schemastore.org/vs-2017.3.host",
+  "order": 0,
+  "icon": "icon.png",
+  "learnMoreLink": "https://appstore.intelligentplant.com",
+  "symbolInfo": [
+    {
+      "id": "AdapterTypeName",
+      "name": {
+        "text": "Adapter Type Display Name"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "AdapterTypeDescription",
+      "name": {
+        "text": "Adapter Type Description"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "VendorName",
+      "name": {
+        "text": "Vendor Name"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "VendorUrl",
+      "name": {
+        "text": "Vendor URL"
+      },
+      "isVisible": true
+    }
+  ]
+}

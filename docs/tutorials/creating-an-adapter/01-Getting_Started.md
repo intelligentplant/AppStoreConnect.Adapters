@@ -17,7 +17,7 @@ cd MyAdapter
 dotnet new console
 ```
 
-The project can target .NET Framework 4.8, .NET Core 3.1, or .NET 5.0 or later.
+The project can target .NET Framework 4.8, or .NET Core 3.1 or later.
 
 Next, we will add a package references to the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) and [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) NuGet packages.
 
@@ -242,9 +242,7 @@ Next, create a new class called `Adapter`, and extend `AdapterBase`:
 
 ```csharp
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -270,9 +268,7 @@ The first thing we have to do is write a constructor that will call the protecte
 
 ```csharp
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -301,13 +297,11 @@ namespace MyAdapter {
             IBackgroundTaskService backgroundTaskService = null,
             // Logging
             ILogger<Adapter> logger = null
-        ) : base(id, new AdapterOptions() { Name = name, Description = description }, backgroundTaskService, logger) { }
+        ) : base(id, name, description, backgroundTaskService, logger) { }
 
     }
 }
 ```
-
-Note that the base class requires us to pass it an instance of the `AdapterOptions` class, so we construct this parameter ourselves and set the `Name` and `Description` properties that will used by the base class.
 
 The `IBackgroundTaskService` type is defined in the [IntelligentPlant.BackgroundTasks](https://www.nuget.org/packages/IntelligentPlant.BackgroundTasks/) package, which is transitively referenced by the [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter/) package.
 
@@ -342,7 +336,7 @@ protected override Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(
     CancellationToken cancellationToken
 ) {
     return Task.FromResult<IEnumerable<HealthCheckResult>>(new[] {
-        HealthCheckResult.Healthy("All systems normal!")
+        HealthCheckResult.Healthy("Example", "All systems normal!")
     });
 }
 ```
@@ -416,9 +410,9 @@ namespace MyAdapter {
                 var healthFeature = adapter.GetFeature<IHealthCheck>();
                 var health = await healthFeature.CheckHealthAsync(context, cancellationToken);
                 Console.WriteLine("  Health:");
-                Console.WriteLine($"    - <{health.Status}> {health.Description}");
+                Console.WriteLine($"    - <{health.Status}> {health.DisplayName}: {health.Description ?? "no description provided"}");
                 foreach (var item in health.InnerResults) {
-                    Console.WriteLine($"      - <{item.Status}> {item.Description}");
+                    Console.WriteLine($"      - <{item.Status}> {item.DisplayName}: {item.Description ?? "no description provided"}");
                 }
                 Console.WriteLine();
 
@@ -442,8 +436,8 @@ When you run the program, you will see output like the following:
   Features:
     - asc:features/diagnostics/health-check/
   Health:
-    - <Healthy> The adapter is running with healthy status.
-      - <Healthy>
+    - <Healthy> Adapter Health: The adapter is running with healthy status.
+      - <Healthy> Example: All systems normal!
 ```
 
 Note that the URI for the health check feature (`asc:features/diagnostics/health-check/`) is listed in the available adapter features.

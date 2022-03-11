@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
     <AdapterPackageVersion>3.0.0</AdapterPackageVersion>
-    <MicrosoftExtensionsHostingVersion>5.0.0</MicrosoftExtensionsHostingVersion>
+    <MicrosoftExtensionsHostingVersion>6.0.0</MicrosoftExtensionsHostingVersion>
   </PropertyGroup>
 </Project>

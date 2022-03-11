@@ -325,7 +325,7 @@ namespace DataCore.Adapter.Csv {
             };
             
             var csvConfig = new CsvHelper.Configuration.CsvConfiguration(cultureInfo) {
-                PrepareHeaderForMatch = (header, index) => header?.Trim()?.ToUpperInvariant()
+                PrepareHeaderForMatch = args => args.Header?.Trim()?.ToUpperInvariant()
             };
 
             var timeStampColumnIndex = options.TimeStampFieldIndex;

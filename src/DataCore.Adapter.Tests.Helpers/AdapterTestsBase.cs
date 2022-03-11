@@ -75,6 +75,47 @@ namespace DataCore.Adapter.Tests {
 
 
         /// <summary>
+        /// Called immediately prior to the callback in <see cref="RunAdapterTest"/>, after the 
+        /// <paramref name="adapter"/> has been started.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter for the test.
+        /// </param>
+        /// <param name="context">
+        ///   The call context for the test.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the test.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will perform any pre-test actions.
+        /// </returns>
+        protected virtual Task BeforeAdapterTestAsync(TAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Called immediately after the callback in <see cref="RunAdapterTest"/>.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter for the test.
+        /// </param>
+        /// <param name="context">
+        ///   The call context for the test.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the test.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will perform any post-test actions.
+        /// </returns>
+        protected virtual Task AfterAdapterTestAsync(TAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
+            return Task.CompletedTask;
+        }
+
+
+        /// <summary>
         /// Creates and initialises a <typeparamref name="TAdapter"/> instance and runs an adapter 
         /// test.
         /// </summary>
@@ -104,7 +145,9 @@ namespace DataCore.Adapter.Tests {
                         await adapter.StartAsync(CancellationToken).ConfigureAwait(false);
                     }
                     var context = CreateCallContext(TestContext);
+                    await BeforeAdapterTestAsync(adapter, context, CancellationToken).ConfigureAwait(false);
                     await callback(adapter, context, CancellationToken).ConfigureAwait(false);
+                    await AfterAdapterTestAsync(adapter, context, CancellationToken).ConfigureAwait(false);
                 }
                 finally {
                     if (adapter is IAsyncDisposable iad) {

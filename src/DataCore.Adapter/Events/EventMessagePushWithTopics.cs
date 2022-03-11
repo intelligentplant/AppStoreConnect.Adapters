@@ -40,6 +40,11 @@ namespace DataCore.Adapter.Events {
         private readonly Dictionary<string, int> _subscriberCount = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// Lock for performing subscription modifications.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncReaderWriterLock _subscriptionLock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <summary>
         /// Indicates if the subscription manager holds any active subscriptions. If your adapter uses 
         /// a forward-only cursor that you do not want to advance when only passive listeners are 
         /// attached to the adapter, you can use this property to identify if any active listeners are 
@@ -92,9 +97,9 @@ namespace DataCore.Adapter.Events {
             }
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, DisposedToken)) {
-                var subscription = CreateSubscription<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, ctSource.Token);
+                var subscription = await CreateSubscriptionAsync<IEventMessagePushWithTopics>(context, nameof(Subscribe), request, ctSource.Token).ConfigureAwait(false);
                 if (request.Topics != null && request.Topics.Any()) {
-                    await OnTopicsAddedToSubscriptionInternal(subscription, request.Topics, ctSource.Token).ConfigureAwait(false);
+                    await OnTopicsAddedToSubscriptionInternalAsync(subscription, request.Topics, ctSource.Token).ConfigureAwait(false);
                 }
 
                 BackgroundTaskService.QueueBackgroundWorkItem(
@@ -118,7 +123,7 @@ namespace DataCore.Adapter.Events {
             int id, 
             int channelCapacity,
             CancellationToken[] cancellationTokens, 
-            Action cleanup, 
+            Func<ValueTask> cleanup, 
             object? state
         ) {
             var request = (CreateEventMessageTopicSubscriptionRequest) state!;
@@ -136,18 +141,18 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionAdded(EventSubscriptionChannel subscription) {
-            base.OnSubscriptionAdded(subscription);
+        protected override async ValueTask OnSubscriptionAddedAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) {
+            await base.OnSubscriptionAddedAsync(subscription, cancellationToken).ConfigureAwait(false);
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
         }
 
 
         /// <inheritdoc/>
-        protected override void OnSubscriptionCancelled(EventSubscriptionChannel subscription) {
-            base.OnSubscriptionCancelled(subscription);
+        protected override async ValueTask OnSubscriptionCancelledAsync(EventSubscriptionChannel subscription, CancellationToken cancellationToken) {
+            await base.OnSubscriptionCancelledAsync(subscription, cancellationToken).ConfigureAwait(false);
             HasActiveSubscriptions = HasSubscriptions && GetSubscriptions().Any(x => x.SubscriptionType == EventMessageSubscriptionType.Active);
             if (subscription != null) {
-                OnTopicsRemovedFromSubscriptionInternal(subscription, subscription.Topics);
+                await OnTopicsRemovedFromSubscriptionInternalAsync(subscription, subscription.Topics, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -160,7 +165,7 @@ namespace DataCore.Adapter.Events {
         ///   The subscribed topics.
         /// </returns>
         public IEnumerable<string> GetSubscribedTopics() {
-            lock (_subscriberCount) {
+            using (_subscriptionLock.ReaderLock()) {
                 return _subscriberCount.Keys.ToArray();
             }
         }
@@ -283,10 +288,10 @@ namespace DataCore.Adapter.Events {
                 }
 
                 if (item.Action == SubscriptionUpdateAction.Subscribe) {
-                    await OnTopicsAddedToSubscriptionInternal(subscription, topics, cancellationToken).ConfigureAwait(false);
+                    await OnTopicsAddedToSubscriptionInternalAsync(subscription, topics, cancellationToken).ConfigureAwait(false);
                 }
                 else {
-                    OnTopicsRemovedFromSubscriptionInternal(subscription, topics);
+                    await OnTopicsRemovedFromSubscriptionInternalAsync(subscription, topics, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -307,12 +312,12 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A task that will process the operation.
         /// </returns>
-        private async Task OnTopicsAddedToSubscriptionInternal(EventSubscriptionChannel subscription, IEnumerable<string> topics, CancellationToken cancellationToken) {
+        private async Task OnTopicsAddedToSubscriptionInternalAsync(EventSubscriptionChannel subscription, IEnumerable<string> topics, CancellationToken cancellationToken) {
             TaskCompletionSource<bool> processed = null!;
 
             subscription.AddTopics(topics);
 
-            lock (_subscriberCount) {
+            using (await _subscriptionLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
                 var newSubscriptions = new List<string>();
 
                 foreach (var topic in topics) {
@@ -355,11 +360,14 @@ namespace DataCore.Adapter.Events {
         /// <param name="topics">.
         ///   The subscription topics
         /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
         /// <returns>
         ///   A task that will process the operation.
         /// </returns>
-        private void OnTopicsRemovedFromSubscriptionInternal(EventSubscriptionChannel subscription, IEnumerable<string> topics) {
-            lock (_subscriberCount) {
+        private async Task OnTopicsRemovedFromSubscriptionInternalAsync(EventSubscriptionChannel subscription, IEnumerable<string> topics, CancellationToken cancellationToken) {
+            using (await _subscriptionLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
                 var removedSubscriptions = new List<string>();
 
                 foreach (var topic in topics) {
@@ -459,7 +467,7 @@ namespace DataCore.Adapter.Events {
 
             if (disposing) {
                 _topicSubscriptionChangesChannel.Writer.TryComplete();
-                lock (_subscriberCount) {
+                using (_subscriptionLock.WriterLock()) {
                     _subscriberCount.Clear();
                 }
             }

@@ -97,7 +97,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add OpenTelemetry tracing
             services.AddOpenTelemetryTracing(builder => {
                 builder
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Adapter API", serviceVersion: version, serviceInstanceId: System.Net.Dns.GetHostName()))
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
                     .AddJaegerExporter();

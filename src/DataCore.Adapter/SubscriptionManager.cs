@@ -147,8 +147,15 @@ namespace DataCore.Adapter {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        protected virtual void OnSubscriptionAdded(TSubscription subscription) {
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform any required actions.
+        /// </returns>
+        protected virtual ValueTask OnSubscriptionAddedAsync(TSubscription subscription, CancellationToken cancellationToken) {
             SubscriptionAdded?.Invoke(subscription);
+            return default;
         }
 
 
@@ -158,8 +165,15 @@ namespace DataCore.Adapter {
         /// <param name="subscription">
         ///   The subscription.
         /// </param>
-        protected virtual void OnSubscriptionCancelled(TSubscription subscription) {
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform any required actions.
+        /// </returns>
+        protected virtual ValueTask OnSubscriptionCancelledAsync(TSubscription subscription, CancellationToken cancellationToken) {
             SubscriptionCancelled?.Invoke(subscription);
+            return default;
         }
 
 
@@ -182,7 +196,7 @@ namespace DataCore.Adapter {
         ///   A callback that must be invoked when the subscription is cancelled.
         /// </param>
         /// <param name="state">
-        ///   The state value passed to <see cref="CreateSubscription"/>.
+        ///   The state value passed to <see cref="CreateSubscriptionAsync"/>.
         /// </param>
         /// <returns>
         ///   A new <typeparamref name="TSubscription"/> that will emit values to the subscriber.
@@ -192,7 +206,7 @@ namespace DataCore.Adapter {
             int id, 
             int channelCapacity,
             CancellationToken[] cancellationTokens,
-            Action cleanup,
+            Func<ValueTask> cleanup,
             object? state
         );
 
@@ -242,7 +256,7 @@ namespace DataCore.Adapter {
         /// <exception cref="InvalidOperationException">
         ///   The subscription manager does not have the capacity to add a new subscription.
         /// </exception>
-        protected TSubscription CreateSubscription(IAdapterCallContext context, string? name, object? state, CancellationToken cancellationToken) {
+        protected async ValueTask<TSubscription> CreateSubscriptionAsync(IAdapterCallContext context, string? name, object? state, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -261,7 +275,7 @@ namespace DataCore.Adapter {
             );
             _subscriptions[subscriptionId] = subscription;
 
-            OnSubscriptionAdded(subscription);
+            await OnSubscriptionAddedAsync(subscription, subscription.CancellationToken).ConfigureAwait(false);
 
             return subscription;
         }
@@ -297,7 +311,7 @@ namespace DataCore.Adapter {
         /// <exception cref="InvalidOperationException">
         ///   The subscription manager does not have the capacity to add a new subscription.
         /// </exception>
-        protected TSubscription CreateSubscription<TFeature>(IAdapterCallContext context, string name, object? state, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
+        protected async ValueTask<TSubscription> CreateSubscriptionAsync<TFeature>(IAdapterCallContext context, string name, object? state, CancellationToken cancellationToken) where TFeature : IAdapterFeature {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -319,7 +333,7 @@ namespace DataCore.Adapter {
             );
             _subscriptions[subscriptionId] = subscription;
 
-            OnSubscriptionAdded(subscription);
+            await OnSubscriptionAddedAsync(subscription, subscription.CancellationToken).ConfigureAwait(false);
 
             return subscription;
         }
@@ -342,14 +356,14 @@ namespace DataCore.Adapter {
         /// <param name="id">
         ///   The cancelled subscription ID.
         /// </param>
-        private void OnSubscriptionCancelledInternal(int id) {
+        private async ValueTask OnSubscriptionCancelledInternal(int id) {
             if (_isDisposed) {
                 return;
             }
 
             if (_subscriptions.TryRemove(id, out var subscription)) {
                 subscription.Dispose();
-                OnSubscriptionCancelled(subscription);
+                await OnSubscriptionCancelledAsync(subscription, DisposedToken).ConfigureAwait(false);
             }
         }
 
