@@ -63,6 +63,12 @@
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="&lt;ProjectReference Include=&quot;..\..\src\DataCore.Adapter.KeyValueStore.Sqlite\DataCore.Adapter.KeyValueStore.Sqlite.csproj&quot; /&gt;"
+      Replacement="&lt;PackageReference Include=&quot;IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite&quot; Version=&quot;$(Version)&quot; /&gt;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       Placeholder="&lt;ProjectReference Include=&quot;..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj&quot; /&gt;"
       Replacement="&lt;PackageReference Include=&quot;IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry&quot; Version=&quot;$(Version)&quot; /&gt;"
     />

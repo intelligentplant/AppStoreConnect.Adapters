@@ -1,4 +1,6 @@
-﻿using OpenTelemetry.Resources;
+﻿using DataCore.Adapter.KeyValueStore.Sqlite;
+
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 // The [VendorInfo] attribute is used to add vendor information to the adapters in this assembly,
@@ -19,6 +21,19 @@ builder.Services
         name: "ExampleHostedAdapter Host",
         description: "ASP.NET Core adapter host"
      )
+    // Add a SQLite-based key-value store service. This can be used by our adapter to persist data
+    // between restarts.
+    //
+    // NuGet packages are also available for other store types, including file system annd Microsoft
+    // FASTER-based stores.
+    .AddKeyValueStore(sp => {
+        var path = Path.Combine(AppContext.BaseDirectory, "Data", "kvstore.db");
+        var options = new SqliteKeyValueStoreOptions() {
+            ConnectionString = $"Data Source={path};Cache=Shared"
+        };
+
+        return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
+    })
     // Bind adapter options against the application configuration.
     .AddServices(svc => svc.Configure<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
         AdapterId,

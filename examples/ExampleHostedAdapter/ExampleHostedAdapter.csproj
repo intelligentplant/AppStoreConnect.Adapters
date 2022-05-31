@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.Sqlite\DataCore.Adapter.KeyValueStore.Sqlite.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
   </ItemGroup>
   
