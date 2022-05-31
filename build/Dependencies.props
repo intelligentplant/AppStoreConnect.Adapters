@@ -5,6 +5,7 @@
   <!-- Microsoft Packages -->
   <PropertyGroup>
     <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
+    <SystemLinqAsyncVersion>6.0.1</SystemLinqAsyncVersion>
     <SystemNetHttpJsonVersion>6.0.0</SystemNetHttpJsonVersion>
     <SystemTextJsonVersion>6.0.4</SystemTextJsonVersion>
     <SystemThreadingChannelsVersion>6.0.0</SystemThreadingChannelsVersion>

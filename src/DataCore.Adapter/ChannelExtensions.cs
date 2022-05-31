@@ -2087,35 +2087,6 @@ namespace DataCore.Adapter {
 
         #endregion
 
-
-        /// <summary>
-        /// Returns the first item emitted from the <see cref="IAsyncEnumerable{T}"/>, or the 
-        /// default value of the item type if no values are emitted.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The item type.
-        /// </typeparam>
-        /// <param name="enumerable">
-        ///   The <see cref="IAsyncEnumerable{T}"/>.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the first item emitted, or the 
-        ///   default value of <typeparamref name="T"/>.
-        /// </returns>
-        public static async Task<T> FirstOrDefaultAsync<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken = default) {
-            await using (var enumerator = enumerable.GetAsyncEnumerator(cancellationToken)) {
-                if (!await enumerator.MoveNextAsync().ConfigureAwait(false)) {
-                    return default!;
-                }
-
-                return enumerator.Current;
-            }
-        }
-
-
         /// <summary>
         /// Emits all items in the <see cref="IEnumerable{T}"/> as an <see cref="IAsyncEnumerable{T}"/>.
         /// </summary>

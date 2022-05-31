@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestTestFrameworkVersion)" />
+    <PackageReference Include="System.Linq.Async" Version="$(SystemLinqAsyncVersion)" />
   </ItemGroup>
 
   <ItemGroup>
