@@ -27,7 +27,7 @@ builder.Services
     // NuGet packages are also available for other store types, including file system annd Microsoft
     // FASTER-based stores.
     .AddKeyValueStore(sp => {
-        var path = Path.Combine(AppContext.BaseDirectory, "Data", "kvstore.db");
+        var path = Path.Combine(AppContext.BaseDirectory, "kvstore.db");
         var options = new SqliteKeyValueStoreOptions() {
             ConnectionString = $"Data Source={path};Cache=Shared"
         };
