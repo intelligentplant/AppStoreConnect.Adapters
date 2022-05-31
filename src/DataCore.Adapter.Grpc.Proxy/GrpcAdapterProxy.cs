@@ -1,22 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 
-#if NET461 == false
+using GrpcCore = Grpc.Core;
+using Grpc.Core.Interceptors;
+
+#if NETFRAMEWORK == false
 using GrpcNet = Grpc.Net;
 #endif
 
-using GrpcCore = Grpc.Core;
-using Grpc.Core.Interceptors;
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
+
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.Extensions.Logging;
+
 using DataCore.Adapter.Diagnostics;
-using System.ComponentModel.DataAnnotations;
 using DataCore.Adapter.Proxy;
-using System.Linq;
+
 
 namespace DataCore.Adapter.Grpc.Proxy {
 
@@ -114,7 +118,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
 
 
-#if NET461 == false
+#if NETFRAMEWORK == false
 
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
