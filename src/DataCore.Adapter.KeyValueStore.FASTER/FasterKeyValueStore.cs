@@ -294,31 +294,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <summary>
-        /// Takes a full snapshot checkpoint.
-        /// </summary>
-        /// <remarks>
-        ///   This method is intended to be called from <see cref="Dispose(bool)"/> and nowhere else!
-        /// </remarks>
-        private void TakeFullCheckpoint() {
-            if (Interlocked.CompareExchange(ref _checkpointIsRequired, 0, 1) != 1) {
-                // No checkpoint pending.
-                return;
-            }
-            try {
-                _fasterKVStore.TakeFullCheckpoint(out _, CheckpointType.Snapshot);
-                // We need to wait for the checkpoint to complete and there is not a
-                // synchronous way of doing this. We avoid doing this if TakeFullCheckpointAsync
-                // is called instead!
-                _fasterKVStore.CompleteCheckpointAsync().GetAwaiter().GetResult();
-            }
-            catch {
-                Interlocked.Exchange(ref _checkpointIsRequired, 1);
-                throw;
-            }
-        }
-
-
-        /// <summary>
         /// Long-running task that will periodically perform compaction of the FASTER log if 
         /// required.
         /// </summary>
@@ -355,7 +330,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     var compactUntilAddress = (long) (logAccessor.BeginAddress + 0.2 * (logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress));
                     var session = GetPooledSession();
                     try {
-                        session.Compact(compactUntilAddress, true);
+                        session.Compact(compactUntilAddress, CompactionType.Scan);
                         // Log has been modified; we need a new checkpoint to be created.
                         Interlocked.Exchange(ref _checkpointIsRequired, 1);
                     }
@@ -464,7 +439,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
-                while (result.Status == Status.PENDING) {
+                while (result.Status.IsPending) {
                     result = await result.CompleteAsync().ConfigureAwait(false);
                 }
 
@@ -497,7 +472,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 ReturnPooledSession(session);
             }
 
-            if (status != Status.OK) {
+            if (!status.Found) {
                 return null;
             }
 
@@ -518,16 +493,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 var result = await session.DeleteAsync(ref keySpanByte).ConfigureAwait(false);
 
-                while (result.Status == Status.PENDING) {
+                while (result.Status.IsPending) {
                     result = await result.CompleteAsync().ConfigureAwait(false);
                 }
 
-                if (result.Status != Status.NOTFOUND) {
+                if (result.Status.Found) {
                     // Mark the cache as dirty.
                     Interlocked.Exchange(ref _checkpointIsRequired, 1);
                 }
 
-                return result.Status == Status.OK;
+                return result.Status.IsCompletedSuccessfully;
             }
             finally {
                 ReturnPooledSession(session);
@@ -604,7 +579,21 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             if (disposing) {
                 if (_canRecordCheckpoints) {
-                    TakeFullCheckpoint();
+                    using (var @lock = new ManualResetEventSlim()) {
+                        _ = Task.Run(async () => { 
+                            try {
+                                await TakeFullCheckpointAsync().ConfigureAwait(false);
+                            }
+                            catch (Exception e) {
+                                Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                            }
+                            finally {
+                                @lock.Set();
+                            }
+                        });
+                        @lock.Wait();
+                    }
+                    
                 }
                 DisposeCommon();
             }
