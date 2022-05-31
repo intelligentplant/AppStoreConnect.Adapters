@@ -3,6 +3,7 @@ using DataCore.Adapter;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.RealTimeData;
+using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
@@ -38,6 +39,7 @@ namespace ExampleHostedAdapter {
         public ExampleHostedAdapter(
             string id, 
             IOptionsMonitor<ExampleHostedAdapterOptions> options,
+            IKeyValueStore keyValueStore,
             IBackgroundTaskService taskScheduler,
             ILogger<ExampleHostedAdapter> logger
         ) : base(id, options, taskScheduler, logger) {
@@ -51,9 +53,14 @@ namespace ExampleHostedAdapter {
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
             _tagManager = new TagManager(
-                // If you want to persist definitions between restarts, pass e.g. a Microsoft FASTER or
-                // JSON file-based IKeyValueStore implementation here instead of null.
-                null,
+                // We can persist tag definitions between restarts using the provided IKeyValueStore
+                // service. The CreateScopedStore extension method adds a prefix to all keys that
+                // we read from or write to, which is useful if multiple services in your
+                // application are sharing the same store.
+                //
+                // If we are not interested in persisting tag definitions, we can pass null
+                // here instead.
+                keyValueStore.CreateScopedStore(id),
                 BackgroundTaskService,
                 new[] { s_tagCreatedAtPropertyDefinition }
             );

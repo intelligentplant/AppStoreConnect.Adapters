@@ -78,6 +78,11 @@ namespace DataCore.Adapter.Tags {
         /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
+        /// <summary>
+        /// The number of tag definitions held by the <see cref="TagManager"/>.
+        /// </summary>
+        public int Count => _tagsById.Count;
+
 
         /// <summary>
         /// Creates a new <see cref="TagManager"/> object.

@@ -68,7 +68,7 @@
         <!-- Explicit Sqlite reference required on .NET Framework because the package reference 
              from Microsoft.Data.Sqlite on the Sqlite key-value store project seems to not be 
              transitive, so tests fail. This does not happen against .NET for some reason... -->
-        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.0.7" />
+        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
       </ItemGroup>
       <ItemGroup>
         <ProjectReference Include="..\..\src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj" />
