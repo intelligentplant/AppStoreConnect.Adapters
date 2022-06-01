@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="$(IntelligentPlantBackgroundTasksVersion)" />
+    <PackageReference Include="IntelligentPlant.BackgroundTasks.DependencyInjection" />
   </ItemGroup>
 
   <ItemGroup>

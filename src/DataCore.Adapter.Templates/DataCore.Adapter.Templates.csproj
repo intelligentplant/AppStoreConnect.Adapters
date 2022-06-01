@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>$(PackagePrefix).Adapter.Templates</PackageId>
     <PackageType>Template</PackageType>
-    <DefaultNetCoreTargetFramework>netcoreapp3.1</DefaultNetCoreTargetFramework>
+    <DefaultNetCoreTargetFramework>net6.0</DefaultNetCoreTargetFramework>
     <Title>App Store Connect Adapter Templates</Title>
     <Description>Templates to use when creating an adapter for Intelligent Plant App Store Connect.</Description>
     <PackageTags>$(PackageTags);dotnet-new;templates</PackageTags>
@@ -72,23 +72,54 @@
       Placeholder="&lt;ProjectReference Include=&quot;..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj&quot; /&gt;"
       Replacement="&lt;PackageReference Include=&quot;IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry&quot; Version=&quot;$(Version)&quot; /&gt;"
     />
+
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
-      Placeholder="Version=&quot;%24(OpenTelemetryApiVersion)&quot;"
-      Replacement="Version=&quot;$(OpenTelemetryApiVersion)&quot;"
+      Placeholder="Include=&quot;OpenTelemetry&quot;"
+      Replacement="Include=&quot;OpenTelemetry&quot; Version=&quot;$(PkgVersion_OpenTelemetry)&quot;"
     />
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
-      Placeholder="Version=&quot;%24(OpenTelemetryHostingVersion)&quot;"
-      Replacement="Version=&quot;$(OpenTelemetryHostingVersion)&quot;"
+      Placeholder="Include=&quot;OpenTelemetry.Api&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Api&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Api)&quot;"
     />
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
-      Placeholder="Version=&quot;%24(OpenTelemetryInstrumentationVersion)&quot;"
-      Replacement="Version=&quot;$(OpenTelemetryInstrumentationVersion)&quot;"
+      Placeholder="Include=&quot;OpenTelemetry.Exporter.Console&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Exporter.Console&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Exporter_Console)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Exporter.Jaeger&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Exporter.Jaeger&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Exporter_Jaeger)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Extensions.Hosting&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Extensions.Hosting&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Extensions_Hosting)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Instrumentation.AspNetCore&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Instrumentation.AspNetCore&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_AspNetCore)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Instrumentation.Http&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Instrumentation.Http&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_Http)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Instrumentation.SqlClient&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Instrumentation.SqlClient&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_SqlClient)&quot;"
     />
   </Target>
 

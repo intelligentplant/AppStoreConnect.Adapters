@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Castle.Core" Version="$(CastleCoreVersion)" />
+    <PackageReference Include="Castle.Core" />
   </ItemGroup>
 
   <ItemGroup>
