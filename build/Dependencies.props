@@ -1,63 +1,19 @@
-<!-- Contains NuGet package versions used throughout the rest of the repository. -->
-
 <Project>
 
-  <!-- Microsoft Packages -->
+  <!-- 
+  Define package versions for OpenTelemetry packages as build properties. This allows us to inject 
+  the correct package versions into the templated project files when building the DataCore.Adapter.Templates 
+  project. 
+  -->
   <PropertyGroup>
-    <SystemComponentModelAnnotationsVersion>5.0.0</SystemComponentModelAnnotationsVersion>
-    <SystemLinqAsyncVersion>6.0.1</SystemLinqAsyncVersion>
-    <SystemNetHttpJsonVersion>6.0.0</SystemNetHttpJsonVersion>
-    <SystemTextJsonVersion>6.0.4</SystemTextJsonVersion>
-    <SystemThreadingChannelsVersion>6.0.0</SystemThreadingChannelsVersion>
-    <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
-    <!-- 
-      Microsoft.AspNetCore metapackage is referenced by .NET Framework 4.8 unit tests. 
-    -->
-    <MicrosoftAspNetCoreVersion>2.2.0</MicrosoftAspNetCoreVersion>
-    <MicrosoftAspNetCoreSignalRClientVersion>6.0.5</MicrosoftAspNetCoreSignalRClientVersion>
-    <MicrosoftAspNetCoreSignalRVersion>1.1.0</MicrosoftAspNetCoreSignalRVersion>
-    <MicrosoftAspNetWebApiClientVersion>5.2.7</MicrosoftAspNetWebApiClientVersion>
-    <MicrosoftBclAsyncInterfacesVersion>6.0.0</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftDataSqliteVersion>6.0.5</MicrosoftDataSqliteVersion>
-    <!-- 
-      Microsoft.Extensions.Hosting and Microsoft.Extensions.Http are referenced by the 
-      DataCore.Adapter.Tests.Helpers project for .NET Standard 2.0 targeting. 
-    -->
-    <MicrosoftExtensionsHostingVersion>2.2.0</MicrosoftExtensionsHostingVersion>
-    <MicrosoftExtensionsHttpVersion>2.2.0</MicrosoftExtensionsHttpVersion>
-    <MicrosoftFASTERCoreVersion>2.0.7</MicrosoftFASTERCoreVersion>
+    <PkgVersion_OpenTelemetry>1.2.0</PkgVersion_OpenTelemetry>
+    <PkgVersion_OpenTelemetry_Api>1.2.0</PkgVersion_OpenTelemetry_Api>
+    <PkgVersion_OpenTelemetry_Exporter_Console>1.2.0</PkgVersion_OpenTelemetry_Exporter_Console>
+    <PkgVersion_OpenTelemetry_Exporter_Jaeger>1.2.0</PkgVersion_OpenTelemetry_Exporter_Jaeger>
+    <PkgVersion_OpenTelemetry_Extensions_Hosting>1.0.0-rc9</PkgVersion_OpenTelemetry_Extensions_Hosting>
+    <PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>1.0.0-rc9</PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>
+    <PkgVersion_OpenTelemetry_Instrumentation_Http>1.0.0-rc9</PkgVersion_OpenTelemetry_Instrumentation_Http>
+    <PkgVersion_OpenTelemetry_Instrumentation_SqlClient>1.0.0-rc9</PkgVersion_OpenTelemetry_Instrumentation_SqlClient>
   </PropertyGroup>
   
-  <!-- gRPC Packages -->
-  <PropertyGroup>
-    <GoogleProtobufVersion>3.21.1</GoogleProtobufVersion>
-    <GrpcAspNetCoreServerVersion>2.46.0</GrpcAspNetCoreServerVersion>
-    <GrpcCoreVersion>2.46.3</GrpcCoreVersion>
-    <GrpcNetClientVersion>2.46.0</GrpcNetClientVersion>
-    <GrpcToolsVersion>2.46.3</GrpcToolsVersion>
-  </PropertyGroup>
-  
-  <!-- Dev/Test/Benchmark Packages -->
-  <PropertyGroup>
-    <BenchmarkDotNetVersion>0.12.1</BenchmarkDotNetVersion>
-    <MicrosoftNETTestSdkVersion>17.2.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftSourceLinkGitHubVersion>1.1.1</MicrosoftSourceLinkGitHubVersion>
-    <MSTestTestAdapterVersion>2.2.10</MSTestTestAdapterVersion>
-    <MSTestTestFrameworkVersion>2.2.10</MSTestTestFrameworkVersion>
-  </PropertyGroup>
-  
-  <!-- Other Packages -->
-  <PropertyGroup>
-    <CastleCoreVersion>5.0.0</CastleCoreVersion>
-    <CsvHelperVersion>27.2.1</CsvHelperVersion>
-    <IntelligentPlantBackgroundTasksVersion>8.1.0</IntelligentPlantBackgroundTasksVersion>
-    <JaahasHttpRequestTransformerVersion>2.2.0</JaahasHttpRequestTransformerVersion>
-    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <NitoAsyncExCoordinationVersion>5.1.2</NitoAsyncExCoordinationVersion>
-    <NSwagAspNetCoreVersion>13.16.0</NSwagAspNetCoreVersion>
-    <NuGetVersioningVersion>6.2.0</NuGetVersioningVersion>
-    <OpenTelemetryApiVersion>1.2.0</OpenTelemetryApiVersion>
-    <OpenTelemetryHostingVersion>1.0.0-rc9</OpenTelemetryHostingVersion>
-    <OpenTelemetryInstrumentationVersion>1.0.0-rc9</OpenTelemetryInstrumentationVersion>
-  </PropertyGroup>
 </Project>
