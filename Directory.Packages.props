@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <EnablePackageVersionOverride>true</EnablePackageVersionOverride>
+    <EnablePackageVersionOverride>false</EnablePackageVersionOverride>
     <NoWarn>NU1507;$(NoWarn)</NoWarn>
   </PropertyGroup>
 
