@@ -83,7 +83,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
 	ProjectSection(SolutionItems) = preProject
-		build\Dependencies.props = build\Dependencies.props
 		build\NetFX.targets = build\NetFX.targets
 		build\version.json = build\version.json
 	EndProjectSection
