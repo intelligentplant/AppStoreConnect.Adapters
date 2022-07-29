@@ -27,11 +27,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AdapterOptionsResources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Diagnostics\AdapterEventSourceResources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AdapterEventSourceResources.resx</DependentUpon>
-    </Compile>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -43,10 +38,6 @@
     <EmbeddedResource Update="AdapterOptionsResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AdapterOptionsResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Diagnostics\AdapterEventSourceResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AdapterEventSourceResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

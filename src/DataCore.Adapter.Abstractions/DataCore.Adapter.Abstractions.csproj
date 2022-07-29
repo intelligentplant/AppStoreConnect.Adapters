@@ -29,6 +29,11 @@
       <DependentUpon>AbstractionsResources.resx</DependentUpon>
       <CustomToolNamespace></CustomToolNamespace>
     </Compile>
+    <Compile Update="Diagnostics\AdapterEventSourceResources.Designer.cs">
+      <DependentUpon>AdapterEventSourceResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +41,10 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AbstractionsResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Diagnostics\AdapterEventSourceResources.resx">
+      <LastGenOutput>AdapterEventSourceResources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
 

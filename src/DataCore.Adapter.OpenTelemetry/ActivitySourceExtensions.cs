@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using DataCore.Adapter.Common;
 
@@ -11,14 +13,9 @@ namespace DataCore.Adapter.Diagnostics {
     public static partial class ActivitySourceExtensions {
 
         /// <summary>
-        /// The name of the App Store Connect adapters activity source.
+        /// The default namespace to use for activities and activity tags.
         /// </summary>
-        public const string DiagnosticSourceName = "IntelligentPlant.AppStoreConnect.Adapter";
-
-        /// <summary>
-        /// The default namespace to use for OpenTelemetry attributes.
-        /// </summary>
-        public const string DefaultOpenTelemetryNamespace = "intelligentplant.appstoreconnect";
+        public const string DefaultNamespace = "intelligentplant.appstoreconnect";
 
 
         /// <summary>
@@ -34,7 +31,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The activity name.
         /// </returns>
         public static string GetActivityName(Type featureType, string operationName) {
-            return string.Concat(DefaultOpenTelemetryNamespace, ".", "adapter", "/", featureType.Name, "/", operationName);
+            return string.Concat(DefaultNamespace, ".", "adapter", "/", featureType.Name, "/", operationName);
         }
 
 
@@ -49,17 +46,17 @@ namespace DataCore.Adapter.Diagnostics {
         /// </param>
         /// <returns>
         ///   The qualified name. If <paramref name="namespace"/> is <see langword="null"/> or 
-        ///   white space, <see cref="DefaultOpenTelemetryNamespace"/> will be used as the namespace.
+        ///   white space, <see cref="DefaultNamespace"/> will be used as the namespace.
         /// </returns>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         public static string GetQualifiedName(string name, string? @namespace) {
             if (string.IsNullOrWhiteSpace(name)) {
-                throw new ArgumentException(SharedResources.Error_NameIsRequired, nameof(name));
+                throw new ArgumentOutOfRangeException(nameof(name), SharedResources.Error_NameIsRequired);
             }
 
-            return string.Concat(string.IsNullOrWhiteSpace(@namespace) ? DefaultOpenTelemetryNamespace : @namespace, ".", name);
+            return string.Concat(string.IsNullOrWhiteSpace(@namespace) ? DefaultNamespace : @namespace, ".", name);
         }
 
 
@@ -80,7 +77,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// </param>
         /// <param name="namespace">
         ///   The namespace for the tag. Specify <see langword="null"/> or white space to use 
-        ///   <see cref="DefaultOpenTelemetryNamespace"/>.
+        ///   <see cref="DefaultNamespace"/>.
         /// </param>
         /// <returns>
         ///   The activity.
@@ -368,6 +365,30 @@ namespace DataCore.Adapter.Diagnostics {
             }
 
             return activity.SetTagWithNamespace("page", value);
+        }
+
+
+        /// <summary>
+        /// Creates a tag that can be assigned to an metric instrument reading associated with an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID
+        /// </param>
+        /// <param name="tags">
+        ///   The additional tags to include in the tag list.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagList"/> instance.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public static TagList CreateInstrumentReadingTags(string adapterId, IDictionary<string, object?>? tags = null) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentOutOfRangeException(nameof(adapterId));
+            }
+            var adapterIdTag = new KeyValuePair<string, object?>(GetQualifiedName("adapter_id", null), adapterId);
+            return new TagList(new ReadOnlySpan<KeyValuePair<string, object?>>(tags == null ? new[] { adapterIdTag } : new[] { adapterIdTag }.Concat(tags).ToArray()));
         }
 
     }

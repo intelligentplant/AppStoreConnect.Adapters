@@ -6,7 +6,7 @@ namespace DataCore.Adapter.Diagnostics {
     /// <see cref="EventSource"/> that adapters can use to emit lifecycle events.
     /// </summary>
     [EventSource(
-        Name = ActivitySourceExtensions.DiagnosticSourceName,
+        Name = Telemetry.DiagnosticSourceName,
         LocalizationResources = "DataCore.Adapter.Diagnostics.AdapterEventSourceResources"
     )]
     public partial class AdapterEventSource : EventSource {

@@ -25,7 +25,7 @@ namespace OpenTelemetry.Trace {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.AddSource(DataCore.Adapter.Diagnostics.ActivitySourceExtensions.DiagnosticSourceName);
+            builder.AddSource(DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName);
 
             return builder;
         }
