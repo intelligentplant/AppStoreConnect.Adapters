@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc" />
   </ItemGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 

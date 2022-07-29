@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Snapshot Subscription Management ]
 
-#if NETSTANDARD2_0 == false
+#if NET48 == false
 
         /// <summary>
         /// Creates a snapshot tag value subscription.
@@ -394,7 +394,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Tag Value Write ]
 
-#if NETSTANDARD2_0 == false
+#if NET48 == false
 
         /// <summary>
         /// Writes values to the specified adapter's snapshot.

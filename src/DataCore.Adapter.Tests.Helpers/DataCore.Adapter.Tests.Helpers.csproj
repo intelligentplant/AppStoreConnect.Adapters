@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net48</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.Tests</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Tests.Helpers</PackageId>
     <Description>Base MSTest test classes for testing App Store Connect adapters.</Description>
@@ -19,12 +19,12 @@
     <ProjectReference Include="..\DataCore.Adapter.DependencyInjection\DataCore.Adapter.DependencyInjection.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Http" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
