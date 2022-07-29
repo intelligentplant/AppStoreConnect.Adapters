@@ -18,7 +18,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The available adapters.
         /// </summary>
-        private readonly IAdapter[] _adapters;
+        private readonly IEnumerable<IAdapter> _adapters;
 
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace DataCore.Adapter {
         /// </param>
         public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
             : base(authorizationService) {
-            _adapters = adapters?.OrderBy(x => x.Descriptor.Name, StringComparer.OrdinalIgnoreCase)?.ToArray() ?? Array.Empty<IAdapter>();
+            _adapters = adapters ?? Array.Empty<IAdapter>();
         }
 
 
