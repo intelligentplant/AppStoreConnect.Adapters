@@ -24,7 +24,7 @@ builder.Services
     // Add a SQLite-based key-value store service. This can be used by our adapter to persist data
     // between restarts.
     //
-    // NuGet packages are also available for other store types, including file system annd Microsoft
+    // NuGet packages are also available for other store types, including file system and Microsoft
     // FASTER-based stores.
     .AddKeyValueStore(sp => {
         var path = Path.Combine(AppContext.BaseDirectory, "kvstore.db");
