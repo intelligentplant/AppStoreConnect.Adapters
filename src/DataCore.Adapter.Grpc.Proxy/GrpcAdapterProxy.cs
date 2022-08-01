@@ -5,11 +5,8 @@ using System.Threading.Tasks;
 using System.Threading;
 
 using GrpcCore = Grpc.Core;
-using Grpc.Core.Interceptors;
-
-#if NETFRAMEWORK == false
 using GrpcNet = Grpc.Net;
-#endif
+using Grpc.Core.Interceptors;
 
 using DataCore.Adapter.Grpc.Client.Authentication;
 using DataCore.Adapter.Common;
@@ -118,8 +115,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
         private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
 
 
-#if NETFRAMEWORK == false
-
         /// <summary>
         /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcNet.Client.GrpcChannel"/>.
         /// </summary>
@@ -170,61 +165,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
             _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
         }
-
-#else
-
-        /// <summary>
-        /// Creates a new <see cref="GrpcAdapterProxy"/> using the specified <see cref="GrpcCore.Channel"/>.
-        /// </summary>
-        /// <param name="id">
-        ///   The adapter ID. Specify <see langword="null"/> or white space to generate an ID 
-        ///   automatically.
-        /// </param>
-        /// <param name="channel">
-        ///   The channel.
-        /// </param>
-        /// <param name="options">
-        ///   The proxy options.
-        /// </param>
-        /// <param name="taskScheduler">
-        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
-        ///   operations. Specify <see langword="null"/> to use the default implementation.
-        /// </param>
-        /// <param name="encoders">
-        ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
-        ///   extension objects.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="channel"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="options"/> does not define an adapter ID.
-        /// </exception>
-        public GrpcAdapterProxy(
-            string id,
-            GrpcCore.Channel channel, 
-            GrpcAdapterProxyOptions options, 
-            IBackgroundTaskService taskScheduler, 
-            IEnumerable<IObjectEncoder> encoders,
-            ILogger<GrpcAdapterProxy> logger
-        ) : base(
-            id,
-            options, 
-            taskScheduler, 
-            logger
-        ) {
-            Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
-            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
-            _getCallCredentials = Options?.GetCallCredentials;
-            _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
-            _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
-        }
-
-#endif
 
 
         /// <summary>
