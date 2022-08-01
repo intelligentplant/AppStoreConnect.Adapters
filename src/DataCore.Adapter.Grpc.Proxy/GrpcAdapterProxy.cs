@@ -101,7 +101,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// gRPC channel.
         /// </summary>
-        private readonly GrpcCore.ChannelBase _channel;
+        private readonly GrpcNet.Client.GrpcChannel _channel;
 
         /// <summary>
         /// When <see langword="true"/>, the <see cref="_channel"/> will be shut down when the 
