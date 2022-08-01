@@ -44,12 +44,12 @@ namespace ExampleHostedAdapter {
             ILogger<ExampleHostedAdapter> logger
         ) : base(id, options, taskScheduler, logger) {
 
-            // The TagManager implements the ITagSearch adapter feature on our adapter's behalf,
-            // meaning that our adapter allows callers to discover available tags (measurements)
-            // that can be read. In our example we use a fixed set of tags created at startup time,
-            // but your implementation might e.g. query a database to get a list of available
-            // measurements. In this circumstance, you can implement ITagSearch directly instead
-            // of using the TagManager.
+            // The TagManager class implements the ITagSearch adapter feature on our adapter's
+            // behalf, meaning that our adapter allows callers to discover available tags
+            // (measurements) that can be read. In our example we use a fixed set of tags created
+            // at startup time, but your implementation might e.g. query a database to get a list
+            // of available measurements. In this circumstance, you can implement ITagSearch
+            // directly instead of using the TagManager.
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
             _tagManager = new TagManager(
@@ -61,7 +61,11 @@ namespace ExampleHostedAdapter {
                 // If we are not interested in persisting tag definitions, we can pass null
                 // here instead.
                 keyValueStore.CreateScopedStore(id),
+                // TagManager uses an IBackgroundTaskService instance to run background tasks
+                // that have a lifetime matching the adapter and/or the TagManager.
                 BackgroundTaskService,
+                // We need to tell TagManager about the types of bespoke properties that our tags
+                // will define.
                 new[] { s_tagCreatedAtPropertyDefinition }
             );
 
@@ -71,10 +75,11 @@ namespace ExampleHostedAdapter {
 
             // The PollingSnapshotTagValuePush class implements the ISnapshotTagValuePush, meaning
             // that callers can subscribe to be notified of snapshot value changes. Under the hood,
-            // PollingSnapshotTagValuePushOptions functions by periocially polling the snapshot
-            // value for tags with subscribers. If your adapter receives push notifications of new
-            // values from an external source (such as an MQTT broker), you can use the
-            // SnapshotTagValuePush class instead, and pass new values to it as they arrive.
+            // PollingSnapshotTagValuePushOptions functions by periodically polling the snapshot
+            // value for tags that have active subscribers. If your adapter receives push
+            // notifications of new values from an external source (such as an MQTT broker), you
+            // can use the SnapshotTagValuePush class instead, and pass new values to it as they
+            // arrive.
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
             _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
@@ -154,7 +159,8 @@ namespace ExampleHostedAdapter {
         // 
         // Override the Dispose(bool) and DisposeAsyncCore() methods if you need to dispose of
         // managed or unmanaged resources. You do not need to manually dispose of any object that
-        // has been registered with the adapter as a feature provider.
+        // has been registered with the adapter as a feature provider (for example, a TagManager
+        // object used to manage tag definitions on behalf of the adapter).
         //
         // When IDisposable.Dispose() is called on your adapter, Dispose(true) will be called.
         //
