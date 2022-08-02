@@ -15,6 +15,9 @@ namespace DataCore.Adapter.Services {
     /// </remarks>
     public class ScopedKeyValueStore : IKeyValueStore {
 
+        /// <summary>
+        /// The prefix to apply to keys read from or written to the inner store.
+        /// </summary>
         internal KVKey Prefix { get; }
 
         /// <summary>
