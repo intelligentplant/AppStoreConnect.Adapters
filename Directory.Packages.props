@@ -23,7 +23,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageVersion Include="Castle.Core" Version="5.0.0" />
+    <PackageVersion Include="Castle.Core" Version="5.1.0" />
     <PackageVersion Include="CsvHelper" Version="28.0.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.21.4" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.47.0" />
