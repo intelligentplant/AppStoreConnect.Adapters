@@ -21,6 +21,7 @@ namespace DataCore.Adapter.Json {
             string? description = null!;
             string? version = null!;
             VendorInfo? vendor = null!;
+            string? helpUrl = null!;
 
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
                 if (reader.TokenType != JsonTokenType.PropertyName) {
@@ -47,12 +48,15 @@ namespace DataCore.Adapter.Json {
                 else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Vendor), StringComparison.OrdinalIgnoreCase)) {
                     vendor = JsonSerializer.Deserialize<VendorInfo>(ref reader, options);
                 }
+                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.HelpUrl), StringComparison.OrdinalIgnoreCase)) {
+                    helpUrl = JsonSerializer.Deserialize<string>(ref reader, options);
+                }
                 else {
                     reader.Skip();
                 }
             }
 
-            return new AdapterTypeDescriptor(id, name, description, version, vendor);
+            return new AdapterTypeDescriptor(id, name, description, version, vendor, helpUrl);
         }
 
 
@@ -70,6 +74,7 @@ namespace DataCore.Adapter.Json {
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Description), value.Description, options);
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Version), value.Version, options);
             WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Vendor), value.Vendor, options);
+            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.HelpUrl), value.HelpUrl, options);
 
             writer.WriteEndObject();
         }

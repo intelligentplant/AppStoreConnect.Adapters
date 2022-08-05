@@ -31,7 +31,8 @@ namespace DataCore.Adapter.Csv {
         "https://www.intelligentplant.com/app-store-connect/adapters/csv",
         ResourceType = typeof(Resources),
         Name = nameof(Resources.AdapterMetadata_DisplayName),
-        Description = nameof(Resources.AdapterMetadata_Description)
+        Description = nameof(Resources.AdapterMetadata_Description),
+        HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.Csv"
     )]
     public class CsvAdapter : AdapterBase<CsvAdapterOptions>, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues {
 

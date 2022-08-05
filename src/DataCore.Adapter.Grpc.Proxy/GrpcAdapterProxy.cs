@@ -28,7 +28,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         "https://www.intelligentplant.com/app-store-connect/adapters/proxies/grpc",
         ResourceType = typeof(Resources),
         Name = nameof(Resources.AdapterMetadata_DisplayName),
-        Description = nameof(Resources.AdapterMetadata_Description)
+        Description = nameof(Resources.AdapterMetadata_Description),
+        HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.Grpc.Proxy"
     )]
     public class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
 

@@ -32,7 +32,8 @@ namespace DataCore.Adapter.Http.Proxy {
         "https://www.intelligentplant.com/app-store-connect/adapters/proxies/http",
         ResourceType = typeof(Resources),
         Name = nameof(Resources.AdapterMetadata_DisplayName),
-        Description = nameof(Resources.AdapterMetadata_Description)
+        Description = nameof(Resources.AdapterMetadata_Description),
+        HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.Http.Proxy"
     )]
     public class HttpAdapterProxy : AdapterBase<HttpAdapterProxyOptions>, IAdapterProxy {
 

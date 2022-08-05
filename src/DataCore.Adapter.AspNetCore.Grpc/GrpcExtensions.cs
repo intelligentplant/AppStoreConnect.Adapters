@@ -922,7 +922,8 @@ namespace DataCore.Adapter {
                 descriptor.Name,
                 descriptor.Description,
                 descriptor.Version,
-                descriptor.VendorInfo?.ToAdapterVendorInfo()
+                descriptor.VendorInfo?.ToAdapterVendorInfo(),
+                descriptor.HelpUrl
             );
         }
 
@@ -948,7 +949,8 @@ namespace DataCore.Adapter {
                 Version = descriptor.Version ?? string.Empty,
                 VendorInfo = descriptor.Vendor == null
                     ? new Grpc.VendorInfo() { Name = string.Empty, Url = string.Empty }
-                    : descriptor.Vendor.ToGrpcVendorInfo()
+                    : descriptor.Vendor.ToGrpcVendorInfo(),
+                HelpUrl = descriptor.HelpUrl ?? string.Empty
             };
         }
 
