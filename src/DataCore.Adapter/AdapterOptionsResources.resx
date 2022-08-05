@@ -123,6 +123,10 @@
   <data name="AdapterOptions_Description_DisplayName" xml:space="preserve">
     <value>Description</value>
   </data>
+  <data name="AdapterOptions_Description_MaxLength_Error" xml:space="preserve">
+    <value>Maximum description length is {1}.</value>
+    <comment>{0} = member name, {1} = limit</comment>
+  </data>
   <data name="AdapterOptions_IsEnabled_Description" xml:space="preserve">
     <value>Specifies if the adapter is enabled or disabled</value>
   </data>
@@ -130,9 +134,13 @@
     <value>Enabled</value>
   </data>
   <data name="AdapterOptions_Name_Description" xml:space="preserve">
-    <value>The display name for the adapter</value>
+    <value>The display name for the adapter. If not specified, the adapter's ID will be used instead.</value>
   </data>
   <data name="AdapterOptions_Name_DisplayName" xml:space="preserve">
     <value>Name</value>
+  </data>
+  <data name="AdapterOptions_Name_MaxLength_Error" xml:space="preserve">
+    <value>Maximum display name length is {1}.</value>
+    <comment>{0} = member name, {1} = limit</comment>
   </data>
 </root>
