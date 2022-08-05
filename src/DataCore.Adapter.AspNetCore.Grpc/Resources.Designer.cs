@@ -19,7 +19,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,7 +61,16 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to resolve adapter ID: {0}.
+        ///   Looks up a localized string similar to Adapter &apos;{0}&apos; is not running..
+        /// </summary>
+        internal static string Error_AdapterIsNotRunning {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsNotRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve adapter &apos;{0}&apos;..
         /// </summary>
         internal static string Error_CannotResolveAdapterId {
             get {
@@ -70,7 +79,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An event push subscription for adapter {0} already exists..
+        ///   Looks up a localized string similar to An event push subscription for adapter &apos;{0}&apos; already exists..
         /// </summary>
         internal static string Error_DuplicateEventSubscriptionAlreadyExists {
             get {
@@ -79,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A snapshot tag value subscription for adapter {0} already exists..
+        ///   Looks up a localized string similar to A snapshot tag value subscription for adapter &apos;{0}&apos; already exists..
         /// </summary>
         internal static string Error_DuplicateSnapshotSubscriptionAlreadyExists {
             get {
@@ -97,7 +106,7 @@ namespace DataCore.Adapter.AspNetCore.Grpc {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A snapshot tag value subscription for adapter {0} does not exist..
+        ///   Looks up a localized string similar to A snapshot tag value subscription for adapter &apos;{0}&apos; does not exist..
         /// </summary>
         internal static string Error_SnapshotSubscriptionDoesNotExist {
             get {

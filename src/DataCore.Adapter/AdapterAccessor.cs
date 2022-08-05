@@ -99,7 +99,7 @@ namespace DataCore.Adapter {
             ValidationExtensions.ValidateObject(request);
 
             await foreach (var item in FindAdapters(context, request, cancellationToken).ConfigureAwait(false)) {
-                if (item == null || !item.IsEnabled) {
+                if (item == null) {
                     continue;
                 }
                 yield return item;
@@ -121,12 +121,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
 
-            var result = await GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
-            if (result == null || !result.IsEnabled) {
-                return null;
-            }
-
-            return result;
+            return await GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
         }
 
 

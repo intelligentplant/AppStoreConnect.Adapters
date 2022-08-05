@@ -52,25 +52,25 @@ namespace DataCore.Adapter.AspNetCore {
         /// <returns>
         ///   A task that will start the registered adapters.
         /// </returns>
-        public Task StartAsync(CancellationToken cancellationToken) {
-            return Task.Run(async () => {
-                await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
-                    if (cancellationToken.IsCancellationRequested) {
-                        break;
-                    }
-                    if (!adapter.IsEnabled) {
-                        continue;
-                    }
+        public async Task StartAsync(CancellationToken cancellationToken) {
+            await Task.Yield();
 
-                    try {
-                        _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                    }
+            await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
+                if (cancellationToken.IsCancellationRequested) {
+                    break;
                 }
-            }, cancellationToken);
+                if (!adapter.IsEnabled) {
+                    continue;
+                }
+
+                try {
+                    _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                    await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception e) {
+                    _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                }
+            }
         }
 
 
