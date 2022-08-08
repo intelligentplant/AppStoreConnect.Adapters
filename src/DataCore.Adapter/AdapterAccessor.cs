@@ -49,8 +49,8 @@ namespace DataCore.Adapter {
         /// </returns>
         /// <remarks>
         ///   Implementers should use <see cref="IsAuthorized"/> to determine if a caller 
-        ///   is authorized to access a particular adapter. Only enabled adapters should 
-        ///   be returned.
+        ///   is authorized to access a particular adapter. Disabled and non-running adapters 
+        ///   should also be returned.
         /// </remarks>
         protected abstract IAsyncEnumerable<IAdapter> FindAdapters(
             IAdapterCallContext context, 
