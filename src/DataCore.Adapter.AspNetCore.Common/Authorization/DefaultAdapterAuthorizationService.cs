@@ -28,7 +28,8 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <summary>
         /// Indicates if authorization will be applied to adapter API calls. This will be <see langword="false"/> 
-        /// unless a <see cref="FeatureAuthorizationHandler"/> is registered using <see cref="AdapterServicesOptionsBuilder.UseFeatureAuthorizationHandler{THandler}"/>
+        /// unless a <see cref="FeatureAuthorizationHandler"/> is registered using 
+        /// <see cref="Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddAdapterFeatureAuthorization{T}"/>
         /// during application startup.
         /// </summary>
         public bool UseAuthorization { get; }
