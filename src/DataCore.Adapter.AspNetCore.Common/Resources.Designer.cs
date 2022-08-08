@@ -19,7 +19,7 @@ namespace DataCore.Adapter.AspNetCore {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -129,6 +129,15 @@ namespace DataCore.Adapter.AspNetCore {
         internal static string HostProperty_OperatingSystem_Name {
             get {
                 return ResourceManager.GetString("HostProperty_OperatingSystem_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Options change detected for adapter ID &apos;{AdapterId}&apos;..
+        /// </summary>
+        internal static string Log_AdapterOptionsChangeDetected {
+            get {
+                return ResourceManager.GetString("Log_AdapterOptionsChangeDetected", resourceCulture);
             }
         }
         
