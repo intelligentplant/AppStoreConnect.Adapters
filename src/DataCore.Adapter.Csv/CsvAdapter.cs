@@ -355,6 +355,9 @@ namespace DataCore.Adapter.Csv {
                     throw new InvalidOperationException("Unable to read CSV header.");
                 }
                 var fields = csvParser.Record;
+                if (fields == null) {
+                    return result;
+                }
                 result.RowsRead++;
 
                 if (timeStampColumnIndex > fields.Length) {
