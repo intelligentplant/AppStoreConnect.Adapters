@@ -201,10 +201,7 @@ namespace DataCore.Adapter {
             _stopTokenSource.Cancel();
 
             TypeDescriptor = this.CreateTypeDescriptor();
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(
-                backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
-                () => StopToken
-            );
+            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(id);
 
@@ -464,9 +461,7 @@ namespace DataCore.Adapter {
                     // The adapter is already running and has now been disabled.
 
                     BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        // We don't want to pass the provided cancellation token, as it will cancel
-                        // in StopAsync when we cancel _stopTokenSource.
-                        await ((IAdapter) this).StopAsync(default).ConfigureAwait(false);
+                        await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
                     });
 
                     // No need to call the OnOptionsChange handler on the implementing class, since
@@ -481,7 +476,7 @@ namespace DataCore.Adapter {
                         await ((IAdapter) this).StartAsync(ct).ConfigureAwait(false);
                     });
 
-                    // No need to call the OnOpionsChange handler on the implementing class, since
+                    // No need to call the OnOptionsChange handler on the implementing class, since
                     // we've just started the adapter.
                     return;
                 }
@@ -981,7 +976,7 @@ namespace DataCore.Adapter {
 
                         IsStarting = true;
                         try {
-                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
+                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
                                 await StartAsync(ctSource.Token).ConfigureAwait(false);
                                 _isRunning = true;
                                 await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
@@ -1001,7 +996,7 @@ namespace DataCore.Adapter {
                 }
             }
             
-            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync);
+            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
         }
 
 
