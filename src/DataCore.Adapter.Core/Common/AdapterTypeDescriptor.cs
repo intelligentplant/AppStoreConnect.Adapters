@@ -32,6 +32,11 @@ namespace DataCore.Adapter.Common {
         /// </summary>
         public VendorInfo? Vendor { get; }
 
+        /// <summary>
+        /// The help URL for the adapter type.
+        /// </summary>
+        public string? HelpUrl { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterTypeDescriptor"/> object.
@@ -52,7 +57,10 @@ namespace DataCore.Adapter.Common {
         /// <param name="vendor">
         ///   The adapter type vendor information.
         /// </param>
-        public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor) {
+        /// <param name="helpUrl">
+        ///   The help URL for the adapter type.
+        /// </param>
+        public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor, string? helpUrl) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name;
             Description = description;
@@ -67,6 +75,7 @@ namespace DataCore.Adapter.Common {
                         : null;
             }
             Vendor = vendor;
+            HelpUrl = helpUrl;
         }
 
     }

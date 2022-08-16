@@ -25,7 +25,9 @@ namespace ExampleHostedAdapter {
         // The display name for the adapter type.
         Name = "My Adapter",
         // The adapter type description.
-        Description = "A brief description of the adapter type"
+        Description = "A brief description of the adapter type",
+        // You can optionally specify a help URL for the adapter type.
+        HelpUrl = "https://my-company.com/app-store-connect/adapters/my-adapter/help"
     )]
     public partial class ExampleHostedAdapter : AdapterBase<ExampleHostedAdapterOptions> {
 

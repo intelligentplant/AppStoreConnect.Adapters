@@ -123,6 +123,10 @@
 {1} - builder type name
 {2} - method name</comment>
   </data>
+  <data name="Error_AdapterIsNotRunning" xml:space="preserve">
+    <value>Adapter '{0}' is not running.</value>
+    <comment>{0} - adapter ID</comment>
+  </data>
   <data name="Error_AdapterSubscriptionDoesNotExist" xml:space="preserve">
     <value>An existing subscription for this adapter could not be found.</value>
   </data>
@@ -130,7 +134,7 @@
     <value>You must specify at least one tag to subscribe to.</value>
   </data>
   <data name="Error_CannotResolveAdapterId" xml:space="preserve">
-    <value>Unable to resolve adapter ID: {0}</value>
+    <value>Unable to resolve adapter '{0}'.</value>
     <comment>{0} - adapter ID</comment>
   </data>
   <data name="Error_NotAuthorizedToAccessFeature" xml:space="preserve">

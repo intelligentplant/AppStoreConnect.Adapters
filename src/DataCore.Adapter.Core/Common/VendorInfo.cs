@@ -6,15 +6,12 @@ namespace DataCore.Adapter.Common {
     /// Describes the vendor for the hosting application.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1056:Uri properties should not be strings", Justification = "URL is for informational use only")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "URL is for informational use only")]
     public class VendorInfo {
 
         /// <summary>
         /// The vendor name.
         /// </summary>
         public string? Name { get; }
-
-
 
         /// <summary>
         /// The vendor URL.

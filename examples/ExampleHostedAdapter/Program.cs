@@ -7,10 +7,11 @@ using OpenTelemetry.Trace;
 // as well as the host information for the application.
 [assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
-// The ID of the hosted adapter.
-const string AdapterId = "$default";
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Our adapter settings are stored in adaptersettings.json.
+builder.Configuration
+    .AddJsonFile(ExampleHostedAdapter.Constants.AdapterSettingsFilePath, false, true);
 
 builder.Services
     .AddLocalization();
@@ -36,11 +37,11 @@ builder.Services
     })
     // Bind adapter options against the application configuration.
     .AddServices(svc => svc.Configure<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
-        AdapterId,
+        ExampleHostedAdapter.Constants.AdapterId,
         builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
      ))
     // Register the adapter.
-    .AddAdapter(sp => ActivatorUtilities.CreateInstance<ExampleHostedAdapter.ExampleHostedAdapter>(sp, AdapterId));
+    .AddAdapter(sp => ActivatorUtilities.CreateInstance<ExampleHostedAdapter.ExampleHostedAdapter>(sp, ExampleHostedAdapter.Constants.AdapterId));
 
 // Register adapter MVC controllers.
 builder.Services
@@ -92,16 +93,18 @@ else {
 
 app.UseHttpsRedirection();
 app.UseRequestLocalization();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthorization();
 
 app.MapControllers();
 app.MapDataCoreAdapterHubs();
-app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
+app.MapRazorPages();
 
-// Fallback route that redirects to the host information API call. This can be safely removed if
-// not required.
+// Fallback route that redirects to the UI home page
 app.MapFallback("/{*url}", context => {
-    context.Response.Redirect($"/api/app-store-connect/v2.0/host-info/");
+    context.Response.Redirect($"/");
     return Task.CompletedTask;
 });
 

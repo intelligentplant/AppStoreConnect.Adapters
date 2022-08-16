@@ -27,7 +27,8 @@ namespace DataCore.Adapter.WaveGenerator {
         "https://www.intelligentplant.com/app-store-connect/adapters/wave-generator",
         ResourceType = typeof(Resources),
         Name = nameof(Resources.AdapterMetadata_DisplayName),
-        Description = nameof(Resources.AdapterMetadata_Description)
+        Description = nameof(Resources.AdapterMetadata_Description),
+        HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.WaveGenerator"
     )]
     public class WaveGeneratorAdapter : AdapterBase<WaveGeneratorAdapterOptions>, ITagInfo, ITagSearch, IReadSnapshotTagValues, IReadRawTagValues, IReadTagValuesAtTimes {
 

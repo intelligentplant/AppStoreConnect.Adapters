@@ -46,6 +46,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             if (!resolvedFeature.IsAdapterResolved) {
                 throw new RpcException(new Status(StatusCode.NotFound, string.Format(callContext?.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, string.Format(callContext?.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)));
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(callContext?.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }

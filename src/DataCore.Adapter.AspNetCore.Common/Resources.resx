@@ -141,6 +141,9 @@
   <data name="HostProperty_OperatingSystem_Name" xml:space="preserve">
     <value>Operating System</value>
   </data>
+  <data name="Log_AdapterOptionsChangeDetected" xml:space="preserve">
+    <value>Options change detected for adapter ID '{AdapterId}'.</value>
+  </data>
   <data name="Log_AdapterStartError" xml:space="preserve">
     <value>An error occurred while starting adapter '{AdapterName}' (ID: '{AdapterId}').</value>
   </data>

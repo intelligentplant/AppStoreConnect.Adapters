@@ -19,7 +19,7 @@ namespace DataCore.Adapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AdapterOptionsResources {
@@ -79,6 +79,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum description length is {1}..
+        /// </summary>
+        public static string AdapterOptions_Description_MaxLength_Error {
+            get {
+                return ResourceManager.GetString("AdapterOptions_Description_MaxLength_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specifies if the adapter is enabled or disabled.
         /// </summary>
         public static string AdapterOptions_IsEnabled_Description {
@@ -97,7 +106,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The display name for the adapter.
+        ///   Looks up a localized string similar to The display name for the adapter. If not specified, the adapter&apos;s ID will be used instead..
         /// </summary>
         public static string AdapterOptions_Name_Description {
             get {
@@ -111,6 +120,15 @@ namespace DataCore.Adapter {
         public static string AdapterOptions_Name_DisplayName {
             get {
                 return ResourceManager.GetString("AdapterOptions_Name_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum display name length is {1}..
+        /// </summary>
+        public static string AdapterOptions_Name_MaxLength_Error {
+            get {
+                return ResourceManager.GetString("AdapterOptions_Name_MaxLength_Error", resourceCulture);
             }
         }
     }

@@ -182,6 +182,7 @@ namespace DataCore.Adapter.Tests {
             provider.Set(nameof(AdapterOptions.Description), description);
 
             var serviceProvider = ConfigureServiceProvider(id, configuration);
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             using (var adapter = new OptionsMonitorAdapter(
                 id,
@@ -191,8 +192,11 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(adapter.IsEnabled);
                 Assert.IsTrue(adapter.IsRunning);
 
-                provider.Set(nameof(AdapterOptions.IsEnabled), false.ToString());
-                configuration.Reload();
+                using (adapter.StopToken.Register(() => tcs.TrySetResult(null))) {
+                    provider.Set(nameof(AdapterOptions.IsEnabled), false.ToString());
+                    configuration.Reload();
+                    await tcs.Task.WithCancellation(CancellationToken).ConfigureAwait(false);
+                }
 
                 Assert.IsFalse(adapter.IsEnabled);
                 Assert.IsFalse(adapter.IsRunning);

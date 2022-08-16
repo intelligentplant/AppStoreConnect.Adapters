@@ -101,6 +101,7 @@ message AdapterTypeDescriptor {
     string description = 3;
     string version = 4;
     VendorInfo vendor_info = 5;
+    string help_url = 6;
 }
 
 message AdapterDescriptor {

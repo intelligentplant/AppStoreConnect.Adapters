@@ -1,0 +1,42 @@
+﻿@page
+@model ExampleHostedAdapter.Pages.IndexModel
+@{
+  ViewData["Title"] = "Home";
+}
+
+<div id="adapter-status">
+@await Html.PartialAsync("~/Pages/Shared/_AdapterStatusPartial.cshtml", Model)
+</div>
+
+@section Scripts {
+  <script defer>
+    $(() => {
+        function setLastUpdated() {
+            $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
+        }
+
+        setLastUpdated();
+
+        let updateInProgress = false;
+        setInterval(function() { 
+            if (updateInProgress) {
+                return;
+            }
+
+            $.get({
+                url: '@Url.Page("Index", "Status")',
+                beforeSend: function() { 
+                    updateInProgress = true;
+                },
+                complete: function() { 
+                    updateInProgress = false;
+                },
+                success: function(response) {
+                    $('#adapter-status').html(response);
+                    setLastUpdated();
+                }
+            });
+        }, 15000);
+    });
+  </script>
+}

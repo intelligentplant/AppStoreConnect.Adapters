@@ -106,15 +106,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The adapter is disabled..
-        /// </summary>
-        internal static string Error_AdapterIsDisabled {
-            get {
-                return ResourceManager.GetString("Error_AdapterIsDisabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Adapter &apos;{0}&apos; is not compatible with &apos;{1}&apos;..
         /// </summary>
         internal static string Error_AdapterIsNotCompatibleWithHelperClass {
@@ -399,6 +390,15 @@ namespace DataCore.Adapter {
         internal static string HealthChecks_DisplayName_OverallAdapterHealth {
             get {
                 return ResourceManager.GetString("HealthChecks_DisplayName_OverallAdapterHealth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adapter &apos;{AdapterId}&apos; is disabled..
+        /// </summary>
+        internal static string Log_AdapterIsDisabled {
+            get {
+                return ResourceManager.GetString("Log_AdapterIsDisabled", resourceCulture);
             }
         }
         

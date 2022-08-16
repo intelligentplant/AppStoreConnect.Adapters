@@ -1,6 +1,16 @@
 ﻿# App Store Connect Adapter Host: ExampleHostedAdapter
 
-This App Store Connect adapter uses a [starter template](https://github.com/intelligentplant/AppStoreConnect.Adapters/src/DataCore.Adapter.Templates) from the [Industrial App Store](https://appstore.intelligentplant.com). The adapter is hosted by an ASP.NET Core application. You can connect an App Store Connect instance to your adapter via REST API calls or SignalR.
+This App Store Connect adapter uses a [starter template](https://github.com/intelligentplant/AppStoreConnect.Adapters/src/DataCore.Adapter.Templates) from the [Industrial App Store](https://appstore.intelligentplant.com). The adapter is hosted by an ASP.NET Core application with a Razor Pages user interface. You can connect an App Store Connect instance to your adapter via REST API calls or SignalR.
+
+The following client-side libraries are used in the user interface:
+
+- [Bootstrap](https://getbootstrap.com/)
+- [Font Awesome](https://fontawesome.com/)
+- [jQuery](https://jquery.com/)
+- [jQuery Validation](https://jqueryvalidation.org/)
+- [jQuery Unobtrusive Validation](https://github.com/aspnet/jquery-validation-unobtrusive)
+
+Client-side libraries are restored at build time via the LibMan MSBuild task. The versions of the libraries used can be found in `libman.json`.
 
 
 # Getting Started
@@ -9,7 +19,9 @@ The `ExampleHostedAdapter` and `ExampleHostedAdapterOptions` classes define the 
 
 For information about how to implement adapter features, as well as example projects, please visit the [App Store Connect adapters GitHub repository](https://github.com/intelligentplant/AppStoreConnect.Adapters).
 
-The `Program.cs` file configures the dependency injection container and application pipeline for the ASP.NET Core application using a minimal API application builder. The `appsettings.json` file provides configuration settings for the application, including the `ExampleHostedAdapterOptions` instance that is passed to the `ExampleHostedAdapter` instance at runtime.
+The `Program.cs` file configures the dependency injection container and application pipeline for the ASP.NET Core application using a minimal API application builder. The `appsettings.json` file provides configuration settings for the application. The `ExampleHostedAdapterOptions` that is passed to the `ExampleHostedAdapter` instance at runtime is defined in the `adaptersettings.json` file. Changes to the `adaptersettings.json` file will be automatically passed to the adapter at runtime.
+
+The Razor Pages for the application define a basic user interface. The `Settings` page is used to configure the `ExampleHostedAdapterOptions` for the adapter at runtime. Submitting the form will overwrite the contents of the `adaptersettings.json` file. Remember to extend the form when you add new properties to the `ExampleHostedAdapterOptions` class!
 
 
 # Deployment
@@ -49,3 +61,11 @@ To connect a local App Store Connect instance to your adapter using an ASP.NET C
 - `Adapter ID`: $default
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
+
+
+# Security
+
+You should make note of the following security-related items:
+
+- The ASP.NET Core application allows anonyous access by default. When deploying the application, it is recommended that you listen only on `localhost` and/or add authentication to the application.
+- Adapter settings are not encrypted by default. If your adapter requires configuration of sensitive settings such as passwords, you should modify the application to either save the sensitive settings in a separate secure store (such as Azure Key Vault), or implement a mechanism that encrypts these settings prior to updating `adaptersettings.json` and decrypts them when reading the file from disk.

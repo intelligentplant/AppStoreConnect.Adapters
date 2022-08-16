@@ -2237,46 +2237,5 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
-        #region [ Miscellaneous Other Tests ]
-
-        /// <summary>
-        /// This test ensures that background tasks that are registered with an adapter's 
-        /// <see cref="IBackgroundTaskServiceProvider.BackgroundTaskService"/> are cancelled when 
-        /// the adapter is stopped.
-        /// </summary>
-        /// <returns>
-        ///   A <see cref="Task"/> that will run the test.
-        /// </returns>
-        [TestMethod]
-        public Task BackgroundTaskShouldCancelWhenAdapterIsStopped() {
-            return RunAdapterTest(async (adapter, context, ct) => {
-                var tcs = new TaskCompletionSource<bool>();
-
-                adapter.BackgroundTaskService.QueueBackgroundWorkItem(new IntelligentPlant.BackgroundTasks.BackgroundWorkItem(async (ct2) => {
-                    using (var compositeCtSource = CancellationTokenSource.CreateLinkedTokenSource(ct, ct2)) {
-                        try {
-                            await Task.Delay(-1, compositeCtSource.Token).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) { 
-                            if (ct.IsCancellationRequested) {
-                                tcs.TrySetCanceled(ct);
-                            }
-                        }
-                        catch (Exception e) {
-                            tcs.TrySetException(e);
-                        }
-                        finally {
-                            tcs.TrySetResult(true);
-                        }
-                    }
-                }));
-
-                await adapter.StopAsync(ct).ConfigureAwait(false);
-                await tcs.Task.ConfigureAwait(false);
-            });
-        }
-
-        #endregion
-
     }
 }

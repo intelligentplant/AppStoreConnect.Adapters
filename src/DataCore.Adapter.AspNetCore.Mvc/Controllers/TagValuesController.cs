@@ -123,6 +123,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadSnapshotTagValues))); // 400
             }
@@ -243,6 +246,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadRawTagValues))); // 400
@@ -370,6 +376,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadPlotTagValues))); // 400
             }
@@ -464,6 +473,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadTagValuesAtTimes))); // 400
@@ -607,6 +619,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
@@ -702,6 +717,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadProcessedTagValues))); // 400
             }
@@ -763,6 +781,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteSnapshotTagValues))); // 400
@@ -830,6 +851,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IWriteHistoricalTagValues))); // 400
