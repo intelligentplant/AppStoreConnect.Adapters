@@ -130,9 +130,9 @@
                           <p class="card-subtitle">
                             <code>@feature!.Uri</code>
                           </p>
-                          @if (!string.IsNullOrWhiteSpace(feature.Description)) {
+                          @if (!string.IsNullOrWhiteSpace(feature?.Description)) {
                             <p class="card-text text-muted">
-                              @feature!.Description
+                              @feature.Description
                             </p>
                           }
                         </div>
