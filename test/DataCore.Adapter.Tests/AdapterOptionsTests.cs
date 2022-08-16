@@ -193,6 +193,7 @@ namespace DataCore.Adapter.Tests {
 
                 provider.Set(nameof(AdapterOptions.IsEnabled), false.ToString());
                 configuration.Reload();
+                await Task.Delay(100).ConfigureAwait(false);
 
                 Assert.IsFalse(adapter.IsEnabled);
                 Assert.IsFalse(adapter.IsRunning);
