@@ -4,11 +4,6 @@
   ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-  <h1 class="display-6">Adapter Overview</h1>
-  <p>The current status of your <a href="https://github.com/intelligentplant/AppStoreConnect.Adapters" target="_blank" title="Visit the App Store Connect adapters repository on GitHub">App Store Connect adapter</a> is shown below.</p>
-</div>
-
 <div id="adapter-status">
 @await Html.PartialAsync("~/Pages/Shared/_AdapterStatusPartial.cshtml", Model)
 </div>

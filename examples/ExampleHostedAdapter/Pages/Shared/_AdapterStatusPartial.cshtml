@@ -45,25 +45,13 @@
   <div class="card border-@cardColourModifier">
     <div class="card-header @cardTextModifier bg-@cardColourModifier">
       <i class="fa-solid fa-puzzle-piece fa-fw"></i>
-      @Model.Adapter.Descriptor.Name
+      Adapter Status
     </div>
     <div class="card-body">
 
       <div class="row">
         <div class="col-12 col-lg-2">
-          <div class="pb-3">
-            <i class="fa-solid fa-circle-info fa-fw" title="Adapter description"></i>
-            Description
-          </div>
-        </div>
-        <div class="col">
-          <div class="pb-3">@Model.Adapter.Descriptor.Description</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12 col-lg-2">
-          <div class="pb-3">
+          <div class="pb-1">
             <i class="fa-solid fa-fingerprint fa-fw" title="Adapter ID"></i>
             ID
           </div>
@@ -75,14 +63,38 @@
 
       <div class="row">
         <div class="col-12 col-lg-2">
-          <div class="pb-3">
+          <div class="pb-1">
+            <i class="fa-solid fa-id-badge fa-fw" title="Adapter name"></i>
+            Name
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3">@Model.Adapter.Descriptor.Name</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-1">
+            <i class="fa-solid fa-circle-info fa-fw" title="Adapter description"></i>
+            Description
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3">@Model.Adapter.Descriptor.Description</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-1">
             <i class="fa-solid fa-code fa-fw" title="Adapter driver"></i>
             Driver
           </div>
         </div>
         <div class="col">
           <div class="pb-3">
-            <code>@($"{Model.Adapter.TypeDescriptor.Name} v{Model.Adapter.TypeDescriptor.Version}")</code>
+            @($"{Model.Adapter.TypeDescriptor.Name} v{Model.Adapter.TypeDescriptor.Version}")
             @if (Model.Adapter.TypeDescriptor.Vendor != null) {
               if (Model.Adapter.TypeDescriptor.Vendor.Url != null) {
                 <span>by <a href="@Model.Adapter.TypeDescriptor.Vendor.Url" target="_blank" title="Visit @Model.Adapter.TypeDescriptor.Vendor.Name">@Model.Adapter.TypeDescriptor.Vendor.Name</a></span>
@@ -99,13 +111,13 @@
         if (Model.Adapter.Features.Keys.Any()) {
           <div class="row">
             <div class="col-12 col-lg-2">
-              <div class="pb-3">
+              <div class="pb-1">
                 <i class="fa-solid fa-cubes fa-fw" title="Adapter features"></i>
                 Features
               </div>
             </div>
             <div class="col">
-              <div class="pb-3">
+              <div class="pb-1">
                 <div class="row row-cols-1 row-cols-lg-2">
                   @foreach (var feature in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase)) {
                     <div class="col pb-2">
@@ -135,7 +147,7 @@
 
         <div class="row">
           <div class="col-12 col-lg-2">
-            <div class="pb-3">
+            <div class="pb-1">
               <i class="fa-solid fa-circle-nodes fa-fw" title="APIs"></i>
               APIs
             </div>
