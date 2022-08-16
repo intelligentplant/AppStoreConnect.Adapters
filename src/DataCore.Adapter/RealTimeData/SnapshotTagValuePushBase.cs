@@ -95,8 +95,8 @@ namespace DataCore.Adapter.RealTimeData {
                     await OnTagSubscriptionChanges(
                         subscription,
                         SubscriptionUpdateAction.Subscribe,
-                        ResolveTags(context, request.Tags, cancellationToken),
-                        cancellationToken
+                        ResolveTags(context, request.Tags, ctSource.Token),
+                        ctSource.Token
                     ).ConfigureAwait(false);
                 }
 
