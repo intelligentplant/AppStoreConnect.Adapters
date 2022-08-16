@@ -97,6 +97,11 @@ namespace DataCore.Adapter {
         private readonly Nito.AsyncEx.AsyncManualResetEvent _shutdownInProgress = new Nito.AsyncEx.AsyncManualResetEvent(true); // Initial state is set
 
         /// <summary>
+        /// Fires when <see cref="Dispose"/> or <see cref="DisposeAsync"/> are called.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
+
+        /// <summary>
         /// Fires when <see cref="IAdapter.StopAsync(CancellationToken)"/> is called.
         /// </summary>
         private CancellationTokenSource _stopTokenSource;
@@ -201,7 +206,7 @@ namespace DataCore.Adapter {
             _stopTokenSource.Cancel();
 
             TypeDescriptor = this.CreateTypeDescriptor();
-            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(id);
 
@@ -1075,6 +1080,8 @@ namespace DataCore.Adapter {
             }
 
             _optionsMonitorSubscription?.Dispose();
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _healthCheckManager.Dispose();
