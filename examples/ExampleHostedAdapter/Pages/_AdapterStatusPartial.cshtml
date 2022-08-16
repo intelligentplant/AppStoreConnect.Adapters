@@ -122,7 +122,7 @@
                   @foreach (var feature in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase)) {
                     <div class="col pb-2">
                       <div class="card w-100 h-100 small">
-                        <div class="card-body pt-1 pb-1 ps-2 pe-2">
+                        <div class="card-body p-2">
                           <p class="card-title">
                             <i class="fa-solid fa-cube fa-fw"></i>
                             @feature!.DisplayName
