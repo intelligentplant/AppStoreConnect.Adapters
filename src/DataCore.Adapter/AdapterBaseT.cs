@@ -99,7 +99,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Fires when <see cref="IAdapter.StopAsync(CancellationToken)"/> is called.
         /// </summary>
-        private CancellationTokenSource _stopTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _stopTokenSource;
 
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
@@ -194,6 +194,11 @@ namespace DataCore.Adapter {
             if (id.Length > AdapterConstants.MaxIdLength) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, AdapterConstants.MaxIdLength), nameof(id));
             }
+
+            // Create initial stopped token source and cancel it immediately so that StopToken is
+            // initially in a cancelled state.
+            _stopTokenSource = new CancellationTokenSource();
+            _stopTokenSource.Cancel();
 
             TypeDescriptor = this.CreateTypeDescriptor();
             BackgroundTaskService = new BackgroundTaskServiceWrapper(
@@ -961,8 +966,9 @@ namespace DataCore.Adapter {
                 if (IsRunning) {
                     return;
                 }
+
                 if (StopToken.IsCancellationRequested) {
-                    throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
+                    _stopTokenSource = new CancellationTokenSource();
                 }
 
                 using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StartAsync)))) {
@@ -1016,8 +1022,7 @@ namespace DataCore.Adapter {
                             activity.SetAdapterTag(this);
                         }
                         Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
-                        _stopTokenSource.Cancel();
-                        await StopAsync(cancellationToken).ConfigureAwait(false);
+                        await StopAsync(default).ConfigureAwait(false);
                         EventSource.AdapterStopped(descriptorId);
                         Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
                     }
@@ -1027,8 +1032,8 @@ namespace DataCore.Adapter {
                     throw;
                 }
                 finally {
-                    _stopTokenSource = new CancellationTokenSource();
                     _isRunning = false;
+                    _stopTokenSource.Cancel();
                     _healthCheckManager.RecalculateHealthStatus();
                     _shutdownInProgress.Set();
                 }
