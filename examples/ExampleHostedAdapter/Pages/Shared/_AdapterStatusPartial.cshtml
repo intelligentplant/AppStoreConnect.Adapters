@@ -1,0 +1,181 @@
+﻿@using DataCore.Adapter;
+@model ExampleHostedAdapter.Pages.IndexModel
+
+@{
+  string cardColourModifier;
+  string cardTextModifier;
+  string statusIcon;
+  string statusText;
+
+  switch (Model.State) {
+    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Disabled:
+      cardColourModifier = "danger";
+      cardTextModifier = "text-white";
+      statusIcon = "fa-circle-stop";
+      statusText = "Disabled";
+      break;
+    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Enabled:
+      cardColourModifier = "warning";
+      cardTextModifier = "";
+      statusIcon = "fa-circle-half-stroke";
+      statusText = "Enabled";
+      break;
+    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Running:
+      cardColourModifier = "success";
+      cardTextModifier = "text-white";
+      statusIcon = "fa-circle-play";
+      statusText = "Running";
+      break;
+    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.RunningWithWarning:
+      cardColourModifier = "warning";
+      cardTextModifier = "";
+      statusIcon = "fa-circle-exclamation";
+      statusText = "Running (Unhealthy)";
+      break;
+    default:
+      cardColourModifier = "light";
+      cardTextModifier = "";
+      statusIcon = "fa-circle-question";
+      statusText = "Unknown Status";
+      break;
+  }
+}
+
+<div class="w-100">
+  <div class="card border-@cardColourModifier">
+    <div class="card-header @cardTextModifier bg-@cardColourModifier">
+      <i class="fa-solid fa-puzzle-piece fa-fw"></i>
+      @Model.Adapter.Descriptor.Name
+    </div>
+    <div class="card-body">
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-3">
+            <i class="fa-solid fa-circle-info fa-fw" title="Adapter description"></i>
+            Description
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3">@Model.Adapter.Descriptor.Description</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-3">
+            <i class="fa-solid fa-fingerprint fa-fw" title="Adapter ID"></i>
+            ID
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3"><code>@Model.Adapter.Descriptor.Id</code></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-3">
+            <i class="fa-solid fa-code fa-fw" title="Adapter driver"></i>
+            Driver
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3">
+            <code>@($"{Model.Adapter.TypeDescriptor.Name} v{Model.Adapter.TypeDescriptor.Version}")</code>
+            @if (Model.Adapter.TypeDescriptor.Vendor != null) {
+              if (Model.Adapter.TypeDescriptor.Vendor.Url != null) {
+                <span>by <a href="@Model.Adapter.TypeDescriptor.Vendor.Url" target="_blank" title="Visit @Model.Adapter.TypeDescriptor.Vendor.Name">@Model.Adapter.TypeDescriptor.Vendor.Name</a></span>
+              }
+              else {
+                <span>by @Model.Adapter.TypeDescriptor.Vendor.Name</span>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (Model.Adapter.IsEnabled) {
+        if (Model.Adapter.Features.Keys.Any()) {
+          <div class="row">
+            <div class="col-12 col-lg-2">
+              <div class="pb-3">
+                <i class="fa-solid fa-cubes fa-fw" title="Adapter features"></i>
+                Features
+              </div>
+            </div>
+            <div class="col">
+              <div class="pb-3">
+                <div class="row row-cols-1 row-cols-lg-2">
+                  @foreach (var feature in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase)) {
+                    <div class="col pb-2">
+                      <div class="card w-100 h-100 small">
+                        <div class="card-body pt-1 pb-1 ps-2 pe-2">
+                          <p class="card-title">
+                            <i class="fa-solid fa-cube fa-fw"></i>
+                            @feature!.DisplayName
+                          </p>
+                          <p class="card-subtitle">
+                            <code>@feature!.Uri</code>
+                          </p>
+                          @if (!string.IsNullOrWhiteSpace(feature.Description)) {
+                            <p class="card-text text-muted">
+                              @feature!.Description
+                            </p>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="row">
+          <div class="col-12 col-lg-2">
+            <div class="pb-3">
+              <i class="fa-solid fa-circle-nodes fa-fw" title="APIs"></i>
+              APIs
+            </div>
+          </div>
+          <div class="col">
+            <div class="pb-3">
+              @if (Model.ApiIsEnabled) {
+                if (Model.RestApi.IsEnabled) {
+                  <div>REST v@(Model.RestApi.Version)</div>
+                }
+                if (Model.SignalRApi.IsEnabled) {
+                  <div>SignalR v@(Model.SignalRApi.Version)</div>
+                }
+                if (Model.GrpcApi.IsEnabled) {
+                  <div>gRPC v@(Model.GrpcApi.Version)</div>
+                }
+              }
+              else {
+                <div>
+                  <i class="fa-solid fa-exclamation fa-fw"></i>
+                  <em>No APIs are enabled</em>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+
+    <div class="card-footer">
+      <div class="small text-muted">
+        <div class="d-flex justify-content-between">
+          <div>
+            <i class="fa-solid @statusIcon fa-fw"></i>
+            <span>@statusText</span>
+          </div>
+          <div id="last-updated"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

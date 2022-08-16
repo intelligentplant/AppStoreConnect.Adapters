@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <!-- 
-  Define package versions for OpenTelemetry packages as build properties. This allows us to inject 
+  Define package versions for OpenTelemetry and LibMan packages as build properties. This allows us to inject 
   the correct package versions into the templated project files when building the DataCore.Adapter.Templates 
   project. 
   -->
@@ -20,6 +20,7 @@
     <PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>1.0.0-rc9.4</PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>
     <PkgVersion_OpenTelemetry_Instrumentation_Http>1.0.0-rc9.4</PkgVersion_OpenTelemetry_Instrumentation_Http>
     <PkgVersion_OpenTelemetry_Instrumentation_SqlClient>1.0.0-rc9.4</PkgVersion_OpenTelemetry_Instrumentation_SqlClient>
+    <PkgVersion_Microsoft_Web_LibraryManager_Build>2.1.175</PkgVersion_Microsoft_Web_LibraryManager_Build>
   </PropertyGroup>
   
   <ItemGroup>
@@ -48,6 +49,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
+    <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="$(PkgVersion_Microsoft_Web_LibraryManager_Build)" />
     <PackageVersion Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageVersion Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />

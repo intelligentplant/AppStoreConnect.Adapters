@@ -1,0 +1,12 @@
+{
+  "AppStoreConnect": {
+    "Adapter": {
+      "Settings": {
+        "Seed": 0,
+        "Name": "My Example Adapter",
+        "Description": "An example adapter generated using a template.",
+        "IsEnabled": true
+      }
+    }
+  }
+}

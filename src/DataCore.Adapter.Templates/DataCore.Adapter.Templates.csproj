@@ -21,15 +21,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\Directory.Build.props;..\..\examples\ExampleHostedAdapter\README*.md;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
+    <!-- Include files from the ExampleHostedAdapter project. -->
+    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\Directory.Build.props;..\..\examples\ExampleHostedAdapter\README*.md;..\..\examples\ExampleHostedAdapter\wwwroot\lib\**;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
   </ItemGroup>
     
   <Target Name="CopyAscHostedAdapterTemplateFiles" BeforeTargets="Build">
+    <!-- Remove the Properties and wwwroot folders from the template's content folder. -->
+    <RemoveDir Directories="templates\aschostedadapter\Properties;templates\aschostedadapter\wwwroot" />
+    <!-- Remove other files from the template's content folder. -->
+    <Delete Files="templates\aschostedadapter\*" />
+    <!-- Copy all HostedAdapterTemplateFiles items to the template's content folder. -->
     <Copy SkipUnchangedFiles="false" SourceFiles="@(HostedAdapterTemplateFiles)" DestinationFiles="@(HostedAdapterTemplateFiles->'templates\aschostedadapter\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <!-- Copy and rename the README file from the ExampleHostedAdapter project. -->
     <Copy SkipUnchangedFiles="false" SourceFiles="..\..\examples\ExampleHostedAdapter\README_TEMPLATE.md" DestinationFiles="templates\aschostedadapter\README.md" />
   </Target>
   
-  <Target Name="ReplacePackageVersions" BeforeTargets="Build">
+  <Target Name="ReplacePackageVersions" BeforeTargets="Build" AfterTargets="CopyAscHostedAdapterTemplateFiles">
+    <!-- Insert the adapter package versions into the templated project file. -->
+    
     <ReplaceFileText 
       InputFilename="..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj" 
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj" 
@@ -73,6 +82,17 @@
       Replacement="&lt;PackageReference Include=&quot;IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry&quot; Version=&quot;$(Version)&quot; /&gt;"
     />
 
+    <!-- Insert the LibMan package version into the templated project file. -->
+
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;Microsoft.Web.LibraryManager.Build&quot;"
+      Replacement="Include=&quot;Microsoft.Web.LibraryManager.Build&quot; Version=&quot;$(PkgVersion_Microsoft_Web_LibraryManager_Build)&quot;"
+    />
+
+    <!-- Insert the OpenTelemetry package versions into the templated project file. -->
+    
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
