@@ -91,9 +91,9 @@ namespace DataCore.Adapter.Events {
         ///   The logger for the <see cref="InMemoryEventMessageStore"/>.
         /// </param>
         public InMemoryEventMessageStore(
-            InMemoryEventMessageStoreOptions options, 
-            IBackgroundTaskService? backgroundTaskService, 
-            ILogger? logger
+            InMemoryEventMessageStoreOptions? options = null, 
+            IBackgroundTaskService? backgroundTaskService = null, 
+            ILogger? logger = null
         ) {
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _disposedToken = _disposedTokenSource.Token;

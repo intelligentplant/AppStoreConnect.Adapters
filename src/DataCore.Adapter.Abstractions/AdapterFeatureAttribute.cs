@@ -12,6 +12,11 @@ namespace DataCore.Adapter {
     public class AdapterFeatureAttribute : Attribute {
 
         /// <summary>
+        /// The localised category name.
+        /// </summary>
+        private readonly LocalizableString _category = new LocalizableString(nameof(Category));
+
+        /// <summary>
         /// The localised display name.
         /// </summary>
         private readonly LocalizableString _name = new LocalizableString(nameof(Name));
@@ -33,7 +38,8 @@ namespace DataCore.Adapter {
         public Uri Uri { get; }
 
         /// <summary>
-        /// The type that contains the resources for the <see cref="Name"/> and <see cref="Description"/> properties.
+        /// The type that contains the resources for the <see cref="Category"/>, <see cref="Name"/> 
+        /// and <see cref="Description"/> properties.
         /// </summary>
         public Type? ResourceType {
             get => _resourceType;
@@ -41,6 +47,7 @@ namespace DataCore.Adapter {
                 if (_resourceType != value) {
                     _resourceType = value;
 
+                    _category.ResourceType = value;
                     _name.ResourceType = value;
                     _description.ResourceType = value;
                 }
@@ -49,9 +56,20 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// The category for the feature.
+        /// </summary>
+        /// <remarks>
+        ///   If a <see cref="ResourceType"/> is specified and <see cref="Category"/> is <see langword="null"/>, 
+        ///   a default category will be inferred from the <see cref="Uri"/>.
+        /// </remarks>
+        public string? Category {
+            get => _category.Value;
+            set => _category.Value = value;
+        }
+
+        /// <summary>
         /// The display name for the feature.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Name { 
             get => _name.Value;
             set => _name.Value = value;
@@ -60,7 +78,6 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The description for the feature.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "Following convention used by DisplayAttribute")]
         public string? Description {
             get => _description.Value;
             set => _description.Value = value;
@@ -148,6 +165,49 @@ namespace DataCore.Adapter {
             }
 
             Uri = absoluteUri;
+        }
+
+
+        /// <summary>
+        /// Gets the category for the adapter feature. This can be either a literal string 
+        /// specified by the <see cref="Category"/> property, or a localised string found when 
+        /// <see cref="ResourceType"/> is specified and <see cref="Category"/> represents a resource 
+        /// key within the resource type.
+        /// </summary>
+        /// <returns>
+        ///   The category for the adapter feature.
+        /// </returns>
+        public string? GetCategory() {
+            if (_category.ResourceType != null && _category.Value == null) {
+                // A resource type has been specified but a category has not; we will try and
+                // return a default category based on the feature URI.
+                var defaultCategory = new LocalizableString(nameof(Category)) { 
+                    ResourceType = _category.ResourceType
+                };
+
+                if (Uri.IsChildOf(WellKnownFeatures.AssetModel.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_AssetModel);
+                }
+                else if (Uri.IsChildOf(WellKnownFeatures.Diagnostics.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_Diagnostics);
+                }
+                else if (Uri.IsChildOf(WellKnownFeatures.Events.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_Events);
+                }
+                else if (Uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_Extensions);
+                }
+                else if (Uri.IsChildOf(WellKnownFeatures.RealTimeData.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_RealTimeData);
+                }
+                else if (Uri.IsChildOf(WellKnownFeatures.Tags.BaseUri)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_Tags);
+                }
+
+                return defaultCategory.GetLocalizableValue();
+            }
+
+            return _category.GetLocalizableValue();
         }
 
 

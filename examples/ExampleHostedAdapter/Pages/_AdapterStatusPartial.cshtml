@@ -39,6 +39,32 @@
       statusText = "Unknown Status";
       break;
   }
+
+  string GetFeatureIcon(DataCore.Adapter.Common.FeatureDescriptor descriptor) {
+    if (descriptor.Uri.IsChildOf(WellKnownFeatures.AssetModel.BaseUri)) {
+      return "fa-sitemap";
+    }
+    if (descriptor.Uri.IsChildOf(WellKnownFeatures.Diagnostics.BaseUri)) {
+      return "fa-heart-pulse";
+    }
+    if (descriptor.Uri.IsChildOf(WellKnownFeatures.Events.BaseUri)) {
+      return "fa-message";
+    }
+    if (descriptor.Uri.IsChildOf(WellKnownFeatures.RealTimeData.BaseUri)) {
+      return "fa-chart-line";
+    }
+    if (descriptor.Uri.IsChildOf(WellKnownFeatures.Tags.BaseUri)) {
+      return "fa-tags";
+    }
+
+    return "fa-microchip";
+  }
+
+  string GetFeatureCategory(DataCore.Adapter.Common.FeatureDescriptor descriptor) {
+    return string.IsNullOrWhiteSpace(descriptor?.Category)
+      ? "Uncategorised"
+      : descriptor.Category;
+  }
 }
 
 <div class="w-100">
@@ -110,36 +136,42 @@
       @if (Model.Adapter.IsEnabled) {
         if (Model.Adapter.Features.Keys.Any()) {
           <div class="row">
-            <div class="col-12 col-lg-2">
+            <div class="col-12 col-lg-2 d-none d-lg-block">
               <div class="pb-1">
-                <i class="fa-solid fa-cubes fa-fw" title="Adapter features"></i>
+                <i class="fa-solid fa-microchip fa-fw" title="Adapter features"></i>
                 Features
               </div>
             </div>
             <div class="col">
               <div class="pb-1">
-                <div class="row row-cols-1 row-cols-lg-2">
-                  @foreach (var feature in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase)) {
-                    <div class="col pb-2">
-                      <div class="card w-100 h-100 small">
-                        <div class="card-body pt-1 pb-1 ps-2 pe-2">
-                          <p class="card-title">
-                            <i class="fa-solid fa-cube fa-fw"></i>
-                            @feature!.DisplayName
-                          </p>
-                          <p class="card-subtitle">
-                            <code>@feature!.Uri</code>
-                          </p>
-                          @if (!string.IsNullOrWhiteSpace(feature.Description)) {
-                            <p class="card-text text-muted">
-                              @feature!.Description
+                @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase).ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
+                  <div class="pb-2">
+                    <i class="fa-solid @GetFeatureIcon(featureGroup.First()!) fa-fw" title="Adapter features: @featureGroup.Key"></i>
+                    <span class="d-lg-none">Features: </span>
+                    @featureGroup.Key
+                  </div>
+                  <div class="row row-cols-1 row-cols-lg-2">
+                    @foreach (var feature in featureGroup) {
+                      <div class="col pb-2">
+                        <div class="card w-100 h-100 small">
+                          <div class="card-body p-2">
+                            <p class="card-title">
+                              @feature!.DisplayName
                             </p>
-                          }
+                            <p class="card-subtitle">
+                              <code>@feature!.Uri</code>
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(feature?.Description)) {
+                              <p class="card-text text-muted">
+                                @feature.Description
+                              </p>
+                            }
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  }
-                </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -149,7 +181,7 @@
           <div class="col-12 col-lg-2">
             <div class="pb-1">
               <i class="fa-solid fa-circle-nodes fa-fw" title="APIs"></i>
-              APIs
+              Enabled APIs
             </div>
           </div>
           <div class="col">
