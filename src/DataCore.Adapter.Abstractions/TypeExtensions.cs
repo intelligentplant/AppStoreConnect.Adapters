@@ -364,6 +364,7 @@ namespace DataCore.Adapter {
 
             var displayName = attr.attr.GetName();
             var description = attr.attr.GetDescription();
+            var category = attr.attr.GetCategory();
 
             if (string.IsNullOrWhiteSpace(displayName)) {
                 displayName = type.FullName;
@@ -377,8 +378,13 @@ namespace DataCore.Adapter {
                 description = description.Substring(0, FeatureDescriptor.MaxDescriptionLength);
             }
 
+            if (category != null && category.Length > FeatureDescriptor.MaxCategoryLength) {
+                category = category.Substring(0, FeatureDescriptor.MaxCategoryLength);
+            }
+
             return new FeatureDescriptor() {
                 Uri = uri,
+                Category = category,
                 DisplayName = displayName,
                 Description = description
             };

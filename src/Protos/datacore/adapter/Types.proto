@@ -414,6 +414,7 @@ message FeatureDescriptor {
     string feature_uri = 1;
     string display_name = 2;
     string description = 3;
+    string category = 4;
 }
 
 

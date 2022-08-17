@@ -61,6 +61,60 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Asset Model.
+        /// </summary>
+        public static string Category_AssetModel {
+            get {
+                return ResourceManager.GetString("Category_AssetModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Diagnostics.
+        /// </summary>
+        public static string Category_Diagnostics {
+            get {
+                return ResourceManager.GetString("Category_Diagnostics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alarms &amp; Events.
+        /// </summary>
+        public static string Category_Events {
+            get {
+                return ResourceManager.GetString("Category_Events", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extensions.
+        /// </summary>
+        public static string Category_Extensions {
+            get {
+                return ResourceManager.GetString("Category_Extensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Real-Time Data.
+        /// </summary>
+        public static string Category_RealTimeData {
+            get {
+                return ResourceManager.GetString("Category_RealTimeData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tags.
+        /// </summary>
+        public static string Category_Tags {
+            get {
+                return ResourceManager.GetString("Category_Tags", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average value calculated over sample interval..
         /// </summary>
         public static string DataFunction_Avg_Description {

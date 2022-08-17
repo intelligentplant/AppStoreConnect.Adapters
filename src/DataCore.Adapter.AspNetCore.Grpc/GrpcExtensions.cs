@@ -1508,6 +1508,7 @@ namespace DataCore.Adapter {
                 Uri = Uri.TryCreate(descriptor.FeatureUri, UriKind.Absolute, out var uri)
                     ? uri
                     : null!,
+                Category = descriptor.Category,
                 DisplayName = descriptor.DisplayName,
                 Description = descriptor.Description
             };
@@ -1530,6 +1531,7 @@ namespace DataCore.Adapter {
 
             return new Grpc.FeatureDescriptor() {
                 FeatureUri = descriptor.Uri?.ToString() ?? string.Empty,
+                Category = descriptor.Category ?? string.Empty,
                 DisplayName = descriptor.DisplayName ?? string.Empty,
                 Description = descriptor.Description ?? string.Empty
             };
