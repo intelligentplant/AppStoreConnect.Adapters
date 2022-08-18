@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DataCore.Adapter.Common {
@@ -65,11 +64,7 @@ namespace DataCore.Adapter.Common {
         public HostInfo(string? name, string? description, string? version, VendorInfo? vendor, IEnumerable<AdapterProperty>? properties) {
             Name = name?.Trim();
             Description = description?.Trim();
-            Version = NuGet.Versioning.SemanticVersion.TryParse(version, out var semVer)
-                ? semVer.ToFullString()
-                : System.Version.TryParse(version, out var v)
-                    ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString(System.Globalization.CultureInfo.CurrentCulture)).ToFullString()
-                    : new NuGet.Versioning.SemanticVersion(0, 0, 0).ToFullString();
+            Version = AdapterTypeDescriptor.GetNormalisedVersion(version) ?? new Semver.SemVersion(0, 0, 0).ToString();
             Vendor = vendor;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
