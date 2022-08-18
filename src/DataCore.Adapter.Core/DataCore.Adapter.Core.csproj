@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="Semver" />
     <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 
