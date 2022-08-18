@@ -97,7 +97,7 @@ namespace DataCore.Adapter {
         private readonly Nito.AsyncEx.AsyncManualResetEvent _shutdownInProgress = new Nito.AsyncEx.AsyncManualResetEvent(true); // Initial state is set
 
         /// <summary>
-        /// Fires when <see cref="Dispose"/> or <see cref="DisposeAsync"/> are called.
+        /// Fires when <see cref="Dispose()"/> or <see cref="DisposeAsync"/> are called.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
