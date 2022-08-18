@@ -5,37 +5,36 @@
 }
 
 <div id="adapter-status">
-@await Html.PartialAsync("_AdapterStatusPartial", Model)
+  @await Html.PartialAsync("_AdapterStatusPartial")
 </div>
 
 @section Scripts {
   <script defer>
     $(() => {
-        function setLastUpdated() {
-            $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
-        }
-
-        setLastUpdated();
-
         let updateInProgress = false;
-        setInterval(function() { 
+
+        const setLastUpdatedTime = () => $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
+        
+        const updateStatus = async () => {
             if (updateInProgress) {
                 return;
             }
 
-            $.get({
-                url: '@Url.Page("Index", "Status")',
-                beforeSend: function() { 
-                    updateInProgress = true;
-                },
-                complete: function() { 
-                    updateInProgress = false;
-                },
-                success: function(response) {
-                    $('#adapter-status').html(response);
-                    setLastUpdated();
-                }
-            });
+            updateInProgress = true;
+            try {
+                const response = await $.get('@Url.Page("Index", "Status")');
+                $('#adapter-status').html(response);
+                setLastUpdatedTime();;
+            }
+            finally {
+                updateInProgress = false;
+            }
+        };
+
+        setLastUpdatedTime();
+        
+        setInterval(async () => { 
+            await updateStatus();
         }, 15000);
     });
   </script>
