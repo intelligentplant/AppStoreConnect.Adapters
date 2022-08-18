@@ -1,7 +1,7 @@
 {
   "$schema": "http://json.schemastore.org/template",
   "author": "Intelligent Plant",
-  "classifications": [ "Industrial App Store", "Web", "MVC", "IoT" ],
+  "classifications": [ "Industrial App Store", "Web", "Razor Pages", "IoT" ],
   "identity": "IntelligentPlant.AppStoreConnect.Adapter.AppStoreConnectAdapterHost",
   "name": "Industrial App Store Connect Adapter Host",
   "description": "A project for creating a data adapter that connects to the Industrial App Store using App Store Connect.",
