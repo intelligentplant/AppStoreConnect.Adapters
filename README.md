@@ -119,6 +119,6 @@ Signing of assemblies (by specifying the `--sign-output` flag when running the b
 
 # Software Bill of Materials
 
-To generate a Software Bill of Materials (SBOM) for the repository in [CycloneDX](https://cyclonedx.org/) format, run [build.ps1](./build.ps1) or [build.sh](./build.sh) with the `--target BillOfMaterials` parameter.
+To generate a Software Bill of Materials (SBOM) for the repository in [CycloneDX](https://cyclonedx.org/) XML format, run [build.ps1](./build.ps1) or [build.sh](./build.sh) with the `--target BillOfMaterials` parameter.
 
 The resulting SBOM is written to the `artifacts/bom` folder.
