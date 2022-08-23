@@ -60,9 +60,9 @@ Bootstrap(DefaultSolutionFile, VersionFile);
 // Add Bill of Materials task
 Task("BillOfMaterials")
     .Does<BuildState>(state => {
-        StartProcess("dotnet", new ProcessSettings {
+        var cycloneDx = Context.Tools.Resolve("dotnet-CycloneDX.exe");
+        StartProcess(cycloneDx, new ProcessSettings {
             Arguments = new ProcessArgumentBuilder()
-                .Append("CycloneDX")
                 .Append(DefaultSolutionFile)
                 .Append("-o")
                 .Append("./artifacts/bom")
