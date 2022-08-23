@@ -115,3 +115,10 @@ Additionally, all methods on adapter feature interfaces are passed an [IAdapterC
 Run [build.ps1](./build.ps1) or [build.sh](./build.sh) to bootstrap and build the solution using [Cake](https://cakebuild.net/).
 
 Signing of assemblies (by specifying the `--sign-output` flag when running the build script) requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
+
+
+# Software Bill of Materials
+
+To generate a Software Bill of Materials (SBOM) for the repository in [CycloneDX](https://cyclonedx.org/) format, run [build.ps1](./build.ps1) or [build.sh](./build.sh) with the `--target BillOfMaterials` parameter.
+
+The resulting SBOM is written to the `artifacts/bom` folder.
