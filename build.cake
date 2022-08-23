@@ -51,23 +51,10 @@ const string VersionFile = "./build/version.json";
 // 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#load nuget:?package=Jaahas.Cake.Extensions&version=1.3.1
-#tool dotnet:?package=CycloneDX&version=2.3.0
+#load nuget:?package=Jaahas.Cake.Extensions&version=1.4.0
 
 // Bootstrap build context and tasks.
 Bootstrap(DefaultSolutionFile, VersionFile);
-
-// Add Bill of Materials task
-Task("BillOfMaterials")
-    .Does<BuildState>(state => {
-        var cycloneDx = Context.Tools.Resolve("dotnet-CycloneDX.exe");
-        StartProcess(cycloneDx, new ProcessSettings {
-            Arguments = new ProcessArgumentBuilder()
-                .Append(DefaultSolutionFile)
-                .Append("-o")
-                .Append("./artifacts/bom")
-        });
-    });
 
 // Get the target that was specified.
 var target = GetTarget();
