@@ -59,7 +59,6 @@ Bootstrap(DefaultSolutionFile, VersionFile);
 
 // Add Bill of Materials task
 Task("BillOfMaterials")
-    .IsDependentOn("Pack")
     .Does<BuildState>(state => {
         StartProcess("dotnet", new ProcessSettings {
             Arguments = new ProcessArgumentBuilder()
