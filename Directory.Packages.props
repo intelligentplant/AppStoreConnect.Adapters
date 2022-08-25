@@ -3,6 +3,7 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <EnablePackageVersionOverride>false</EnablePackageVersionOverride>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <NoWarn>NU1507;$(NoWarn)</NoWarn>
   </PropertyGroup>
 
@@ -35,7 +36,6 @@
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="8.1.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="8.1.0" />
     <PackageVersion Include="Jaahas.HttpRequestTransformer" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.8" />
