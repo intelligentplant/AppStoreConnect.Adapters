@@ -1,11 +1,10 @@
-﻿using System;
+﻿#if NETCOREAPP
+using System;
+using System.Net.Http;
 
-#if NETCOREAPP
 using GrpcNet = Grpc.Net;
-#endif
 
 using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Tests {
@@ -17,7 +16,7 @@ namespace DataCore.Adapter.Tests {
 
         public static string DefaultUrl { get; } = string.Concat("https://", DefaultHostName, ":", DefaultPortNumber);
 
-        public const string AdapterId = "sensor-csv";
+        public const string AdapterId = AssemblyInitializer.AdapterId;
 
         public const string TestTagId = "Sensor_001";
 
@@ -26,12 +25,10 @@ namespace DataCore.Adapter.Tests {
 
         internal static void AllowUntrustedCertificates(HttpMessageHandler handler) {
             // For unit test purposes, allow all SSL certificates.
-#if NETCOREAPP
             if (handler is SocketsHttpHandler socketsHandler) {
                 socketsHandler.SslOptions.RemoteCertificateValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
                 return;
             }
-#endif
             if (handler is HttpClientHandler clientHandler) {
                 clientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
             }
@@ -52,14 +49,13 @@ namespace DataCore.Adapter.Tests {
             });
             services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName);
 
-#if NETCOREAPP
             services.AddTransient(sp => {
                 return GrpcNet.Client.GrpcChannel.ForAddress(DefaultUrl, new GrpcNet.Client.GrpcChannelOptions() {
                     HttpClient = sp.GetService<IHttpClientFactory>().CreateClient(HttpClientName)
                 });
             });
-#endif
         }
 
     }
 }
+#endif

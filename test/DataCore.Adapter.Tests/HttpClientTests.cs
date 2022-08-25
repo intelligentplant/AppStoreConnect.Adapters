@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETCOREAPP
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,10 +33,8 @@ namespace DataCore.Adapter.Tests {
                 }
                 catch (AdapterHttpClientException e) {
                     Assert.IsNotNull(e.ProblemDetails);
-#if NETCOREAPP
                     // The type for the problem details is only set in ASP.NET Core 3.x onwards.
                     Assert.IsNotNull(e.ProblemDetails.Type);
-#endif
                     Assert.IsNotNull(e.ProblemDetails.Title);
                     Assert.IsNotNull(e.ProblemDetails.Extensions);
                 }
@@ -45,3 +44,4 @@ namespace DataCore.Adapter.Tests {
     }
 
 }
+#endif
