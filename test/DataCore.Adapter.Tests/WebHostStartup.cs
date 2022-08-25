@@ -1,8 +1,8 @@
-﻿using System;
+﻿#if NETCOREAPP
+using System;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,67 +42,23 @@ namespace DataCore.Adapter.Tests {
                             "GitHub repository URL for the project"
                         )
                     }
-                )
-                .AddServices(svc => {
-                    svc.AddSingleton<Events.InMemoryEventMessageStoreOptions>();
-                    svc.AddSingleton<Diagnostics.ConfigurationChangesOptions>();
-                })
-                .AddAdapter(sp => {
-                    var adapter = ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(sp, WebHostConfiguration.AdapterId, new Csv.CsvAdapterOptions() {
-                        Name = "Sensor CSV",
-                        Description = "CSV adapter with dummy sensor data",
-                        IsDataLoopingAllowed = true,
-                        GetCsvStream = () => GetType().Assembly.GetManifestResourceStream(GetType(), "DummySensorData.csv")
-                    });
+                );
 
-                    // Add in-memory event message management
-                    adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
-                    );
-
-                    // Add dummy tag value writing.
-                    adapter.AddStandardFeatures(new NullValueWrite());
-
-                    // Add configuration change notifier.
-                    adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
-                    );
-
-                    // Add ping-pong extension
-                    adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
-
-                    return adapter;
-                });
-            //.AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-
-            // To add authentication and authorization for adapter API operations, extend 
-            // the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
-            // above to register your handler.
-
-#if NETCOREAPP
             services.AddGrpc();
-#endif
 
             services.AddMvc()
-#if !NET6_0_OR_GREATER
-                .SetCompatibilityVersion(CompatibilityVersion.Latest)
-#endif
-#if NETCOREAPP
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.WriteIndented = true;
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
-#endif
                 .AddDataCoreAdapterMvc();
 
-#if NETCOREAPP
             services
                 .AddSignalR()
                 .AddDataCoreAdapterSignalR()
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
-#endif
 
             services
                 .AddHealthChecks()
@@ -110,18 +66,13 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-#if NETCOREAPP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
-#else
-        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env) {
-#endif
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
 
             app.UseRequestLocalization();
 
-#if NETCOREAPP
             app.UseRouting();
 
             app.UseEndpoints(endpoints => {
@@ -130,10 +81,8 @@ namespace DataCore.Adapter.Tests {
                 endpoints.MapDataCoreAdapterHubs();
                 endpoints.MapHealthChecks("/health");
             });
-#else
-            app.UseMvc();
-#endif
         }
     
     }
 }
+#endif
