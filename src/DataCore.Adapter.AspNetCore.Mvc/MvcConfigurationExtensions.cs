@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD2_0
+﻿#if NET48
 using DataCore.Adapter.NewtonsoftJson;
 #else
 using DataCore.Adapter.Json;
@@ -28,7 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
-#if NETSTANDARD2_0
+#if NET48
             builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
 #else
             builder.AddJsonOptions(options => options.JsonSerializerOptions.AddDataCoreAdapterConverters());

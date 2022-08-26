@@ -32,6 +32,11 @@ namespace DataCore.Adapter.Common {
         /// </summary>
         public VendorInfo? Vendor { get; }
 
+        /// <summary>
+        /// The help URL for the adapter type.
+        /// </summary>
+        public string? HelpUrl { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterTypeDescriptor"/> object.
@@ -52,21 +57,45 @@ namespace DataCore.Adapter.Common {
         /// <param name="vendor">
         ///   The adapter type vendor information.
         /// </param>
-        public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor) {
+        /// <param name="helpUrl">
+        ///   The help URL for the adapter type.
+        /// </param>
+        public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor, string? helpUrl) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name;
             Description = description;
-            if (version == null) {
-                Version = null;
-            }
-            else {
-                Version = NuGet.Versioning.SemanticVersion.TryParse(version, out var semVer)
-                    ? semVer.ToFullString()
-                    : System.Version.TryParse(version, out var v)
-                        ? new NuGet.Versioning.SemanticVersion(v.Major, v.Minor, v.Build, string.Empty, v.Revision.ToString(System.Globalization.CultureInfo.CurrentCulture)).ToFullString()
-                        : null;
-            }
+            Version = GetNormalisedVersion(version);
             Vendor = vendor;
+            HelpUrl = helpUrl;
+        }
+
+
+        /// <summary>
+        /// Converts the specified version string into a normalised format.
+        /// </summary>
+        /// <param name="version">
+        ///   The version string.
+        /// </param>
+        /// <param name="style">
+        ///   The <see cref="Semver.SemVersionStyles"/> to use when converting <paramref name="version"/> 
+        ///   into a <see cref="Semver.SemVersion"/> instance.
+        /// </param>
+        /// <returns></returns>
+        /// <remarks>
+        ///   <see cref="GetNormalisedVersion"/> will attempt to convert <paramref name="version"/> 
+        ///   into a <see cref="Semver.SemVersion"/> instance and return a <see cref="string"/> 
+        ///   representation of the version.
+        /// </remarks>
+        internal static string? GetNormalisedVersion(string? version, Semver.SemVersionStyles style = Semver.SemVersionStyles.Strict) {
+            if (version == null) {
+                return null;
+            }
+
+            return Semver.SemVersion.TryParse(version, style, out var semVer)
+                ? semVer.ToString()
+                : System.Version.TryParse(version, out var v)
+                    ? Semver.SemVersion.FromVersion(v).ToString()
+                    : null;
         }
 
     }

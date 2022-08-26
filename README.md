@@ -10,7 +10,7 @@ An adapter is a component can expose real-time process data and/or alarm & event
 
 Different systems expose different features. For example, an MQTT broker can be used to transmit sensor readings from IoT devices to interested subscribers, but it is not capable of long-term storage of these readings, or of performing ad hoc aggregation of the data (e.g. find the average value of instrument X at 1 hour intervals over the previous calendar day). Some alarm & event systems may allow historical querying of event messages, where as others (such as OPC AE) can only emit ephemeral event messages. Some systems may be read-only, others may be write-only, and some may allow data to flow in both directions. An adapter allows you to integrate with a system (or multiple systems), and expose the system's capabilities as simple, discrete features. 
 
-Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP-, SignalR-, or [gRPC](https://grpc.io/)-based API. Hosting is also possible in other frameworks via gRPC (see notes at the end of this README).
+Typically, an ASP.NET Core application is used to host and run one or more adapters, which App Store Connect can then query via an HTTP- or SignalR-based API. gRPC-based hosting and client packages are also defined, but cannot currently be used with App Store Connect (due to compatibility issues with .NET Framework).
 
 
 # Getting Started
@@ -115,3 +115,10 @@ Additionally, all methods on adapter feature interfaces are passed an [IAdapterC
 Run [build.ps1](./build.ps1) or [build.sh](./build.sh) to bootstrap and build the solution using [Cake](https://cakebuild.net/).
 
 Signing of assemblies (by specifying the `--sign-output` flag when running the build script) requires additional bootstrapping not provided by this repository. A hint is provided to MSBuild that output should be signed by setting the `SignOutput` build property to `true`.
+
+
+# Software Bill of Materials
+
+To generate a Software Bill of Materials (SBOM) for the repository in [CycloneDX](https://cyclonedx.org/) XML format, run [build.ps1](./build.ps1) or [build.sh](./build.sh) with the `--target BillOfMaterials` parameter.
+
+The resulting SBOM is written to the `artifacts/bom` folder.

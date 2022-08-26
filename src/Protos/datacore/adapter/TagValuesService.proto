@@ -11,10 +11,17 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service TagValuesService {
     // Snapshot polling/push
+
     rpc ReadSnapshotTagValues (ReadSnapshotTagValuesRequest) returns (stream TagValueQueryResult);
+    // Streams snapshot values from an adapters. Uses bidirectional streaming to allow 
+    // subscriptions to be modified after creation.
     rpc CreateSnapshotPushChannel (stream CreateSnapshotPushChannelRequest) returns (stream TagValueQueryResult);
+    // Streams snapshot values from an adapters. Changes to the subscription are not allowed after 
+    // creation.
+    rpc CreateFixedSnapshotPushChannel (CreateSnapshotPushChannelMessage) returns (stream TagValueQueryResult);
 
     // Historical data polling
+
     rpc ReadRawTagValues (ReadRawTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadPlotTagValues (ReadPlotTagValuesRequest) returns (stream TagValueQueryResult);
     rpc ReadTagValuesAtTimes (ReadTagValuesAtTimesRequest) returns (stream TagValueQueryResult);
@@ -22,6 +29,7 @@ service TagValuesService {
     rpc ReadProcessedTagValues (ReadProcessedTagValuesRequest) returns (stream ProcessedTagValueQueryResult);
 
     // Write tag values
+
     rpc WriteSnapshotTagValues(stream WriteTagValueRequest) returns (stream WriteTagValueResult);
     rpc WriteHistoricalTagValues(stream WriteTagValueRequest) returns (stream WriteTagValueResult);
 }

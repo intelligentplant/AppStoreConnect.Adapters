@@ -195,7 +195,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   <paramref name="adapterId"/> could not be resolved.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        ///   The adapter does not support the requested feature.
+        ///   The adapter is not running or does not support the requested feature.
         /// </exception>
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
@@ -204,6 +204,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<TFeature>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId), nameof(adapterId));
+            }
+
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                throw new InvalidOperationException(string.Format(adapterCallContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId));
             }
 
             if (!resolvedFeature.IsFeatureResolved) {

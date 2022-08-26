@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
@@ -15,6 +16,25 @@ namespace DataCore.Adapter.Services {
     ///   Inherit from this class instead of implementing <see cref="IKeyValueStore"/> directly.
     /// </remarks>
     public abstract class KeyValueStore : IKeyValueStore {
+
+        /// <summary>
+        /// Instrument recording the bytes written to the store.
+        /// </summary>
+        private static Counter<long> s_bytesWritten = Diagnostics.Telemetry.Meter.CreateCounter<long>(
+            "Services.KeyValueStore.io.bytes.out",
+            "By",
+            "Number of bytes written to the key-value store."
+        );
+
+        /// <summary>
+        /// Instrument recording the bytes read from the store.
+        /// </summary>
+        private static Counter<long> s_bytesRead = Diagnostics.Telemetry.Meter.CreateCounter<long>(
+            "Services.KeyValueStore.io.bytes.in",
+            "By",
+            "Number of bytes read from the key-value store."
+        );
+
 
         /// <summary>
         /// The logger for the store.
@@ -42,13 +62,13 @@ namespace DataCore.Adapter.Services {
             }
 
             var compressionLevel = GetCompressionLevel();
+            var encodedBytes = value.Length == 0 || compressionLevel == CompressionLevel.NoCompression
+                    ? value
+                    : await CompressDataAsync(value, compressionLevel).ConfigureAwait(false);
 
-            await WriteAsync(
-                key, 
-                value.Length == 0 || compressionLevel == CompressionLevel.NoCompression
-                    ? value 
-                    : await CompressDataAsync(value, compressionLevel).ConfigureAwait(false)
-                ).ConfigureAwait(false);
+            await WriteAsync(key, encodedBytes).ConfigureAwait(false);
+
+            s_bytesWritten.Add(encodedBytes.LongLength);
         }
 
 
@@ -59,12 +79,16 @@ namespace DataCore.Adapter.Services {
 
             var compressionLevel = GetCompressionLevel();
 
-            var result = await ReadAsync(key).ConfigureAwait(false);
-            if (result == null || result.Length == 0 || compressionLevel == CompressionLevel.NoCompression) {
-                return result;
+            var encodedBytes = await ReadAsync(key).ConfigureAwait(false);
+            if (encodedBytes != null) {
+                s_bytesRead.Add(encodedBytes.LongLength);
             }
 
-            return await DecompressDataAsync(result).ConfigureAwait(false);
+            if (encodedBytes == null || encodedBytes.Length == 0 || compressionLevel == CompressionLevel.NoCompression) {
+                return encodedBytes;
+            }
+
+            return await DecompressDataAsync(encodedBytes).ConfigureAwait(false);
         }
 
 

@@ -8,7 +8,7 @@ namespace OpenTelemetry.Trace {
     public static class DCATracerProviderBuilderExtensions {
 
         /// <summary>
-        /// Adds instrumentation for the <see cref="DataCore.Adapter.Diagnostics.ActivitySourceExtensions.DiagnosticSourceName"/> 
+        /// Adds instrumentation for the <see cref="DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName"/> 
         /// activity source.
         /// </summary>
         /// <param name="builder">
@@ -25,7 +25,7 @@ namespace OpenTelemetry.Trace {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.AddSource(DataCore.Adapter.Diagnostics.ActivitySourceExtensions.DiagnosticSourceName);
+            builder.AddSource(DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName);
 
             return builder;
         }

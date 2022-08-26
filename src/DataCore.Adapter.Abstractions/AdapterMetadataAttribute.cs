@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace DataCore.Adapter {
 
@@ -61,6 +62,40 @@ namespace DataCore.Adapter {
         public string? Description {
             get => _description.Value;
             set => _description.Value = value;
+        }
+
+        /// <summary>
+        /// The help URL.
+        /// </summary>
+        private string? _helpUrl;
+
+        /// <summary>
+        /// The help URL for the adapter type.
+        /// </summary>
+        /// <remarks>
+        ///   If specified, this must be parsable to a URL. If an absolute URL is specified, it 
+        ///   must use a scheme of <see cref="Uri.UriSchemeHttps"/> or <see cref="Uri.UriSchemeHttp"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentException">
+        ///   The property is set using a value that cannot be parsed to an absolute or relative URL, 
+        ///   or an absolute URL with a scheme other than <see cref="Uri.UriSchemeHttps"/> or 
+        ///   <see cref="Uri.UriSchemeHttp"/> is specified.
+        /// </exception>
+        public string? HelpUrl {
+            get => _helpUrl;
+            set {
+                if (string.IsNullOrWhiteSpace(value)) {
+                    _helpUrl = null;
+                    return;
+                }
+                if (!Uri.TryCreate(value, UriKind.RelativeOrAbsolute, out var help)) {
+                    throw new ArgumentException(SharedResources.Error_InvalidUri, nameof(value));
+                }
+                if (help.IsAbsoluteUri && !help.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) && !help.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)) {
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_AbsoluteUriWithSpecificSchemeRequired, $"{Uri.UriSchemeHttps}, {Uri.UriSchemeHttp}"), nameof(value));
+                }
+                _helpUrl = help.ToString();
+            }
         }
 
 

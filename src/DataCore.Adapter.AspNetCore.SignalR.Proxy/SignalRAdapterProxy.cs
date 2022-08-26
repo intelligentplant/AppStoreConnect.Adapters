@@ -23,7 +23,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         "https://www.intelligentplant.com/app-store-connect/adapters/proxies/signalr",
         ResourceType = typeof(Resources),
         Name = nameof(Resources.AdapterMetadata_DisplayName),
-        Description = nameof(Resources.AdapterMetadata_Description)
+        Description = nameof(Resources.AdapterMetadata_Description),
+        HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.AspNetCore.SignalR.Proxy"
     )]
     public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 

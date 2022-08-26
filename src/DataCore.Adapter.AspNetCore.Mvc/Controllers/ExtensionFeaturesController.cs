@@ -102,6 +102,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, id)); // 400
             }
@@ -158,6 +161,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, id, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, id)); // 400
@@ -216,6 +222,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
             }
             if (!resolvedFeature.IsFeatureResolved) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri)); // 400

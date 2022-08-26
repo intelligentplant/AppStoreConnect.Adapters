@@ -194,7 +194,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
         }
 
-#if NETSTANDARD2_0 == false
+#if NET48 == false
 
         /// <summary>
         /// Invokes a duplex streaming extension feature on an adapter.

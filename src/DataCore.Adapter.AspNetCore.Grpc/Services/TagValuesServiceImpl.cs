@@ -118,6 +118,36 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        public override async Task CreateFixedSnapshotPushChannel(CreateSnapshotPushChannelMessage request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var cancellationToken = context.CancellationToken;
+
+            var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+            var adapterRequest = new CreateSnapshotTagValueSubscriptionRequest() {
+                Tags = request.Tags.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
+
+            using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (val == null) {
+                            continue;
+                        }
+                        ++outputItems;
+                        await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
+            }
+        }
+
+
+        /// <inheritdoc/>
         public override async Task ReadSnapshotTagValues(ReadSnapshotTagValuesRequest request, IServerStreamWriter<TagValueQueryResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;

@@ -11,11 +11,11 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
     <!-- IAsyncEnumerable/IAsyncDisposable support for .NET Standard 2.0 and .NET Framework 4.x -->
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftBclAsyncInterfacesVersion)" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.BackgroundTasks" Version="$(IntelligentPlantBackgroundTasksVersion)" />
+    <PackageReference Include="IntelligentPlant.BackgroundTasks" />
   </ItemGroup>
   
   <ItemGroup>
@@ -29,6 +29,11 @@
       <DependentUpon>AbstractionsResources.resx</DependentUpon>
       <CustomToolNamespace></CustomToolNamespace>
     </Compile>
+    <Compile Update="Diagnostics\AdapterEventSourceResources.Designer.cs">
+      <DependentUpon>AdapterEventSourceResources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +41,10 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>AbstractionsResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Diagnostics\AdapterEventSourceResources.resx">
+      <LastGenOutput>AdapterEventSourceResources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
 

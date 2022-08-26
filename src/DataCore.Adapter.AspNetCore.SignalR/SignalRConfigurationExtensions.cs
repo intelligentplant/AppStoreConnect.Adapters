@@ -1,7 +1,7 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Hubs;
 
-#if NETSTANDARD2_0
+#if NET48
 using DataCore.Adapter.NewtonsoftJson;
 #else
 using DataCore.Adapter.Json;
@@ -37,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-#if NETSTANDARD2_0
+#if NET48
             return builder.AddJsonProtocol(options => {
                 options.PayloadSerializerSettings.AddDataCoreAdapterConverters();
             });
@@ -49,7 +49,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         }
 
 
-#if NETSTANDARD2_0
+#if NET48
 
         /// <summary>
         /// Maps adapter hub endpoints.

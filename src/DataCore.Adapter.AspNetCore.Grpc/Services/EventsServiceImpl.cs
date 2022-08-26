@@ -191,6 +191,39 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        public override async Task CreateFixedEventTopicPushChannel(CreateEventTopicPushChannelMessage request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var cancellationToken = context.CancellationToken;
+
+            var adapter = await Util.ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, _adapterAccessor, request.AdapterId, cancellationToken).ConfigureAwait(false);
+            var adapterRequest = new CreateEventMessageTopicSubscriptionRequest() {
+                SubscriptionType = request.SubscriptionType == EventSubscriptionType.Active
+                    ? EventMessageSubscriptionType.Active
+                    : EventMessageSubscriptionType.Passive,
+                Topics = request.Topics.ToArray(),
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
+
+            using (var activity = Telemetry.ActivitySource.StartEventMessagePushWithTopicsSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                long outputItems = 0;
+                try {
+                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        ++outputItems;
+                        await responseStream.WriteAsync(item.ToGrpcEventMessage()).ConfigureAwait(false);
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(outputItems);
+                }
+            }
+        }
+
+
+        /// <inheritdoc/>
         public override async Task GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest request, IServerStreamWriter<EventMessage> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;

@@ -10,14 +10,25 @@ option csharp_namespace = "DataCore.Adapter.Grpc";
 
 service EventsService {
     // Push 
+
+    // Streams event messages from adapters that support topic-less event subscriptions.
     rpc CreateEventPushChannel(CreateEventPushChannelRequest) returns (stream EventMessage);
+
+    // Streams event messages from adapters that support topic-based event subscriptions. Uses 
+    // bidirectional streaming to allow subscriptions to be modified after creation.
     rpc CreateEventTopicPushChannel(stream CreateEventTopicPushChannelRequest) returns (stream EventMessage);
 
+    // Streams event messages from adapters that support topic-based event subscriptions. Changes 
+    // to the subscription are not allowed after creation.
+    rpc CreateFixedEventTopicPushChannel(CreateEventTopicPushChannelMessage) returns (stream EventMessage);
+
     // Polling
+
     rpc GetEventMessagesForTimeRange(GetEventMessagesForTimeRangeRequest) returns (stream EventMessage);
     rpc GetEventMessagesUsingCursorPosition(GetEventMessagesUsingCursorPositionRequest) returns (stream EventMessageWithCursorPosition);
 
     // Event message write
+
     rpc WriteEventMessages(stream WriteEventMessageRequest) returns (stream WriteEventMessageResult);
 }
 

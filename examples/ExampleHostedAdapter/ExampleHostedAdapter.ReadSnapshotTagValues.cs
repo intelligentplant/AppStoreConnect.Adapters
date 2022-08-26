@@ -22,10 +22,11 @@ namespace ExampleHostedAdapter {
             // context and request object(s) are valid!
             ValidateInvocation(context, request);
 
+            await Task.Yield();
             var now = DateTime.UtcNow;
 
             Random GetRng(string tagId) {
-                return new Random((tagId.GetHashCode() + now.GetHashCode()).GetHashCode());
+                return new Random((tagId.GetHashCode() + now.GetHashCode() + Options.Seed).GetHashCode());
             }
 
             using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {

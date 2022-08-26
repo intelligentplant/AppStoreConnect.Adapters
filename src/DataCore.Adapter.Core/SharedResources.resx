@@ -120,6 +120,10 @@
   <data name="Error_AbsoluteUriRequired" xml:space="preserve">
     <value>An absolute URI is required.</value>
   </data>
+  <data name="Error_AbsoluteUriWithSpecificSchemeRequired" xml:space="preserve">
+    <value>An absolute URI with one of the following schemes is required: {0}</value>
+    <comment>{0} - scheme list</comment>
+  </data>
   <data name="Error_ArrayElementTypeIsUnsupported" xml:space="preserve">
     <value>Array element type is unsupported.</value>
   </data>

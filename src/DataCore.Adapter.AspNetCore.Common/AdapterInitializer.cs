@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore {
@@ -12,7 +11,7 @@ namespace DataCore.Adapter.AspNetCore {
     /// time.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated via dependency injection")]
-    internal class AdapterInitializer : IHostedService {
+    internal partial class AdapterInitializer {
 
         /// <summary>
         /// Logging.
@@ -44,67 +43,59 @@ namespace DataCore.Adapter.AspNetCore {
 
 
         /// <summary>
-        /// Starts the adapters.
+        /// Runs the <see cref="AdapterInitializer"/> service.
         /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
+        /// <param name="stoppingToken">
+        ///   The <see cref="CancellationToken"/> that will request cancellation when the service 
+        ///   is being stopped.
         /// </param>
         /// <returns>
-        ///   A task that will start the registered adapters.
+        ///   A <see cref="Task"/> that will run the service.
         /// </returns>
-        public Task StartAsync(CancellationToken cancellationToken) {
-            return Task.Run(async () => {
-                await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
-                    if (cancellationToken.IsCancellationRequested) {
+        private async Task RunAsync(CancellationToken stoppingToken) {
+            var context = new DefaultAdapterCallContext();
+            
+            try {
+                await foreach (var adapter in _adapterAccessor.GetAllAdapters(context, stoppingToken).ConfigureAwait(false)) {
+                    if (stoppingToken.IsCancellationRequested) {
                         break;
                     }
-                    if (!adapter.IsEnabled) {
-                        continue;
-                    }
-
+                    
                     try {
                         _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        await adapter.StartAsync(cancellationToken).ConfigureAwait(false);
+                        await adapter.StartAsync(stoppingToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException e) {
+                        if (stoppingToken.IsCancellationRequested) {
+                            throw;
+                        }
+                        _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
                     }
                     catch (Exception e) {
                         _logger.LogError(e, Resources.Log_AdapterStartError, adapter.Descriptor.Name, adapter.Descriptor.Id);
                     }
                 }
-            }, cancellationToken);
-        }
 
+                await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
+            }
+            finally {
+                using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(10))) {
+                    await foreach (var adapter in _adapterAccessor.GetAllAdapters(context, ctSource.Token).ConfigureAwait(false)) {
+                        if (!adapter.IsRunning) {
+                            continue;
+                        }
 
-
-        /// <summary>
-        /// Stops the adapters.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A task that will stop the registered adapters.
-        /// </returns>
-        public async Task StopAsync(CancellationToken cancellationToken) {
-            try {
-                await foreach (var adapter in _adapterAccessor.GetAllAdapters(new DefaultAdapterCallContext(), cancellationToken).ConfigureAwait(false)) {
-                    if (!adapter.IsRunning) {
-                        continue;
-                    }
-
-                    try {
-                        _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
-                        await adapter.StopAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception e) {
-                        _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        try {
+                            _logger.LogDebug(Resources.Log_StoppingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                            await adapter.StopAsync(ctSource.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception e) {
+                            _logger.LogError(e, Resources.Log_AdapterStopError, adapter.Descriptor.Name, adapter.Descriptor.Id);
+                        }
                     }
                 }
             }
-            catch (OperationCanceledException) {
-                if (!cancellationToken.IsCancellationRequested) {
-                    throw;
-                }
-            }
         }
+
     }
 }

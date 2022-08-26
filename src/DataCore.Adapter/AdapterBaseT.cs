@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -47,6 +46,11 @@ namespace DataCore.Adapter {
         private bool _isRunning;
 
         /// <summary>
+        /// Specifies if <see cref="IAdapter.StartAsync"/> has been called at least once.
+        /// </summary>
+        private bool _hasStartBeenCalled;
+
+        /// <summary>
         /// Logging.
         /// </summary>
         protected internal ILogger Logger { get; }
@@ -79,17 +83,33 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Ensures that only one startup attempt can occur at a time.
         /// </summary>
-        private readonly SemaphoreSlim _startupLock = new SemaphoreSlim(1, 1);
+        private readonly Nito.AsyncEx.AsyncLock _startupLock = new Nito.AsyncEx.AsyncLock();
+
+        /// <summary>
+        /// Ensures that only one shutdown attempt can occur at a time.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncLock _shutdownLock = new Nito.AsyncEx.AsyncLock();
+
+        /// <summary>
+        /// Manual reset event that is reset when a shutdown starts and is set when a shutdown 
+        /// completes.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncManualResetEvent _shutdownInProgress = new Nito.AsyncEx.AsyncManualResetEvent(true); // Initial state is set
+
+        /// <summary>
+        /// Fires when <see cref="Dispose()"/> or <see cref="DisposeAsync"/> are called.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Fires when <see cref="IAdapter.StopAsync(CancellationToken)"/> is called.
         /// </summary>
-        private CancellationTokenSource _stopTokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _stopTokenSource;
 
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        public CancellationToken StopToken { get; }
+        public CancellationToken StopToken => _stopTokenSource.Token;
 
         /// <summary>
         /// Allows the adapter to register work items to be run in the background. The adapter's 
@@ -180,12 +200,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, AdapterConstants.MaxIdLength), nameof(id));
             }
 
-            StopToken = _stopTokenSource.Token;
+            // Create initial stopped token source and cancel it immediately so that StopToken is
+            // initially in a cancelled state.
+            _stopTokenSource = new CancellationTokenSource();
+            _stopTokenSource.Cancel();
+
             TypeDescriptor = this.CreateTypeDescriptor();
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(
-                backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
-                () => StopToken
-            );
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             _loggerScope = Logger.BeginScope(id);
 
@@ -444,27 +465,24 @@ namespace DataCore.Adapter {
                 if (!newOptions.IsEnabled && (IsStarting || IsRunning)) {
                     // The adapter is already running and has now been disabled.
 
-                    var tcs = new TaskCompletionSource<bool>();
-
                     BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        try {
-                            await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) {
-                            tcs.TrySetCanceled(ct);
-                        }
-                        catch (Exception e) {
-                            tcs.TrySetException(e);
-                        }
-                        finally {
-                            tcs.TrySetResult(true);
-                        }
+                        await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
                     });
 
-                    tcs.Task.Wait();
+                    // No need to call the OnOptionsChange handler on the implementing class, since
+                    // we've just stopped the adapter.
+                    return;
+                }
+                if (_hasStartBeenCalled && newOptions.IsEnabled && !(IsStarting || IsRunning)) {
+                    // The adapter was disabled but has now been enabled, and StartAsync has been
+                    // called at least once before.
 
-                    // No need to call the handler on the implementing class, since we've just 
-                    // stopped the adapter.
+                    BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                        await ((IAdapter) this).StartAsync(ct).ConfigureAwait(false);
+                    });
+
+                    // No need to call the OnOptionsChange handler on the implementing class, since
+                    // we've just started the adapter.
                     return;
                 }
             }
@@ -932,21 +950,26 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
+            _hasStartBeenCalled = true;
+
+            var descriptorId = Descriptor.Id;
+
             if (!IsEnabled) {
-                throw new InvalidOperationException(Resources.Error_AdapterIsDisabled);
+                Logger.LogWarning(Resources.Log_AdapterIsDisabled, descriptorId);
+                return;
             }
 
             CheckDisposed();
-            await _startupLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try {
+            using (await _startupLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                await _shutdownInProgress.WaitAsync(cancellationToken).ConfigureAwait(false);
+
                 if (IsRunning) {
                     return;
                 }
-                if (StopToken.IsCancellationRequested) {
-                    throw new InvalidOperationException(Resources.Error_AdapterIsStopping);
-                }
 
-                var descriptorId = Descriptor.Id;
+                if (StopToken.IsCancellationRequested) {
+                    _stopTokenSource = new CancellationTokenSource();
+                }
 
                 using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StartAsync)))) {
                     if (activity != null) {
@@ -958,7 +981,7 @@ namespace DataCore.Adapter {
 
                         IsStarting = true;
                         try {
-                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _stopTokenSource.Token)) {
+                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
                                 await StartAsync(ctSource.Token).ConfigureAwait(false);
                                 _isRunning = true;
                                 await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
@@ -977,46 +1000,43 @@ namespace DataCore.Adapter {
                     }
                 }
             }
-            finally {
-                // If startup has been cancelled because the adapter is being disposed, releasing 
-                // the lock will throw an ObjectDisposedException.
-                if (!_isDisposed) {
-                    _startupLock.Release();
-                }
-            }
-
-            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync);
+            
+            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
         }
 
 
         /// <inheritdoc/>
         async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
             CheckDisposed();
-            if (!IsStarting && !IsRunning) {
-                return;
-            }
-
-            var descriptorId = Descriptor.Id;
-
-            try {
-                using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StopAsync)))) {
-                    if (activity != null) {
-                        activity.SetAdapterTag(this);
-                    }
-                    Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
-                    _stopTokenSource.Cancel();
-                    await StopAsync(cancellationToken).ConfigureAwait(false);
-                    EventSource.AdapterStopped(descriptorId);
-                    Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
+            using (await _shutdownLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!IsStarting && !IsRunning) {
+                    return;
                 }
-            }
-            catch (Exception e) {
-                Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
-                throw;
-            }
-            finally {
-                _stopTokenSource = new CancellationTokenSource();
-                _isRunning = false;
+
+                _shutdownInProgress.Reset();
+                var descriptorId = Descriptor.Id;
+
+                try {
+                    using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StopAsync)))) {
+                        if (activity != null) {
+                            activity.SetAdapterTag(this);
+                        }
+                        Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
+                        await StopAsync(default).ConfigureAwait(false);
+                        EventSource.AdapterStopped(descriptorId);
+                        Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
+                    }
+                }
+                catch (Exception e) {
+                    Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
+                    throw;
+                }
+                finally {
+                    _isRunning = false;
+                    _stopTokenSource.Cancel();
+                    _healthCheckManager.RecalculateHealthStatus();
+                    _shutdownInProgress.Set();
+                }
             }
         }
 
@@ -1060,12 +1080,13 @@ namespace DataCore.Adapter {
             }
 
             _optionsMonitorSubscription?.Dispose();
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _healthCheckManager.Dispose();
             _properties.Clear();
             _loggerScope.Dispose();
-            _startupLock.Dispose();
 
             _isDisposedCommon = true;
         }

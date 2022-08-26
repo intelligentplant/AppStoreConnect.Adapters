@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{0DEC6A
 		build.sh = build.sh
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
 		LICENSE = LICENSE
 		README.md = README.md
 		swagger.json = swagger.json
@@ -46,8 +47,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Grpc.Clien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.ExampleAdapter", "examples\DataCore.Adapter.ExampleAdapter\DataCore.Adapter.ExampleAdapter.csproj", "{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.GrpcExampleClient", "examples\DataCore.Adapter.GrpcExampleClient\DataCore.Adapter.GrpcExampleClient.csproj", "{F8F84631-2D62-4104-BDFD-F43C6A76C068}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Csv", "src\DataCore.Adapter.Csv\DataCore.Adapter.Csv.csproj", "{A00430B8-EF92-4C82-97C1-48B8977B88A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.Common", "src\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj", "{1EEB0C0A-6790-401A-A501-411FF8235861}"
@@ -55,8 +54,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.Grpc", "src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj", "{0895A919-F5F8-4358-98B0-1BC7087D1906}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.SignalR", "src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj", "{72E6C560-2248-4209-9F10-315B93C4FDEA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.NetFxExample", "examples\DataCore.Adapter.NetFxExample\DataCore.Adapter.NetFxExample.csproj", "{D13E7FB7-2E71-4725-8B38-D0CA201A16AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.SignalR.Proxy", "src\DataCore.Adapter.AspNetCore.SignalR.Proxy\DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj", "{00DB3574-0618-4137-AAA1-815248A1E837}"
 EndProject
@@ -82,12 +79,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
 	ProjectSection(SolutionItems) = preProject
-		build\Dependencies.props = build\Dependencies.props
 		build\NetFX.targets = build\NetFX.targets
 		build\version.json = build\version.json
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Benchmarks", "test\DataCore.Adapter.Benchmarks\DataCore.Adapter.Benchmarks.csproj", "{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Proxy", "src\DataCore.Adapter.Proxy\DataCore.Adapter.Proxy.csproj", "{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}"
 EndProject
@@ -143,7 +137,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueSt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueStore.FileSystem", "src\DataCore.Adapter.KeyValueStore.FileSystem\DataCore.Adapter.KeyValueStore.FileSystem.csproj", "{8C225A69-794C-4451-B5CE-91EAD5269C87}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApiExample", "examples\MinimalApiExample\MinimalApiExample.csproj", "{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApiExample", "examples\MinimalApiExample\MinimalApiExample.csproj", "{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,10 +177,6 @@ Global
 		{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F8F84631-2D62-4104-BDFD-F43C6A76C068}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F8F84631-2D62-4104-BDFD-F43C6A76C068}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F8F84631-2D62-4104-BDFD-F43C6A76C068}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F8F84631-2D62-4104-BDFD-F43C6A76C068}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -203,10 +193,6 @@ Global
 		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72E6C560-2248-4209-9F10-315B93C4FDEA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D13E7FB7-2E71-4725-8B38-D0CA201A16AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D13E7FB7-2E71-4725-8B38-D0CA201A16AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D13E7FB7-2E71-4725-8B38-D0CA201A16AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D13E7FB7-2E71-4725-8B38-D0CA201A16AC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{00DB3574-0618-4137-AAA1-815248A1E837}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{00DB3574-0618-4137-AAA1-815248A1E837}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00DB3574-0618-4137-AAA1-815248A1E837}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -235,10 +221,6 @@ Global
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -300,12 +282,10 @@ Global
 		{67504392-4D6A-4BA3-B59F-3D8D72D93EAC} = {1BF8C809-6F14-4C52-B172-D43A96295884}
 		{F971C9D2-5948-4680-BA30-C5E31B1FF8D4} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{A74F8D3F-191C-4EB4-ACAD-D72017AE32BB} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
-		{F8F84631-2D62-4104-BDFD-F43C6A76C068} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
 		{A00430B8-EF92-4C82-97C1-48B8977B88A4} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{1EEB0C0A-6790-401A-A501-411FF8235861} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{0895A919-F5F8-4358-98B0-1BC7087D1906} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{72E6C560-2248-4209-9F10-315B93C4FDEA} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
-		{D13E7FB7-2E71-4725-8B38-D0CA201A16AC} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
 		{00DB3574-0618-4137-AAA1-815248A1E837} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{083650D1-693D-4F4C-A699-9D8127D34D00} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{B158078F-D217-46FE-A9B8-7BD1B99922BA} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
@@ -317,7 +297,6 @@ Global
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
-		{A28BD1F2-AFC4-4AF9-8C20-F943BAB260C5} = {1BF8C809-6F14-4C52-B172-D43A96295884}
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{5E4F5BAB-DAA5-47B0-862A-B6E4173F146C} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETCOREAPP
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -349,3 +350,4 @@ namespace DataCore.Adapter.Tests {
 
     }
 }
+#endif

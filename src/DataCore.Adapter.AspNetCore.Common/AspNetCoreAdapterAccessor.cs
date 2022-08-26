@@ -18,7 +18,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The available adapters.
         /// </summary>
-        private readonly IAdapter[] _adapters;
+        private readonly IEnumerable<IAdapter> _adapters;
 
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace DataCore.Adapter {
         /// </param>
         public AspNetCoreAdapterAccessor(IAdapterAuthorizationService authorizationService, IEnumerable<IAdapter>? adapters) 
             : base(authorizationService) {
-            _adapters = adapters?.OrderBy(x => x.Descriptor.Name, StringComparer.OrdinalIgnoreCase)?.ToArray() ?? Array.Empty<IAdapter>();
+            _adapters = adapters ?? Array.Empty<IAdapter>();
         }
 
 
@@ -44,7 +44,6 @@ namespace DataCore.Adapter {
             CancellationToken cancellationToken
         ) {
             var adapters = _adapters
-                .Where(x => x.IsEnabled)
                 .Where(x => MatchesFilter(x, request))
                 .OrderBy(x => x.GetName(), StringComparer.OrdinalIgnoreCase);
 
@@ -73,7 +72,7 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         protected override async Task<IAdapter?> GetAdapter(IAdapterCallContext context, string adapterId, CancellationToken cancellationToken) {
             var adapter = _adapters.FirstOrDefault(x => string.Equals(x.Descriptor.Id, adapterId, StringComparison.OrdinalIgnoreCase));
-            if (adapter == null || !adapter.IsEnabled || !await IsAuthorized(adapter, context, cancellationToken).ConfigureAwait(false)) {
+            if (adapter == null || !await IsAuthorized(adapter, context, cancellationToken).ConfigureAwait(false)) {
                 return null;
             }
 

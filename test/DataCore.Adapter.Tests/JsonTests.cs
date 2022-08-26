@@ -327,7 +327,8 @@ namespace DataCore.Adapter.Tests {
                     TestContext.TestName, 
                     TestContext.TestName, 
                     "1.0.0",
-                    new VendorInfo("", "")
+                    new VendorInfo("", ""),
+                    null
                 )
             );
 

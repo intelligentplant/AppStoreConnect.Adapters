@@ -19,7 +19,7 @@ namespace DataCore.Adapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SharedResources {
@@ -66,6 +66,15 @@ namespace DataCore.Adapter {
         public static string Error_AbsoluteUriRequired {
             get {
                 return ResourceManager.GetString("Error_AbsoluteUriRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An absolute URI with one of the following schemes is required: {0}.
+        /// </summary>
+        public static string Error_AbsoluteUriWithSpecificSchemeRequired {
+            get {
+                return ResourceManager.GetString("Error_AbsoluteUriWithSpecificSchemeRequired", resourceCulture);
             }
         }
         

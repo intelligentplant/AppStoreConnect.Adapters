@@ -21,7 +21,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Subscription Management ]
 
-#if NETSTANDARD2_0 == false
+#if NET48 == false
 
         /// <summary>
         /// Creates a channel that will receive event messages from the specified adapter using 
@@ -247,7 +247,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Write Event Messages ]
 
-#if NETSTANDARD2_0 == false
+#if NET48 == false
 
         /// <summary>
         /// Writes event messages to the specified adapter.

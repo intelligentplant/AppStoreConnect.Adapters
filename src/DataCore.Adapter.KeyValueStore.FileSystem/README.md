@@ -2,7 +2,9 @@
 
 Implementation of [IKeyValueStore](/src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) that uses the file system to persist data.
 
-Each key in the store is saved to a different file. The name of the fix is the key, converted to hexadecimal and suffixed with a file extension e.g. `[0x48, 0x65,0x6C, 0x6C]` becomes `48656C6C.data`.
+Each key in the store is saved to a different file. The name of the file is the key, converted to hexadecimal and suffixed with a file extension e.g. `[0x48, 0x65, 0x6C, 0x6C]` becomes `48656C6C.data`.
+
+Files are distributed across a number of subfolders, determined by the `FileSystemKeyValueStoreOptions.HashBuckets` property. 20 buckets are used by default. An index file (`index.data`) is saved to the store's root folder. This file provides a lookup from key to the file containing the data for that key. Note that the index file will zip its contents if required when writing to disk.
 
 
 # Example Usage
