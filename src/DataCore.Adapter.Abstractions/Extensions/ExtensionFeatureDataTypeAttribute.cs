@@ -12,6 +12,7 @@ namespace DataCore.Adapter.Extensions {
     ///   specified in the constructor is made absolute using the URI of the feature type.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public sealed class ExtensionFeatureDataTypeAttribute : Common.DataTypeIdAttribute {
 
         /// <summary>

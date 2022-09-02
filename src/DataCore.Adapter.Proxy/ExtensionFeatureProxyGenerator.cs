@@ -44,12 +44,13 @@ namespace DataCore.Adapter.Proxy {
         /// <summary>
         /// Class initialiser.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Complex initialisation required")]
         static ExtensionFeatureProxyGenerator() {
             var assemblyName = new AssemblyName(typeof(ExtensionFeatureProxyGenerator).Assembly.GetName().Name + ".DynamicExtensions");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
             s_moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicExtensionsModule");
+#pragma warning disable CS0618 // Type or member is obsolete
             s_adapterExtensionFeatureAttributeConstructor = typeof(ExtensionFeatureAttribute).GetConstructor(new[] { typeof(string) })!;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 
@@ -77,7 +78,9 @@ namespace DataCore.Adapter.Proxy {
                 fullyQualifiedTypeName,
                 TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public
             );
+#pragma warning disable CS0618 // Type or member is obsolete
             typeBuilder.AddInterfaceImplementation(typeof(IAdapterExtensionFeature));
+#pragma warning restore CS0618 // Type or member is obsolete
             typeBuilder.SetCustomAttribute(new CustomAttributeBuilder(
                 s_adapterExtensionFeatureAttributeConstructor,
                 new object[] { featureUri.ToString() }
@@ -119,6 +122,7 @@ namespace DataCore.Adapter.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="featureUri"/> is not an absolute URI.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TProxy, TAdapterOptions, TImpl>(
             TProxy proxy,
             Uri featureUri

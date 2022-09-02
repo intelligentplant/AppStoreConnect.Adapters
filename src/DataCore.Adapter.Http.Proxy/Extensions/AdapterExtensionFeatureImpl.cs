@@ -11,6 +11,7 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
     /// <summary>
     /// Allows communication with remote <see cref="IAdapterExtensionFeature"/> implementations.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<HttpAdapterProxy, HttpAdapterProxyOptions> {
 
         /// <summary>

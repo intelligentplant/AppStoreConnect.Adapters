@@ -43,6 +43,7 @@ namespace DataCore.Adapter {
             [Events.ReadEventMessagesForTimeRange] = typeof(IReadEventMessagesForTimeRange),
             [Events.ReadEventMessagesUsingCursor] = typeof(IReadEventMessagesUsingCursor),
             [Events.WriteEventMessages] = typeof(IWriteEventMessages),
+            [Extensions.CustomFunctions] = typeof(ICustomFunctions),
             [RealTimeData.ReadAnnotations] = typeof(IReadTagValueAnnotations),
             [RealTimeData.ReadPlotTagValues] = typeof(IReadPlotTagValues),
             [RealTimeData.ReadProcessedTagValues] = typeof(IReadProcessedTagValues),
@@ -331,6 +332,11 @@ namespace DataCore.Adapter {
         /// Defines URIs related to extension features.
         /// </summary>
         public static class Extensions {
+
+            /// <summary>
+            /// URI for <see cref="ICustomFunctions"/>.
+            /// </summary>
+            public const string CustomFunctions = "asc:features/extensions/custom-functions/";
 
             /// <summary>
             /// The root URI for all extension features (i.e. features extension <see cref="IAdapterExtensionFeature"/>).

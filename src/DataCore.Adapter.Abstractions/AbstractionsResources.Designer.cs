@@ -412,6 +412,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom Functions.
+        /// </summary>
+        public static string Description_CustomFunctions {
+            get {
+                return ResourceManager.GetString("Description_CustomFunctions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time..
         /// </summary>
         public static string Description_EventMessagePush {
@@ -597,6 +606,15 @@ namespace DataCore.Adapter {
         public static string DisplayName_ConfigurationChanges {
             get {
                 return ResourceManager.GetString("DisplayName_ConfigurationChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Functions.
+        /// </summary>
+        public static string DisplayName_CustomFunctions {
+            get {
+                return ResourceManager.GetString("DisplayName_CustomFunctions", resourceCulture);
             }
         }
         

@@ -234,6 +234,9 @@
   <data name="Description_ConfigurationChanges" xml:space="preserve">
     <value>Allows subscribers to receive notifications when items on an adapter such as tags or asset model nodes are created, updated, or deleted.</value>
   </data>
+  <data name="Description_CustomFunctions" xml:space="preserve">
+    <value>Custom Functions</value>
+  </data>
   <data name="Description_EventMessagePush" xml:space="preserve">
     <value>Allows subscribers to receive event messages from an adapter in real-time.</value>
   </data>
@@ -296,6 +299,9 @@
   </data>
   <data name="DisplayName_ConfigurationChanges" xml:space="preserve">
     <value>Configuration Changes</value>
+  </data>
+  <data name="DisplayName_CustomFunctions" xml:space="preserve">
+    <value>Custom Functions</value>
   </data>
   <data name="DisplayName_EventMessagePush" xml:space="preserve">
     <value>Event Message Push</value>

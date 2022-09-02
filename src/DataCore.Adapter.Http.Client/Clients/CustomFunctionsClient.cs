@@ -5,21 +5,19 @@ using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Http.Client.Clients {
 
     /// <summary>
-    /// Client for querying adapter extension features.
+    /// Client for invoking custom adapter functions.
     /// </summary>
-    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
-    public class ExtensionFeaturesClient {
+    public class CustomFunctionsClient {
 
         /// <summary>
         /// The URL prefix for API calls.
         /// </summary>
-        private string UrlPrefix => string.Concat(_client.GetBaseUrl(), "/extensions");
+        private string UrlPrefix => string.Concat(_client.GetBaseUrl(), "/custom-functions");
 
         /// <summary>
         /// The adapter HTTP client that is used to perform the requests.
@@ -28,7 +26,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
-        /// Creates a new <see cref="EventsClient"/> object.
+        /// Creates a new <see cref="CustomFunctionsClient"/> object.
         /// </summary>
         /// <param name="client">
         ///   The adapter HTTP client.
@@ -36,112 +34,16 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="client"/> is <see langword="null"/>.
         /// </exception>
-        public ExtensionFeaturesClient(AdapterHttpClient client) {
+        public CustomFunctionsClient(AdapterHttpClient client) {
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
 
         /// <summary>
-        /// Gets the descriptor for the specified extension feature.
+        /// Gets the available custom functions for the adapter.
         /// </summary>
         /// <param name="adapterId">
-        ///   The adapter to query.
-        /// </param>
-        /// <param name="featureUri">
-        ///   The extension feature URI to retrieve the descriptor for.
-        /// </param>
-        /// <param name="metadata">
-        ///   The metadata to associate with the outgoing request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The feature descriptor.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="featureUri"/> is <see langword="null"/>.
-        /// </exception>
-        public async Task<FeatureDescriptor?> GetDescriptorAsync(
-            string adapterId,
-            Uri featureUri,
-            RequestMetadata? metadata = null,
-            CancellationToken cancellationToken = default
-        ) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-            if (featureUri == null) {
-                throw new ArgumentNullException(nameof(featureUri));
-            }
-
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/descriptor?id={Uri.EscapeDataString(featureUri?.ToString()!)}";
-
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
-
-                return (await httpResponse.Content.ReadFromJsonAsync<FeatureDescriptor>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
-            }
-        }
-
-
-        /// <summary>
-        /// Gets the available operations for the specified extension feature.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter to query.
-        /// </param>
-        /// <param name="featureUri">
-        ///   The extension feature URI to retrieve the operation descriptors for.
-        /// </param>
-        /// <param name="metadata">
-        ///   The metadata to associate with the outgoing request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   The available operations.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="featureUri"/> is <see langword="null"/>.
-        /// </exception>
-        public async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetOperationsAsync(
-            string adapterId,
-            Uri featureUri,
-            RequestMetadata? metadata = null,
-            CancellationToken cancellationToken = default
-        ) {
-            if (string.IsNullOrWhiteSpace(adapterId)) {
-                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
-            }
-            if (featureUri == null) {
-                throw new ArgumentNullException(nameof(featureUri));
-            }
-
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?id={Uri.EscapeDataString(featureUri.ToString())}";
-
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
-                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
-
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<ExtensionFeatureOperationDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
-            }
-        }
-
-
-        /// <summary>
-        /// Invokes an extension feature on an adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter to query.
+        ///   The ID of the adapter to query.
         /// </param>
         /// <param name="request">
         ///   The request.
@@ -153,7 +55,8 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   The operation result.
+        ///   A <see cref="Task{TResult}"/> that will return a <see cref="CustomFunctionDescriptor"/> 
+        ///   for each custom function defined by the adapter.
         /// </returns>
         /// <exception cref="ArgumentException">
         ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
@@ -164,9 +67,9 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<InvocationResponse> InvokeExtensionAsync(
+        public async Task<IEnumerable<CustomFunctionDescriptor>> GetFunctionsAsync(
             string adapterId,
-            InvocationRequest request,
+            GetCustomFunctionsRequest request,
             RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
@@ -175,13 +78,109 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             AdapterHttpClient.ValidateObject(request);
 
-            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke";
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<CustomFunctionDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
 
-                return (await httpResponse.Content.ReadFromJsonAsync<InvocationResponse>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+
+        /// <summary>
+        /// Gets the extended descriptor for the specified custom function.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return a <see cref="CustomFunctionDescriptorExtended"/> 
+        ///   describing the function.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<CustomFunctionDescriptorExtended?> GetFunctionAsync(
+            string adapterId,
+            GetCustomFunctionRequest request,
+            RequestMetadata? metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/details";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<CustomFunctionDescriptorExtended>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
+
+
+        /// <summary>
+        /// Invokes a custom function.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The invocation request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the invocation response.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<CustomFunctionInvocationResponse> InvokeFunctionAsync(
+            string adapterId,
+            CustomFunctionInvocationRequest request,
+            RequestMetadata? metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/invoke";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+                return (await httpResponse.Content.ReadFromJsonAsync<CustomFunctionInvocationResponse>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// Input arguments for a duplex streaming extension feature operation. 
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class InvocationStreamItem {
 
         /// <summary>

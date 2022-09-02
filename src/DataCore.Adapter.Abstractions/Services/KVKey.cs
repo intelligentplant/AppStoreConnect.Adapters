@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Services {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0 || NET461
+#if NETSTANDARD2_0 || NETFRAMEWORK
             return HashGenerator.Combine(Value);
 #else
             return HashCode.Combine(Value);

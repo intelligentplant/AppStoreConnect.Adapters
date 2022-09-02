@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// Describes a response to an <see cref="InvocationRequest"/>.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class InvocationResponse {
 
         /// <summary>

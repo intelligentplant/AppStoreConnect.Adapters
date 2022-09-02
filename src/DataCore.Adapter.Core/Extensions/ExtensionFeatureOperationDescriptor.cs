@@ -5,6 +5,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// Describes an operation on an extension adapter feature.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeatureOperationDescriptor {
 
         /// <summary>

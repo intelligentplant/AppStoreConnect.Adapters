@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
     /// <summary>
     /// Extensions for <see cref="ActivitySource"/> related to extension feature operations.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public static class ExtensionFeaturesActivitySourceExtensions {
 
         /// <summary>

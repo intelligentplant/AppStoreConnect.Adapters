@@ -160,7 +160,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
     #endregion
 
-    #region [ Polling Queries ]
+        #region [ Polling Queries ]
 
         /// <summary>
         /// Reads event messages occurring inside the specified time range.

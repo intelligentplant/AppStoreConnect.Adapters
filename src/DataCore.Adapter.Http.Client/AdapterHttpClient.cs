@@ -42,6 +42,11 @@ namespace DataCore.Adapter.Http.Client {
         public AssetModelBrowserClient AssetModel { get; }
 
         /// <summary>
+        /// The client for invoking custom adapter functions.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
+
+        /// <summary>
         /// The client for reading event messages from and writing event messages to an adapter.
         /// </summary>
         public EventsClient Events { get; }
@@ -70,6 +75,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <summary>
         /// The client for invoking extension features on an adapter.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
 
 

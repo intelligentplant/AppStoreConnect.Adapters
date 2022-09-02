@@ -24,6 +24,7 @@ namespace DataCore.Adapter.Tests {
     ///   * The class also implements the <see cref="IHelloWorld"/> extension defined in a separate interface.
     /// 
     /// </remarks>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     [ExtensionFeature(
         FeatureUri,
         Name = "Ping Pong",

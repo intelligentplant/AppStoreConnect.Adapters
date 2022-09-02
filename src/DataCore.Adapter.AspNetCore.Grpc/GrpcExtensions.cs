@@ -104,6 +104,38 @@ namespace DataCore.Adapter {
             return VariantConverter.WriteArray(array);
         }
 
+
+        /// <summary>
+        /// Converts the <see cref="Google.Protobuf.WellKnownTypes.Struct"/> to a <see cref="System.Text.Json.JsonElement"/>.
+        /// </summary>
+        /// <param name="struct">
+        ///   The <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        /// </param>
+        /// <returns>
+        ///   An equivalent <see cref="System.Text.Json.JsonElement"/>.
+        /// </returns>
+        public static System.Text.Json.JsonElement ToJsonElement(this Google.Protobuf.WellKnownTypes.Struct @struct) {
+            if (@struct == null) {
+                return default;
+            }
+
+            return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(@struct));
+        }
+
+
+        /// <summary>
+        /// Converts the <see cref="System.Text.Json.JsonElement"/> to a <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        /// </summary>
+        /// <param name="element">
+        ///   The <see cref="System.Text.Json.JsonElement"/>.
+        /// </param>
+        /// <returns>
+        ///   An equivalent <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        /// </returns>
+        public static Google.Protobuf.WellKnownTypes.Struct ToProtoStruct(this System.Text.Json.JsonElement element) {
+            return Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(element.ToString());
+        }
+
         #endregion
 
         #region [ Asset Model ]
@@ -1068,6 +1100,67 @@ namespace DataCore.Adapter {
             }
 
             return EncodedObject.Create(new Uri(obj.TypeId), obj.Encoding, obj.EncodedBody.ToByteArray());
+        }
+
+        #endregion
+
+        #region [ Custom Functions ]
+
+        public static Extensions.CustomFunctionDescriptor ToAdapterCustomFunctionDescriptor(this Grpc.CustomFunctionDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Extensions.CustomFunctionDescriptor() { 
+                Id = Uri.TryCreate(descriptor.Id, UriKind.Absolute, out var uri) 
+                    ? uri 
+                    : null!,
+                Name = descriptor.Name,
+                Description = descriptor.Description
+            };
+        }
+
+
+        public static Grpc.CustomFunctionDescriptor ToGrpcCustomFunctionDescriptor(this Extensions.CustomFunctionDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Grpc.CustomFunctionDescriptor() {
+                Id = descriptor.Id?.ToString() ?? string.Empty,
+                Name = descriptor.Name ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty
+            };
+        }
+
+
+        public static Extensions.CustomFunctionDescriptorExtended ToAdapterCustomFunctionDescriptorExtended(this Grpc.CustomFunctionDescriptorExtended descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Extensions.CustomFunctionDescriptorExtended() {
+                Id = Uri.TryCreate(descriptor.Function.Id, UriKind.Absolute, out var uri)
+                    ? uri
+                    : null!,
+                Name = descriptor.Function.Name,
+                Description = descriptor.Function.Description,
+                RequestSchema = descriptor.RequestSchema.ToJsonElement(),
+                ResponseSchema = descriptor.ResponseSchema.ToJsonElement()
+            };
+        }
+
+
+        public static Grpc.CustomFunctionDescriptorExtended ToGrpcCustomFunctionDescriptorExtended(this Extensions.CustomFunctionDescriptorExtended descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Grpc.CustomFunctionDescriptorExtended() {
+                Function = descriptor.ToGrpcCustomFunctionDescriptor(),
+                RequestSchema = descriptor.RequestSchema.ToProtoStruct(),
+                ResponseSchema = descriptor.ResponseSchema.ToProtoStruct(),
+            };
         }
 
         #endregion

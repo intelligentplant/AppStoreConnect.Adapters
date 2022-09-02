@@ -6,6 +6,7 @@ import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
 
+// DEPRECATED!
 service ExtensionFeaturesService {
     rpc GetDescriptor(GetExtensionDescriptorRequest) returns (FeatureDescriptor);
     rpc GetOperations(GetExtensionOperationsRequest) returns (GetExtensionOperationsResponse);

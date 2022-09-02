@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Extensions {
     /// </para>
     /// 
     /// </remarks>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public interface IAdapterExtensionFeature : IAdapterFeature {
 
         /// <summary>

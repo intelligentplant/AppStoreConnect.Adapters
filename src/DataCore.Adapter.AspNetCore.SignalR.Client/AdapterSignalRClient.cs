@@ -82,8 +82,14 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public TagValuesClient TagValues { get; }
 
         /// <summary>
+        /// The strongly-typed client for invoking custom functions on an adapter.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
+
+        /// <summary>
         /// The strongly-typed client for invoking extension features on an adapter.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
 
         /// <summary>
@@ -147,8 +153,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
+            CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
+#pragma warning disable CS0618 // Type or member is obsolete
             Extensions = new ExtensionFeaturesClient(this);
+#pragma warning restore CS0618 // Type or member is obsolete
             HostInfo = new HostInfoClient(this);
             ConfigurationChanges = new ConfigurationChangesClient(this);
             TagSearch = new TagSearchClient(this);
