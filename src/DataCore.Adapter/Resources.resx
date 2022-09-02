@@ -152,6 +152,9 @@
   <data name="Error_CannotResolveAnySubscriptionTopics" xml:space="preserve">
     <value>Unable to resolve any requested subscription topics.</value>
   </data>
+  <data name="Error_CustomFunctionIsAlreadyRegistered" xml:space="preserve">
+    <value>A custom function with ID '{0}' is already registered.</value>
+  </data>
   <data name="Error_FeatureIsAlreadyRegistered" xml:space="preserve">
     <value>This feature has already been registered.</value>
   </data>

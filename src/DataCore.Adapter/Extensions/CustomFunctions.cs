@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 using IntelligentPlant.BackgroundTasks;
 
-using Microsoft.Extensions.Logging;
-
 using JsonSchema = Json.Schema;
-using JsonSchemaGeneration = Json.Schema.Generation;
+using Json.Schema.Generation;
+
+using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -20,27 +21,90 @@ namespace DataCore.Adapter.Extensions {
     /// </summary>
     public sealed class CustomFunctions : ICustomFunctions {
 
+        /// <summary>
+        /// Logging.
+        /// </summary>
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// The registered functions.
+        /// </summary>
         private readonly Dictionary<Uri, CustomFunctionRegistration> _functions = new Dictionary<Uri, CustomFunctionRegistration>();
 
+        /// <summary>
+        /// Lock for accessing <see cref="_functions"/>.
+        /// </summary>
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _functionsLock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
+        /// <inheritdoc/>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
 
+        /// <summary>
+        /// Creates a new <see cref="CustomFunctions"/> instance.
+        /// </summary>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> to use.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger to use.
+        /// </param>
         public CustomFunctions(IBackgroundTaskService? backgroundTaskService = null, ILogger<CustomFunctions>? logger = null) {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
 
+        /// <summary>
+        /// Checks if the caller is authorised to call the specified custom function.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="registration">
+        ///   The custom function registration.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return <see langword="true"/> if the 
+        ///   caller is authorised or <see langword="false"/> otherwise.
+        /// </returns>
         private static async ValueTask<bool> IsAuthorizedAsync(IAdapterCallContext context, CustomFunctionRegistration registration, CancellationToken cancellationToken) {
             return registration.Authorize == null || await registration.Authorize.Invoke(context, cancellationToken).ConfigureAwait(false);
         }
 
 
-        public async Task AddFunctionAsync(
+        /// <summary>
+        /// Registers a custom function.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The function descriptor.
+        /// </param>
+        /// <param name="handler">
+        ///   The function handler.
+        /// </param>
+        /// <param name="authorizeHandler">
+        ///   The function's authorisation handler.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="handler"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="descriptor"/> is not valid.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   A custom function with the same ID has already been registered.
+        /// </exception>
+        public async Task RegisterFunctionAsync(
             CustomFunctionDescriptorExtended descriptor,
             CustomFunctionHandler handler, 
             CustomFunctionAuthorizeHandler? authorizeHandler = null, 
@@ -56,7 +120,7 @@ namespace DataCore.Adapter.Extensions {
 
             using (await _functionsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
                 if (_functions.ContainsKey(descriptor.Id)) {
-                    throw new ArgumentException($"A function with ID '{descriptor.Id}' has already been registered.", nameof(descriptor));
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_CustomFunctionIsAlreadyRegistered, descriptor.Id), nameof(descriptor));
                 }
 
                 var reg = new CustomFunctionRegistration(new CustomFunctionDescriptorExtended() { 
@@ -66,12 +130,29 @@ namespace DataCore.Adapter.Extensions {
                     RequestSchema = descriptor.RequestSchema,
                     ResponseSchema = descriptor.ResponseSchema 
                 }, handler, authorizeHandler);
+
                 _functions[reg.Id] = reg;
             }
         }
 
 
-        public async Task<bool> RemoveFunctionAsync(Uri id, CancellationToken cancellationToken) {
+        /// <summary>
+        /// Unregisters a custom function.
+        /// </summary>
+        /// <param name="id">
+        ///   The custom function ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the 
+        ///   function was unregistered, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        public async Task<bool> UnregisterFunctionAsync(Uri id, CancellationToken cancellationToken) {
             if (id == null) {
                 throw new ArgumentNullException(nameof(id));
             }
@@ -82,6 +163,7 @@ namespace DataCore.Adapter.Extensions {
         }
 
 
+        /// <inheritdoc/>
         async Task<IEnumerable<CustomFunctionDescriptor>> ICustomFunctions.GetFunctionsAsync(
             IAdapterCallContext context, 
             GetCustomFunctionsRequest request,
@@ -138,6 +220,7 @@ namespace DataCore.Adapter.Extensions {
         }
 
 
+        /// <inheritdoc/>
         async Task<CustomFunctionDescriptorExtended?> ICustomFunctions.GetFunctionAsync(
             IAdapterCallContext context, 
             GetCustomFunctionRequest request, 
@@ -164,6 +247,7 @@ namespace DataCore.Adapter.Extensions {
         }
 
 
+        /// <inheritdoc/>
         async Task<CustomFunctionInvocationResponse> ICustomFunctions.InvokeFunctionAsync(IAdapterCallContext context, CustomFunctionInvocationRequest request, CancellationToken cancellationToken) {
             if (context == null) {
                 throw new ArgumentNullException(nameof(context));
@@ -191,8 +275,12 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Creates a JSON schema for the specified type.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">
+        ///   The type to generate a JSON schema for.
+        /// </typeparam>
+        /// <returns>
+        ///   The JSON schema, represented as a <see cref="JsonElement"/>.
+        /// </returns>
         /// <remarks>
         /// 
         /// <para>
@@ -201,25 +289,33 @@ namespace DataCore.Adapter.Extensions {
         /// </para>
         /// 
         /// <para>
-        ///   Schema generation is performed using <see cref="JsonSchema"/>.
+        ///   Schema generation is performed using <see cref="JsonSchema.JsonSchemaBuilder"/>. 
+        ///   Attributes can be used to customise the schema. In addition to the attributes in the 
+        ///   <see cref="JsonSchema.Generation"/> namespace, attributes from the <see cref="System.ComponentModel.DataAnnotations"/> 
+        ///   namespace can also be used. See <see cref="Json.Schema.DataAnnotationsAttributeHandler"/> 
+        ///   for details of supported attributes.
         /// </para>
         /// 
         /// </remarks>
+        /// <seealso cref="Json.Schema.DataAnnotationsAttributeHandler"/>
         public static JsonElement CreateJsonSchema<T>() {
-            return default;
+            Json.Schema.JsonSchemaUtility.RegisterExtensions();
+            return JsonSerializer.SerializeToElement(new JsonSchema.JsonSchemaBuilder().FromType<T>().Build());
         }
 
 
+        /// <summary>
+        /// Describes a registered custom function.
+        /// </summary>
         private readonly struct CustomFunctionRegistration {
 
-            public Uri Id => Descriptor!.Id;
+            internal Uri Id => Descriptor!.Id;
 
-            public CustomFunctionDescriptorExtended Descriptor { get; }
+            internal readonly CustomFunctionDescriptorExtended Descriptor;
 
-            public CustomFunctionHandler Handler { get; }
+            internal readonly CustomFunctionHandler Handler;
 
-            public CustomFunctionAuthorizeHandler? Authorize { get; }
-
+            internal readonly CustomFunctionAuthorizeHandler? Authorize;
 
             public CustomFunctionRegistration(CustomFunctionDescriptorExtended descriptor, CustomFunctionHandler handler, CustomFunctionAuthorizeHandler? authorize) {
                 Descriptor = descriptor;

@@ -160,6 +160,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A custom function with ID &apos;{0}&apos; is already registered..
+        /// </summary>
+        internal static string Error_CustomFunctionIsAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("Error_CustomFunctionIsAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This feature has already been registered..
         /// </summary>
         internal static string Error_FeatureIsAlreadyRegistered {
