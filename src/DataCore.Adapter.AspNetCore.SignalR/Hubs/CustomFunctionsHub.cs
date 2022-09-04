@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Diagnostics;
@@ -109,7 +111,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             ).ConfigureAwait(false);
 
             using (Telemetry.ActivitySource.StartInvokeCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                // TODO: validate request body against custom function's request schema
+                CustomFunctionDescriptorExtended? function;
+
+                using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
+                    function = await resolvedFeature.Feature.GetFunctionAsync(adapterCallContext, new GetCustomFunctionRequest() {
+                        Id = request.Id,
+                    }, Context.ConnectionAborted).ConfigureAwait(false);
+                }
+
+                if (function == null) {
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id), nameof(request));
+                }
+
+                if (!request.TryValidateBody(function, out var validationResults)) {
+                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
+                }
+
                 return await resolvedFeature.Feature.InvokeFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
             }
         }

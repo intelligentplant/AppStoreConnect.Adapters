@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -101,6 +102,22 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             Util.ValidateObject(req);
 
             using (Telemetry.ActivitySource.StartInvokeCustomFunctionActivity(adapter.Adapter.Descriptor.Id, req.Id)) {
+                Extensions.CustomFunctionDescriptorExtended? function;
+
+                using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(adapter.Adapter.Descriptor.Id, req.Id)) {
+                    function = await adapter.Feature.GetFunctionAsync(adapterCallContext, new Extensions.GetCustomFunctionRequest() {
+                        Id = req.Id,
+                    }, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (function == null) {
+                    throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, req.Id)));
+                }
+
+                if (!req.TryValidateBody(function, out var validationResults)) {
+                    throw new RpcException(new Status(StatusCode.InvalidArgument, System.Text.Json.JsonSerializer.Serialize(validationResults)));
+                }
+
                 var result = await adapter.Feature.InvokeFunctionAsync(adapterCallContext, req, cancellationToken).ConfigureAwait(false);
                 var response = new InvokeCustomFunctionsResponse();
                 response.Body = Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(result.Body.ToString());

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -92,6 +93,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </param>
         /// <param name="description">
         ///   The function description filter.
+        /// </param>
+        /// <param name="pageSize">
+        ///   The page size for the results.
+        /// </param>
+        /// <param name="page">
+        ///   The results page to return.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -216,8 +223,22 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
 
             using (Telemetry.ActivitySource.StartInvokeCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                // TODO: validate request body against schema
-                //var descriptor = await feature.GetFunctionAsync(callContext, request.Id, cancellationToken).ConfigureAwait(false);
+                CustomFunctionDescriptorExtended? function;
+
+                using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
+                    function = await feature.GetFunctionAsync(callContext, new GetCustomFunctionRequest() {
+                        Id = request.Id,
+                    }, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (function == null) {
+                    return BadRequest(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id)); // 400
+                }
+
+                if (!request.TryValidateBody(function, out var validationResults)) {
+                    return BadRequest(validationResults); // 400
+                }
+
                 return Ok(await feature.InvokeFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false)); // 200
             }
         }

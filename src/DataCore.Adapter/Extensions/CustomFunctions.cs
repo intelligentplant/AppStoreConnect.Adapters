@@ -123,15 +123,13 @@ namespace DataCore.Adapter.Extensions {
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_CustomFunctionIsAlreadyRegistered, descriptor.Id), nameof(descriptor));
                 }
 
-                var reg = new CustomFunctionRegistration(new CustomFunctionDescriptorExtended() { 
-                    Id = descriptor.Id,
-                    Name = descriptor.Name,
-                    Description = descriptor.Description,
-                    RequestSchema = descriptor.RequestSchema,
-                    ResponseSchema = descriptor.ResponseSchema 
-                }, handler, authorizeHandler);
+                var reg = new CustomFunctionRegistration(
+                    descriptor,
+                    handler, 
+                    authorizeHandler
+                );
 
-                _functions[reg.Id] = reg;
+                _functions[reg.Descriptor.Id] = reg;
             }
         }
 
@@ -180,7 +178,7 @@ namespace DataCore.Adapter.Extensions {
                 IEnumerable<CustomFunctionRegistration> funcs = _functions.Values;
 
                 if (!string.IsNullOrEmpty(request.Id)) {
-                    funcs = funcs.Where(x => x.Id.ToString().Like(request.Id));
+                    funcs = funcs.Where(x => x.Descriptor.Id.ToString().Like(request.Id));
                 }
                 if (!string.IsNullOrEmpty(request.Name)) {
                     funcs = funcs.Where(x => x.Descriptor.Name.Like(request.Name));
@@ -300,7 +298,33 @@ namespace DataCore.Adapter.Extensions {
         /// <seealso cref="Json.Schema.DataAnnotationsAttributeHandler"/>
         public static JsonElement CreateJsonSchema<T>() {
             Json.Schema.JsonSchemaUtility.RegisterExtensions();
-            return JsonSerializer.SerializeToElement(new JsonSchema.JsonSchemaBuilder().FromType<T>().Build());
+            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>();
+            return JsonSerializer.SerializeToElement(builder.Build());
+        }
+
+
+        /// <summary>
+        /// Tries to validate the specified JSON document against a schema.
+        /// </summary>
+        /// <param name="data">
+        ///   The JSON data to validate.
+        /// </param>
+        /// <param name="schema">
+        ///   The schema to validate the <paramref name="data"/> against.
+        /// </param>
+        /// <param name="validationResults">
+        ///   The validation results.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <paramref name="data"/> was successfully validated 
+        ///   against the <paramref name="schema"/>, or <see langword="false"/> otherwise.
+        /// </returns>
+        public static bool TryValidate(JsonElement data, JsonElement schema, out JsonElement validationResults) {
+            var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema));
+            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data));
+
+            validationResults = JsonSerializer.SerializeToElement(result);
+            return result.IsValid;
         }
 
 
@@ -309,15 +333,17 @@ namespace DataCore.Adapter.Extensions {
         /// </summary>
         private readonly struct CustomFunctionRegistration {
 
-            internal Uri Id => Descriptor!.Id;
-
             internal readonly CustomFunctionDescriptorExtended Descriptor;
-
+            
             internal readonly CustomFunctionHandler Handler;
 
             internal readonly CustomFunctionAuthorizeHandler? Authorize;
 
-            public CustomFunctionRegistration(CustomFunctionDescriptorExtended descriptor, CustomFunctionHandler handler, CustomFunctionAuthorizeHandler? authorize) {
+            public CustomFunctionRegistration(
+                CustomFunctionDescriptorExtended descriptor,
+                CustomFunctionHandler handler, 
+                CustomFunctionAuthorizeHandler? authorize
+            ) {
                 Descriptor = descriptor;
                 Handler = handler;
                 Authorize = authorize;
