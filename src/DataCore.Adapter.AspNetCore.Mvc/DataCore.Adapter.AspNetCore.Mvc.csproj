@@ -16,7 +16,6 @@
   
   <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>

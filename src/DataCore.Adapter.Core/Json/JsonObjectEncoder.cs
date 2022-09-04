@@ -32,8 +32,7 @@ namespace DataCore.Adapter.Json {
         ///   The options to use in conversion to/from JSON.
         /// </param>
         public JsonObjectEncoder(JsonSerializerOptions? options = null) {
-            _options = options ?? new JsonSerializerOptions();
-            _options.Converters.AddDataCoreAdapterConverters();
+            _options = options;
         }
 
 

@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj" />
-    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>

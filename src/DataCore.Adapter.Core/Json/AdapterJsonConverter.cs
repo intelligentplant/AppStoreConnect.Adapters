@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,7 +11,7 @@ namespace DataCore.Adapter.Json {
     /// <typeparam name="T">
     ///   The object type for the converter.
     /// </typeparam>
-    public abstract class AdapterJsonConverter<T> : JsonConverter<T> {
+    internal abstract class AdapterJsonConverter<T> : JsonConverter<T> {
 
         /// <summary>
         /// A flag indicating if <typeparamref name="T"/> is serliazed/deserialized as a JSON 
@@ -25,7 +24,7 @@ namespace DataCore.Adapter.Json {
         /// Throws a <see cref="JsonException"/> to indicate that the JSON structure is invalid.
         /// </summary>
         protected void ThrowInvalidJsonError() {
-            throw new JsonException(string.Format(CultureInfo.CurrentCulture, Resources.Error_InvalidJsonStructure, typeof(T).Name));
+            throw new JsonException(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_InvalidJsonStructure, typeof(T).Name));
         }
 
 
@@ -43,9 +42,7 @@ namespace DataCore.Adapter.Json {
         ///   The converted property name.
         /// </returns>
         protected string ConvertPropertyName(string name, JsonSerializerOptions? options) {
-#pragma warning disable CS8603 // Possible null reference return.
-            return options?.ConvertPropertyName(name);
-#pragma warning restore CS8603 // Possible null reference return.
+            return options?.PropertyNamingPolicy?.ConvertName(name) ?? name;
         }
 
 

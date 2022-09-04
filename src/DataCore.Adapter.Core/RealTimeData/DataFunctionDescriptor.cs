@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes a data function that is supported when making a call for processed historical data.
     /// </summary>
+    [JsonConverter(typeof(DataFunctionDescriptorConverter))]
     public sealed class DataFunctionDescriptor : IEquatable<DataFunctionDescriptor> {
 
         /// <summary>
@@ -166,4 +170,86 @@ namespace DataCore.Adapter.RealTimeData {
             return string.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase);
         }
     }
+
+
+    /// <summary>
+    /// JSON converter for <see cref="DataFunctionDescriptor"/>.
+    /// </summary>
+    internal class DataFunctionDescriptorConverter : AdapterJsonConverter<DataFunctionDescriptor> {
+
+
+        /// <inheritdoc/>
+        public override DataFunctionDescriptor Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                ThrowInvalidJsonError();
+            }
+
+            string id = null!;
+            string name = null!;
+            string description = null!;
+            DataFunctionSampleTimeType sampleTime = DataFunctionSampleTimeType.Unspecified;
+            DataFunctionStatusType status = DataFunctionStatusType.Unspecified;
+            AdapterProperty[] properties = null!;
+            string[] aliases = null!;
+
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
+
+                var propertyName = reader.GetString();
+                if (!reader.Read()) {
+                    ThrowInvalidJsonError();
+                }
+
+                if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
+                    id = JsonSerializer.Deserialize<string>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
+                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Description), StringComparison.OrdinalIgnoreCase)) {
+                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.SampleTime), StringComparison.OrdinalIgnoreCase)) {
+                    sampleTime = JsonSerializer.Deserialize<DataFunctionSampleTimeType>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Status), StringComparison.OrdinalIgnoreCase)) {
+                    status = JsonSerializer.Deserialize<DataFunctionStatusType>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Properties), StringComparison.OrdinalIgnoreCase)) {
+                    properties = JsonSerializer.Deserialize<AdapterProperty[]>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(DataFunctionDescriptor.Aliases), StringComparison.OrdinalIgnoreCase)) {
+                    aliases = JsonSerializer.Deserialize<string[]>(ref reader, options)!;
+                }
+                else {
+                    reader.Skip();
+                }
+            }
+
+            return DataFunctionDescriptor.Create(id, name, description, sampleTime, status, properties, aliases);
+        }
+
+
+        /// <inheritdoc/>
+        public override void Write(Utf8JsonWriter writer, DataFunctionDescriptor value, JsonSerializerOptions options) {
+            if (value == null) {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStartObject();
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Id), value.Id, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Description), value.Description, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.SampleTime), value.SampleTime, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Status), value.Status, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Properties), value.Properties, options);
+            WritePropertyValue(writer, nameof(DataFunctionDescriptor.Aliases), value.Aliases, options);
+            writer.WriteEndObject();
+        }
+
+    }
+
 }

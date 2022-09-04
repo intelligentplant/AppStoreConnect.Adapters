@@ -367,6 +367,10 @@
   <data name="Error_RelativeUrisAreNotSupported" xml:space="preserve">
     <value>This operation is not supported for a relative URI.</value>
   </data>
+  <data name="Error_UnableToResolveCustomFunction" xml:space="preserve">
+    <value>Unable to resolve custom function with ID '{0}'.</value>
+    <comment>{0} - function ID</comment>
+  </data>
   <data name="Error_UnableToResolveMethod" xml:space="preserve">
     <value>Unable to resolve method '{0}' on type '{1}'.</value>
     <comment>{0} - method name

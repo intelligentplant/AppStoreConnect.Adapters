@@ -32,7 +32,6 @@ namespace DataCore.Adapter {
         /// </returns>
         private static System.Text.Json.JsonSerializerOptions GetJsonSerializerOptions() {
             var result = new System.Text.Json.JsonSerializerOptions();
-            result.Converters.AddDataCoreAdapterConverters();
             return result;
         }
 
@@ -87,7 +86,7 @@ namespace DataCore.Adapter {
         ///   The <see cref="Array"/> object that was deserialized from the JSON bytes.
         /// </returns>
         private static Array ReadJsonArray<T>(byte[] bytes, IEnumerable<int> dimensions) {
-            return VariantConverter.ReadArray<T>(System.Text.Encoding.UTF8.GetString(bytes), dimensions.ToArray(), GetJsonSerializerOptions());
+            return JsonExtensions.ReadArray<T>(System.Text.Encoding.UTF8.GetString(bytes), dimensions.ToArray(), GetJsonSerializerOptions());
         }
 
 
@@ -101,7 +100,7 @@ namespace DataCore.Adapter {
         ///   The serialized JSON bytes.
         /// </returns>
         private static byte[] WriteJsonArray(Array array) {
-            return VariantConverter.WriteArray(array);
+            return JsonExtensions.WriteArray(array);
         }
 
 

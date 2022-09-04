@@ -808,6 +808,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve custom function with ID &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToResolveCustomFunction {
+            get {
+                return ResourceManager.GetString("Error_UnableToResolveCustomFunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to resolve method &apos;{0}&apos; on type &apos;{1}&apos;..
         /// </summary>
         public static string Error_UnableToResolveMethod {

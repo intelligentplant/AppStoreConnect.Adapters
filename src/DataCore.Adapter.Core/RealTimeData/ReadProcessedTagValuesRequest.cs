@@ -8,7 +8,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a request to retrieve processed (aggregated) tag values.
     /// </summary>
-    public sealed class ReadProcessedTagValuesRequest: ReadHistoricalTagValuesRequest {
+    public sealed class ReadProcessedTagValuesRequest : ReadHistoricalTagValuesRequest {
 
         /// <summary>
         /// The aggregate data functions to request.

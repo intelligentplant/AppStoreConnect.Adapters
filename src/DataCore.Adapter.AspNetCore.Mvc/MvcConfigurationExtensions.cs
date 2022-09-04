@@ -30,8 +30,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
 #if NET48
             builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
-#else
-            builder.AddJsonOptions(options => options.JsonSerializerOptions.AddDataCoreAdapterConverters());
 #endif
 
             return builder;

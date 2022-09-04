@@ -37,6 +37,7 @@ namespace DataCore.Adapter.NewtonsoftJson {
                 throw new ArgumentNullException(nameof(converters));
             }
 
+            converters.Add(new JsonElementConverter());
             converters.Add(new VariantConverter());
 
         }

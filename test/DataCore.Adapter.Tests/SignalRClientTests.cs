@@ -25,7 +25,6 @@ namespace DataCore.Adapter.Tests {
                     };
                 })
                 .AddJsonProtocol(options => {
-                    Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.PayloadSerializerOptions.Converters);
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
                 .WithAutomaticReconnect();
@@ -56,7 +55,6 @@ namespace DataCore.Adapter.Tests {
                     };
                 })
                 .AddJsonProtocol(options => {
-                    Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.PayloadSerializerOptions.Converters);
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
                 .WithAutomaticReconnect();

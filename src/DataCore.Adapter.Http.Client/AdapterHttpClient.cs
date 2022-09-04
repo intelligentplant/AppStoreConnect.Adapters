@@ -94,7 +94,6 @@ namespace DataCore.Adapter.Http.Client {
                 PropertyNameCaseInsensitive = true
             };
             JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            JsonSerializerOptions.Converters.AddDataCoreAdapterConverters();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);

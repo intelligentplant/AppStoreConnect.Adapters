@@ -40,7 +40,6 @@ namespace DataCore.Adapter.Tests {
 
         protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
             return builder.AddJsonProtocol(options => {
-                Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.PayloadSerializerOptions.Converters);
                 options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
         }

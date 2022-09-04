@@ -416,8 +416,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 return results;
             }
 
-#if NET461 == false
-            // Grpc.Net channel doesn't expose a way of getting the channel state.
             results.Add(
                 Diagnostics.HealthCheckResult.Composite(
                     Resources.HealthCheck_DisplayName_Connection,
@@ -427,39 +425,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     Resources.HealthCheck_GrpcNetClientDescription
                 )
             );
-#else
-            var coreChannel = _channel as GrpcCore.Channel;
-            var state = coreChannel!.State;
-
-            switch (state) {
-                case GrpcCore.ChannelState.Ready:
-                case GrpcCore.ChannelState.Idle:
-                    results.Add(
-                        Diagnostics.HealthCheckResult.Composite(
-                            Resources.HealthCheck_DisplayName_Connection,
-                            new [] {
-                                await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
-                            },
-                            // Use coreChannel.State instead of state, since, if the connection
-                            // was idle in the switch statement, it will now be ready.
-                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescription, coreChannel.State.ToString())
-                        )    
-                    );
-                    break;
-                case GrpcCore.ChannelState.Shutdown:
-                    results.Add(Diagnostics.HealthCheckResult.Unhealthy(
-                        Resources.HealthCheck_DisplayName_Connection,
-                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                    ));
-                    break;
-                default:
-                    results.Add(Diagnostics.HealthCheckResult.Degraded(
-                        Resources.HealthCheck_DisplayName_Connection,
-                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                    ));
-                    break;
-            }
-#endif
 
             return results;
         }

@@ -41,11 +41,6 @@ namespace DataCore.Adapter.AssetModel {
         private readonly IKeyValueStore? _keyValueStore;
 
         /// <summary>
-        /// Options for serializing/deserializing nodes.
-        /// </summary>
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
-
-        /// <summary>
         /// Flags if the class has been initialised.
         /// </summary>
         private bool _isInitialised;
@@ -105,8 +100,6 @@ namespace DataCore.Adapter.AssetModel {
             _onConfigurationChange = onConfigurationChange;
             _nodeNameComparer = nodeNameComparer ?? StringComparer.OrdinalIgnoreCase;
             _keyValueStore = keyValueStore?.CreateScopedStore("asset-model-manager:");
-
-            _jsonOptions.AddDataCoreAdapterConverters();
 
             _initTask = new Lazy<Task>(() => InitAsyncCore(_disposedTokenSource.Token), LazyThreadSafetyMode.ExecutionAndPublication);
         }
@@ -186,7 +179,7 @@ namespace DataCore.Adapter.AssetModel {
             // "nodes" key contains an array of the defined node IDs.
             var readResult = _keyValueStore == null 
                 ? null 
-                : await _keyValueStore.ReadJsonAsync<string[]>("nodes", _jsonOptions).ConfigureAwait(false);
+                : await _keyValueStore.ReadJsonAsync<string[]>("nodes").ConfigureAwait(false);
             
             if (cancellationToken.IsCancellationRequested) {
                 return;
@@ -205,7 +198,7 @@ namespace DataCore.Adapter.AssetModel {
                     }
 
                     // "nodes:{id}" key contains the the definition with ID {id}.
-                    var nodeReadResult = await _keyValueStore!.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId), _jsonOptions).ConfigureAwait(false);
+                    var nodeReadResult = await _keyValueStore!.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId)).ConfigureAwait(false);
                     if (nodeReadResult == null) {
                         continue;
                     }
@@ -360,7 +353,7 @@ namespace DataCore.Adapter.AssetModel {
             try {
                 if (_keyValueStore != null) {
                     // "nodes:{id}" key contains the definition with ID {id}.
-                    await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node, _jsonOptions).ConfigureAwait(false);
+                    await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node).ConfigureAwait(false);
                 }
 
                 // Flags if the keys in _nodesById have been modified by this operation. We will
@@ -379,7 +372,7 @@ namespace DataCore.Adapter.AssetModel {
                 if (indexHasChanged) {
                     if (_keyValueStore != null) {
                         // "nodes" key contains an array of the defined node IDs.
-                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
                     }
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
                 }
@@ -495,7 +488,7 @@ namespace DataCore.Adapter.AssetModel {
 
                     if (_keyValueStore != null) {
                         // "nodes" key contains an array of the defined node IDs.
-                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
                     }
 
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);

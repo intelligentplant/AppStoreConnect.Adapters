@@ -79,6 +79,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must specify the length of at least one array dimension..
+        /// </summary>
+        public static string Error_ArrayDimensionsMustBeSpecified {
+            get {
+                return ResourceManager.GetString("Error_ArrayDimensionsMustBeSpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Array element type is unsupported..
         /// </summary>
         public static string Error_ArrayElementTypeIsUnsupported {
@@ -196,6 +205,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified JSON cannot be converted to an instance of {0}..
+        /// </summary>
+        public static string Error_InvalidJsonStructure {
+            get {
+                return ResourceManager.GetString("Error_InvalidJsonStructure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid time span..
         /// </summary>
         public static string Error_InvalidTimeSpan {
@@ -219,6 +237,15 @@ namespace DataCore.Adapter {
         public static string Error_InvalidUri {
             get {
                 return ResourceManager.GetString("Error_InvalidUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified JSON does not represent a Variant structure..
+        /// </summary>
+        public static string Error_InvalidVariantStructure {
+            get {
+                return ResourceManager.GetString("Error_InvalidVariantStructure", resourceCulture);
             }
         }
         
@@ -255,6 +282,15 @@ namespace DataCore.Adapter {
         public static string Error_NodeIdCannotBeNull {
             get {
                 return ResourceManager.GetString("Error_NodeIdCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Arrays can only be deserialized from JSON array elements..
+        /// </summary>
+        public static string Error_NotAJsonArray {
+            get {
+                return ResourceManager.GetString("Error_NotAJsonArray", resourceCulture);
             }
         }
         

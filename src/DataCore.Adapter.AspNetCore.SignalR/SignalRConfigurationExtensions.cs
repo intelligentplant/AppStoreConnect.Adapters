@@ -42,9 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                 options.PayloadSerializerSettings.AddDataCoreAdapterConverters();
             });
 #else
-            return builder.AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.AddDataCoreAdapterConverters();
-            });
+            return builder.AddJsonProtocol();
 #endif
         }
 
