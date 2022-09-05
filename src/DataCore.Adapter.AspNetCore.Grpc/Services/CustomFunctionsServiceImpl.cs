@@ -80,8 +80,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ICustomFunctions>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            if (!Uri.TryCreate(request.FunctionId, UriKind.Absolute, out var functionId)) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, SharedResources.Error_AbsoluteUriRequired));
+            if (!Uri.TryCreate(request.FunctionId, UriKind.RelativeOrAbsolute, out var functionId)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, SharedResources.Error_InvalidUri));
             }
 
             using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(adapter.Adapter.Descriptor.Id, functionId)) {
@@ -105,8 +105,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<ICustomFunctions>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            if (!Uri.TryCreate(request.FunctionId, UriKind.Absolute, out var functionId)) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, SharedResources.Error_AbsoluteUriRequired));
+            if (!Uri.TryCreate(request.FunctionId, UriKind.RelativeOrAbsolute, out var functionId)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, SharedResources.Error_InvalidUri));
             }
 
             var req = new CustomFunctionInvocationRequest() {
