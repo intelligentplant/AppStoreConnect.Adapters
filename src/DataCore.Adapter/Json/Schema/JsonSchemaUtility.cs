@@ -26,7 +26,15 @@ namespace DataCore.Adapter.Json.Schema {
             }
 
             GeneratorRegistry.Register(new TimeSpanSchemaGenerator());
-            AttributeHandler.AddHandler<DataAnnotationsAttributeHandler>();
+
+            AttributeHandler.AddHandler<DataTypeAttributeHandler>();
+            AttributeHandler.AddHandler<DescriptionAttributeHandler>();
+            AttributeHandler.AddHandler<DisplayAttributeHandler>();
+            AttributeHandler.AddHandler<MinLengthAttributeHandler>();
+            AttributeHandler.AddHandler<MaxLengthAttributeHandler>();
+            AttributeHandler.AddHandler<RangeAttributeHandler>();
+            AttributeHandler.AddHandler<RegularExpressionAttributeHandler>();
+            AttributeHandler.AddHandler<RequiredAttributeHandler>();
         }
 
     }
