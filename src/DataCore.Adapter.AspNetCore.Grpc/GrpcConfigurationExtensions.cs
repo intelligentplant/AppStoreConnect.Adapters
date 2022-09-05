@@ -45,12 +45,15 @@ namespace Microsoft.Extensions.DependencyInjection {
             MapService<AdaptersServiceImpl>(endpoints, builder);
             MapService<AssetModelBrowserServiceImpl>(endpoints, builder);
             MapService<ConfigurationChangesServiceImpl>(endpoints, builder);
+            MapService<CustomFunctionsServiceImpl>(endpoints, builder);
             MapService<EventsServiceImpl>(endpoints, builder);
             MapService<HostInfoServiceImpl>(endpoints, builder);
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
             MapService<TagValuesServiceImpl>(endpoints, builder);
+#pragma warning disable CS0618 // Type or member is obsolete
             MapService<ExtensionFeaturesServiceImpl>(endpoints, builder);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             return endpoints;
         }
