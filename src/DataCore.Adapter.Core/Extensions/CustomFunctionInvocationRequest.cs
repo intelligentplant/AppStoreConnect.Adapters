@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Extensions {
                 yield return item;
             }
 
-            if (Id != null && Id.IsAbsoluteUri) {
+            if (Id != null && !Id.IsAbsoluteUri) {
                 yield return new ValidationResult(SharedResources.Error_AbsoluteUriRequired, new[] { nameof(Id) });
             }
         }

@@ -168,6 +168,9 @@
   <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
     <value>Interval count must be greater than zero.</value>
   </data>
+  <data name="Error_InvalidJsonSchema" xml:space="preserve">
+    <value>JSON schema must be true, false, or an object.</value>
+  </data>
   <data name="Error_InvalidJsonStructure" xml:space="preserve">
     <value>The specified JSON cannot be converted to an instance of {0}.</value>
     <comment>{0} - type name</comment>

@@ -205,6 +205,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to JSON schema must be true, false, or an object..
+        /// </summary>
+        public static string Error_InvalidJsonSchema {
+            get {
+                return ResourceManager.GetString("Error_InvalidJsonSchema", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified JSON cannot be converted to an instance of {0}..
         /// </summary>
         public static string Error_InvalidJsonStructure {

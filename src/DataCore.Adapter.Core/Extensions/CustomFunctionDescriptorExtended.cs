@@ -27,12 +27,14 @@ namespace DataCore.Adapter.Extensions {
                 yield return item;
             }
 
-            if (RequestSchema.ValueKind != JsonValueKind.Undefined) {
-                // TODO: validate schema
+            // JSON schemas must be true, false, or an object
+
+            if (RequestSchema.ValueKind != JsonValueKind.Object && RequestSchema.ValueKind != JsonValueKind.True && RequestSchema.ValueKind != JsonValueKind.False) {
+                yield return new ValidationResult(SharedResources.Error_InvalidJsonSchema, new[] { nameof(RequestSchema) });
             }
 
-            if (ResponseSchema.ValueKind != JsonValueKind.Undefined) {
-                // TODO: validate schema
+            if (ResponseSchema.ValueKind != JsonValueKind.Object && ResponseSchema.ValueKind != JsonValueKind.True && ResponseSchema.ValueKind != JsonValueKind.False) {
+                yield return new ValidationResult(SharedResources.Error_InvalidJsonSchema, new[] { nameof(ResponseSchema) });
             }
         }
 
