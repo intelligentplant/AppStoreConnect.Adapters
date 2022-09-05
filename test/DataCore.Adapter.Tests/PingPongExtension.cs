@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -222,21 +223,29 @@ namespace DataCore.Adapter.Tests {
     }
 
 
+#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
+#pragma warning restore CS0618 // Type or member is obsolete
     internal class PingMessage {
 
+        [Required]
         public Guid CorrelationId { get; set; }
 
+        [Required]
         public DateTime UtcClientTime { get; set; }
 
     }
 
 
+#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
+#pragma warning restore CS0618 // Type or member is obsolete
     internal class PongMessage {
 
+        [Required]
         public Guid CorrelationId { get; set; }
 
+        [Required]
         public DateTime UtcServerTime { get; set; }
 
     }
@@ -249,10 +258,14 @@ namespace DataCore.Adapter.Tests {
     }
 
 
+#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeature(HelloWorldConstants.FeatureUri)]
     internal interface IHelloWorld : IAdapterExtensionFeature {
+#pragma warning restore CS0618 // Type or member is obsolete
 
+#pragma warning disable CS0618 // Type or member is obsolete
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(PingPongExtension.GetGreetDescriptor))]
+#pragma warning restore CS0618 // Type or member is obsolete
         string Greet();
 
     }
