@@ -18,6 +18,9 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="functionDescriptor">
         ///   The descriptor for the custom function.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
         /// <param name="validationResults">
         ///   The validation results for the request body.
         /// </param>
@@ -31,7 +34,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="functionDescriptor"/> is <see langword="null"/>.
         /// </exception>
-        public static bool TryValidateBody(this CustomFunctionInvocationRequest request, CustomFunctionDescriptorExtended functionDescriptor, out JsonElement validationResults) { 
+        public static bool TryValidateBody(this CustomFunctionInvocationRequest request, CustomFunctionDescriptorExtended functionDescriptor, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) { 
             if (request == null) {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -39,7 +42,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(functionDescriptor));
             }
 
-            return CustomFunctions.TryValidate(request.Body, functionDescriptor.RequestSchema, out validationResults);
+            return CustomFunctions.TryValidate(request.Body, functionDescriptor.RequestSchema, jsonOptions, out validationResults);
         }
 
 
@@ -51,6 +54,9 @@ namespace DataCore.Adapter.Extensions {
         /// </param>
         /// <param name="functionDescriptor">
         ///   The descriptor for the custom function.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
         /// </param>
         /// <param name="validationResults">
         ///   The validation results for the response body.
@@ -65,7 +71,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="functionDescriptor"/> is <see langword="null"/>.
         /// </exception>
-        public static bool TryValidateBody(this CustomFunctionInvocationResponse response, CustomFunctionDescriptorExtended functionDescriptor, out JsonElement validationResults) {
+        public static bool TryValidateBody(this CustomFunctionInvocationResponse response, CustomFunctionDescriptorExtended functionDescriptor, JsonSerializerOptions jsonOptions, out JsonElement validationResults) {
             if (response == null) {
                 throw new ArgumentNullException(nameof(response));
             }
@@ -73,7 +79,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(functionDescriptor));
             }
 
-            return CustomFunctions.TryValidate(response.Body, functionDescriptor.ResponseSchema, out validationResults);
+            return CustomFunctions.TryValidate(response.Body, functionDescriptor.ResponseSchema, jsonOptions, out validationResults);
         }
 
     }

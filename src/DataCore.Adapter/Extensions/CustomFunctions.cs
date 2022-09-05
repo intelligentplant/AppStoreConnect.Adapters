@@ -11,7 +11,6 @@ using JsonSchema = Json.Schema;
 using Json.Schema.Generation;
 
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -22,9 +21,19 @@ namespace DataCore.Adapter.Extensions {
     public sealed class CustomFunctions : ICustomFunctions {
 
         /// <summary>
+        /// The base URI for custom functions registered using a relative URI.
+        /// </summary>
+        public Uri BaseUri { get; }
+
+        /// <summary>
         /// Logging.
         /// </summary>
         private readonly ILogger _logger;
+
+        /// <summary>
+        /// JSON options to use when serializing/deserializing.
+        /// </summary>
+        private readonly JsonSerializerOptions? _jsonOptions;
 
         /// <summary>
         /// The registered functions.
@@ -43,15 +52,29 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Creates a new <see cref="CustomFunctions"/> instance.
         /// </summary>
+        /// <param name="baseUri">
+        ///   The base URI for custom functions registered with a relative URI.
+        /// </param>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
         /// </param>
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
-        public CustomFunctions(IBackgroundTaskService? backgroundTaskService = null, ILogger<CustomFunctions>? logger = null) {
+        public CustomFunctions(Uri baseUri, IBackgroundTaskService? backgroundTaskService = null, JsonSerializerOptions? jsonOptions = null, ILogger? logger = null) {
+            if (baseUri == null) {
+                throw new ArgumentNullException(nameof(baseUri));
+            }
+            if (!baseUri.IsAbsoluteUri) {
+                throw new ArgumentOutOfRangeException(nameof(baseUri), SharedResources.Error_AbsoluteUriRequired);
+            }
+            BaseUri = baseUri.EnsurePathHasTrailingSlash();
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            _jsonOptions = jsonOptions;
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
 
@@ -91,7 +114,11 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
-        /// <returns></returns>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the custom 
+        ///   function was registered, or <see langword="false"/> if a function with the same ID is 
+        ///   already registered.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="descriptor"/> is <see langword="null"/>.
         /// </exception>
@@ -101,36 +128,185 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="descriptor"/> is not valid.
         /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   A custom function with the same ID has already been registered.
-        /// </exception>
-        public async Task RegisterFunctionAsync(
+        public async Task<bool> RegisterFunctionAsync(
             CustomFunctionDescriptorExtended descriptor,
             CustomFunctionHandler handler, 
             CustomFunctionAuthorizeHandler? authorizeHandler = null, 
             CancellationToken cancellationToken = default
         ) {
-            if (descriptor == null) {
-                throw new ArgumentNullException(nameof(handler));
-            }
             ValidationExtensions.ValidateObject(descriptor);
             if (handler == null) {
                 throw new ArgumentNullException(nameof(handler));
             }
 
             using (await _functionsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (_functions.ContainsKey(descriptor.Id)) {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_CustomFunctionIsAlreadyRegistered, descriptor.Id), nameof(descriptor));
+                var lookupId = descriptor.Id.EnsurePathHasTrailingSlash();
+                if (_functions.ContainsKey(lookupId)) {
+                    return false;
                 }
 
                 var reg = new CustomFunctionRegistration(
-                    descriptor,
+                    new CustomFunctionDescriptorExtended() { 
+                        Id = descriptor.Id,
+                        Name = descriptor.Name,
+                        Description = descriptor.Description,
+                        RequestSchema = descriptor.RequestSchema,
+                        ResponseSchema = descriptor.ResponseSchema
+                    },
                     handler, 
                     authorizeHandler
                 );
 
-                _functions[reg.Descriptor.Id] = reg;
+                _functions[lookupId] = reg;
             }
+
+            return true;
+        }
+
+
+        /// <summary>
+        /// Registers a custom function.
+        /// </summary>
+        /// <typeparam name="TRequest">
+        ///   The request type of the custom function.
+        /// </typeparam>
+        /// <typeparam name="TResponse">
+        ///   The response type of the custom function.
+        /// </typeparam>
+        /// <param name="id">
+        ///   The function ID. If a relative URI is specified, it will be made absolute using the 
+        ///   <see cref="BaseUri"/>.
+        /// </param>
+        /// <param name="name">
+        ///   The name of the function.
+        /// </param>
+        /// <param name="description">
+        ///   The function's description.
+        /// </param>
+        /// <param name="handler">
+        ///   The function handler.
+        /// </param>
+        /// <param name="authorizeHandler">
+        ///   The function's authorisation handler.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the custom 
+        ///   function was registered, or <see langword="false"/> if a function with the same ID is 
+        ///   already registered.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="handler"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="name"/> is not valid.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="description"/> is not valid.
+        /// </exception>
+        public async Task<bool> RegisterFunctionAsync<TRequest, TResponse>(
+            Uri id,
+            string name,
+            string? description,
+            CustomFunctionHandler<TRequest, TResponse> handler,
+            CustomFunctionAuthorizeHandler? authorizeHandler = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (id == null) {
+                throw new ArgumentNullException(nameof(id));
+            }
+            if (string.IsNullOrWhiteSpace(name)) {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+            if (handler == null) {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            var descriptor = new CustomFunctionDescriptorExtended() {
+                Id = id.IsAbsoluteUri 
+                    ? id 
+                    : new Uri(BaseUri, id),
+                Name = name,
+                Description = description,
+                RequestSchema = CreateJsonSchema<TRequest>(),
+                ResponseSchema = CreateJsonSchema<TResponse>()
+            };
+
+            return await RegisterFunctionAsync(
+                descriptor,
+                async (context, request, ct) => {
+                    var result = await handler.Invoke(context, request.Body.Deserialize<TRequest>(_jsonOptions)!, ct).ConfigureAwait(false);
+                    return new CustomFunctionInvocationResponse() {
+                        Body = JsonSerializer.SerializeToElement(result, _jsonOptions)
+                    };
+                },
+                authorizeHandler,
+                cancellationToken
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Registers a custom function.
+        /// </summary>
+        /// <typeparam name="TRequest">
+        ///   The request type of the custom function.
+        /// </typeparam>
+        /// <typeparam name="TResponse">
+        ///   The response type of the custom function.
+        /// </typeparam>
+        /// <param name="name">
+        ///   The name of the function.
+        /// </param>
+        /// <param name="description">
+        ///   The function's description.
+        /// </param>
+        /// <param name="handler">
+        ///   The function handler.
+        /// </param>
+        /// <param name="authorizeHandler">
+        ///   The function's authorisation handler.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the custom 
+        ///   function was registered, or <see langword="false"/> if a function with the same ID is 
+        ///   already registered.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="handler"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="description"/> is not valid.
+        /// </exception>
+        /// <remarks>
+        ///   The registered function will be assigned an ID derived from the <see cref="BaseUri"/> 
+        ///   and the function <paramref name="name"/>.
+        /// </remarks>
+        public async Task<bool> RegisterFunctionAsync<TRequest, TResponse>(
+            string name,
+            string? description,
+            CustomFunctionHandler<TRequest, TResponse> handler,
+            CustomFunctionAuthorizeHandler? authorizeHandler = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(name)) {
+                throw new ArgumentOutOfRangeException(nameof(name));
+            }
+            return await RegisterFunctionAsync(new Uri(BaseUri, name.ToLowerInvariant()), name, description, handler, authorizeHandler, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -156,7 +332,7 @@ namespace DataCore.Adapter.Extensions {
             }
 
             using (await _functionsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
-                return _functions.Remove(id);
+                return _functions.Remove(id.EnsurePathHasTrailingSlash());
             }
         }
 
@@ -230,7 +406,7 @@ namespace DataCore.Adapter.Extensions {
             ValidationExtensions.ValidateObject(request);
 
             using (await _functionsLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!_functions.TryGetValue(request.Id, out var func) || !await IsAuthorizedAsync(context, func, cancellationToken).ConfigureAwait(false)) {
+                if (!_functions.TryGetValue(request.Id.EnsurePathHasTrailingSlash(), out var func) || !await IsAuthorizedAsync(context, func, cancellationToken).ConfigureAwait(false)) {
                     return null;
                 }
 
@@ -255,7 +431,7 @@ namespace DataCore.Adapter.Extensions {
             CustomFunctionHandler handler;
 
             using (await _functionsLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!_functions.TryGetValue(request.Id, out var func)) {
+                if (!_functions.TryGetValue(request.Id.EnsurePathHasTrailingSlash(), out var func)) {
                     throw new InvalidOperationException();
                 }
 
@@ -290,16 +466,17 @@ namespace DataCore.Adapter.Extensions {
         ///   Schema generation is performed using <see cref="JsonSchema.JsonSchemaBuilder"/>. 
         ///   Attributes can be used to customise the schema. In addition to the attributes in the 
         ///   <see cref="JsonSchema.Generation"/> namespace, attributes from the <see cref="System.ComponentModel.DataAnnotations"/> 
-        ///   namespace can also be used. See <see cref="Json.Schema.DataAnnotationsAttributeHandler"/> 
-        ///   for details of supported attributes.
+        ///   namespace can also be used.
         /// </para>
         /// 
         /// </remarks>
-        /// <seealso cref="Json.Schema.DataAnnotationsAttributeHandler"/>
-        public static JsonElement CreateJsonSchema<T>() {
+        public JsonElement CreateJsonSchema<T>() {
             Json.Schema.JsonSchemaUtility.RegisterExtensions();
-            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>();
-            return JsonSerializer.SerializeToElement(builder.Build());
+            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() { 
+                PropertyNamingMethod = name => _jsonOptions?.PropertyNamingPolicy?.ConvertName(name) ?? name
+            });
+
+            return JsonSerializer.SerializeToElement(builder.Build(), _jsonOptions);
         }
 
 
@@ -312,6 +489,9 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="schema">
         ///   The schema to validate the <paramref name="data"/> against.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
         /// <param name="validationResults">
         ///   The validation results.
         /// </param>
@@ -319,11 +499,12 @@ namespace DataCore.Adapter.Extensions {
         ///   <see langword="true"/> if the <paramref name="data"/> was successfully validated 
         ///   against the <paramref name="schema"/>, or <see langword="false"/> otherwise.
         /// </returns>
-        public static bool TryValidate(JsonElement data, JsonElement schema, out JsonElement validationResults) {
-            var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema));
-            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data));
-
-            validationResults = JsonSerializer.SerializeToElement(result);
+        public static bool TryValidate(JsonElement data, JsonElement schema, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) {
+            var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema, jsonOptions));
+            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data, jsonOptions), new JsonSchema.ValidationOptions() {  
+                OutputFormat = JsonSchema.OutputFormat.Detailed
+            });
+            validationResults = JsonSerializer.SerializeToElement(result, jsonOptions);
             return result.IsValid;
         }
 
