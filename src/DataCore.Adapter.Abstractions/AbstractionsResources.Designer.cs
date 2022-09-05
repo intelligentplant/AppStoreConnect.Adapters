@@ -412,7 +412,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Custom Functions.
+        ///   Looks up a localized string similar to Allows invocation of vendor-specific custom functions..
         /// </summary>
         public static string Description_CustomFunctions {
             get {

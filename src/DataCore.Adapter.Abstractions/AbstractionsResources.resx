@@ -235,7 +235,7 @@
     <value>Allows subscribers to receive notifications when items on an adapter such as tags or asset model nodes are created, updated, or deleted.</value>
   </data>
   <data name="Description_CustomFunctions" xml:space="preserve">
-    <value>Custom Functions</value>
+    <value>Allows invocation of vendor-specific custom functions.</value>
   </data>
   <data name="Description_EventMessagePush" xml:space="preserve">
     <value>Allows subscribers to receive event messages from an adapter in real-time.</value>
