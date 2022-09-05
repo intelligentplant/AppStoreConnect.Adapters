@@ -42,6 +42,16 @@ namespace DataCore.Adapter {
         bool IsRunning { get; }
 
         /// <summary>
+        /// Raised when the adapter is started.
+        /// </summary>
+        event Func<IAdapter, Task> Started;
+
+        /// <summary>
+        /// Raised when the adapter is stopped.
+        /// </summary>
+        event Func<IAdapter, Task> Stopped;
+
+        /// <summary>
         /// Starts the adapter.
         /// </summary>
         /// <param name="cancellationToken">
