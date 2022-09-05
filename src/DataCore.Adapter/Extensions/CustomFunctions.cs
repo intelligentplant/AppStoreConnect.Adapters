@@ -53,7 +53,9 @@ namespace DataCore.Adapter.Extensions {
         /// Creates a new <see cref="CustomFunctions"/> instance.
         /// </summary>
         /// <param name="baseUri">
-        ///   The base URI for custom functions registered with a relative URI.
+        ///   The base URI for custom functions registered with a relative URI. This would usually 
+        ///   be the type URI for the adapter associated with the <see cref="CustomFunctions"/> 
+        ///   instance.
         /// </param>
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use.
@@ -64,6 +66,12 @@ namespace DataCore.Adapter.Extensions {
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="baseUri"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="baseUri"/> is not an absolute URI.
+        /// </exception>
         public CustomFunctions(Uri baseUri, IBackgroundTaskService? backgroundTaskService = null, JsonSerializerOptions? jsonOptions = null, ILogger? logger = null) {
             if (baseUri == null) {
                 throw new ArgumentNullException(nameof(baseUri));
