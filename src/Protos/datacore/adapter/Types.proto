@@ -29,6 +29,7 @@ enum VariantType {
     VARIANT_TYPE_DATETIME = 15;
     VARIANT_TYPE_TIMESPAN = 16;
     VARIANT_TYPE_URL = 17;
+    VARIANT_TYPE_JSON = 18;
 }
 
 

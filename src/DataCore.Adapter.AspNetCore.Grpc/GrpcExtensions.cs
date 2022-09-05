@@ -439,6 +439,11 @@ namespace DataCore.Adapter {
                         ? (object) ReadJsonArray<long>(bytes, variant.ArrayDimensions)
                         : BitConverter.ToInt64(bytes, 0);
                     break;
+                case Grpc.VariantType.Json:
+                    value = isArray
+                        ? (object) ReadJsonArray<System.Text.Json.JsonElement>(bytes, variant.ArrayDimensions)
+                        : ReadJsonValue<System.Text.Json.JsonElement>(bytes);
+                    break;
                 case Grpc.VariantType.Null:
                     value = null!;
                     break;
@@ -545,6 +550,9 @@ namespace DataCore.Adapter {
                         break;
                     case Common.VariantType.Int64:
                         bytes = BitConverter.GetBytes(variant.GetValueOrDefault<long>());
+                        break;
+                    case Common.VariantType.Json:
+                        bytes = WriteJsonValue(variant.GetValueOrDefault<System.Text.Json.JsonElement>());
                         break;
                     case Common.VariantType.Null:
                         bytes = Array.Empty<byte>();
