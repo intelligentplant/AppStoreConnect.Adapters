@@ -429,8 +429,8 @@ message CustomFunctionDescriptor {
 
 message CustomFunctionDescriptorExtended {
     CustomFunctionDescriptor function = 1;
-    google.protobuf.Struct request_schema = 2;
-    google.protobuf.Struct response_schema = 3;
+    google.protobuf.Value request_schema = 2;
+    google.protobuf.Value response_schema = 3;
 }
 
 

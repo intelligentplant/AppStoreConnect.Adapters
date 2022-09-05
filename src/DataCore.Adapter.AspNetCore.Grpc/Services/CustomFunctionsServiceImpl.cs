@@ -135,8 +135,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }
 
                 var result = await adapter.Feature.InvokeFunctionAsync(adapterCallContext, req, cancellationToken).ConfigureAwait(false);
-                var response = new InvokeCustomFunctionsResponse();
-                response.Body = Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(result.Body.ToString());
+                var response = new InvokeCustomFunctionsResponse() { 
+                    Body = result.Body.ToProtoValue()
+                };
                 return response;
             }
         }

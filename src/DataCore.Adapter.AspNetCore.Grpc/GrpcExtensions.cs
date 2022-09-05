@@ -105,34 +105,65 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Converts the <see cref="Google.Protobuf.WellKnownTypes.Struct"/> to a <see cref="System.Text.Json.JsonElement"/>.
+        /// Converts the <see cref="Google.Protobuf.WellKnownTypes.Value"/> to a <see cref="System.Text.Json.JsonElement"/>.
         /// </summary>
-        /// <param name="struct">
-        ///   The <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        /// <param name="value">
+        ///   The <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
         /// </param>
         /// <returns>
         ///   An equivalent <see cref="System.Text.Json.JsonElement"/>.
         /// </returns>
-        public static System.Text.Json.JsonElement ToJsonElement(this Google.Protobuf.WellKnownTypes.Struct @struct) {
-            if (@struct == null) {
+        public static System.Text.Json.JsonElement ToJsonElement(this Google.Protobuf.WellKnownTypes.Value value) {
+            if (value == null) {
                 return default;
             }
 
-            return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(@struct));
+            switch (value.KindCase) {
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.NumberValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.NumberValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.StringValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.StringValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.BoolValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.BoolValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.StructValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(value.StructValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.ListValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(value.ListValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.NullValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("null");
+                default:
+                    return default;
+            }
         }
 
 
         /// <summary>
-        /// Converts the <see cref="System.Text.Json.JsonElement"/> to a <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        /// Converts the <see cref="System.Text.Json.JsonElement"/> to a <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
         /// </summary>
         /// <param name="element">
         ///   The <see cref="System.Text.Json.JsonElement"/>.
         /// </param>
         /// <returns>
-        ///   An equivalent <see cref="Google.Protobuf.WellKnownTypes.Struct"/>.
+        ///   An equivalent <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
         /// </returns>
-        public static Google.Protobuf.WellKnownTypes.Struct ToProtoStruct(this System.Text.Json.JsonElement element) {
-            return Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(element.ToString());
+        public static Google.Protobuf.WellKnownTypes.Value ToProtoValue(this System.Text.Json.JsonElement element) {
+            switch (element.ValueKind) {
+                case System.Text.Json.JsonValueKind.True:
+                case System.Text.Json.JsonValueKind.False:
+                    return Google.Protobuf.WellKnownTypes.Value.ForBool(element.GetBoolean());
+                case System.Text.Json.JsonValueKind.Number:
+                    return Google.Protobuf.WellKnownTypes.Value.ForNumber(element.GetDouble());
+                case System.Text.Json.JsonValueKind.String:
+                    return Google.Protobuf.WellKnownTypes.Value.ForString(element.GetString());
+                case System.Text.Json.JsonValueKind.Object:
+                    return Google.Protobuf.WellKnownTypes.Value.ForStruct(Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(element.ToString()));
+                case System.Text.Json.JsonValueKind.Array:
+                    return Google.Protobuf.WellKnownTypes.Value.ForList(element.EnumerateArray().Select(x => x.ToProtoValue()).ToArray());
+                case System.Text.Json.JsonValueKind.Null:
+                    return Google.Protobuf.WellKnownTypes.Value.ForNull();
+                default:
+                    return new Google.Protobuf.WellKnownTypes.Value();
+            }
         }
 
         #endregion
@@ -1165,8 +1196,8 @@ namespace DataCore.Adapter {
 
             return new Grpc.CustomFunctionDescriptorExtended() {
                 Function = descriptor.ToGrpcCustomFunctionDescriptor(),
-                RequestSchema = descriptor.RequestSchema.ToProtoStruct(),
-                ResponseSchema = descriptor.ResponseSchema.ToProtoStruct(),
+                RequestSchema = descriptor.RequestSchema.ToProtoValue(),
+                ResponseSchema = descriptor.ResponseSchema.ToProtoValue(),
             };
         }
 

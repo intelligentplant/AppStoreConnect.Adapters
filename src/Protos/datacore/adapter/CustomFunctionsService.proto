@@ -42,10 +42,10 @@ message GetCustomFunctionResponse {
 message InvokeCustomFunctionRequest {
     string adapter_id = 1;
     string function_id = 2;
-    google.protobuf.Struct body = 3;
+    google.protobuf.Value body = 3;
     map<string, string> properties = 4;
 }
 
 message InvokeCustomFunctionsResponse {
-    google.protobuf.Struct body = 1;
+    google.protobuf.Value body = 1;
 }
