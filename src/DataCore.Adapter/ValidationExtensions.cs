@@ -34,7 +34,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(o));
             }
 
-            Validator.ValidateObject(o, new ValidationContext(o));
+            Validator.ValidateObject(o, new ValidationContext(o), true);
         }
 
     }
