@@ -123,9 +123,15 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id), nameof(request));
                 }
 
-                if (!request.TryValidateBody(function, out var validationResults)) {
+#if NETCOREAPP
+                if (!request.TryValidateBody(function, _jsonOptions, out var validationResults)) {
                     throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
                 }
+#else
+                if (!request.TryValidateBody(function, null, out var validationResults)) {
+                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
+                }
+#endif
 
                 return await resolvedFeature.Feature.InvokeFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
@@ -9,6 +10,9 @@ using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 using Grpc.Core;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
 
@@ -22,6 +26,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
+        /// <summary>
+        /// The JSON serialization options to use.
+        /// </summary>
+        private readonly JsonSerializerOptions? _jsonOptions;
+
 
         /// <summary>
         /// Creates a new <see cref="CustomFunctionsServiceImpl"/> object.
@@ -29,8 +38,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <param name="adapterAccessor">
         ///   The service for resolving adapter references.
         /// </param>
-        public CustomFunctionsServiceImpl(IAdapterAccessor adapterAccessor) {
+        /// <param name="jsonOptions">
+        ///   The configure JSON options.
+        /// </param>
+        public CustomFunctionsServiceImpl(IAdapterAccessor adapterAccessor, IOptions<JsonOptions> jsonOptions) {
             _adapterAccessor = adapterAccessor;
+
+            // Note that, by receiving the IOptions<JsonOptions> service, we are actually getting
+            // the JSON options that have been configured for ASP.NET Core MVC (if any).
+            _jsonOptions = jsonOptions?.Value?.JsonSerializerOptions;
         }
 
 
@@ -114,8 +130,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     throw new RpcException(new Status(StatusCode.InvalidArgument, string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, req.Id)));
                 }
 
-                if (!req.TryValidateBody(function, out var validationResults)) {
-                    throw new RpcException(new Status(StatusCode.InvalidArgument, System.Text.Json.JsonSerializer.Serialize(validationResults)));
+                if (!req.TryValidateBody(function, _jsonOptions, out var validationResults)) {
+                    throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
                 }
 
                 var result = await adapter.Feature.InvokeFunctionAsync(adapterCallContext, req, cancellationToken).ConfigureAwait(false);

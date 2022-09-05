@@ -196,6 +196,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="request">
         ///   The invocation request.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON options for the application.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the request.
         /// </param>
@@ -205,7 +208,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/invoke")]
         [ProducesResponseType(typeof(CustomFunctionInvocationResponse), 200)]
-        public async Task<IActionResult> InvokeFunctionAsync(string adapterId, CustomFunctionInvocationRequest request, CancellationToken cancellationToken) {
+        public async Task<IActionResult> InvokeFunctionAsync(
+            string adapterId, 
+            CustomFunctionInvocationRequest request,
+#if NETCOREAPP
+            [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions,
+#endif
+            CancellationToken cancellationToken
+        ) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ICustomFunctions>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -235,9 +245,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     return BadRequest(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id)); // 400
                 }
 
-                if (!request.TryValidateBody(function, out var validationResults)) {
+#if NETCOREAPP
+                if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
                     return BadRequest(validationResults); // 400
                 }
+#else
+                if (!request.TryValidateBody(function, null, out var validationResults)) {
+                    return BadRequest(validationResults); // 400
+                }
+#endif
 
                 return Ok(await feature.InvokeFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false)); // 200
             }
