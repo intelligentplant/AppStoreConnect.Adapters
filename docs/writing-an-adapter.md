@@ -44,13 +44,15 @@ Adapter implementers can pick and choose which features they want to provide. Fo
 Every feature defines a URI that uniquely identifies the feature. URIs for well-known features are defined [here](/src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs).
 
 
-## Standard Features
+## Available Features
 
 Adapters can implement any number of the following standard feature interfaces:
 
 - Asset Model:
     - [IAssetModelBrowse](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs)
     - [IAssetModelSearch](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs)
+- Custom Functions:
+    - [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) 
 - Diagnostics:
     - [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagostics/IConfigurationChanges.cs)
     - [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagostics/IHealthCheck.cs)
@@ -75,7 +77,7 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IWriteSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteSnapshotTagValues.cs)
     - [IWriteTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteTagValueAnnotations.cs)
 
-Adapters can also implement custom extension features. This is described in more detail below.
+The [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature allows an adapter to define bespoke custom functions that can be invoked via standard API calls. This is described in more detail below.
 
 
 ## Helper Methods
@@ -235,220 +237,132 @@ If your source implements some of these capabilities but not others, you can use
 > Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
 
 
-## Extension Features
+## Custom Functions
 
-**WARNING: EXTENSION FEATURE IMPLEMENTATION WILL FEATURE MULTIPLE BREAKING CHANGES IN v3.0**
+An adapter can expose non-standard or vendor-specific functionality via custom functions. Custom functions can be discovered an invoked if an adapter implements the [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature.
 
-> The [Writing an Extension Feature](/docs/tutorials/writing-an-extension-feature) tutorial provides a walk-through example of how to write an extension feature for an adapter.
-
-In addition to standard features, implementers can define their own extension features.
-
-Extension features must inherit from [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs), and must be annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which identifies the URI for the extension, as well as additional properties such as the display name and description.
-
-The `IAdapterExtensionFeature` interface defines methods for retrieving a descriptor for the extension, and a list of available operations. Extension operations are called via the `Invoke`, `Stream`, or `DuplexStream` methods defined on `IAdapterExtensionFeature`. 
-
-The [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) class is a base class for simplifying the implementation of extension features, which provides a number of `BindInvoke`, `BindStream`, and `BindDuplexStream` methods to automatically generate operation descriptors for the extension feature, and to automatically invoke the bound method when a call is made to the extension's `Invoke`, `Stream`, or `DuplexStream` methods.
-
-For example, the full implementation of a "ping pong" extension, that responds to `PingMessage` objects it receives with an equivalent `PongMessage` might look like this:
+The simplest way to implement [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) is to create an instance of the [CustomFunctions](/src/DataCore.Adapter/Extensions/CustomFunctions.cs) helper class and have your adapter register the instance as a feature provider:
 
 ```csharp
-[ExtensionFeature(
-    // Relative feature URI; will be made absolute relative to WellKnownFeatures.Extensions.ExtensionFeatureBasePath
-    "example/ping-pong/", 
-    Name = "Ping Pong",
-    Description = "Responds to every ping message with a pong message"
-)]
-public class PingPongExtension : AdapterExtensionFeature {
+var customFunctions = new CustomFunctions(TypeDescriptor.Id);
+AddFeatures(customFunctions);
+```
 
-    public PingPongExtension(
-        IBackgroundTaskService backgroundTaskService, 
-        IEnumerable<IObjectEncoder> encoders
-    ) : base(backgroundTaskService, encoders) {
-        BindInvoke<PingPongExtension, PingMessage, PongMessage>(PingInvoke);
-        BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
-        BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
+You can then use the `RegisterFunctionAsync` method to register your functions:
+
+```csharp
+private async Task AddFunctionsAsync() {
+    var feature = Features.Get<ICustomFunctions>();
+    if (feature == null) {
+        return;
     }
 
+    await feature.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
+        "Greet",
+        "Replies to requests with a greeting message.",
+        (context, request, ct) => Task.FromResult(new GreeterResponse() { 
+            Message = $"Hello, {request.Name}!" 
+        });
+    );
+}
 
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
-    public PongMessage PingInvoke(PingMessage ping) {
-        if (ping == null) {
-            throw new ArgumentNullException(nameof(ping));
-        }
+public class GreeterRequest {
 
-        return new PongMessage() {
-            CorrelationId = ping.CorrelationId
-        };
-    }
-
-
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
-    public async IAsyncEnumerable<PongMessage> PingStream(
-        PingMessage ping,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken
-    ) {
-        if (ping == null) {
-            throw new ArgumentNullException(nameof(ping));
-        }
-
-        while (!cancellationToken.IsCancellationRequested) {
-            try {
-                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                yield return PingInvoke(ping);
-            }
-            catch (OperationCanceledException) { }
-        }
-    }
-
-
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
-    public async IAsyncEnumerable<PongMessage> PingDuplexStream(
-        IAsyncEnumerable<PingMessage> channel,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken
-    ) {
-        if (channel == null) {
-            throw new ArgumentNullException(nameof(channel));
-        }
-
-        await foreach(var ping in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
-            if (ping == null) {
-                continue;
-            }
-            yield return PingInvoke(ping);
-        }
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message that matches the correlation ID of the specified ping message",
-            Inputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message every time a ping message is received",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = default!;
 
 }
 
+public class GreeterResponse {
 
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "ping-message"
-)]
-public class PingMessage {
-    public Guid CorrelationId { get; set; } = Guid.NewGuid();
-}
+    public string Message { get; set; } = default!;
 
-
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "pong-message"
-)]
-public class PongMessage {
-    public Guid CorrelationId { get; set; } = Guid.NewGuid();
 }
 ```
 
-The `[ExtensionFeature]` annotation defines a URI for the extension. This can be specified as a relative URI path (in which case it will be made absolute using `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` as the base) or as an absolute URI (in which case it must be a child path of `WellKnownFeatures.Extensions.ExtensionFeatureBasePath`). The URI for the feature always ends with a forwards slash; one will be added if not specified in the URI passed to the `[ExtensionFeature]`. This information is used to create a descriptor for the feature. An example (JSON-encoded) descriptor for the ping-pong extension defined above would look like this:
+Each registered function has a unique URI identifier. In the example above, the URI will be derived from the base URI specified when creating the `CustomFunctions` (the URI type identifier for the adapter in the above example), and the name of the function. 
+
+Each custom function definition also contains JSON schemas describing valid request and response messages. In the example above, the schemas are automatically generated from the `GreeterRequest` and `GreeterResponse` types. 
+
+Assuming that the type ID of the adapter is `https://my-company.com/app-store-connect/adapters/my-adapter`, the JSON-encoded function description for the `Greet` function would be as follows:
 
 ```json
 {
-  "uri": "asc:extensions/example/ping-pong/",
-  "displayName": "Ping Pong",
-  "description": "Responds to every ping message with a pong message"
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "name": "Greet",
+    "description": "Replies to requests with a greeting message.",
+    "requestSchema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "maxLength": 100
+            }
+        },
+        "required": [
+            "name"
+        ]
+    },
+    "responseSchema": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string"
+            }
+        }
+    }
 }
 ```
 
-When writing an extension feature, methods can be annotated with an [ExtensionFeatureOperationAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureOperationAttribute.cs). When one of the `BindXXX` methods is used to bind the method to an `Invoke`, `Stream`, or `DuplexStream` operation, this attribute is used to generate a descriptor for the operation. 
+The request schema is automatically applied to incoming invocation requests received via the [REST API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages.
 
-For example, the `PingInvoke` method above is annotated with an `[ExtensionFeatureOperation]` attribute that uses the static `GetPingInvokeDescriptor` method to retrieve metadata about the operation. An example (JSON-encoded) descriptor for the operation generated by the `AdapterExtensionFeature` base class would look like this:
+Example invocations via REST interface:
 
-```json
+```
+POST /api/app-store-connect/v2.0/custom-functions
+Content-Type: application/json
+
 {
-    "operationId": "asc:extensions/example/ping-pong/invoke/Ping/",
-    "operationType": "Invoke",
-    "name": "Ping",
-    "description": "Returns a pong message that matches the correlation ID of the specified ping message",
-    "inputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/ping-message/",
-            "description": "The ping message"
-        }
-    ],
-    "outputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/pong-message/",
-            "description": "The resulting pong message"
-        }
-    ]
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "body": {
+        "name": "John Smith"
+    }
+}
+
+---
+
+200/OK
+Content-Type: application/json
+
+{
+    "body": {
+        "message": "Hello, John Smith!"
+    }
+}
+```
+
+```
+POST /api/app-store-connect/v2.0/custom-functions
+Content-Type: application/json
+
+{
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "body": {
+        "name": null
+    }
+}
+
+---
+
+400/Bad Request
+Content-Type: application/json
+
+{
+    "valid": false,
+    "keywordLocation": "#/properties/name/type",
+    "instanceLocation": "#/name",
+    "error": "Value is \"null\" but should be \"string\""
 }
 ```
 
@@ -461,7 +375,7 @@ The [IKeyValueStore](/src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.
 
 # Telemetry
 
-Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The [Web API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages automatically create activities when invoking operations on your adapter. You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class to provide adapter-specific telemetry inside your feature implementations (for example, while executing a database query):
+Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The [REST API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages automatically create activities when invoking operations on your adapter. You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class to provide adapter-specific telemetry inside your feature implementations (for example, while executing a database query):
 
 ```csharp
 private async IAsyncEnumerable<EventMessage> ReadEventMessages(
