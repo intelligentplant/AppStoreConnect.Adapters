@@ -72,12 +72,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             HostInfo hostInfo, 
             IAdapterAccessor adapterAccessor,
             IBackgroundTaskService taskScheduler,
-            JsonHubProtocolOptions jsonOptions
+            Microsoft.Extensions.Options.IOptions<JsonHubProtocolOptions> jsonOptions
         ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            _jsonOptions = jsonOptions?.PayloadSerializerOptions;
+            _jsonOptions = jsonOptions?.Value?.PayloadSerializerOptions;
         }
 
 #else
