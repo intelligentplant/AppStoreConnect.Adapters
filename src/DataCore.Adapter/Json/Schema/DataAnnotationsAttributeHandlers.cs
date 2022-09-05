@@ -38,6 +38,17 @@ namespace DataCore.Adapter.Json.Schema {
     }
 
 
+    internal class DisplayNameAttributeHandler : IAttributeHandler<System.ComponentModel.DisplayNameAttribute> {
+
+        public void AddConstraints(SchemaGenerationContextBase context, Attribute attribute) {
+            if (attribute is System.ComponentModel.DisplayNameAttribute displayNameAttr) {
+                context.Intents.Add(new DisplayIntent(displayNameAttr.DisplayName, null));
+            }
+        }
+
+    }
+
+
     internal class MaxLengthAttributeHandler : IAttributeHandler<System.ComponentModel.DataAnnotations.MaxLengthAttribute> {
 
         public void AddConstraints(SchemaGenerationContextBase context, Attribute attribute) {

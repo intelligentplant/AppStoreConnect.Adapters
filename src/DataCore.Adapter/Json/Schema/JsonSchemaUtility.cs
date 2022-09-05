@@ -30,6 +30,7 @@ namespace DataCore.Adapter.Json.Schema {
             AttributeHandler.AddHandler<DataTypeAttributeHandler>();
             AttributeHandler.AddHandler<DescriptionAttributeHandler>();
             AttributeHandler.AddHandler<DisplayAttributeHandler>();
+            AttributeHandler.AddHandler<DisplayNameAttributeHandler>();
             AttributeHandler.AddHandler<MinLengthAttributeHandler>();
             AttributeHandler.AddHandler<MaxLengthAttributeHandler>();
             AttributeHandler.AddHandler<RangeAttributeHandler>();
