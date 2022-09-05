@@ -247,7 +247,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 #if NETCOREAPP
                 if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
-                    return BadRequest(validationResults); // 400
+                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidCustomFunctionRequestBody);
+                    problem.Extensions["errors"] = validationResults;
+                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
                 }
 #else
                 if (!request.TryValidateBody(function, null, out var validationResults)) {
