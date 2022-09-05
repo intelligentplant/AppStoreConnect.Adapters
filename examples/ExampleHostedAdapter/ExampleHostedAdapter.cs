@@ -1,13 +1,18 @@
 ﻿
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+
 using DataCore.Adapter;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 
 
@@ -37,15 +42,17 @@ namespace ExampleHostedAdapter {
 
         private readonly PollingSnapshotTagValuePush _snapshotPush;
 
+        private readonly CustomFunctions _customFunctions;
+
 
         public ExampleHostedAdapter(
             string id, 
             IOptionsMonitor<ExampleHostedAdapterOptions> options,
+            IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService taskScheduler,
             ILogger<ExampleHostedAdapter> logger
         ) : base(id, options, taskScheduler, logger) {
-
             // The TagManager class implements the ITagSearch adapter feature on our adapter's
             // behalf, meaning that our adapter allows callers to discover available tags
             // (measurements) that can be read. In our example we use a fixed set of tags created
@@ -75,10 +82,10 @@ namespace ExampleHostedAdapter {
             // implemented by the TagManager object.
             AddFeatures(_tagManager);
 
-            // The PollingSnapshotTagValuePush class implements the ISnapshotTagValuePush, meaning
-            // that callers can subscribe to be notified of snapshot value changes. Under the hood,
-            // PollingSnapshotTagValuePushOptions functions by periodically polling the snapshot
-            // value for tags that have active subscribers. If your adapter receives push
+            // The PollingSnapshotTagValuePush class implements the ISnapshotTagValuePush feature,
+            // meaning that callers can subscribe to be notified of snapshot value changes. Under
+            // the hood, PollingSnapshotTagValuePushOptions functions by periodically polling the
+            // snapshot value for tags that have active subscribers. If your adapter receives push
             // notifications of new values from an external source (such as an MQTT broker), you
             // can use the SnapshotTagValuePush class instead, and pass new values to it as they
             // arrive.
@@ -93,6 +100,19 @@ namespace ExampleHostedAdapter {
             // Tell the adapter to advertise that it supports all of the adapter features
             // implemented by the PollingSnapshotTagValuePush object.
             AddFeatures(_snapshotPush);
+
+            // The CustomFunctions class implements the ICustomFunctions feature, which allows us
+            // to define vendor-specific custom functions that callers can invoke.
+            _customFunctions = new CustomFunctions(
+                TypeDescriptor.Id, 
+                BackgroundTaskService, 
+                jsonOptions.Value.SerializerOptions, 
+                Logger
+            );
+
+            // Tell the adapter to advertise that it supports all of the adapter features
+            // implemented by the CustomFunctions object.
+            AddFeatures(_customFunctions);
         }
 
 
@@ -111,6 +131,27 @@ namespace ExampleHostedAdapter {
                 .Build();
 
             await _tagManager.AddOrUpdateTagAsync(testTag, cancellationToken).ConfigureAwait(false);
+
+            // Register our custom function. This overload will generate a function ID for us
+            // based on the function name and the base URI of the CustomFunctions instance. It will
+            // also generate request and response schemas for us automatically.
+            //
+            // See the documentation for CustomFunctions.CreateJsonSchema<T>() for more information
+            // about schema generation.
+            //
+            // Note that, if we wanted to apply authorization to the function, we could also
+            // specify an authorization delegate below.
+            await _customFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>( 
+                "Greet",
+                "Replies to requests with a greeting message.",
+                (context, request, ct) => {
+                    return Task.FromResult(new GreeterResponse() { 
+                        Message = $"Hello, {request.Name}!"
+                    });
+                }, 
+                authorizeHandler: null,
+                cancellationToken: cancellationToken
+            ).ConfigureAwait(false);
         }
 
 
@@ -170,6 +211,33 @@ namespace ExampleHostedAdapter {
         // is called, followed by Dispose(false). This is the standard pattern for implementing
         // both IDisposable and IAsyncDisposable on the same type. See here for more details: 
         // https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-disposeasync
+
+
+        /// <summary>
+        /// "Greet" custom function request type.
+        /// </summary>
+        public class GreeterRequest {
+
+            /// <summary>
+            /// The name of the person to send the greeting to.
+            /// </summary>
+            [Required]
+            [MaxLength(100)]
+            public string Name { get; set; } = default!;
+
+        }
+
+        /// <summary>
+        /// "Greet" custom function response type.
+        /// </summary>
+        public class GreeterResponse {
+
+            /// <summary>
+            /// The greeting.
+            /// </summary>
+            public string Message { get; set; } = default!;
+
+        }
 
     }
 }
