@@ -212,6 +212,10 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="description"/> is not valid.
         /// </exception>
+        /// <remarks>
+        ///   A JSON schema will be generated for the request and response types. See 
+        ///   <see cref="CreateJsonSchema{T}"/> for details about how the schema is generated.
+        /// </remarks>
         public async Task<bool> RegisterFunctionAsync<TRequest, TResponse>(
             Uri id,
             string name,
@@ -242,12 +246,7 @@ namespace DataCore.Adapter.Extensions {
 
             return await RegisterFunctionAsync(
                 descriptor,
-                async (context, request, ct) => {
-                    var result = await handler.Invoke(context, request.Body.Deserialize<TRequest>(_jsonOptions)!, ct).ConfigureAwait(false);
-                    return new CustomFunctionInvocationResponse() {
-                        Body = JsonSerializer.SerializeToElement(result, _jsonOptions)
-                    };
-                },
+                CreateHandler(handler, _jsonOptions),
                 authorizeHandler,
                 cancellationToken
             ).ConfigureAwait(false);
@@ -293,8 +292,17 @@ namespace DataCore.Adapter.Extensions {
         ///   <paramref name="description"/> is not valid.
         /// </exception>
         /// <remarks>
+        /// 
+        /// <para>
         ///   The registered function will be assigned an ID derived from the <see cref="BaseUri"/> 
         ///   and the function <paramref name="name"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   A JSON schema will be generated for the request and response types. See 
+        ///   <see cref="CreateJsonSchema{T}"/> for details about how the schema is generated.
+        /// </para>
+        /// 
         /// </remarks>
         public async Task<bool> RegisterFunctionAsync<TRequest, TResponse>(
             string name,
@@ -464,10 +472,41 @@ namespace DataCore.Adapter.Extensions {
         /// 
         /// <para>
         ///   Schema generation is performed using <see cref="JsonSchema.JsonSchemaBuilder"/>. 
-        ///   Attributes can be used to customise the schema. In addition to the attributes in the 
-        ///   <see cref="JsonSchema.Generation"/> namespace, attributes from the <see cref="System.ComponentModel.DataAnnotations"/> 
-        ///   namespace can also be used.
+        ///   Attributes can be specified on properties to customise the generated schema. In 
+        ///   addition to the attributes in the <see cref="JsonSchema.Generation"/> namespace, 
+        ///   the following attributes from the <see cref="System.ComponentModel.DataAnnotations"/> 
+        ///   namespace can also be used:
         /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.DataTypeAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DescriptionAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.DisplayAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DisplayNameAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.MaxLengthAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.MinLengthAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.RangeAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.RegularExpressionAttribute"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="System.ComponentModel.DataAnnotations.RequiredAttribute"/>
+        ///   </item>
+        /// </list>
         /// 
         /// </remarks>
         public JsonElement CreateJsonSchema<T>() {
@@ -506,6 +545,38 @@ namespace DataCore.Adapter.Extensions {
             });
             validationResults = JsonSerializer.SerializeToElement(result, jsonOptions);
             return result.IsValid;
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="CustomFunctionHandler"/> that deserializes the body of a 
+        /// <see cref="CustomFunctionInvocationRequest"/> to a <typeparamref name="TRequest"/>, 
+        /// invokes the specified <paramref name="innerHandler"/>, and then serializes the resulting 
+        /// <typeparamref name="TResponse"/> to a <see cref="CustomFunctionInvocationResponse"/>.
+        /// </summary>
+        /// <typeparam name="TRequest">
+        ///   The request type.
+        /// </typeparam>
+        /// <typeparam name="TResponse">
+        ///   The response type.
+        /// </typeparam>
+        /// <param name="innerHandler">
+        ///   The inner <see cref="CustomFunctionHandler{TRequest, TResponse}"/>.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serializer options to use when deserializing the request and serializing 
+        ///   the response.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="CustomFunctionHandler"/> delegate.
+        /// </returns>
+        public static CustomFunctionHandler CreateHandler<TRequest, TResponse>(CustomFunctionHandler<TRequest, TResponse> innerHandler, JsonSerializerOptions? jsonOptions = null) {
+            return async (context, request, ct) => {
+                var result = await innerHandler.Invoke(context, request.Body.Deserialize<TRequest>(jsonOptions)!, ct).ConfigureAwait(false);
+                return new CustomFunctionInvocationResponse() {
+                    Body = JsonSerializer.SerializeToElement(result, jsonOptions)
+                };
+            };
         }
 
 
