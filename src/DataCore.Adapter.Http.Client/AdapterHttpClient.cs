@@ -97,8 +97,11 @@ namespace DataCore.Adapter.Http.Client {
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
+            CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
+#pragma warning disable CS0618 // Type or member is obsolete
             Extensions = new ExtensionFeaturesClient(this);
+#pragma warning restore CS0618 // Type or member is obsolete
             HostInfo = new HostInfoClient(this);
             TagSearch = new TagSearchClient(this);
             TagValueAnnotations = new TagValueAnnotationsClient(this);

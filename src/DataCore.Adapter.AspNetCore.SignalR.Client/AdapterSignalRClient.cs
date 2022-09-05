@@ -54,6 +54,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public ConfigurationChangesClient ConfigurationChanges { get; }
 
         /// <summary>
+        /// The strongly-typed client for invoking custom functions on an adapter.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
+
+        /// <summary>
         /// The strongly-typed client for reading event messages from and writing event messages 
         /// to an adapter.
         /// </summary>
@@ -80,11 +85,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// adapter.
         /// </summary>
         public TagValuesClient TagValues { get; }
-
-        /// <summary>
-        /// The strongly-typed client for invoking custom functions on an adapter.
-        /// </summary>
-        public CustomFunctionsClient CustomFunctions { get; }
 
         /// <summary>
         /// The strongly-typed client for invoking extension features on an adapter.
