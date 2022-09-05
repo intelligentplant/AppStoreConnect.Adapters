@@ -190,8 +190,16 @@
     <comment>{0} - IAdapterExtensionFeature name
 {1} - AdapterFeatureAttribute name</comment>
   </data>
+  <data name="Error_NotAuthorisedToInvokeFunction" xml:space="preserve">
+    <value>Caller is not authorised to invoke custom function '{0}'.</value>
+    <comment>{0} - function ID</comment>
+  </data>
   <data name="Error_TooManySubscriptions" xml:space="preserve">
     <value>Too many subscriptions.</value>
+  </data>
+  <data name="Error_UnknownCustomFunctionId" xml:space="preserve">
+    <value>Custom function ID '{0}' could not be resolved.</value>
+    <comment>{0} - function ID</comment>
   </data>
   <data name="HealthChecks_CompositeResultDescription_Degraded" xml:space="preserve">
     <value>The adapter is running with degraded health status.</value>

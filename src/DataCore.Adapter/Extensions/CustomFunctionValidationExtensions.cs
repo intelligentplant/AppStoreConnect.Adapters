@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="functionDescriptor"/> is <see langword="null"/>.
         /// </exception>
-        public static bool TryValidateBody(this CustomFunctionInvocationResponse response, CustomFunctionDescriptorExtended functionDescriptor, JsonSerializerOptions jsonOptions, out JsonElement validationResults) {
+        public static bool TryValidateBody(this CustomFunctionInvocationResponse response, CustomFunctionDescriptorExtended functionDescriptor, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) {
             if (response == null) {
                 throw new ArgumentNullException(nameof(response));
             }

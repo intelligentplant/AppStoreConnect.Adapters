@@ -11,6 +11,7 @@ using JsonSchema = Json.Schema;
 using Json.Schema.Generation;
 
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.Extensions {
             if (!baseUri.IsAbsoluteUri) {
                 throw new ArgumentOutOfRangeException(nameof(baseUri), SharedResources.Error_AbsoluteUriRequired);
             }
-            BaseUri = baseUri.EnsurePathHasTrailingSlash();
+            BaseUri = new Uri(baseUri.EnsurePathHasTrailingSlash(), "custom-functions/");
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _jsonOptions = jsonOptions;
             _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
@@ -421,8 +422,12 @@ namespace DataCore.Adapter.Extensions {
             }
             ValidationExtensions.ValidateObject(request);
 
+            var lookupId = request.Id.IsAbsoluteUri
+                ? request.Id.EnsurePathHasTrailingSlash()
+                : new Uri(BaseUri, request.Id).EnsurePathHasTrailingSlash();
+
             using (await _functionsLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!_functions.TryGetValue(request.Id.EnsurePathHasTrailingSlash(), out var func) || !await IsAuthorizedAsync(context, func, cancellationToken).ConfigureAwait(false)) {
+                if (!_functions.TryGetValue(lookupId, out var func) || !await IsAuthorizedAsync(context, func, cancellationToken).ConfigureAwait(false)) {
                     return null;
                 }
 
@@ -444,15 +449,19 @@ namespace DataCore.Adapter.Extensions {
             }
             ValidationExtensions.ValidateObject(request);
 
+            var lookupId = request.Id.IsAbsoluteUri
+                ? request.Id.EnsurePathHasTrailingSlash()
+                : new Uri(BaseUri, request.Id).EnsurePathHasTrailingSlash();
+
             CustomFunctionHandler handler;
 
             using (await _functionsLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!_functions.TryGetValue(request.Id.EnsurePathHasTrailingSlash(), out var func)) {
-                    throw new InvalidOperationException();
+                if (!_functions.TryGetValue(lookupId, out var func)) {
+                    throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, Resources.Error_UnknownCustomFunctionId, request.Id));
                 }
 
                 if (!await IsAuthorizedAsync(context, func, cancellationToken).ConfigureAwait(false)) {
-                    throw new System.Security.SecurityException();
+                    throw new System.Security.SecurityException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NotAuthorisedToInvokeFunction, request.Id));
                 }
 
                 handler = func.Handler;
