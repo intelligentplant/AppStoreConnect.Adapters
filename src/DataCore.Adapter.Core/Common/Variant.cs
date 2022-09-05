@@ -26,6 +26,7 @@ namespace DataCore.Adapter.Common {
             [typeof(short)] = VariantType.Int16,
             [typeof(int)] = VariantType.Int32,
             [typeof(long)] = VariantType.Int64,
+            [typeof(JsonElement)] = VariantType.Json,
             [typeof(sbyte)] = VariantType.SByte,
             [typeof(string)] = VariantType.String,
             [typeof(TimeSpan)] = VariantType.TimeSpan,
@@ -1179,6 +1180,10 @@ namespace DataCore.Adapter.Common {
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<long>(valueElement, arrayDimensions!, options))
                         : valueElement.GetInt64();
+                case VariantType.Json:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<JsonElement>(valueElement, arrayDimensions!, options))
+                        : valueElement;
                 case VariantType.SByte:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<sbyte>(valueElement, arrayDimensions!, options))

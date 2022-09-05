@@ -94,7 +94,12 @@
         /// <summary>
         /// URL
         /// </summary>
-        Url = 17
+        Url = 17,
+
+        /// <summary>
+        /// JSON
+        /// </summary>
+        Json = 18
 
     }
 
