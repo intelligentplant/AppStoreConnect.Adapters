@@ -205,6 +205,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid request body..
+        /// </summary>
+        public static string Error_InvalidCustomFunctionRequestBody {
+            get {
+                return ResourceManager.GetString("Error_InvalidCustomFunctionRequestBody", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to JSON schema must be true, false, or an object..
         /// </summary>
         public static string Error_InvalidJsonSchema {

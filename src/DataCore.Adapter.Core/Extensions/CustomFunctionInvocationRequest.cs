@@ -109,5 +109,17 @@ namespace DataCore.Adapter.Extensions {
             };
         }
 
+
+        /// <inheritdoc/>
+        protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
+            foreach (var item in base.Validate(validationContext)) {
+                yield return item;
+            }
+
+            if (Body.ValueKind == JsonValueKind.Undefined) {
+                yield return new ValidationResult(SharedResources.Error_InvalidCustomFunctionRequestBody, new[] { nameof(Body) });
+            }
+        }
+
     }
 }
