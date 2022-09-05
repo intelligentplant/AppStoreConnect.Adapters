@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,6 +24,11 @@ namespace DataCore.Adapter.AspNetCore {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
+        /// <summary>
+        /// Services that perform started/stopped actions on adapters.
+        /// </summary>
+        private readonly IEnumerable<IAdapterLifetime> _lifetimeServices;
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterInitializer"/> object.
@@ -30,14 +36,18 @@ namespace DataCore.Adapter.AspNetCore {
         /// <param name="adapterAccessor">
         ///   The adapter accessor service.
         /// </param>
+        /// <param name="lifetimeServices">
+        ///   Services that perform started/stopped actions on adapters.
+        /// </param>
         /// <param name="logger">
         ///   The logger for the service.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="adapterAccessor"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterInitializer(IAdapterAccessor adapterAccessor, ILogger<AdapterInitializer> logger) {
+        public AdapterInitializer(IAdapterAccessor adapterAccessor, IEnumerable<IAdapterLifetime> lifetimeServices, ILogger<AdapterInitializer> logger) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+            _lifetimeServices = lifetimeServices ?? Array.Empty<IAdapterLifetime>();
             _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
@@ -60,7 +70,18 @@ namespace DataCore.Adapter.AspNetCore {
                     if (stoppingToken.IsCancellationRequested) {
                         break;
                     }
-                    
+
+                    adapter.Started += async _ => {
+                        foreach (var item in _lifetimeServices) {
+                            await item.StartedAsync(adapter, stoppingToken).ConfigureAwait(false);
+                        }
+                    };
+                    adapter.Stopped += async _ => {
+                        foreach (var item in _lifetimeServices) {
+                            await item.StoppedAsync(adapter, stoppingToken).ConfigureAwait(false);
+                        }
+                    };
+
                     try {
                         _logger.LogDebug(Resources.Log_StartingAdapter, adapter.Descriptor.Name, adapter.Descriptor.Id);
                         await adapter.StartAsync(stoppingToken).ConfigureAwait(false);
