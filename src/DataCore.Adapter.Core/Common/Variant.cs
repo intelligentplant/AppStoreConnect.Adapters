@@ -1107,6 +1107,10 @@ namespace DataCore.Adapter.Common {
             int[]? arrayDimensions = null;
             JsonElement valueElement = default;
 
+            var propertyNameComparer = options.PropertyNameCaseInsensitive
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
             var startDepth = reader.CurrentDepth;
 
             do {
@@ -1123,13 +1127,13 @@ namespace DataCore.Adapter.Common {
                     ThrowInvalidJsonError();
                 }
 
-                if (string.Equals(propertyName, nameof(Variant.Type), StringComparison.OrdinalIgnoreCase)) {
+                if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.Type), options), propertyNameComparer)) {
                     valueType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(Variant.ArrayDimensions), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.ArrayDimensions), options), propertyNameComparer)) {
                     arrayDimensions = JsonSerializer.Deserialize<int[]?>(ref reader, options);
                 }
-                else if (string.Equals(propertyName, nameof(Variant.Value), StringComparison.OrdinalIgnoreCase)) {
+                else if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.Value), options), propertyNameComparer)) {
                     valueElement = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
                 }
                 else {
