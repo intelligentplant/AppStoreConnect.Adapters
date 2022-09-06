@@ -113,7 +113,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   An equivalent <see cref="System.Text.Json.JsonElement"/>.
         /// </returns>
-        public static System.Text.Json.JsonElement ToJsonElement(this Google.Protobuf.WellKnownTypes.Value value) {
+        public static System.Text.Json.JsonElement? ToJsonElement(this Google.Protobuf.WellKnownTypes.Value value) {
             if (value == null) {
                 return default;
             }
@@ -130,7 +130,7 @@ namespace DataCore.Adapter {
                 case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.ListValue:
                     return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(value.ListValue));
                 case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.NullValue:
-                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("null");
+                    return null;
                 default:
                     return default;
             }
@@ -1149,13 +1149,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return new Extensions.CustomFunctionDescriptor() { 
-                Id = Uri.TryCreate(descriptor.Id, UriKind.Absolute, out var uri) 
-                    ? uri 
+            return new Extensions.CustomFunctionDescriptor(
+                Uri.TryCreate(descriptor.Id, UriKind.Absolute, out var uri)
+                    ? uri
                     : null!,
-                Name = descriptor.Name,
-                Description = descriptor.Description
-            };
+                descriptor.Name,
+                descriptor.Description
+            );
         }
 
 
@@ -1177,15 +1177,15 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return new Extensions.CustomFunctionDescriptorExtended() {
-                Id = Uri.TryCreate(descriptor.Function.Id, UriKind.Absolute, out var uri)
+            return new Extensions.CustomFunctionDescriptorExtended(
+                Uri.TryCreate(descriptor.Function.Id, UriKind.Absolute, out var uri)
                     ? uri
                     : null!,
-                Name = descriptor.Function.Name,
-                Description = descriptor.Function.Description,
-                RequestSchema = descriptor.RequestSchema.ToJsonElement(),
-                ResponseSchema = descriptor.ResponseSchema.ToJsonElement()
-            };
+                descriptor.Function.Name,
+                descriptor.Function.Description,
+                descriptor.RequestSchema.ToJsonElement(),
+                descriptor.ResponseSchema.ToJsonElement()
+            );
         }
 
 
@@ -1196,8 +1196,8 @@ namespace DataCore.Adapter {
 
             return new Grpc.CustomFunctionDescriptorExtended() {
                 Function = descriptor.ToGrpcCustomFunctionDescriptor(),
-                RequestSchema = descriptor.RequestSchema.ToProtoValue(),
-                ResponseSchema = descriptor.ResponseSchema.ToProtoValue(),
+                RequestSchema = descriptor.RequestSchema?.ToProtoValue() ?? Google.Protobuf.WellKnownTypes.Value.ForNull(),
+                ResponseSchema = descriptor.ResponseSchema?.ToProtoValue() ?? Google.Protobuf.WellKnownTypes.Value.ForNull(),
             };
         }
 

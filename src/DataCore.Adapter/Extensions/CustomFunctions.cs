@@ -155,13 +155,7 @@ namespace DataCore.Adapter.Extensions {
                 }
 
                 var reg = new CustomFunctionRegistration(
-                    new CustomFunctionDescriptorExtended() { 
-                        Id = descriptor.Id,
-                        Name = descriptor.Name,
-                        Description = descriptor.Description,
-                        RequestSchema = descriptor.RequestSchema,
-                        ResponseSchema = descriptor.ResponseSchema
-                    },
+                    descriptor,
                     handler, 
                     authorizeHandler
                 );
@@ -243,15 +237,15 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentNullException(nameof(handler));
             }
 
-            var descriptor = new CustomFunctionDescriptorExtended() {
-                Id = id.IsAbsoluteUri 
-                    ? id 
+            var descriptor = new CustomFunctionDescriptorExtended(
+                id.IsAbsoluteUri
+                    ? id
                     : new Uri(BaseUri, id),
-                Name = name,
-                Description = description,
-                RequestSchema = CreateJsonSchema<TRequest>(),
-                ResponseSchema = CreateJsonSchema<TResponse>()
-            };
+                name,
+                description, 
+                CreateJsonSchema<TRequest>(),
+                CreateJsonSchema<TResponse>()
+            );
 
             return await RegisterFunctionAsync(
                 descriptor,
@@ -397,11 +391,7 @@ namespace DataCore.Adapter.Extensions {
                         continue;
                     }
 
-                    result.Add(new CustomFunctionDescriptor() {
-                        Id = item.Descriptor.Id,
-                        Name = item.Descriptor.Name,
-                        Description = item.Descriptor.Description
-                    });
+                    result.Add(new CustomFunctionDescriptor(item.Descriptor.Id, item.Descriptor.Name, item.Descriptor.Description));
 
                     --takeCount;
                 }
@@ -431,13 +421,7 @@ namespace DataCore.Adapter.Extensions {
                     return null;
                 }
 
-                return new CustomFunctionDescriptorExtended() { 
-                    Id = func.Descriptor.Id,
-                    Name = func.Descriptor.Name,
-                    Description = func.Descriptor.Description,
-                    RequestSchema = func.Descriptor.RequestSchema,
-                    ResponseSchema = func.Descriptor.ResponseSchema 
-                };
+                return func.Descriptor;
             }
         }
 
@@ -589,7 +573,7 @@ namespace DataCore.Adapter.Extensions {
         /// </returns>
         public static CustomFunctionHandler CreateHandler<TRequest, TResponse>(CustomFunctionHandler<TRequest, TResponse> innerHandler, JsonSerializerOptions? jsonOptions = null) {
             return async (context, request, ct) => {
-                var result = await innerHandler.Invoke(context, request.Body.Deserialize<TRequest>(jsonOptions)!, ct).ConfigureAwait(false);
+                var result = await innerHandler.Invoke(context, request.Body == null ? default! : request.Body.Value.Deserialize<TRequest>(jsonOptions)!, ct).ConfigureAwait(false);
                 return new CustomFunctionInvocationResponse() {
                     Body = JsonSerializer.SerializeToElement(result, jsonOptions)
                 };

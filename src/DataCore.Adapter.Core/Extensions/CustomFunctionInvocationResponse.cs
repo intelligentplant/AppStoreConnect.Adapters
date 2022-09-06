@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The response payload.
         /// </summary>
-        public JsonElement Body { get; set; }
+        public JsonElement? Body { get; set; }
 
 
         /// <summary>
@@ -37,9 +37,11 @@ namespace DataCore.Adapter.Extensions {
         /// <returns>
         ///   A new <see cref="CustomFunctionInvocationResponse"/>.
         /// </returns>
-        public static CustomFunctionInvocationResponse Create<TBody>(TBody body, JsonSerializerOptions? options = null) {
+        public static CustomFunctionInvocationResponse Create<TBody>(TBody? body, JsonSerializerOptions? options = null) {
             return new CustomFunctionInvocationResponse() {
-                Body = JsonSerializer.SerializeToElement(body, options)
+                Body = body == null 
+                    ? null 
+                    : JsonSerializer.SerializeToElement(body, options)
             };
         }
 

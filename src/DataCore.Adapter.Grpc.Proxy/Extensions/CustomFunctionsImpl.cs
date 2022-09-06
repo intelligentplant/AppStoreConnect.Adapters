@@ -95,7 +95,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions.Features {
             var grpcRequest = new InvokeCustomFunctionRequest() {
                 AdapterId = AdapterId,
                 FunctionId = request.Id.ToString(),
-                Body = request.Body.ToProtoValue()
+                Body = request.Body?.ToProtoValue()
             };
 
             if (request.Properties != null) {

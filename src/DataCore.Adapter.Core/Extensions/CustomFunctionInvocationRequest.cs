@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
@@ -32,8 +31,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// The request body.
         /// </summary>
-        [Required]
-        public JsonElement Body { get; set; }
+        public JsonElement? Body { get; set; }
 
 
         /// <summary>
@@ -58,14 +56,16 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
-        public static CustomFunctionInvocationRequest Create<TBody>(Uri id, TBody body, JsonSerializerOptions? options = null) { 
+        public static CustomFunctionInvocationRequest Create<TBody>(Uri id, TBody? body, JsonSerializerOptions? options = null) { 
             if (id == null) {
                 throw new ArgumentNullException(nameof(id));
             }
 
             return new CustomFunctionInvocationRequest() { 
                 Id = id,
-                Body = JsonSerializer.SerializeToElement(body, options)
+                Body = body == null 
+                    ? null 
+                    : JsonSerializer.SerializeToElement(body, options)
             };
         }
 
@@ -107,18 +107,6 @@ namespace DataCore.Adapter.Extensions {
                 Id = id,
                 Body = JsonSerializer.SerializeToElement(body, jsonTypeInfo)
             };
-        }
-
-
-        /// <inheritdoc/>
-        protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
-            foreach (var item in base.Validate(validationContext)) {
-                yield return item;
-            }
-
-            if (Body.ValueKind == JsonValueKind.Undefined) {
-                yield return new ValidationResult(SharedResources.Error_InvalidCustomFunctionRequestBody, new[] { nameof(Body) });
-            }
         }
 
     }

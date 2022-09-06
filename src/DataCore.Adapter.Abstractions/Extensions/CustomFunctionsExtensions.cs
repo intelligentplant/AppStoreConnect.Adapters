@@ -62,7 +62,9 @@ namespace DataCore.Adapter.Extensions {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            return result.Body.Deserialize<TResponse>(jsonOptions);
+            return result.Body == null 
+                ? default 
+                : result.Body.Value.Deserialize<TResponse>(jsonOptions);
         }
 
 
@@ -121,7 +123,9 @@ namespace DataCore.Adapter.Extensions {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            return result.Body.Deserialize(responseTypeInfo);
+            return result.Body == null 
+                ? default 
+                : result.Body.Value.Deserialize(responseTypeInfo);
         }
 
     }
