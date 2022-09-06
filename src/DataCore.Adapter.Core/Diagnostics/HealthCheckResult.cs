@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Represents the result of an adapter health check.
     /// </summary>
-    [JsonConverter(typeof(HealthCheckResultConverter))]
     public struct HealthCheckResult {
 
         /// <summary>
@@ -69,6 +65,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The inner results that contributed to the status of this result. Can be 
         ///   <see langword="null"/>.
         /// </param>
+        [JsonConstructor]
         public HealthCheckResult(string? displayName, HealthStatus status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
@@ -218,76 +215,6 @@ namespace DataCore.Adapter.Diagnostics {
             return statuses.Aggregate(HealthStatus.Healthy, (previous, current) => current < previous ? current : previous);
         }
 
-    }
-
-
-    /// <summary>
-    /// JSON converter for <see cref="HealthCheckResultConverter"/>.
-    /// </summary>
-    internal class HealthCheckResultConverter : AdapterJsonConverter<HealthCheckResult> {
-
-        /// <inheritdoc/>
-        public override HealthCheckResult Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            if (reader.TokenType != JsonTokenType.StartObject) {
-                ThrowInvalidJsonError();
-            }
-
-            string? displayName = default;
-            HealthStatus status = default;
-            string? description = default;
-            string? error = default;
-            IDictionary<string, string>? data = default;
-            IEnumerable<HealthCheckResult>? innerResults = null;
-
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
-                if (reader.TokenType != JsonTokenType.PropertyName) {
-                    continue;
-                }
-
-                var propertyName = reader.GetString();
-                if (!reader.Read()) {
-                    ThrowInvalidJsonError();
-                }
-
-                if (string.Equals(propertyName, nameof(HealthCheckResult.DisplayName), StringComparison.OrdinalIgnoreCase)) {
-                    displayName = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.Status), StringComparison.OrdinalIgnoreCase)) {
-                    status = JsonSerializer.Deserialize<HealthStatus>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.Error), StringComparison.OrdinalIgnoreCase)) {
-                    error = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.Data), StringComparison.OrdinalIgnoreCase)) {
-                    data = JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(HealthCheckResult.InnerResults), StringComparison.OrdinalIgnoreCase)) {
-                    innerResults = JsonSerializer.Deserialize<IEnumerable<HealthCheckResult>>(ref reader, options);
-                }
-                else {
-                    reader.Skip();
-                }
-            }
-
-            return new HealthCheckResult(displayName, status, description, error, data, innerResults);
-        }
-
-        /// <inheritdoc/>
-        public override void Write(Utf8JsonWriter writer, HealthCheckResult value, JsonSerializerOptions options) {
-            writer.WriteStartObject();
-
-            WritePropertyValue(writer, nameof(HealthCheckResult.DisplayName), value.DisplayName, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.Status), value.Status, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.Description), value.Description, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.Error), value.Error, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.Data), value.Data, options);
-            WritePropertyValue(writer, nameof(HealthCheckResult.InnerResults), value.InnerResults, options);
-
-            writer.WriteEndObject();
-        }
     }
 
 }

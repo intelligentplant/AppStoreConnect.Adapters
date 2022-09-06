@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -17,7 +18,7 @@ namespace DataCore.Adapter.Extensions {
         ///   dereferenced.
         /// </remarks>
         [Required]
-        public Uri Id { get; set; } = default!;
+        public Uri Id { get; }
 
         /// <summary>
         /// The name of the custom function.
@@ -29,13 +30,33 @@ namespace DataCore.Adapter.Extensions {
         [Required]
         [MaxLength(100)]
         [RegularExpression("^[a-zA-Z_][a-zA-Z0-9_]+$")]
-        public string Name { get; set; } = default!;
+        public string Name { get; }
 
         /// <summary>
         /// The custom function description.
         /// </summary>
         [MaxLength(500)]
-        public string? Description { get; set; }
+        public string? Description { get; }
+
+
+        /// <summary>
+        /// Creates a new <see cref="CustomFunctionDescriptor"/> instance.
+        /// </summary>
+        /// <param name="id">
+        ///   The function ID.
+        /// </param>
+        /// <param name="name">
+        ///   The function name.
+        /// </param>
+        /// <param name="description">
+        ///   The function description.
+        /// </param>
+        [JsonConstructor]
+        public CustomFunctionDescriptor(Uri id, string name, string? description) {
+            Id = id;
+            Name = name;
+            Description = description;
+        }
 
 
         /// <inheritdoc/>

@@ -1,16 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes a custom property associated with an adapter, tag, tag value, event message, etc.
     /// </summary>
-    [JsonConverter(typeof(AdapterPropertyConverter))]
     public class AdapterProperty {
 
         /// <summary>
@@ -45,6 +41,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public AdapterProperty(string name, Variant value, string? description = null) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
@@ -120,65 +117,4 @@ namespace DataCore.Adapter.Common {
 
     }
 
-
-    /// <summary>
-    /// JSON converter for <see cref="AdapterProperty"/>.
-    /// </summary>
-    internal class AdapterPropertyConverter : AdapterJsonConverter<AdapterProperty> {
-
-        /// <inheritdoc/>
-        public override AdapterProperty Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            if (reader.TokenType != JsonTokenType.StartObject) {
-                ThrowInvalidJsonError();
-            }
-
-            string name = null!;
-            Variant value = Variant.Null;
-            string description = null!;
-
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
-                if (reader.TokenType != JsonTokenType.PropertyName) {
-                    continue;
-                }
-
-                var propertyName = reader.GetString();
-                if (!reader.Read()) {
-                    ThrowInvalidJsonError();
-                }
-
-                if (string.Equals(propertyName, nameof(AdapterProperty.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options)!;
-                }
-                else if (string.Equals(propertyName, nameof(AdapterProperty.Value), StringComparison.OrdinalIgnoreCase)) {
-                    value = JsonSerializer.Deserialize<Variant>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(AdapterProperty.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options)!;
-                }
-                else {
-                    reader.Skip();
-                }
-            }
-
-            return AdapterProperty.Create(name, value, description);
-        }
-
-
-        /// <inheritdoc/>
-        public override void Write(Utf8JsonWriter writer, AdapterProperty value, JsonSerializerOptions options) {
-            if (value == null) {
-                writer.WriteNullValue();
-                return;
-            }
-
-            writer.WriteStartObject();
-
-            WritePropertyValue(writer, nameof(AdapterProperty.Name), value.Name, options);
-            WritePropertyValue(writer, nameof(AdapterProperty.Value), value.Value, options);
-            WritePropertyValue(writer, nameof(AdapterProperty.Description), value.Description, options);
-
-            writer.WriteEndObject();
-        }
-
-    }
 }

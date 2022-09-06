@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes an adapter type.
     /// </summary>
-    [JsonConverter(typeof(AdapterTypeDescriptorConverter))]
     public class AdapterTypeDescriptor {
 
         /// <summary>
@@ -65,6 +61,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="helpUrl">
         ///   The help URL for the adapter type.
         /// </param>
+        [JsonConstructor]
         public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor, string? helpUrl) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name;
@@ -101,83 +98,6 @@ namespace DataCore.Adapter.Common {
                 : System.Version.TryParse(version, out var v)
                     ? Semver.SemVersion.FromVersion(v).ToString()
                     : null;
-        }
-
-    }
-
-
-    /// <summary>
-    /// JSON converter for <see cref="AdapterTypeDescriptor"/>.
-    /// </summary>
-    internal class AdapterTypeDescriptorConverter : AdapterJsonConverter<AdapterTypeDescriptor> {
-
-        /// <inheritdoc/>
-        public override AdapterTypeDescriptor Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            if (reader.TokenType != JsonTokenType.StartObject) {
-                ThrowInvalidJsonError();
-            }
-
-            Uri id = null!;
-            string? name = null!;
-            string? description = null!;
-            string? version = null!;
-            VendorInfo? vendor = null!;
-            string? helpUrl = null!;
-
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
-                if (reader.TokenType != JsonTokenType.PropertyName) {
-                    continue;
-                }
-
-                var propertyName = reader.GetString();
-                if (!reader.Read()) {
-                    ThrowInvalidJsonError();
-                }
-
-                if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Id), StringComparison.OrdinalIgnoreCase)) {
-                    id = JsonSerializer.Deserialize<Uri>(ref reader, options)!;
-                }
-                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Name), StringComparison.OrdinalIgnoreCase)) {
-                    name = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Description), StringComparison.OrdinalIgnoreCase)) {
-                    description = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Version), StringComparison.OrdinalIgnoreCase)) {
-                    version = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.Vendor), StringComparison.OrdinalIgnoreCase)) {
-                    vendor = JsonSerializer.Deserialize<VendorInfo>(ref reader, options);
-                }
-                else if (string.Equals(propertyName, nameof(AdapterTypeDescriptor.HelpUrl), StringComparison.OrdinalIgnoreCase)) {
-                    helpUrl = JsonSerializer.Deserialize<string>(ref reader, options);
-                }
-                else {
-                    reader.Skip();
-                }
-            }
-
-            return new AdapterTypeDescriptor(id, name, description, version, vendor, helpUrl);
-        }
-
-
-        /// <inheritdoc/>
-        public override void Write(Utf8JsonWriter writer, AdapterTypeDescriptor value, JsonSerializerOptions options) {
-            if (value == null) {
-                writer.WriteNullValue();
-                return;
-            }
-
-            writer.WriteStartObject();
-
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Id), value.Id.ToString(), options);
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Name), value.Name, options);
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Description), value.Description, options);
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Version), value.Version, options);
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.Vendor), value.Vendor, options);
-            WritePropertyValue(writer, nameof(AdapterTypeDescriptor.HelpUrl), value.HelpUrl, options);
-
-            writer.WriteEndObject();
         }
 
     }
