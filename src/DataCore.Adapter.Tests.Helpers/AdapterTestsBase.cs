@@ -594,7 +594,13 @@ namespace DataCore.Adapter.Tests {
                 var response = await feature.InvokeFunctionAsync(context, request, ct).ConfigureAwait(false);
                 Assert.IsNotNull(response, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
 
-                Assert.IsTrue(response.TryValidateBody(funcDetails!, null, out _), FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                if (funcDetails!.ResponseSchema == null) {
+                    Assert.IsNull(response.Body, FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                } 
+                else {
+                    Assert.IsNotNull(response.Body, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
+                    Assert.IsTrue(CustomFunctions.TryValidate(response.Body!.Value, funcDetails!.ResponseSchema!.Value, null, out _), FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                }
             });
         }
 
