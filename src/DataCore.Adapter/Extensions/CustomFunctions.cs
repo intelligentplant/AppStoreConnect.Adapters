@@ -365,13 +365,13 @@ namespace DataCore.Adapter.Extensions {
                 IEnumerable<CustomFunctionRegistration> funcs = _functions.Values;
 
                 if (!string.IsNullOrEmpty(request.Id)) {
-                    funcs = funcs.Where(x => x.Descriptor.Id.ToString().Like(request.Id));
+                    funcs = funcs.Where(x => x.Descriptor.Id.ToString().Like(request.Id!));
                 }
                 if (!string.IsNullOrEmpty(request.Name)) {
-                    funcs = funcs.Where(x => x.Descriptor.Name.Like(request.Name));
+                    funcs = funcs.Where(x => x.Descriptor.Name.Like(request.Name!));
                 }
                 if (!string.IsNullOrEmpty(request.Description)) {
-                    funcs = funcs.Where(x => x.Descriptor.Description != null && x.Descriptor.Description.Like(request.Description));
+                    funcs = funcs.Where(x => x.Descriptor.Description != null && x.Descriptor.Description.Like(request.Description!));
                 }
 
                 var skipCount = (request.Page - 1) * request.PageSize;
@@ -574,6 +574,34 @@ namespace DataCore.Adapter.Extensions {
         public static CustomFunctionHandler CreateHandler<TRequest, TResponse>(CustomFunctionHandler<TRequest, TResponse> innerHandler, JsonSerializerOptions? jsonOptions = null) {
             return async (context, request, ct) => {
                 var result = await innerHandler.Invoke(context, request.Body == null ? default! : request.Body.Value.Deserialize<TRequest>(jsonOptions)!, ct).ConfigureAwait(false);
+                return new CustomFunctionInvocationResponse() {
+                    Body = JsonSerializer.SerializeToElement(result, jsonOptions)
+                };
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="CustomFunctionHandler"/> that invokes the specified <paramref name="innerHandler"/>, 
+        /// and then serializes the resulting <typeparamref name="TResponse"/> to a 
+        /// <see cref="CustomFunctionInvocationResponse"/>.
+        /// </summary>
+        /// <typeparam name="TResponse">
+        ///   The response type.
+        /// </typeparam>
+        /// <param name="innerHandler">
+        ///   The inner <see cref="CustomFunctionHandler{TRequest, TResponse}"/>.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serializer options to use when deserializing the request and serializing 
+        ///   the response.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="CustomFunctionHandler"/> delegate.
+        /// </returns>
+        public static CustomFunctionHandler CreateHandler<TResponse>(CustomFunctionHandler<TResponse> innerHandler, JsonSerializerOptions? jsonOptions = null) {
+            return async (context, request, ct) => {
+                var result = await innerHandler.Invoke(context, ct).ConfigureAwait(false);
                 return new CustomFunctionInvocationResponse() {
                     Body = JsonSerializer.SerializeToElement(result, jsonOptions)
                 };
