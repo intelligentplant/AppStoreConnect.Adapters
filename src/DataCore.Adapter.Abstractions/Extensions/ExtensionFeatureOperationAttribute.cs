@@ -126,6 +126,7 @@ namespace DataCore.Adapter.Extensions {
     /// <returns>
     ///   A new <see cref="ExtensionFeatureOperationDescriptorPartial"/> instance.
     /// </returns>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public delegate ExtensionFeatureOperationDescriptorPartial PartialOperationDescriptorFactory();
 
 }

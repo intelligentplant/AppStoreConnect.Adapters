@@ -105,9 +105,7 @@ namespace DataCore.Adapter.Tests {
                     );
 
                     // Add ping-pong extension
-#pragma warning disable CS0618 // Type or member is obsolete
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
-#pragma warning restore CS0618 // Type or member is obsolete
 
                     return adapter;
                 });

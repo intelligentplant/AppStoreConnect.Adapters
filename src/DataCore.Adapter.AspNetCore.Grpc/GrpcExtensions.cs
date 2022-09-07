@@ -1678,6 +1678,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1705,6 +1706,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Grpc.ExtensionFeatureOperationDescriptor ToGrpcExtensionOperatorDescriptor(this Extensions.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1748,6 +1750,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Extensions.ExtensionFeatureOperationParameterDescriptor ToAdapterExtensionFeatureParameterDescriptor(this Grpc.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Extensions.ExtensionFeatureOperationParameterDescriptor();
@@ -1772,6 +1775,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 

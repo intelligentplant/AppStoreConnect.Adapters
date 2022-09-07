@@ -86,6 +86,7 @@ namespace DataCore.Adapter {
         public void AddFeature<TFeature>(TFeature feature) where TFeature : IAdapterFeature {
             CheckDisposed();
             if (!typeof(TFeature).IsAdapterFeature()) {
+#pragma warning disable CS0618 // Type or member is obsolete
                 throw new ArgumentException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resources.Error_NotAnAdapterFeature,
@@ -95,6 +96,7 @@ namespace DataCore.Adapter {
                     nameof(IAdapterExtensionFeature),
                     nameof(ExtensionFeatureAttribute)
                 ), nameof(feature));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             AddFeatureInternal(typeof(TFeature), feature, true);
@@ -132,6 +134,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureType));
             }
             if (!featureType.IsAdapterFeature()) {
+#pragma warning disable CS0618 // Type or member is obsolete
                 throw new ArgumentException(string.Format(
                     CultureInfo.CurrentCulture,
                     Resources.Error_NotAnAdapterFeature,
@@ -141,6 +144,7 @@ namespace DataCore.Adapter {
                     nameof(IAdapterExtensionFeature),
                     nameof(ExtensionFeatureAttribute)
                 ), nameof(featureType));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             AddFeatureInternal(featureType, feature, true);

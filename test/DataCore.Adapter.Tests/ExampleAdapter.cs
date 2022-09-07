@@ -74,9 +74,7 @@ namespace DataCore.Adapter.Tests {
             features.AddFromProvider(_eventTopicSubscriptionManager);
             features.AddFromProvider(_assetModelManager);
             features.AddFromProvider(_customFunctions);
-#pragma warning disable CS0618 // Type or member is obsolete
             features.AddFromProvider(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
-#pragma warning restore CS0618 // Type or member is obsolete
             Features = features;
         }
 

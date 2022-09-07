@@ -48,6 +48,7 @@ namespace DataCore.Adapter {
         /// <see langword="true"/> if the feature is an extension feature, or <see langword="false"/>
         /// if it is a standard feature.
         /// </summary>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public bool IsExtensionFeature => _feature is IAdapterExtensionFeature;
 
 

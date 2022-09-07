@@ -223,9 +223,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
-#pragma warning restore CS0618 // Type or member is obsolete
     internal class PingMessage {
 
         [Required]
@@ -237,9 +235,7 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
-#pragma warning restore CS0618 // Type or member is obsolete
     internal class PongMessage {
 
         [Required]
@@ -258,14 +254,10 @@ namespace DataCore.Adapter.Tests {
     }
 
 
-#pragma warning disable CS0618 // Type or member is obsolete
     [ExtensionFeature(HelloWorldConstants.FeatureUri)]
     internal interface IHelloWorld : IAdapterExtensionFeature {
-#pragma warning restore CS0618 // Type or member is obsolete
 
-#pragma warning disable CS0618 // Type or member is obsolete
         [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(PingPongExtension.GetGreetDescriptor))]
-#pragma warning restore CS0618 // Type or member is obsolete
         string Greet();
 
     }

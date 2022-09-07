@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
@@ -155,9 +157,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             AssetModel = new AssetModelBrowserClient(this);
             CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
-#pragma warning disable CS0618 // Type or member is obsolete
             Extensions = new ExtensionFeaturesClient(this);
-#pragma warning restore CS0618 // Type or member is obsolete
             HostInfo = new HostInfoClient(this);
             ConfigurationChanges = new ConfigurationChangesClient(this);
             TagSearch = new TagSearchClient(this);
@@ -299,3 +299,5 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
     }
 }
+
+#pragma warning restore CS0618 // Type or member is obsolete

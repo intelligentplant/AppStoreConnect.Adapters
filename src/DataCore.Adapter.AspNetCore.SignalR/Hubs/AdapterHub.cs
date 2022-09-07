@@ -286,6 +286,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         private async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext adapterCallContext, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(adapterCallContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

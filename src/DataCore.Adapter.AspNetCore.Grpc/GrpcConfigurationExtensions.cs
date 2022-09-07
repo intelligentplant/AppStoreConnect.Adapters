@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+
+using System;
 
 using DataCore.Adapter.Grpc.Server.Services;
 using Microsoft.AspNetCore.Builder;
@@ -51,9 +53,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             MapService<TagSearchServiceImpl>(endpoints, builder);
             MapService<TagValueAnnotationsServiceImpl>(endpoints, builder);
             MapService<TagValuesServiceImpl>(endpoints, builder);
-#pragma warning disable CS0618 // Type or member is obsolete
             MapService<ExtensionFeaturesServiceImpl>(endpoints, builder);
-#pragma warning restore CS0618 // Type or member is obsolete
 
             return endpoints;
         }
@@ -78,3 +78,4 @@ namespace Microsoft.Extensions.DependencyInjection {
 
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete

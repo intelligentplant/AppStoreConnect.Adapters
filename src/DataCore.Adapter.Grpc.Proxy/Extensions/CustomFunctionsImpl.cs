@@ -82,7 +82,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions.Features {
                     return null;
                 }
 
-                return grpcResponse.Function.ToAdapterCustomFunctionDescriptorExtended();
+                return grpcResponse!.Function.ToAdapterCustomFunctionDescriptorExtended();
             }
         }
 

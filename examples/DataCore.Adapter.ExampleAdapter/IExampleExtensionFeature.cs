@@ -1,6 +1,4 @@
-﻿using System;
-
-using DataCore.Adapter.Common;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.Example {
@@ -24,3 +22,4 @@ namespace DataCore.Adapter.Example {
     }
 
 }
+#pragma warning restore CS0618 // Type or member is obsolete

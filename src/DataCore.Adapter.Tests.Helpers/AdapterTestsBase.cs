@@ -2352,6 +2352,7 @@ namespace DataCore.Adapter.Tests {
 
         #region [ Extensions ]
 
+#pragma warning disable CS0618 // Type or member is obsolete
         /// <summary>
         /// Ensures that, for every extension feature implemented by the adapter, the feature 
         /// returns a descriptor and a set of available operations.
@@ -2384,6 +2385,7 @@ namespace DataCore.Adapter.Tests {
                 }
             });
         }
+#pragma warning restore CS0618 // Type or member is obsolete
 
         #endregion
 

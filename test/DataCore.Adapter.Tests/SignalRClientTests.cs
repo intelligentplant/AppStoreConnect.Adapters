@@ -32,12 +32,10 @@ namespace DataCore.Adapter.Tests {
             await using (var client = new AdapterSignalRClient(builder.Build())) {
                 CancelAfter(TimeSpan.FromSeconds(1));
 
-#pragma warning disable CS0618 // Type or member is obsolete
                 var funcs = await client.TagValues.GetSupportedDataFunctionsAsync(
                     WebHostConfiguration.AdapterId, 
                     CancellationToken
                 ).ToEnumerable(CancellationToken).ConfigureAwait(false);
-#pragma warning restore CS0618 // Type or member is obsolete
 
                 Assert.IsNotNull(funcs);
                 Assert.IsTrue(funcs.Any());

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -187,6 +188,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
+#if NETCOREAPP
         /// <summary>
         /// Invokes a custom function on an adapter.
         /// </summary>
@@ -211,11 +213,34 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public async Task<IActionResult> InvokeFunctionAsync(
             string adapterId, 
             CustomFunctionInvocationRequest request,
-#if NETCOREAPP
             [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions,
-#endif
             CancellationToken cancellationToken
         ) {
+#else
+        /// <summary>
+        /// Invokes a custom function on an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The invocation request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the request.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the result of the custom function invocation.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/invoke")]
+        [ProducesResponseType(typeof(CustomFunctionInvocationResponse), 200)]
+        public async Task<IActionResult> InvokeFunctionAsync(
+            string adapterId, 
+            CustomFunctionInvocationRequest request,
+            CancellationToken cancellationToken
+        ) {
+#endif
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ICustomFunctions>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -263,3 +288,4 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete
