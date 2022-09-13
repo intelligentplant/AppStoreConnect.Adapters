@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-namespace DataCore.Adapter.AspNetCore {
+namespace DataCore.Adapter.AspNetCore.Internal {
 
     /// <summary>
     /// Background service that starts registered adapters at startup time and stops them at shutdown 

@@ -27,10 +27,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// Configures services required for adapter SignalR.
         /// </summary>
         /// <param name="builder">
-        ///   The SignalR server builder.
+        ///   The <see cref="ISignalRServerBuilder"/>.
         /// </param>
         /// <returns>
-        ///   The SignalR server builder.
+        ///   The <see cref="ISignalRServerBuilder"/>.
         /// </returns>
         public static ISignalRServerBuilder AddDataCoreAdapterSignalR(this ISignalRServerBuilder builder) {
             if (builder == null) {
@@ -38,12 +38,17 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
 #if NET48
-            return builder.AddJsonProtocol(options => {
+            builder.AddJsonProtocol(options => {
                 options.PayloadSerializerSettings.AddDataCoreAdapterConverters();
             });
 #else
-            return builder.AddJsonProtocol();
+            builder.AddJsonProtocol(options => {
+                options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
+
+            builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.SignalR.Internal.ApiDescriptorProvider>();
 #endif
+            return builder;
         }
 
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 
-namespace DataCore.Adapter.AspNetCore {
+namespace DataCore.Adapter.AspNetCore.Internal {
 
     internal partial class AdapterInitializer : BackgroundService {
 

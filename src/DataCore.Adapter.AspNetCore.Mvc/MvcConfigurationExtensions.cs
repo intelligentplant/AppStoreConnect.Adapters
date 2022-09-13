@@ -17,10 +17,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// Adds the adapter API controllers to the MVC registration.
         /// </summary>
         /// <param name="builder">
-        ///   The MVC builder.
+        ///   The <see cref="IMvcBuilder"/>.
         /// </param>
         /// <returns>
-        ///   The MVC builder.
+        ///   The <see cref="IMvcBuilder"/>.
         /// </returns>
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
             if (builder == null) {
@@ -31,6 +31,8 @@ namespace Microsoft.Extensions.DependencyInjection {
 #if NET48
             builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
 #endif
+
+            builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Mvc.Internal.ApiDescriptorProvider>();
 
             return builder;
         }

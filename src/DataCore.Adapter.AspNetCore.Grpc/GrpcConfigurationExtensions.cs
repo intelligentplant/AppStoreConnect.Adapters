@@ -3,6 +3,9 @@
 using System;
 
 using DataCore.Adapter.Grpc.Server.Services;
+
+using Grpc.AspNetCore.Server;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -12,6 +15,27 @@ namespace Microsoft.Extensions.DependencyInjection {
     /// Extension methods for registering gRPC adapter services.
     /// </summary>
     public static class GrpcConfigurationExtensions {
+
+
+        /// <summary>
+        /// Adds adapter-related services to the <see cref="IGrpcServerBuilder"/>.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IGrpcServerBuilder"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IGrpcServerBuilder"/>.
+        /// </returns>
+        public static IGrpcServerBuilder AddDataCoreAdapterGrpc(this IGrpcServerBuilder builder) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Grpc.Internal.ApiDescriptorProvider>();
+
+            return builder;
+        }
+
 
         /// <summary>
         /// Registers adapter gRPC services.
