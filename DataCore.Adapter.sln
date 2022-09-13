@@ -113,16 +113,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "creating-an-adapter", "crea
 		docs\tutorials\creating-an-adapter\06-Adapter_Configuration_Options.md = docs\tutorials\creating-an-adapter\06-Adapter_Configuration_Options.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "writing-an-extension-feature", "writing-an-extension-feature", "{A250C7A8-DD5B-4947-A21C-A73C21424FFF}"
-	ProjectSection(SolutionItems) = preProject
-		docs\tutorials\writing-an-extension-feature\00-Introduction.md = docs\tutorials\writing-an-extension-feature\00-Introduction.md
-		docs\tutorials\writing-an-extension-feature\01-Getting_Started.md = docs\tutorials\writing-an-extension-feature\01-Getting_Started.md
-		docs\tutorials\writing-an-extension-feature\02-Extension_Methods.md = docs\tutorials\writing-an-extension-feature\02-Extension_Methods.md
-		docs\tutorials\writing-an-extension-feature\03-Streaming_Methods.md = docs\tutorials\writing-an-extension-feature\03-Streaming_Methods.md
-		docs\tutorials\writing-an-extension-feature\04-Duplex_Streaming_Methods.md = docs\tutorials\writing-an-extension-feature\04-Duplex_Streaming_Methods.md
-		docs\tutorials\writing-an-extension-feature\05-Implementing_Multiple_Extensions.md = docs\tutorials\writing-an-extension-feature\05-Implementing_Multiple_Extensions.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{7701E410-A9F0-4F50-80E4-51576DABB306}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Templates", "src\DataCore.Adapter.Templates\DataCore.Adapter.Templates.csproj", "{B5692AC0-AA11-4062-8F65-8A120C8846FA}"
@@ -299,7 +289,6 @@ Global
 		{A955719A-1C0A-4CE4-80C4-C09CD404380F} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{8ED7CFDF-3C22-4980-AC18-940049B0ED10} = {C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}
 		{876B0BB0-CDD0-420D-87AE-D9390623C467} = {8ED7CFDF-3C22-4980-AC18-940049B0ED10}
-		{A250C7A8-DD5B-4947-A21C-A73C21424FFF} = {8ED7CFDF-3C22-4980-AC18-940049B0ED10}
 		{7701E410-A9F0-4F50-80E4-51576DABB306} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{B5692AC0-AA11-4062-8F65-8A120C8846FA} = {7701E410-A9F0-4F50-80E4-51576DABB306}
 		{CA874402-DD93-40C0-893A-BC8D1D961A43} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
