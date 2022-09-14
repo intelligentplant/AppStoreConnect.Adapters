@@ -80,6 +80,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
             services.AddMvc()
                 .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                     options.JsonSerializerOptions.WriteIndented = true;
                 })
                 .AddDataCoreAdapterMvc();

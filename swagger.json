@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v13.10.2.0 (NJsonSchema v10.3.4.0 (Newtonsoft.Json v12.0.0.0))",
+  "x-generator": "NSwag v13.16.1.0 (NJsonSchema v10.7.2.0 (Newtonsoft.Json v13.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "App Store Connect Adapters",
@@ -18,7 +18,7 @@
           "Adapters"
         ],
         "summary": "Finds adapters matching the specified search filters.",
-        "operationId": "Adapters_FindAdaptersAll",
+        "operationId": "Adapters_FindAdaptersGET",
         "parameters": [
           {
             "name": "id",
@@ -109,7 +109,7 @@
           "Adapters"
         ],
         "summary": "Finds adapters matching the specified search filter.",
-        "operationId": "Adapters_FindAdapters",
+        "operationId": "Adapters_FindAdaptersPOST",
         "requestBody": {
           "x-name": "request",
           "description": "The search filter.",
@@ -418,6 +418,279 @@
                   "items": {
                     "$ref": "#/components/schemas/AssetModelNode"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store-connect/v2.0/custom-functions/{adapterId}": {
+      "post": {
+        "tags": [
+          "CustomFunctions"
+        ],
+        "summary": "Gets the available custom functions.",
+        "operationId": "CustomFunctions_GetFunctionsPOST",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetCustomFunctionsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the descriptors for the available custom functions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomFunctionDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "CustomFunctions"
+        ],
+        "summary": "Gets the available custom functions.",
+        "operationId": "CustomFunctions_GetFunctionsGET",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.",
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The function ID filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The function name filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "The function description filter.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The page size for the results.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 5
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The results page to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 6
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the descriptors for the available custom functions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomFunctionDescriptor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store-connect/v2.0/custom-functions/{adapterId}/details": {
+      "post": {
+        "tags": [
+          "CustomFunctions"
+        ],
+        "summary": "Gets the extended descriptor for the specified custom function.",
+        "operationId": "CustomFunctions_GetFunctionPOST",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetCustomFunctionRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the extended descriptor for the requested custom function.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFunctionDescriptorExtended"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "CustomFunctions"
+        ],
+        "summary": "Gets the extended descriptor for the specified custom function.",
+        "operationId": "CustomFunctions_GetFunctionGET",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The adapter ID to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The custom function ID.",
+            "schema": {
+              "type": "string",
+              "format": "uri",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the extended descriptor for the requested custom function.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFunctionDescriptorExtended"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/app-store-connect/v2.0/custom-functions/{adapterId}/invoke": {
+      "post": {
+        "tags": [
+          "CustomFunctions"
+        ],
+        "summary": "Invokes a custom function on an adapter.",
+        "operationId": "CustomFunctions_InvokeFunction",
+        "parameters": [
+          {
+            "name": "adapterId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the adapter to query.",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "description": "The invocation request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomFunctionInvocationRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "Successful responses contain the result of the custom function invocation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFunctionInvocationResponse"
                 }
               }
             }
@@ -1089,7 +1362,7 @@
           "TagSearch"
         ],
         "summary": "Gets tag property definitions from an adapter.",
-        "operationId": "TagSearch_GetTagPropertiesAll",
+        "operationId": "TagSearch_GetTagPropertiesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1137,7 +1410,7 @@
           "TagSearch"
         ],
         "summary": "Gets tag property definitions from an adapter.",
-        "operationId": "TagSearch_GetTagProperties",
+        "operationId": "TagSearch_GetTagPropertiesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1196,7 +1469,7 @@
           "TagSearch"
         ],
         "summary": "Performs a tag search on an adapter.",
-        "operationId": "TagSearch_FindTagsAll",
+        "operationId": "TagSearch_FindTagsPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1244,7 +1517,7 @@
           "TagSearch"
         ],
         "summary": "Performs a tag search on an adapter.",
-        "operationId": "TagSearch_FindTags",
+        "operationId": "TagSearch_FindTagsGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1332,7 +1605,7 @@
           "TagSearch"
         ],
         "summary": "Performs a tag search on an adapter.",
-        "operationId": "TagSearch_FindTags2",
+        "operationId": "TagSearch_FindTagsPOST2",
         "parameters": [
           {
             "name": "adapterId",
@@ -1380,7 +1653,7 @@
           "TagSearch"
         ],
         "summary": "Performs a tag search on an adapter.",
-        "operationId": "TagSearch_FindTags3",
+        "operationId": "TagSearch_FindTagsGET2",
         "parameters": [
           {
             "name": "adapterId",
@@ -1468,7 +1741,7 @@
           "TagSearch"
         ],
         "summary": "Gets tags by ID.",
-        "operationId": "TagSearch_GetTagsAll",
+        "operationId": "TagSearch_GetTagsPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1516,7 +1789,7 @@
           "TagSearch"
         ],
         "summary": "Gets tags by ID.",
-        "operationId": "TagSearch_GetTags",
+        "operationId": "TagSearch_GetTagsGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1568,7 +1841,7 @@
           "TagValues"
         ],
         "summary": "Requests snapshot (current) tag values.",
-        "operationId": "TagValues_ReadSnapshotValuesAll",
+        "operationId": "TagValues_ReadSnapshotValuesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1618,7 +1891,7 @@
           "TagValues"
         ],
         "summary": "Requests snapshot (current) tag values.",
-        "operationId": "TagValues_ReadSnapshotValues",
+        "operationId": "TagValues_ReadSnapshotValuesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1668,7 +1941,7 @@
           "TagValues"
         ],
         "summary": "Requests raw (archived) tag values.",
-        "operationId": "TagValues_ReadRawValuesAll",
+        "operationId": "TagValues_ReadRawValuesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1765,7 +2038,7 @@
           "TagValues"
         ],
         "summary": "Requests raw (archived) tag values.",
-        "operationId": "TagValues_ReadRawValues",
+        "operationId": "TagValues_ReadRawValuesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1816,7 +2089,7 @@
         ],
         "summary": "Requests plot (vizualization-friendly) tag values.",
         "description": "Plot data is intended to provide visualization-friendly data sets for display in e.g. charts.",
-        "operationId": "TagValues_ReadPlotValuesAll",
+        "operationId": "TagValues_ReadPlotValuesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -1900,7 +2173,7 @@
         ],
         "summary": "Requests plot (vizualization-friendly) tag values.",
         "description": "Plot data is intended to provide visualization-friendly data sets for display in e.g. charts.",
-        "operationId": "TagValues_ReadPlotValues",
+        "operationId": "TagValues_ReadPlotValuesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -1950,7 +2223,7 @@
           "TagValues"
         ],
         "summary": "Requests tag values at specific timestamps.",
-        "operationId": "TagValues_ReadValuesAtTimesAll",
+        "operationId": "TagValues_ReadValuesAtTimesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -2016,7 +2289,7 @@
           "TagValues"
         ],
         "summary": "Requests tag values at specific timestamps.",
-        "operationId": "TagValues_ReadValuesAtTimes",
+        "operationId": "TagValues_ReadValuesAtTimesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -2067,7 +2340,7 @@
         ],
         "summary": "Requests processed (aggregated) tag values.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
-        "operationId": "TagValues_ReadProcessedValuesAll",
+        "operationId": "TagValues_ReadProcessedValuesGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -2166,7 +2439,7 @@
         ],
         "summary": "Requests processed (aggregated) tag values.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
-        "operationId": "TagValues_ReadProcessedValues",
+        "operationId": "TagValues_ReadProcessedValuesPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -2217,7 +2490,7 @@
         ],
         "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
-        "operationId": "TagValues_GetSupportedDataFunctionsAll",
+        "operationId": "TagValues_GetSupportedDataFunctionsGET",
         "parameters": [
           {
             "name": "adapterId",
@@ -2253,7 +2526,7 @@
         ],
         "summary": "Requests the aggregate functions that can be specified when requesting processed data.",
         "description": "Processed data queries are used to request aggregated values for tags. The functions supported vary by data source. The DefaultDataFunctions class definesconstants for commonly-supported aggregate functions.",
-        "operationId": "TagValues_GetSupportedDataFunctions",
+        "operationId": "TagValues_GetSupportedDataFunctionsPOST",
         "parameters": [
           {
             "name": "adapterId",
@@ -2522,15 +2795,6 @@
             "description": "An extended descriptor for an adapter, that includes information about the features that the \nadapter has implemented.",
             "additionalProperties": false,
             "properties": {
-              "typeDescriptor": {
-                "description": "The adapter type descriptor.",
-                "nullable": true,
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/AdapterTypeDescriptor"
-                  }
-                ]
-              },
               "features": {
                 "type": "array",
                 "description": "The names of the implemented standard adapter features.",
@@ -2551,63 +2815,19 @@
                 "items": {
                   "$ref": "#/components/schemas/AdapterProperty"
                 }
+              },
+              "typeDescriptor": {
+                "description": "The adapter type descriptor.",
+                "nullable": true,
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AdapterTypeDescriptor"
+                  }
+                ]
               }
             }
           }
         ]
-      },
-      "AdapterTypeDescriptor": {
-        "type": "object",
-        "description": "Describes an adapter type.",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The URI for the adapter type.",
-            "format": "uri"
-          },
-          "name": {
-            "type": "string",
-            "description": "The display name for the adapter type.",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "description": "The description for the adapter type.",
-            "nullable": true
-          },
-          "version": {
-            "type": "string",
-            "description": "The adapter type version number, expressed as a Semantic Versioning v2 version.",
-            "nullable": true
-          },
-          "vendor": {
-            "description": "The vendor information for the adapter type.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/VendorInfo"
-              }
-            ]
-          }
-        }
-      },
-      "VendorInfo": {
-        "type": "object",
-        "description": "Describes the vendor for the hosting application.",
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "The vendor name.",
-            "nullable": true
-          },
-          "url": {
-            "type": "string",
-            "description": "The vendor URL.",
-            "nullable": true
-          }
-        }
       },
       "AdapterProperty": {
         "type": "object",
@@ -2686,7 +2906,8 @@
           "String",
           "DateTime",
           "TimeSpan",
-          "Url"
+          "Url",
+          "Json"
         ],
         "enum": [
           "Unknown",
@@ -2706,8 +2927,67 @@
           "String",
           "DateTime",
           "TimeSpan",
-          "Url"
+          "Url",
+          "Json"
         ]
+      },
+      "AdapterTypeDescriptor": {
+        "type": "object",
+        "description": "Describes an adapter type.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The URI for the adapter type.",
+            "format": "uri"
+          },
+          "name": {
+            "type": "string",
+            "description": "The display name for the adapter type.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "The description for the adapter type.",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "description": "The adapter type version number, expressed as a Semantic Versioning v2 version.",
+            "nullable": true
+          },
+          "vendor": {
+            "description": "The vendor information for the adapter type.",
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VendorInfo"
+              }
+            ]
+          },
+          "helpUrl": {
+            "type": "string",
+            "description": "The help URL for the adapter type.",
+            "nullable": true
+          }
+        }
+      },
+      "VendorInfo": {
+        "type": "object",
+        "description": "Describes the vendor for the hosting application.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The vendor name.",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The vendor URL.",
+            "nullable": true
+          }
+        }
       },
       "HealthCheckResult": {
         "type": "object",
@@ -2934,6 +3214,151 @@
           }
         ]
       },
+      "CustomFunctionDescriptor": {
+        "type": "object",
+        "description": "Describes basic information about a custom function on an adapter.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the custom function.",
+            "format": "uri",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the custom function.",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]+$"
+          },
+          "description": {
+            "type": "string",
+            "description": "The custom function description.",
+            "maxLength": 500,
+            "nullable": true
+          }
+        }
+      },
+      "GetCustomFunctionsRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PageableAdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to retrieve the available custom functions on an adapter.",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID filter to apply to the functions.",
+                "maxLength": 100,
+                "nullable": true
+              },
+              "name": {
+                "type": "string",
+                "description": "The name filter to apply to the functions.",
+                "maxLength": 100,
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "description": "The description filter to apply to the functions.",
+                "maxLength": 100,
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CustomFunctionDescriptorExtended": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CustomFunctionDescriptor"
+          },
+          {
+            "type": "object",
+            "description": "An extended CustomFunctionDescriptor that includes details about the \nfunction's request and response schemas.",
+            "additionalProperties": false,
+            "properties": {
+              "requestSchema": {
+                "description": "The JSON schema for the function's request body.",
+                "nullable": true
+              },
+              "responseSchema": {
+                "description": "The JSON schema for the function's response body.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "GetCustomFunctionRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to get the extended descriptor for a custom function.",
+            "additionalProperties": false,
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The function ID.",
+                "format": "uri",
+                "minLength": 1
+              }
+            }
+          }
+        ]
+      },
+      "CustomFunctionInvocationResponse": {
+        "type": "object",
+        "description": "A response to a custom function invocation.",
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "The response payload.",
+            "nullable": true
+          }
+        }
+      },
+      "CustomFunctionInvocationRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdapterRequest"
+          },
+          {
+            "type": "object",
+            "description": "A request to invoke a custom adapter function.",
+            "additionalProperties": false,
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the operation.",
+                "format": "uri",
+                "minLength": 1
+              },
+              "body": {
+                "description": "The request body.",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "EventMessage": {
         "allOf": [
           {
@@ -2941,14 +3366,14 @@
           },
           {
             "type": "object",
-            "description": "Describes a message generated by e.g. an alarms &amp; events system.",
+            "description": "Describes a message generated by e.g. an alarms & events system.",
             "additionalProperties": false
           }
         ]
       },
       "EventMessageBase": {
         "type": "object",
-        "description": "Base class describing a message generated by e.g. an alarms &amp; events system.",
+        "description": "Base class describing a message generated by e.g. an alarms & events system.",
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
@@ -3112,7 +3537,7 @@
           },
           {
             "type": "object",
-            "description": "Describes a message generated by e.g. an alarms &amp; events system that also contains a cursor position.",
+            "description": "Describes a message generated by e.g. an alarms & events system that also contains a cursor position.",
             "additionalProperties": false,
             "required": [
               "cursorPosition"
@@ -3293,9 +3718,15 @@
         "properties": {
           "uri": {
             "type": "string",
-            "description": "The extension feature URI.",
+            "description": "The feature URI.",
             "format": "uri",
             "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "description": "The feature category.",
+            "maxLength": 100,
+            "nullable": true
           },
           "displayName": {
             "type": "string",
@@ -3314,6 +3745,8 @@
       "ExtensionFeatureOperationDescriptor": {
         "type": "object",
         "description": "Describes an operation on an extension adapter feature.",
+        "deprecated": true,
+        "x-deprecatedMessage": "Extension features are deprecated and will be removed in a future release. Use custom functions instead.",
         "additionalProperties": false,
         "properties": {
           "operationId": {
@@ -3371,6 +3804,8 @@
       "ExtensionFeatureOperationParameterDescriptor": {
         "type": "object",
         "description": "Describes an input or output parameter on an ExtensionFeatureOperationDescriptor.",
+        "deprecated": true,
+        "x-deprecatedMessage": "Extension features are deprecated and will be removed in a future release. Use custom functions instead.",
         "additionalProperties": false,
         "properties": {
           "ordinal": {
@@ -3407,6 +3842,8 @@
       "InvocationResponse": {
         "type": "object",
         "description": "Describes a response to an InvocationRequest.",
+        "deprecated": true,
+        "x-deprecatedMessage": "Extension features are deprecated and will be removed in a future release. Use custom functions instead.",
         "additionalProperties": false,
         "required": [
           "results"
@@ -3429,6 +3866,8 @@
           {
             "type": "object",
             "description": "A request to invoke an extension operation on an adapter of type Invoke \nor Stream. ",
+            "deprecated": true,
+            "x-deprecatedMessage": "Extension features are deprecated and will be removed in a future release. Use custom functions instead.",
             "additionalProperties": false,
             "required": [
               "operationId",
@@ -4206,7 +4645,7 @@
               "sampleInterval": {
                 "type": "string",
                 "description": "The sample interval to use in the aggregation.",
-                "format": "time-span",
+                "format": "duration",
                 "minLength": 1
               }
             }
