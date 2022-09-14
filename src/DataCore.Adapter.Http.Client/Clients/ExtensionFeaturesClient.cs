@@ -13,6 +13,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
     /// <summary>
     /// Client for querying adapter extension features.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeaturesClient {
 
         /// <summary>

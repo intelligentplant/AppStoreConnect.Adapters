@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Tags;
 
@@ -40,6 +41,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public ProcessedTagValueQueryResult(
             string tagId,
             string tagName,
@@ -102,4 +104,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

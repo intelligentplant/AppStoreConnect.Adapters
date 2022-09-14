@@ -234,6 +234,9 @@
   <data name="Description_ConfigurationChanges" xml:space="preserve">
     <value>Allows subscribers to receive notifications when items on an adapter such as tags or asset model nodes are created, updated, or deleted.</value>
   </data>
+  <data name="Description_CustomFunctions" xml:space="preserve">
+    <value>Allows invocation of vendor-specific custom functions.</value>
+  </data>
   <data name="Description_EventMessagePush" xml:space="preserve">
     <value>Allows subscribers to receive event messages from an adapter in real-time.</value>
   </data>
@@ -296,6 +299,9 @@
   </data>
   <data name="DisplayName_ConfigurationChanges" xml:space="preserve">
     <value>Configuration Changes</value>
+  </data>
+  <data name="DisplayName_CustomFunctions" xml:space="preserve">
+    <value>Custom Functions</value>
   </data>
   <data name="DisplayName_EventMessagePush" xml:space="preserve">
     <value>Event Message Push</value>
@@ -360,6 +366,10 @@
   </data>
   <data name="Error_RelativeUrisAreNotSupported" xml:space="preserve">
     <value>This operation is not supported for a relative URI.</value>
+  </data>
+  <data name="Error_UnableToResolveCustomFunction" xml:space="preserve">
+    <value>Unable to resolve custom function with ID '{0}'.</value>
+    <comment>{0} - function ID</comment>
   </data>
   <data name="Error_UnableToResolveMethod" xml:space="preserve">
     <value>Unable to resolve method '{0}' on type '{1}'.</value>

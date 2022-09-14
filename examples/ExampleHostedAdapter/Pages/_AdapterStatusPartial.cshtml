@@ -187,14 +187,8 @@
           <div class="col">
             <div class="pb-3">
               @if (Model.ApiIsEnabled) {
-                if (Model.RestApi.IsEnabled) {
-                  <div>REST v@(Model.RestApi.Version)</div>
-                }
-                if (Model.SignalRApi.IsEnabled) {
-                  <div>SignalR v@(Model.SignalRApi.Version)</div>
-                }
-                if (Model.GrpcApi.IsEnabled) {
-                  <div>gRPC v@(Model.GrpcApi.Version)</div>
+                foreach (var api in Model.AvailableApis.Where(x => x.Enabled)) {
+                  <div>@(string.IsNullOrWhiteSpace(api.Version) ? api.Name : $"{api.Name} v{api.Version}")</div>
                 }
               }
               else {

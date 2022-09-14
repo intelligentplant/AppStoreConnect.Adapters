@@ -21,7 +21,9 @@ namespace DataCore.Adapter {
         /// <summary>
         /// <see cref="IAdapterExtensionFeature"/> type.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private static readonly Type s_adapterExtensionFeatureType = typeof(IAdapterExtensionFeature);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// Array of all standard adapter feature type interfaces.
@@ -104,6 +106,7 @@ namespace DataCore.Adapter {
                 return false;
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             return
                 // We don't check to see if the type is annotated with [AdapterFeature] when 
                 // comparing against standard features, because we use unit tests to ensure 
@@ -111,6 +114,7 @@ namespace DataCore.Adapter {
                 ((type.IsInterface && s_standardAdapterFeatureTypes.Any(f => f.IsAssignableFrom(type))) || (s_adapterExtensionFeatureType.IsAssignableFrom(type) && type.IsAnnotatedWithAttributeFeatureAttribute<ExtensionFeatureAttribute>())) &&
                 type != s_adapterFeatureType &&
                 type != s_adapterExtensionFeatureType;
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 

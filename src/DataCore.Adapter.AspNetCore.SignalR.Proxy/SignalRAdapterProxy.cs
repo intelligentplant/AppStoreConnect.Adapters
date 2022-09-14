@@ -251,10 +251,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             continue;
                         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, SignalRAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }

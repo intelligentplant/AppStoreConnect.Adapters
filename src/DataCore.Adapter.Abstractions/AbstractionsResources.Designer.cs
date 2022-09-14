@@ -412,6 +412,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows invocation of vendor-specific custom functions..
+        /// </summary>
+        public static string Description_CustomFunctions {
+            get {
+                return ResourceManager.GetString("Description_CustomFunctions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time..
         /// </summary>
         public static string Description_EventMessagePush {
@@ -601,6 +610,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom Functions.
+        /// </summary>
+        public static string DisplayName_CustomFunctions {
+            get {
+                return ResourceManager.GetString("DisplayName_CustomFunctions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Event Message Push.
         /// </summary>
         public static string DisplayName_EventMessagePush {
@@ -786,6 +804,15 @@ namespace DataCore.Adapter {
         public static string Error_RelativeUrisAreNotSupported {
             get {
                 return ResourceManager.GetString("Error_RelativeUrisAreNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve custom function with ID &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToResolveCustomFunction {
+            get {
+                return ResourceManager.GetString("Error_UnableToResolveCustomFunction", resourceCulture);
             }
         }
         

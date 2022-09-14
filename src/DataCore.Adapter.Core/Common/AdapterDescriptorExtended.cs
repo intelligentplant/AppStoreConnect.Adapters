@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Common {
 
@@ -9,11 +13,6 @@ namespace DataCore.Adapter.Common {
     /// adapter has implemented.
     /// </summary>
     public class AdapterDescriptorExtended : AdapterDescriptor {
-
-        /// <summary>
-        /// The adapter type descriptor.
-        /// </summary>
-        public AdapterTypeDescriptor? TypeDescriptor { get; }
 
         /// <summary>
         /// The names of the implemented standard adapter features.
@@ -29,6 +28,11 @@ namespace DataCore.Adapter.Common {
         /// Additional adapter properties.
         /// </summary>
         public IEnumerable<AdapterProperty> Properties { get; }
+
+        /// <summary>
+        /// The adapter type descriptor.
+        /// </summary>
+        public AdapterTypeDescriptor? TypeDescriptor { get; }
 
 
         /// <summary>
@@ -63,6 +67,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
+        [JsonConstructor]
         public AdapterDescriptorExtended(
             string id, 
             string name, 
@@ -117,4 +122,5 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
 }

@@ -11,6 +11,7 @@ namespace DataCore.Adapter.Extensions {
     /// <see cref="ExtensionFeatureOperationDescriptor"/> associated with the method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeatureOperationAttribute : Attribute {
 
         /// <summary>
@@ -125,6 +126,7 @@ namespace DataCore.Adapter.Extensions {
     /// <returns>
     ///   A new <see cref="ExtensionFeatureOperationDescriptorPartial"/> instance.
     /// </returns>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public delegate ExtensionFeatureOperationDescriptorPartial PartialOperationDescriptorFactory();
 
 }

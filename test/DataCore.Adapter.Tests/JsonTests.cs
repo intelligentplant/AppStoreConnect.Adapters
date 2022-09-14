@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
-using DataCore.Adapter.Json;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
@@ -19,16 +19,27 @@ namespace DataCore.Adapter.Tests {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();
-            result.Converters.AddDataCoreAdapterConverters();
 
             return result;
+        }
+
+
+        private void VariantRoundTripTestCompare<T>(object expected, object actual, JsonSerializerOptions options, string message = null) {
+            if (typeof(T) == typeof(JsonElement) || (typeof(T).IsArray && typeof(T).GetElementType() == typeof(JsonElement))) {
+                // For JsonElement, compare the raw JSON
+                Assert.AreEqual(JsonSerializer.Serialize(expected, options), JsonSerializer.Serialize(actual, options), message);
+            }
+            else {
+                // For everything else, compare the variant values.
+                Assert.AreEqual(expected, actual, message);
+            }
         }
 
 
         private void VariantRoundTripTest<T>(T value, JsonSerializerOptions options) {
             var variant = Variant.FromValue(value);
             var json = JsonSerializer.Serialize(variant, options);
-
+            
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
             Assert.AreEqual(variant.Type, deserialized.Type);
 
@@ -37,10 +48,23 @@ namespace DataCore.Adapter.Tests {
                 : deserialized.Value;
 
             if (variant.IsArray()) {
-                Assert.IsTrue(((Array) variant.Value).Cast<object>().SequenceEqual(((Array) actualVal).Cast<object>()));
+                var expectedItemsArr = (Array) variant.Value;
+                var actualItemsArr = (Array) actualVal;
+
+                Assert.AreEqual(expectedItemsArr.Rank, actualItemsArr.Rank);
+                for (var i = 0; i < expectedItemsArr.Rank; i++) {
+                    Assert.AreEqual(expectedItemsArr.GetLength(i), actualItemsArr.GetLength(i), $"Dimension {i} lengths are different");
+                }
+
+                var expectedItems = expectedItemsArr.Cast<object>().ToArray();
+                var actualItems = actualItemsArr.Cast<object>().ToArray();
+                Assert.AreEqual(expectedItems.Length, actualItems.Length);
+                for (var i = 0; i < expectedItems.Length; i++) {
+                    VariantRoundTripTestCompare<T>(expectedItems[i], actualItems[i], options, $"Items at position {i} are different. Expected value has type {expectedItems[i]?.GetType()?.Name ?? "<Unknown>"}, actual value has type {actualItems[i]?.GetType()?.Name ?? "<Unknown>"}");
+                }
             }
             else {
-                Assert.AreEqual(variant.Value, actualVal);
+                VariantRoundTripTestCompare<T>(variant.Value, actualVal, options);
             }
         }
 
@@ -154,6 +178,27 @@ namespace DataCore.Adapter.Tests {
             }
             else {
                 VariantRoundTripTest(values, options);
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(@"{ ""prop1"": ""val1"", ""prop2"": 100, ""prop3"": true, ""prop4"": { ""subprop1"": ""subval1"" } }")]
+        [DataRow("true")]
+        [DataRow("100")]
+        [DataRow(@"""test""")]
+        [DataRow(@"[1, 2, 3]")]
+        [DataRow("1", "2", "3")]
+        public void Variant_JsonShouldRoundTrip(params string[] values) {
+            var options = GetOptions();
+            JsonElement ToJsonElement(string json) => JsonSerializer.Deserialize<JsonElement>(json, options);
+
+            
+            if (values.Length == 1) {
+                VariantRoundTripTest(ToJsonElement(values[0]), options);
+            }
+            else {
+                VariantRoundTripTest(values.Select(ToJsonElement).ToArray(), options);
             }
         }
 

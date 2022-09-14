@@ -87,6 +87,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <exception cref="RpcException">
         ///   The adapter does not provide the requested feature.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         internal static async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext callContext, IAdapterAccessor adapterAccessor, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
             var resolvedFeature = await adapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(callContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

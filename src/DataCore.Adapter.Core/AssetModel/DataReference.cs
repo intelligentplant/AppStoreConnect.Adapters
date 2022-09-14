@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.AssetModel {
 
@@ -28,6 +29,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="tag">
         ///   The tag name or ID for the data reference.
         /// </param>
+        [JsonConstructor]
         public DataReference(string adapterId, string tag) {
             AdapterId = adapterId ?? throw new ArgumentNullException(nameof(adapterId));
             Tag = tag ?? throw new ArgumentNullException(nameof(tag));

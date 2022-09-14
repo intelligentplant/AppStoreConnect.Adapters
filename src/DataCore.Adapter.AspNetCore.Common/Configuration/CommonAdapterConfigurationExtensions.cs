@@ -6,6 +6,7 @@ using System.Reflection;
 using DataCore.Adapter;
 using DataCore.Adapter.AspNetCore;
 using DataCore.Adapter.AspNetCore.Authorization;
+using DataCore.Adapter.AspNetCore.Internal;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.DependencyInjection;
 
@@ -264,6 +265,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.TryAddSingleton(HostInfo.Unspecified);
             builder.AddAdapterAccessor<AspNetCoreAdapterAccessor>();
             builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+            builder.Services.TryAddTransient<IAvailableApiService, DefaultAvailableApiService>();
             builder.AddAutomaticInitialization();
             return builder;
         }

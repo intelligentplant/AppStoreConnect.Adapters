@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package datacore.adapter;
+
+import "google/protobuf/struct.proto";
+import "Types.proto";
+
+option csharp_namespace = "DataCore.Adapter.Grpc";
+
+
+service CustomFunctionsService {
+    rpc GetCustomFunctions(GetCustomFunctionsRequest) returns (GetCustomFunctionsResponse);
+    rpc GetCustomFunction(GetCustomFunctionRequest) returns (GetCustomFunctionResponse);
+    rpc InvokeCustomFunction(InvokeCustomFunctionRequest) returns (InvokeCustomFunctionsResponse);
+}
+
+
+message GetCustomFunctionsRequest { 
+    string adapter_id = 1;
+    int32 page_size = 2;
+    int32 page = 3;
+    string id = 4;
+    string name = 5;
+    string description = 6;
+    map<string, string> properties = 7;
+}
+
+message GetCustomFunctionsResponse {
+    repeated CustomFunctionDescriptor functions = 1;
+}
+
+message GetCustomFunctionRequest { 
+    string adapter_id = 1;
+    string function_id = 2;
+    map<string, string> properties = 3;
+}
+
+message GetCustomFunctionResponse {
+    CustomFunctionDescriptorExtended function = 1;
+}
+
+message InvokeCustomFunctionRequest {
+    string adapter_id = 1;
+    string function_id = 2;
+    google.protobuf.Value body = 3;
+    map<string, string> properties = 4;
+}
+
+message InvokeCustomFunctionsResponse {
+    google.protobuf.Value body = 1;
+}

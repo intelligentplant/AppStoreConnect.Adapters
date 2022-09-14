@@ -1,5 +1,9 @@
 ﻿#if NETCOREAPP
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+using DataCore.Adapter.AspNetCore;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -43,6 +47,18 @@ namespace DataCore.Adapter.Tests {
                         )
                     }
                 );
+
+            services.AddSingleton<IAdapterLifetime>(new AdapterLifetime(async (adapter, ct) => {
+                var customFunctions = adapter.GetFeature<Extensions.ICustomFunctions>() as Extensions.CustomFunctions;
+                if (customFunctions != null) { 
+                    await customFunctions.RegisterFunctionAsync<PingMessage, PongMessage>("Ping", null, (ctx, req, ct) => {
+                        return Task.FromResult(new PongMessage() {
+                            CorrelationId = req.CorrelationId,
+                            UtcServerTime = DateTime.UtcNow
+                        });
+                    }, cancellationToken: ct);
+                };
+            }));
 
             services.AddGrpc();
 

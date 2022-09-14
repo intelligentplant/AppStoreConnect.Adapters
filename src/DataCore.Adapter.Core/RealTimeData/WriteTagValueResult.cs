@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -43,6 +45,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tagId"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public WriteTagValueResult(
             string? correlationId, 
             string tagId, 
@@ -81,4 +84,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

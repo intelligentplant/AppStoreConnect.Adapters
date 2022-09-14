@@ -13,6 +13,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// Extensions for <see cref="IAdapterExtensionFeature"/>.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public static class AdapterExtensionFeatureExtensions {
 
         #region [ Helper Methods ]

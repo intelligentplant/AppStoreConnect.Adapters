@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Proxy {
     /// <typeparam name="TAdapterOptions">
     ///   The adapter proxy's options type.
     /// </typeparam>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public abstract class ExtensionFeatureProxyBase<TProxy, TAdapterOptions> : AdapterExtensionFeature where TProxy : AdapterBase<TAdapterOptions>, IAdapterProxy where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>

@@ -9,6 +9,7 @@ namespace DataCore.Adapter.Extensions {
     /// A request to invoke an extension operation on an adapter of type <see cref="ExtensionFeatureOperationType.Invoke"/> 
     /// or <see cref="ExtensionFeatureOperationType.Stream"/>. 
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class InvocationRequest : AdapterRequest {
 
         /// <summary>

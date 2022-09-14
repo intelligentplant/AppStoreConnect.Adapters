@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes a variant value.
     /// </summary>
+    [JsonConverter(typeof(VariantConverter))]
     public partial struct Variant : IEquatable<Variant>, IFormattable {
 
         /// <summary>
@@ -21,6 +26,7 @@ namespace DataCore.Adapter.Common {
             [typeof(short)] = VariantType.Int16,
             [typeof(int)] = VariantType.Int32,
             [typeof(long)] = VariantType.Int64,
+            [typeof(JsonElement)] = VariantType.Json,
             [typeof(sbyte)] = VariantType.SByte,
             [typeof(string)] = VariantType.String,
             [typeof(TimeSpan)] = VariantType.TimeSpan,
@@ -1060,7 +1066,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0 || NET46
+#if NETSTANDARD2_0 || NETFRAMEWORK
             return HashGenerator.Combine(Type, Value);
 #else
             return HashCode.Combine(Type, Value);
@@ -1081,6 +1087,163 @@ namespace DataCore.Adapter.Common {
         /// <inheritdoc/>
         public bool Equals(Variant other) {
             return other.Type == Type && Equals(other.Value, Value);
+        }
+
+    }
+
+
+    /// <summary>
+    /// JSON converter for <see cref="Variant"/>.
+    /// </summary>
+    internal class VariantConverter : AdapterJsonConverter<Variant> {
+
+        /// <inheritdoc/>
+        public override Variant Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                ThrowInvalidJsonError();
+            }
+
+            VariantType? valueType = null;
+            int[]? arrayDimensions = null;
+            JsonElement valueElement = default;
+
+            var propertyNameComparer = options.PropertyNameCaseInsensitive
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            var startDepth = reader.CurrentDepth;
+
+            do {
+                if (!reader.Read()) {
+                    ThrowInvalidJsonError();
+                }
+
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
+
+                var propertyName = reader.GetString();
+                if (!reader.Read()) {
+                    ThrowInvalidJsonError();
+                }
+
+                if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.Type), options), propertyNameComparer)) {
+                    valueType = JsonSerializer.Deserialize<VariantType>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.ArrayDimensions), options), propertyNameComparer)) {
+                    arrayDimensions = JsonSerializer.Deserialize<int[]?>(ref reader, options);
+                }
+                else if (string.Equals(propertyName, ConvertPropertyName(nameof(Variant.Value), options), propertyNameComparer)) {
+                    valueElement = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
+                }
+                else {
+                    reader.Skip();
+                }
+            } while (reader.CurrentDepth != startDepth || reader.TokenType != JsonTokenType.EndObject);
+
+            if (valueType == VariantType.Null) {
+                return Variant.Null;
+            }
+
+            var isArray = arrayDimensions?.Length > 0;
+
+            switch (valueType) {
+                case VariantType.Boolean:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<bool>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetBoolean();
+                case VariantType.Byte:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<byte>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetByte();
+                case VariantType.DateTime:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<DateTime>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetDateTime();
+                case VariantType.ExtensionObject:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<EncodedObject>(valueElement, arrayDimensions!, options))
+                        : JsonSerializer.Deserialize<EncodedObject>(valueElement.GetRawText(), options)!;
+                case VariantType.Double:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<double>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetDouble();
+                case VariantType.Float:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<float>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetSingle();
+                case VariantType.Int16:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<short>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt16();
+                case VariantType.Int32:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<int>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt32();
+                case VariantType.Int64:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<long>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetInt64();
+                case VariantType.Json:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<JsonElement>(valueElement, arrayDimensions!, options))
+                        : valueElement;
+                case VariantType.SByte:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<sbyte>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetSByte();
+                case VariantType.String:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<string>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetString();
+                case VariantType.TimeSpan:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<TimeSpan>(valueElement, arrayDimensions!, options))
+                        : TimeSpan.TryParse(valueElement.GetString(), out var ts)
+                            ? ts
+                            : default;
+                case VariantType.UInt16:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<ushort>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt16();
+                case VariantType.UInt32:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<uint>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt32();
+                case VariantType.UInt64:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<ulong>(valueElement, arrayDimensions!, options))
+                        : valueElement.GetUInt64();
+                case VariantType.Url:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<Uri>(valueElement, arrayDimensions!, options))
+                        : new Uri(valueElement.GetString(), UriKind.Absolute);
+                case VariantType.Unknown:
+                default:
+                    return Variant.Null;
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public override void Write(Utf8JsonWriter writer, Variant value, JsonSerializerOptions options) {
+            if (writer == null) {
+                return;
+            }
+
+            writer.WriteStartObject();
+
+            WritePropertyValue(writer, nameof(Variant.Type), value.Type, options);
+            if (value.Value is Array arr) {
+                writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
+                JsonExtensions.WriteArray(writer, arr, options);
+            }
+            else {
+                WritePropertyValue(writer, nameof(Variant.Value), value.Value, options);
+            }
+            WritePropertyValue(writer, nameof(Variant.ArrayDimensions), value.ArrayDimensions, options);
+
+            writer.WriteEndObject();
         }
 
     }

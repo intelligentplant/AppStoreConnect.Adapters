@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
@@ -100,6 +101,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public AssetModelNode(
             string id, 
             string name, 
@@ -125,4 +127,5 @@ namespace DataCore.Adapter.AssetModel {
         }
 
     }
+
 }

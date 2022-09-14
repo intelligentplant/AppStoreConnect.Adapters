@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.SignalR.Proxy</PackageId>
     <Description>App Store Connect adapter proxy using ASP.NET Core SignalR.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

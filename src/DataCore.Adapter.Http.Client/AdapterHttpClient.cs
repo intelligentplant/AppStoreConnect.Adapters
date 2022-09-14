@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Security.Claims;
@@ -42,6 +43,11 @@ namespace DataCore.Adapter.Http.Client {
         public AssetModelBrowserClient AssetModel { get; }
 
         /// <summary>
+        /// The client for invoking custom adapter functions.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
+
+        /// <summary>
         /// The client for reading event messages from and writing event messages to an adapter.
         /// </summary>
         public EventsClient Events { get; }
@@ -70,6 +76,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <summary>
         /// The client for invoking extension features on an adapter.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
 
 
@@ -88,10 +95,10 @@ namespace DataCore.Adapter.Http.Client {
                 PropertyNameCaseInsensitive = true
             };
             JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            JsonSerializerOptions.Converters.AddDataCoreAdapterConverters();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
+            CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
             Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
@@ -407,3 +414,4 @@ namespace DataCore.Adapter.Http.Client {
 
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete

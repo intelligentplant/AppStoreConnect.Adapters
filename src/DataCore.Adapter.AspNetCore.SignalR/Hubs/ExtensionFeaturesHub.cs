@@ -31,6 +31,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The feature descriptor.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async Task<FeatureDescriptor> GetDescriptor(
             string adapterId,
             Uri featureUri
@@ -72,6 +73,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The available operations.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async Task<IEnumerable<ExtensionFeatureOperationDescriptor>> GetExtensionOperations(
             string adapterId,
             Uri featureUri
@@ -115,6 +117,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The operation result.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async Task<InvocationResponse> InvokeExtension(
             string adapterId, 
             InvocationRequest request
@@ -159,6 +162,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async IAsyncEnumerable<InvocationResponse> InvokeStreamingExtension(
             string adapterId,
             InvocationRequest request,
@@ -194,7 +198,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
         }
 
-#if NET48 == false
+#if !NETFRAMEWORK
 
         /// <summary>
         /// Invokes a duplex streaming extension feature on an adapter.
@@ -214,6 +218,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   A channel reader that will stream the operation results back to the caller.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async IAsyncEnumerable<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
             DuplexStreamInvocationRequest request,
@@ -267,6 +272,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <returns>
         ///   The operation result.
         /// </returns>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public async Task<InvocationResponse> InvokeDuplexStreamingExtension(
             string adapterId,
             DuplexStreamInvocationRequest request,

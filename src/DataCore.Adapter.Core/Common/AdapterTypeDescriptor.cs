@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Common {
 
@@ -60,6 +61,7 @@ namespace DataCore.Adapter.Common {
         /// <param name="helpUrl">
         ///   The help URL for the adapter type.
         /// </param>
+        [JsonConstructor]
         public AdapterTypeDescriptor(Uri id, string? name, string? description, string? version, VendorInfo? vendor, string? helpUrl) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name;
@@ -99,4 +101,5 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
 }

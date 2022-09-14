@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
@@ -38,6 +39,10 @@ namespace DataCore.Adapter.Tests {
 
         public bool IsRunning { get; } = true;
 
+        public event Func<IAdapter, Task> Started;
+
+        public event Func<IAdapter, Task> Stopped;
+
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 
         private readonly EventSubscriptionManager _eventSubscriptionManager;
@@ -45,6 +50,8 @@ namespace DataCore.Adapter.Tests {
         private readonly EventTopicSubscriptionManager _eventTopicSubscriptionManager;
 
         private readonly AssetModelManager _assetModelManager;
+
+        private readonly CustomFunctions _customFunctions;
 
 
         public ExampleAdapter() {
@@ -59,12 +66,14 @@ namespace DataCore.Adapter.Tests {
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
             _assetModelManager = new AssetModelManager(new InMemoryKeyValueStore());
+            _customFunctions = new CustomFunctions(TypeDescriptor.Id, BackgroundTaskService);
 
             features.AddFromProvider(this);
             features.AddFromProvider(_snapshotSubscriptionManager);
             features.AddFromProvider(_eventSubscriptionManager);
             features.AddFromProvider(_eventTopicSubscriptionManager);
             features.AddFromProvider(_assetModelManager);
+            features.AddFromProvider(_customFunctions);
             features.AddFromProvider(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
             Features = features;
         }
@@ -83,6 +92,17 @@ namespace DataCore.Adapter.Tests {
                 var parent = i > 0 ? nodes[names[i - 1]] : null;
                 await _assetModelManager.AddOrUpdateNodeAsync(new AssetModelNodeBuilder().WithId(id).WithName(name).WithParent(parent).Build(), cancellationToken).ConfigureAwait(false);
             }
+
+            await _customFunctions.RegisterFunctionAsync<PingMessage, PongMessage>("Ping", null, (ctx, req, ct) => {
+                return Task.FromResult(new PongMessage() { 
+                    CorrelationId = req.CorrelationId,
+                    UtcServerTime = DateTime.UtcNow
+                });
+            }, cancellationToken: cancellationToken);
+
+            if (Started != null) {
+                await Started.Invoke(this).ConfigureAwait(false);
+            }
         }
 
 
@@ -92,10 +112,13 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public Task StopAsync(CancellationToken cancellationToken = default) {
+        public async Task StopAsync(CancellationToken cancellationToken = default) {
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
-            return Task.CompletedTask;
+
+            if (Stopped != null) {
+                await Stopped.Invoke(this).ConfigureAwait(false);
+            }
         }
 
 

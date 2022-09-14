@@ -5,6 +5,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// Describes an input or output parameter on an <see cref="ExtensionFeatureOperationDescriptor"/>.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeatureOperationParameterDescriptor {
 
         /// <summary>

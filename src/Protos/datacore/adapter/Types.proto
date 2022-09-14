@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -28,6 +29,7 @@ enum VariantType {
     VARIANT_TYPE_DATETIME = 15;
     VARIANT_TYPE_TIMESPAN = 16;
     VARIANT_TYPE_URL = 17;
+    VARIANT_TYPE_JSON = 18;
 }
 
 
@@ -418,6 +420,21 @@ message FeatureDescriptor {
 }
 
 
+message CustomFunctionDescriptor {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+
+message CustomFunctionDescriptorExtended {
+    CustomFunctionDescriptor function = 1;
+    google.protobuf.Value request_schema = 2;
+    google.protobuf.Value response_schema = 3;
+}
+
+
+// deprecated
 message ExtensionFeatureOperationDescriptor {
     string operation_id = 1;
     ExtensionFeatureOperationType operation_type = 2;
@@ -428,6 +445,7 @@ message ExtensionFeatureOperationDescriptor {
 }
 
 
+// deprecated
 enum ExtensionFeatureOperationType {
     EXTENSION_FEATURE_OPERATION_TYPE_INVOKE = 0;
     EXTENSION_FEATURE_OPERATION_TYPE_STREAM = 1;
@@ -435,6 +453,7 @@ enum ExtensionFeatureOperationType {
 }
 
 
+// deprecated
 message ExtensionFeatureOperationParameterDescriptor {
     int32 ordinal = 1;
     VariantType variant_type = 2;

@@ -35,11 +35,6 @@ namespace DataCore.Adapter.RealTimeData {
         private readonly IKeyValueStore? _keyValueStore;
 
         /// <summary>
-        /// Options for serializing/deserializing tag values.
-        /// </summary>
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
-
-        /// <summary>
         /// Cached tag values, indexed by tag ID.
         /// </summary>
         private readonly ConcurrentDictionary<string, TagValueQueryResult> _valuesById = new ConcurrentDictionary<string, TagValueQueryResult>(StringComparer.OrdinalIgnoreCase);
@@ -73,7 +68,6 @@ namespace DataCore.Adapter.RealTimeData {
             ILogger? logger = null
         ) : base(options, backgroundTaskService, logger) {
             _keyValueStore = keyValueStore?.CreateScopedStore("snapshot-tag-value-manager:");
-            _jsonOptions.AddDataCoreAdapterConverters();
 
             _init = new Lazy<Task>(() => InitAsync(DisposedToken), LazyThreadSafetyMode.ExecutionAndPublication);
         }
@@ -120,7 +114,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return null;
             }
-            return await _keyValueStore.ReadJsonAsync<string[]>("tags", _jsonOptions).ConfigureAwait(false);
+            return await _keyValueStore.ReadJsonAsync<string[]>("tags").ConfigureAwait(false);
         }
 
 
@@ -134,7 +128,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return;
             }
-            await _keyValueStore.WriteJsonAsync("tags", _valuesById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+            await _keyValueStore.WriteJsonAsync("tags", _valuesById.Keys.ToArray()).ConfigureAwait(false);
         }
 
 
@@ -151,7 +145,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return null;
             }
-            return await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}", _jsonOptions).ConfigureAwait(false);
+            return await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}").ConfigureAwait(false);
         }
 
 
@@ -168,7 +162,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return;
             }
-            await _keyValueStore.WriteJsonAsync($"value:{value.TagId}", value, _jsonOptions).ConfigureAwait(false);
+            await _keyValueStore.WriteJsonAsync($"value:{value.TagId}", value).ConfigureAwait(false);
         }
 
 

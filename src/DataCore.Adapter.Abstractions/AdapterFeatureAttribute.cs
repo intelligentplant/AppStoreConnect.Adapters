@@ -197,6 +197,9 @@ namespace DataCore.Adapter {
                 else if (Uri.IsChildOf(WellKnownFeatures.Extensions.BaseUri)) {
                     defaultCategory.Value = nameof(AbstractionsResources.Category_Extensions);
                 }
+                else if (Uri == new Uri(WellKnownFeatures.Extensions.CustomFunctions)) {
+                    defaultCategory.Value = nameof(AbstractionsResources.Category_Extensions);
+                }
                 else if (Uri.IsChildOf(WellKnownFeatures.RealTimeData.BaseUri)) {
                     defaultCategory.Value = nameof(AbstractionsResources.Category_RealTimeData);
                 }

@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
     /// <summary>
     /// Implements <see cref="ExtensionFeaturesService.ExtensionFeaturesServiceBase"/>.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeaturesServiceImpl : ExtensionFeaturesService.ExtensionFeaturesServiceBase {
 
         /// <summary>
@@ -138,7 +139,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
 
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error!));
             }
 
             var adapterId = request.AdapterId;
@@ -190,7 +191,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
 
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error!));
             }
 
             var adapterId = request.AdapterId;
@@ -254,7 +255,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
 
             if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId!, out var featureUri, out var error)) {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, error));
+                throw new RpcException(new Status(StatusCode.InvalidArgument, error!));
             }
 
             var adapterId = request.AdapterId;

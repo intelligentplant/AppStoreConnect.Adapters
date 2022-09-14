@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
-    /// Describes a configuration change for a tag.
+    /// Describes a configuration change on an adapter, such as the creation of a tag.
     /// </summary>
     public class ConfigurationChange {
 
@@ -61,6 +62,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// <exception cref="ArgumentException">
         ///   <paramref name="itemName"/> is <see langword="null"/> or white space.
         /// </exception>
+        [JsonConstructor]
         public ConfigurationChange(string itemType, string itemId, string itemName, ConfigurationChangeType changeType, IEnumerable<AdapterProperty>? properties) {
             if (string.IsNullOrWhiteSpace(itemType)) {
                 throw new ArgumentException(SharedResources.Error_TypeIsRequired, nameof(itemType));
@@ -79,4 +81,5 @@ namespace DataCore.Adapter.Diagnostics {
         }
 
     }
+
 }

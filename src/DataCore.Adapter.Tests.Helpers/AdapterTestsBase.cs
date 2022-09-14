@@ -456,6 +456,156 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
+        #region [ ICustom Functions ]
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="GetCustomFunctionsRequestShouldReturnResults"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="GetCustomFunctionsRequest"/> to use.
+        /// </returns>
+        protected virtual GetCustomFunctionsRequest CreateGetCustomFunctionsRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="GetCustomFunctionRequestShouldReturnResult"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="GetCustomFunctionRequest"/> to use.
+        /// </returns>
+        protected virtual GetCustomFunctionRequest CreateGetCustomFunctionRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="CustomFunctionInvocationRequestShouldReturnResult"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="CustomFunctionInvocationRequest"/> to use.
+        /// </returns>
+        protected virtual CustomFunctionInvocationRequest CreateCustomFunctionInvocationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.GetFunctionsAsync"/> returns at least one 
+        /// result.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateGetCustomFunctionsRequest"/>
+        [TestMethod]
+        public Task GetCustomFunctionsRequestShouldReturnResults() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateGetCustomFunctionsRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateGetCustomFunctionsRequest));
+                    return;
+                }
+
+                var funcs = await feature.GetFunctionsAsync(context, request, ct).ConfigureAwait(false);
+                Assert.IsTrue(funcs.Count() > 0, Resources.GetCustomFunctionsDidNotReturnResults);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.GetFunctionAsync"/> returns details for a 
+        /// custom function.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateGetCustomFunctionRequest"/>
+        [TestMethod]
+        public Task GetCustomFunctionRequestShouldReturnResult() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateGetCustomFunctionRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateGetCustomFunctionRequest));
+                    return;
+                }
+
+                var funcDetails = await feature.GetFunctionAsync(context, request, ct).ConfigureAwait(false);
+
+                Assert.IsNotNull(funcDetails, FormatMessage(Resources.GetCustomFunctionDidNotReturnResult, request.Id));
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.InvokeFunctionAsync"/> can successfully 
+        /// invoke a custom function.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateCustomFunctionInvocationRequest"/>
+        [TestMethod]
+        public Task CustomFunctionInvocationRequestShouldReturnResult() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateCustomFunctionInvocationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateCustomFunctionInvocationRequest));
+                    return;
+                }
+
+                var funcDetails = await feature.GetFunctionAsync(context, new GetCustomFunctionRequest() { 
+                    Id = request.Id
+                }, ct).ConfigureAwait(false);
+
+                Assert.IsNotNull(funcDetails, FormatMessage(Resources.GetCustomFunctionDidNotReturnResult, request.Id));
+
+                var response = await feature.InvokeFunctionAsync(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(response, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
+
+                if (funcDetails!.ResponseSchema == null) {
+                    Assert.IsNull(response.Body, FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                } 
+                else {
+                    Assert.IsNotNull(response.Body, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
+                    Assert.IsTrue(CustomFunctions.TryValidate(response.Body!.Value, funcDetails!.ResponseSchema!.Value, null, out _), FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                }
+            });
+        }
+
+        #endregion
+
         #region [ IHealthCheck ]
 
         /// <summary>
@@ -2202,6 +2352,7 @@ namespace DataCore.Adapter.Tests {
 
         #region [ Extensions ]
 
+#pragma warning disable CS0618 // Type or member is obsolete
         /// <summary>
         /// Ensures that, for every extension feature implemented by the adapter, the feature 
         /// returns a descriptor and a set of available operations.
@@ -2234,6 +2385,7 @@ namespace DataCore.Adapter.Tests {
                 }
             });
         }
+#pragma warning restore CS0618 // Type or member is obsolete
 
         #endregion
 

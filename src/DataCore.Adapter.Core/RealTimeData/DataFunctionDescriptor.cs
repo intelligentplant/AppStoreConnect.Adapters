@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
@@ -82,6 +82,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="id"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public DataFunctionDescriptor(
             string id, 
             string name, 
@@ -166,4 +167,5 @@ namespace DataCore.Adapter.RealTimeData {
             return string.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase);
         }
     }
+
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 
 namespace DataCore.Adapter.Common {
 
@@ -209,6 +210,20 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public static explicit operator TimeSpan[]?(Variant val) => (TimeSpan[]?) val.Value;
+
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(JsonElement val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator JsonElement(Variant val) => val.Value == null ? default : (JsonElement) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(JsonElement[]? val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator JsonElement[]?(Variant val) => (JsonElement[]?) val.Value;
+
 
 
         /// <inheritdoc/>

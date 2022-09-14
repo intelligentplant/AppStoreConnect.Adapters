@@ -173,6 +173,16 @@ namespace DataCore.Adapter {
 
         #endregion
 
+        #region [ Events ]
+
+        /// <inheritdoc/>
+        public event Func<IAdapter, Task> Started;
+
+        /// <inheritdoc/>
+        public event Func<IAdapter, Task> Stopped;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -999,9 +1009,12 @@ namespace DataCore.Adapter {
                         throw;
                     }
                 }
+
+                BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
+                if (Started != null) {
+                    await Started.Invoke(this).ConfigureAwait(false);
+                }
             }
-            
-            BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
         }
 
 
@@ -1036,6 +1049,10 @@ namespace DataCore.Adapter {
                     _stopTokenSource.Cancel();
                     _healthCheckManager.RecalculateHealthStatus();
                     _shutdownInProgress.Set();
+                }
+
+                if (Stopped != null) {
+                    await Stopped.Invoke(this).ConfigureAwait(false);
                 }
             }
         }

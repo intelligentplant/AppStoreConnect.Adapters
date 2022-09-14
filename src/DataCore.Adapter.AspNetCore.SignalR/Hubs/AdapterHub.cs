@@ -45,7 +45,42 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         protected IBackgroundTaskService BackgroundTaskService { get; }
 
+#if NETCOREAPP
 
+        /// <summary>
+        /// JSON serialization options.
+        /// </summary>
+        private readonly System.Text.Json.JsonSerializerOptions? _jsonOptions;
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterHub"/> object.
+        /// </summary>
+        /// <param name="hostInfo">
+        ///   The host information.
+        /// </param>
+        /// <param name="adapterAccessor">
+        ///   For accessing runtime adapters.
+        /// </param>
+        /// <param name="taskScheduler">
+        ///   The background task scheduler to use.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        public AdapterHub(
+            HostInfo hostInfo, 
+            IAdapterAccessor adapterAccessor,
+            IBackgroundTaskService taskScheduler,
+            Microsoft.Extensions.Options.IOptions<JsonHubProtocolOptions> jsonOptions
+        ) {
+            HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
+            AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
+            BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            _jsonOptions = jsonOptions?.Value?.PayloadSerializerOptions;
+        }
+
+#else
         /// <summary>
         /// Creates a new <see cref="AdapterHub"/> object.
         /// </summary>
@@ -67,6 +102,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
         }
+#endif
 
 
         /// <summary>
@@ -250,6 +286,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         private async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext adapterCallContext, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(adapterCallContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

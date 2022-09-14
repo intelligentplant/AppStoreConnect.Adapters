@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
     /// <summary>
     /// Allows communication with remote <see cref="IAdapterExtensionFeature"/> implementations.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class AdapterExtensionFeatureImpl : ExtensionFeatureProxyBase<GrpcAdapterProxy, GrpcAdapterProxyOptions> {
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Tags;
 
@@ -38,6 +39,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="annotation"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public TagValueAnnotationQueryResult(string tagId, string tagName, TagValueAnnotationExtended annotation) 
             : base(tagId, tagName) {
             Annotation = annotation ?? throw new ArgumentNullException(nameof(annotation));
@@ -90,4 +92,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

@@ -124,6 +124,7 @@ namespace DataCore.Adapter.Example {
         }
 
 
+#pragma warning disable CS0618 // Type or member is obsolete
         internal class ExampleExtensionImpl : AdapterExtensionFeature, IExampleExtensionFeature {
 
             public ExampleExtensionImpl(ExampleAdapter adapter, IEnumerable<IObjectEncoder> encoders) : base(adapter.BackgroundTaskService, encoders) {
@@ -168,6 +169,7 @@ namespace DataCore.Adapter.Example {
             }
 
         }
+#pragma warning restore CS0618 // Type or member is obsolete
 
     }
 

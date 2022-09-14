@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes the hosting application.
     /// </summary>
+    [JsonConverter(typeof(HostInfoConverter))]
     public class HostInfo {
 
         /// <summary>
@@ -147,4 +152,76 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
+
+    /// <summary>
+    /// JSON converter for <see cref="HostInfo"/>.
+    /// </summary>
+    internal class HostInfoConverter : AdapterJsonConverter<HostInfo> {
+
+        /// <inheritdoc/>
+        public override HostInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            if (reader.TokenType != JsonTokenType.StartObject) {
+                ThrowInvalidJsonError();
+            }
+
+            string name = null!;
+            string description = null!;
+            string version = null!;
+            VendorInfo vendor = null!;
+            IEnumerable<AdapterProperty> properties = null!;
+
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndObject) {
+                if (reader.TokenType != JsonTokenType.PropertyName) {
+                    continue;
+                }
+
+                var propertyName = reader.GetString();
+                if (!reader.Read()) {
+                    ThrowInvalidJsonError();
+                }
+
+                if (string.Equals(propertyName, nameof(HostInfo.Name), StringComparison.OrdinalIgnoreCase)) {
+                    name = reader.GetString()!;
+                }
+                else if (string.Equals(propertyName, nameof(HostInfo.Description), StringComparison.OrdinalIgnoreCase)) {
+                    description = reader.GetString()!;
+                }
+                else if (string.Equals(propertyName, nameof(HostInfo.Version), StringComparison.OrdinalIgnoreCase)) {
+                    version = reader.GetString()!;
+                }
+                else if (string.Equals(propertyName, nameof(HostInfo.Vendor), StringComparison.OrdinalIgnoreCase)) {
+                    vendor = JsonSerializer.Deserialize<VendorInfo>(ref reader, options)!;
+                }
+                else if (string.Equals(propertyName, nameof(HostInfo.Properties), StringComparison.OrdinalIgnoreCase)) {
+                    properties = JsonSerializer.Deserialize<IEnumerable<AdapterProperty>>(ref reader, options)!;
+                }
+                else {
+                    reader.Skip();
+                }
+            }
+
+            return HostInfo.Create(name, description, version, vendor, properties);
+        }
+
+
+        /// <inheritdoc/>
+        public override void Write(Utf8JsonWriter writer, HostInfo value, JsonSerializerOptions options) {
+            if (value == null) {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStartObject();
+
+            WritePropertyValue(writer, nameof(HostInfo.Name), value.Name, options);
+            WritePropertyValue(writer, nameof(HostInfo.Description), value.Description, options);
+            WritePropertyValue(writer, nameof(HostInfo.Version), value.Version, options);
+            WritePropertyValue(writer, nameof(HostInfo.Vendor), value.Vendor, options);
+            WritePropertyValue(writer, nameof(HostInfo.Properties), value.Properties, options);
+
+            writer.WriteEndObject();
+        }
+    }
+
 }

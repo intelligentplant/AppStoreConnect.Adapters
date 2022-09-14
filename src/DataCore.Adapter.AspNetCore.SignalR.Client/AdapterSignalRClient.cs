@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,6 +56,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public ConfigurationChangesClient ConfigurationChanges { get; }
 
         /// <summary>
+        /// The strongly-typed client for invoking custom functions on an adapter.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
+
+        /// <summary>
         /// The strongly-typed client for reading event messages from and writing event messages 
         /// to an adapter.
         /// </summary>
@@ -84,6 +91,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// <summary>
         /// The strongly-typed client for invoking extension features on an adapter.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
 
         /// <summary>
@@ -147,6 +155,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
+            CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
             Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
@@ -290,3 +299,5 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
     }
 }
+
+#pragma warning restore CS0618 // Type or member is obsolete

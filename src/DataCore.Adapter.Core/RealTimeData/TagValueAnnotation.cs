@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -65,6 +67,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Additional annotation properties.
         /// </param>
+        [JsonConstructor]
         public TagValueAnnotation(AnnotationType annotationType, DateTime utcStartTime, DateTime? utcEndTime, string? value, string? description, IEnumerable<AdapterProperty>? properties) {
             AnnotationType = annotationType;
             UtcStartTime = utcStartTime.ToUniversalTime();
@@ -104,4 +107,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

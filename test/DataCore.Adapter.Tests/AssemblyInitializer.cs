@@ -99,6 +99,11 @@ namespace DataCore.Adapter.Tests {
                         ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
                     );
 
+                    // Add custom functions.
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<Extensions.CustomFunctions>(sp, adapter.TypeDescriptor.Id, sp.GetService<ILogger<Extensions.CustomFunctions>>())
+                    );
+
                     // Add ping-pong extension
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
 

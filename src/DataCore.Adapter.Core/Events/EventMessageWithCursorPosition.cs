@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -49,6 +50,7 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public EventMessageWithCursorPosition(
             string id, 
             string? topic,
