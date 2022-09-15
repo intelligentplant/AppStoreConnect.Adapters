@@ -40,9 +40,9 @@ namespace DataCore.Adapter {
         public IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
-        /// The ID of the adapter associated with the subscription manager.
+        /// The ID of the subscription manager.
         /// </summary>
-        public string? AdapterId { get; }
+        public string Id { get; }
 
         /// <summary>
         /// Logging.
@@ -130,7 +130,7 @@ namespace DataCore.Adapter {
         /// </param>
         protected SubscriptionManager(TOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
             Options = options ?? new TOptions();
-            AdapterId = Options.AdapterId;
+            Id = Options.Id ?? Guid.NewGuid().ToString();
             _maxSubscriptionCount = Options.MaxSubscriptionCount;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
@@ -556,9 +556,22 @@ namespace DataCore.Adapter {
     public class SubscriptionManagerOptions {
 
         /// <summary>
+        /// The ID of the subscription manager.
+        /// </summary>
+        public string? Id { get; set; }
+
+        /// <summary>
         /// The ID of the adapter associated with the subscription manager.
         /// </summary>
-        public string? AdapterId { get; set; }
+        /// <remarks>
+        ///   <see cref="AdapterId"/> has been replaced with <see cref="Id"/>. Setting <see cref="AdapterId"/> 
+        ///   will set <see cref="Id"/> as well.
+        /// </remarks>
+        [Obsolete("AdapterId is obsolete and will be removed in a future release. Use Id instead.", false)]
+        public string? AdapterId {
+            get => Id;
+            set => Id = value;
+        }
 
         /// <summary>
         /// The maximum number of concurrent subscriptions allowed. When this limit is hit, 
