@@ -579,7 +579,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             return Options.OnTagSubscriptionsAdded == null
                 ? Task.CompletedTask
-                : Options.OnTagSubscriptionsAdded.Invoke(tags, cancellationToken);
+                : Options.OnTagSubscriptionsAdded.Invoke(this, tags, cancellationToken);
         }
 
 
@@ -604,7 +604,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             if (Options.OnTagSubscriptionsRemoved != null) {
-                await Options.OnTagSubscriptionsRemoved.Invoke(tags, cancellationToken).ConfigureAwait(false);
+                await Options.OnTagSubscriptionsRemoved.Invoke(this, tags, cancellationToken).ConfigureAwait(false);
             }
         }
 

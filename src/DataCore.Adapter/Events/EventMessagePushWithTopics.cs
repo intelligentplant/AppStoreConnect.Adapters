@@ -230,7 +230,7 @@ namespace DataCore.Adapter.Events {
 
             return Options.OnTopicSubscriptionsAdded == null
                 ? Task.CompletedTask
-                : Options.OnTopicSubscriptionsAdded.Invoke(topics, cancellationToken);
+                : Options.OnTopicSubscriptionsAdded.Invoke(this, topics, cancellationToken);
         }
 
 
@@ -256,7 +256,7 @@ namespace DataCore.Adapter.Events {
 
             return Options.OnTopicSubscriptionsRemoved == null
                 ? Task.CompletedTask
-                : Options.OnTopicSubscriptionsRemoved.Invoke(topics, cancellationToken);
+                : Options.OnTopicSubscriptionsRemoved.Invoke(this, topics, cancellationToken);
         }
 
 
@@ -487,13 +487,13 @@ namespace DataCore.Adapter.Events {
         /// A delegate that is invoked when the number of subscribers for a topic changes from zero 
         /// to one.
         /// </summary>
-        public Func<IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsAdded { get; set; }
+        public Func<EventMessagePushWithTopics, IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a topic changes from one 
         /// to zero.
         /// </summary>
-        public Func<IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsRemoved { get; set; }
+        public Func<EventMessagePushWithTopics, IEnumerable<string>, CancellationToken, Task>? OnTopicSubscriptionsRemoved { get; set; }
 
         /// <summary>
         /// A delegate that is invoked to determine if a topic for a subscription matches the 

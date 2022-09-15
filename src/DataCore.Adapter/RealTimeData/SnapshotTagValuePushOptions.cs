@@ -28,13 +28,13 @@ namespace DataCore.Adapter.RealTimeData {
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
         /// to one.
         /// </summary>
-        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsAdded { get; set; }
+        public Func<SnapshotTagValuePushBase, IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from one 
         /// to zero.
         /// </summary>
-        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsRemoved { get; set; }
+        public Func<SnapshotTagValuePushBase, IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsRemoved { get; set; }
 
         /// <summary>
         /// A delegate that is invoked to determine if the topic for a subscription matches the 
