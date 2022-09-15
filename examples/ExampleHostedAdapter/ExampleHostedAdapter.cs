@@ -107,7 +107,7 @@ namespace ExampleHostedAdapter {
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
             _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
-                AdapterId = Descriptor.Id,
+                Id = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
             }, BackgroundTaskService, Logger);
