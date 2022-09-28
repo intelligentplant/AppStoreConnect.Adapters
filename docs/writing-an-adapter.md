@@ -226,7 +226,7 @@ If your adapter must manage its own asset model, you can delegate this functiona
 
 ## Configuration Changes (IConfigurationChanges Feature)
 
-The [ConfigurationChanges](/src/DataCore.Adapter/Diagnostics/ConfigurationChanges.cs) class can be used to implement the [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagnostics/IConfigurationChanges.cs) on your adapter's behalf.
+The [ConfigurationChanges](/src/DataCore.Adapter/Diagnostics/ConfigurationChanges.cs) class can be used to implement the [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagnostics/IConfigurationChanges.cs) feature on your adapter's behalf.
 
 [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) and [AssetModelManager](/src/DataCore.Adapter/AssetModel/AssetModelManager.cs) can integrate with `ConfigurationChanges` to send notifications when tags or asset model nodes are created, updated or deleted.
 
