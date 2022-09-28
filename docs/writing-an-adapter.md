@@ -244,6 +244,8 @@ To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeDa
 
 If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class and override the appropriate extension points. For example, if you were writing an MQTT adapter that treats individual MQTT channels as tags, you could extend `SnapshotTagValuePush` so that it subscribes to an MQTT channel when a subscriber subscribes to a given tag name.
 
+Note that you can also use the [SnapshotTagValueManager](/src/DataCore.Adapter/RealTimeData/SnapshotTagValueManager.cs) class to implement both [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) _and_ [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) on your adapter's behalf. This is useful when your source does not support direct polling and you need to cache snapshot values received via push locally in the adapter.
+
 
 ## Historical Tag Value Queries 
 
