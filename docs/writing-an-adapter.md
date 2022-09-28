@@ -315,7 +315,7 @@ The request schema is automatically applied to incoming invocation requests rece
 Example invocations via REST interface:
 
 ```
-POST /api/app-store-connect/v2.0/custom-functions
+POST /api/app-store-connect/v2.0/custom-functions/my-adapter
 Content-Type: application/json
 
 {
@@ -338,7 +338,7 @@ Content-Type: application/json
 ```
 
 ```
-POST /api/app-store-connect/v2.0/custom-functions
+POST /api/app-store-connect/v2.0/custom-functions/my-adapter
 Content-Type: application/json
 
 {
