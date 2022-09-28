@@ -19,8 +19,8 @@ namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// <see cref="IReadSnapshotTagValues"/> and <see cref="ISnapshotTagValuePush"/> provider that 
-    /// can an <see cref="IKeyValueStore"/> to persist snapshot tag values between adapter or host 
-    /// restarts.
+    /// can use an <see cref="IKeyValueStore"/> to persist snapshot tag values between adapter or 
+    /// host restarts.
     /// </summary>
     public class SnapshotTagValueManager : SnapshotTagValuePushBase, IReadSnapshotTagValues {
 
