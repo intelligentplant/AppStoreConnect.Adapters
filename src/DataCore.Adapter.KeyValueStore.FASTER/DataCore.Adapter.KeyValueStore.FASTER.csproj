@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.KeyValueStore.FASTER</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.KeyValueStore.FASTER</PackageId>
     <Description>Key-value store for App Store Connect adapters using Microsoft FASTER.</Description>
