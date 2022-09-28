@@ -13,6 +13,7 @@ namespace DataCore.Adapter.Proxy {
     /// <summary>
     /// Generates dynamic implementations of unknown extension adapter features.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public static class ExtensionFeatureProxyGenerator {
 
         /// <summary>

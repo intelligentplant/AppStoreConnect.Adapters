@@ -107,7 +107,9 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private readonly ExtensionFeatureFactory<HttpAdapterProxy>? _extensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -156,7 +158,9 @@ namespace DataCore.Adapter.Http.Proxy {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
+#pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
             _snapshotRefreshInterval = Options?.TagValuePushInterval ?? TimeSpan.FromMinutes(1);
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.Proxy;
 
@@ -42,6 +43,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeatureFactory<HttpAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
     }

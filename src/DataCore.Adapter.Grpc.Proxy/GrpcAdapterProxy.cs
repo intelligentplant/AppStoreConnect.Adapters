@@ -113,7 +113,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 
         /// <summary>
@@ -163,7 +165,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
+#pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
             _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
         }
 
