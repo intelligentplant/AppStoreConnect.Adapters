@@ -1,5 +1,7 @@
 ﻿using System;
 
+using DataCore.Adapter.Extensions;
+
 namespace DataCore.Adapter.Proxy {
     /// <summary>
     /// Delegate for creating extension feature implementations on behalf of a proxy.
@@ -21,6 +23,7 @@ namespace DataCore.Adapter.Proxy {
     ///   If the implementation implements <see cref="IAsyncDisposable"/> or <see cref="IDisposable"/>, 
     ///   it will be disposed when the proxy is disposed.
     /// </remarks>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public delegate object ExtensionFeatureFactory<TProxy>(
         string featureUriOrName, 
         TProxy proxy

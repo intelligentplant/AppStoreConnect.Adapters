@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Proxy;
 
 using GrpcCore = Grpc.Core;
@@ -38,6 +39,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeatureFactory<GrpcAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
         /// <summary>

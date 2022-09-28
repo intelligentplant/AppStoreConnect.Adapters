@@ -1,6 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 using DataCore.Adapter.AspNetCore.SignalR.Client;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Proxy;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
@@ -31,6 +33,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeatureFactory<SignalRAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
     }

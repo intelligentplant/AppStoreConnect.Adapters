@@ -97,7 +97,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private readonly ExtensionFeatureFactory<SignalRAdapterProxy>? _extensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -146,7 +148,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
+#pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
             _client = new Lazy<AdapterSignalRClient>(() => {
                 var conn = _connectionFactory.Invoke(null);
                 AddHubEventHandlers(conn);
