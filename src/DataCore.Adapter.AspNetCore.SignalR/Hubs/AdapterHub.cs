@@ -45,8 +45,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         protected IBackgroundTaskService BackgroundTaskService { get; }
 
-#if NETCOREAPP
-
         /// <summary>
         /// JSON serialization options.
         /// </summary>
@@ -79,30 +77,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _jsonOptions = jsonOptions?.Value?.PayloadSerializerOptions;
         }
-
-#else
-        /// <summary>
-        /// Creates a new <see cref="AdapterHub"/> object.
-        /// </summary>
-        /// <param name="hostInfo">
-        ///   The host information.
-        /// </param>
-        /// <param name="adapterAccessor">
-        ///   For accessing runtime adapters.
-        /// </param>
-        /// <param name="taskScheduler">
-        ///   The background task scheduler to use.
-        /// </param>
-        public AdapterHub(
-            HostInfo hostInfo, 
-            IAdapterAccessor adapterAccessor,
-            IBackgroundTaskService taskScheduler
-        ) {
-            HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
-            AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
-            BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-        }
-#endif
 
 
         /// <summary>
