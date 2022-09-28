@@ -1,10 +1,4 @@
-﻿#if NET48
-using DataCore.Adapter.NewtonsoftJson;
-#else
-using DataCore.Adapter.Json;
-#endif
-
-using System;
+﻿using System;
 
 namespace Microsoft.Extensions.DependencyInjection {
 
@@ -28,10 +22,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
-#if NET48
-            builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
-#endif
-
             builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Mvc.Internal.ApiDescriptorProvider>();
 
             return builder;

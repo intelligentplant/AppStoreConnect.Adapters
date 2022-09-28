@@ -1,13 +1,8 @@
 ﻿using System;
 using DataCore.Adapter.AspNetCore.Hubs;
 
-#if NET48
-using DataCore.Adapter.NewtonsoftJson;
-#else
-using DataCore.Adapter.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-#endif
 using Microsoft.AspNetCore.SignalR;
 
 namespace Microsoft.Extensions.DependencyInjection {
@@ -37,44 +32,14 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-#if NET48
-            builder.AddJsonProtocol(options => {
-                options.PayloadSerializerSettings.AddDataCoreAdapterConverters();
-            });
-#else
             builder.AddJsonProtocol(options => {
                 options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
 
             builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.SignalR.Internal.ApiDescriptorProvider>();
-#endif
             return builder;
         }
 
-
-#if NET48
-
-        /// <summary>
-        /// Maps adapter hub endpoints.
-        /// </summary>
-        /// <param name="endpoints">
-        ///   The endpoint route builder.
-        /// </param>
-        /// <returns>
-        ///   The endpoint route builder.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="endpoints"/> is <see langword="null"/>.
-        /// </exception>
-        public static HubRouteBuilder MapDataCoreAdapterHubs(this HubRouteBuilder endpoints) {
-            if (endpoints == null) {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
-            endpoints.MapHub<AdapterHub>(HubRoute);
-            return endpoints;
-        }
-
-#else 
 
         /// <summary>
         /// Maps adapter hub endpoints.
@@ -111,8 +76,6 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             return endpoints;
         }
-
-#endif
 
     }
 }
