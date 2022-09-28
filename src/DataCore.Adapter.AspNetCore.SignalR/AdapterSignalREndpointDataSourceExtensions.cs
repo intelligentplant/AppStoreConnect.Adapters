@@ -1,6 +1,4 @@
-﻿#if NETCOREAPP
-
-using System.Linq;
+﻿using System.Linq;
 
 namespace Microsoft.AspNetCore.Routing {
 
@@ -26,5 +24,3 @@ namespace Microsoft.AspNetCore.Routing {
 
     }
 }
-
-#endif

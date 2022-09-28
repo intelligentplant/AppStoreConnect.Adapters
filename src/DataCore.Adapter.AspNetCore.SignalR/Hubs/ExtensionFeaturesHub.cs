@@ -198,7 +198,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
         }
 
-#if !NETFRAMEWORK
 
         /// <summary>
         /// Invokes a duplex streaming extension feature on an adapter.
@@ -254,66 +253,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 }
             }
         }
-
-#else
-
-        /// <summary>
-        /// Invokes a duplex streaming extension feature on an adapter for a single input and output.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter to query.
-        /// </param>
-        /// <param name="request">
-        ///   The request message.
-        /// </param>
-        /// <param name="streamItem">
-        ///   The stream item.
-        /// </param>
-        /// <returns>
-        ///   The operation result.
-        /// </returns>
-        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
-        public async Task<InvocationResponse> InvokeDuplexStreamingExtension(
-            string adapterId,
-            DuplexStreamInvocationRequest request,
-            InvocationStreamItem streamItem
-        ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-            ValidateObject(request);
-            ValidateObject(streamItem);
-
-            var operationId = request.OperationId.EnsurePathHasTrailingSlash();
-            if (!AdapterExtensionFeature.TryGetFeatureUriFromOperationUri(operationId, out var featureUri, out var error)) {
-                throw new ArgumentException(error, nameof(operationId));
-            }
-
-            var resolved = await ResolveAdapterAndExtensionFeature(
-                adapterCallContext,
-                adapterId,
-                featureUri,
-                Context.ConnectionAborted
-            ).ConfigureAwait(false);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
-                var cancellationToken = ctSource.Token;
-                try {
-                    var inChannel = Channel.CreateUnbounded<InvocationStreamItem>();
-                    inChannel.Writer.TryWrite(streamItem);
-                    inChannel.Writer.TryComplete();
-
-                    using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                        var result = await resolved.Feature.DuplexStream(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-                        Activity.Current.SetResponseItemCountTag(result == null ? 0 : 1);
-                        return result!;
-                    }
-                }
-                finally {
-                    ctSource.Cancel();
-                }
-            }
-        }
-
-#endif
 
     }
 }

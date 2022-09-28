@@ -188,7 +188,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         }
 
 
-#if NETCOREAPP
         /// <summary>
         /// Invokes a custom function on an adapter.
         /// </summary>
@@ -216,31 +215,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions,
             CancellationToken cancellationToken
         ) {
-#else
-        /// <summary>
-        /// Invokes a custom function on an adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to query.
-        /// </param>
-        /// <param name="request">
-        ///   The invocation request.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the request.
-        /// </param>
-        /// <returns>
-        ///   Successful responses contain the result of the custom function invocation.
-        /// </returns>
-        [HttpPost]
-        [Route("{adapterId}/invoke")]
-        [ProducesResponseType(typeof(CustomFunctionInvocationResponse), 200)]
-        public async Task<IActionResult> InvokeFunctionAsync(
-            string adapterId, 
-            CustomFunctionInvocationRequest request,
-            CancellationToken cancellationToken
-        ) {
-#endif
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ICustomFunctions>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
@@ -270,17 +244,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     return BadRequest(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id)); // 400
                 }
 
-#if NETCOREAPP
                 if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
                     var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidCustomFunctionRequestBody);
                     problem.Extensions["errors"] = validationResults;
                     return new ObjectResult(problem) { StatusCode = 400 }; // 400
                 }
-#else
-                if (!request.TryValidateBody(function, null, out var validationResults)) {
-                    return BadRequest(validationResults); // 400
-                }
-#endif
 
                 return Ok(await feature.InvokeFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false)); // 200
             }

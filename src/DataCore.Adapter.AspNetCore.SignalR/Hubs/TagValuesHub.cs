@@ -22,8 +22,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Snapshot Subscription Management ]
 
-#if NET48 == false
-
         /// <summary>
         /// Creates a snapshot tag value subscription.
         /// </summary>
@@ -68,51 +66,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 }
             }
         }
-
-#else
-
-        /// <summary>
-        /// Creates a snapshot tag value subscription.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to subscribe to.
-        /// </param>
-        /// <param name="request">
-        ///   The subscription request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the subscription.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
-        /// </returns>
-        public async IAsyncEnumerable<TagValueQueryResult> CreateSnapshotTagValueChannel(
-            string adapterId,
-            CreateSnapshotTagValueSubscriptionRequest request,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            // Resolve the adapter and feature.
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            ValidateObject(request);
-
-            using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
-            }
-        }
-
-#endif
 
         #endregion
 
@@ -394,8 +347,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
         #region [ Tag Value Write ]
 
-#if NET48 == false
-
         /// <summary>
         /// Writes values to the specified adapter's snapshot.
         /// </summary>
@@ -485,99 +436,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 }
             }
         }
-
-#else
-
-        /// <summary>
-        /// Writes a tag value to the specified adapter's snapshot.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="item">
-        ///   The value to write.
-        /// </param>
-        /// <returns>
-        ///   The write result.
-        /// </returns>
-        public async Task<WriteTagValueResult> WriteSnapshotTagValue(
-            string adapterId, 
-            WriteTagValuesRequest request,
-            WriteTagValueItem item
-        ) {
-            ValidateObject(item);
-            ValidateObject(request);
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
-                var cancellationToken = ctSource.Token;
-                try {
-                    var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
-                    inChannel.Writer.TryWrite(item);
-                    inChannel.Writer.TryComplete();
-
-                    using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                        var result = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                        return result!;
-                    }
-                }
-                finally {
-                    ctSource.Cancel();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Writes a tag value to the specified adapter's history archive.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="item">
-        ///   The value to write.
-        /// </param>
-        /// <returns>
-        ///   The write result.
-        /// </returns>
-        public async Task<WriteTagValueResult> WriteHistoricalTagValue(
-            string adapterId,
-            WriteTagValuesRequest request,
-            WriteTagValueItem item
-        ) {
-            ValidateObject(item);
-            ValidateObject(request);
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
-                var cancellationToken = ctSource.Token;
-                try {
-                    var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
-                    inChannel.Writer.TryWrite(item);
-                    inChannel.Writer.TryComplete();
-
-                    using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                        var result = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                        return result!;
-                    }
-                }
-                finally {
-                    ctSource.Cancel();
-                }
-            }
-        }
-
-#endif
 
         #endregion
 

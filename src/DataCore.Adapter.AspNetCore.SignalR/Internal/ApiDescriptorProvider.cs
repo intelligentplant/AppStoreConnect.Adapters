@@ -1,5 +1,4 @@
-﻿#if NETCOREAPP
-using Microsoft.AspNetCore.Routing;
+﻿using Microsoft.AspNetCore.Routing;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Internal {
 
@@ -32,4 +31,3 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Internal {
 
     }
 }
-#endif
