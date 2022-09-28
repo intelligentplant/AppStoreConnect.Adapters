@@ -1144,6 +1144,18 @@ namespace DataCore.Adapter {
 
         #region [ Custom Functions ]
 
+        /// <summary>
+        /// Converts the object to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Grpc.CustomFunctionDescriptor"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Extensions.CustomFunctionDescriptor"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
         public static Extensions.CustomFunctionDescriptor ToAdapterCustomFunctionDescriptor(this Grpc.CustomFunctionDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1159,6 +1171,18 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Extensions.CustomFunctionDescriptor"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Grpc.CustomFunctionDescriptor"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
         public static Grpc.CustomFunctionDescriptor ToGrpcCustomFunctionDescriptor(this Extensions.CustomFunctionDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1172,6 +1196,18 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts the object to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Grpc.CustomFunctionDescriptorExtended"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Extensions.CustomFunctionDescriptorExtended"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
         public static Extensions.CustomFunctionDescriptorExtended ToAdapterCustomFunctionDescriptorExtended(this Grpc.CustomFunctionDescriptorExtended descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1189,6 +1225,18 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Extensions.CustomFunctionDescriptorExtended"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Grpc.CustomFunctionDescriptorExtended"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
         public static Grpc.CustomFunctionDescriptorExtended ToGrpcCustomFunctionDescriptorExtended(this Extensions.CustomFunctionDescriptorExtended descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));

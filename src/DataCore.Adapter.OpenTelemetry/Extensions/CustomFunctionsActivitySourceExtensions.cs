@@ -10,6 +10,15 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
     /// </summary>
     public static  class CustomFunctionsActivitySourceExtensions {
 
+        /// <summary>
+        /// Starts an activity associated with an <see cref="ICustomFunctions.GetFunctionsAsync"/> 
+        /// call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns></returns>
         public static Activity? StartGetCustomFunctionsActivity(
             this ActivitySource source,
             string adapterId,
@@ -36,6 +45,16 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an activity associated with an <see cref="ICustomFunctions.GetFunctionAsync"/> 
+        /// call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="functionId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns></returns>
         public static Activity? StartGetCustomFunctionActivity(
             this ActivitySource source,
             string adapterId,
@@ -67,6 +86,16 @@ namespace DataCore.Adapter.Diagnostics.Extensions {
         }
 
 
+        /// <summary>
+        /// Starts an activity associated with an <see cref="ICustomFunctions.InvokeFunctionAsync"/> 
+        /// call.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="adapterId"></param>
+        /// <param name="functionId"></param>
+        /// <param name="kind"></param>
+        /// <param name="parentId"></param>
+        /// <returns></returns>
         public static Activity? StartInvokeCustomFunctionActivity(
             this ActivitySource source,
             string adapterId,
