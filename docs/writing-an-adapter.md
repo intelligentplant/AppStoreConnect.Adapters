@@ -216,7 +216,19 @@ Whenever the health status of your adapter changes (e.g. you become disconnected
 
 ## Tag Management (ITagInfo, ITagSearch Features)
 
-If your adapter will manage its own tag definitions instead of retrieving them from e.g. an external database, you can use the [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) class to handle this functionality on your adapter's behalf.
+If your adapter will manage its own tag definitions instead of retrieving them from e.g. an external database, you can use the [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) class to implement the [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) and [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) features on your adapter's behalf.
+
+
+## Asset Model Management (IAssetModelBrowse, IAssetModelSearch Features)
+
+If your adapter must manage its own asset model, you can delegate this functionality to the [AssetModelManager](/src/DataCore.Adapter/AssetModel/AssetModelManager.cs) class. `AssetModelManager` implements the [IAssetModelBrowse](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs) and [IAssetModelSearch](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs) features on your adapter's behalf.
+
+
+## Configuration Changes (IConfigurationChanges Feature)
+
+The [ConfigurationChanges](/src/DataCore.Adapter/Diagnostics/ConfigurationChanges.cs) class can be used to implement the [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagnostics/IConfigurationChanges.cs) on your adapter's behalf.
+
+[TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) and [AssetModelManager](/src/DataCore.Adapter/AssetModel/AssetModelManager.cs) can integrate with `ConfigurationChanges` to send notifications when tags or asset model nodes are created, updated or deleted.
 
 
 ## Event Message Subscriptions (IEventMessagePush / IEventMessagePushWithTopics Features)
