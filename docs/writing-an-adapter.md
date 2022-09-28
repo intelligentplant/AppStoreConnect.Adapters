@@ -170,6 +170,8 @@ When using external feature providers, you must register the features manually, 
 
 > Any features that are added to the adapter from an external provider that implement `IDisposable` or `IAsyncDisposable` will be disposed when the adapter is disposed.
 
+Examples of external providers can be found later in this document.
+
 
 ## Disabling Automatic Feature Registration
 
@@ -212,6 +214,11 @@ In general, is is not desirable to disable automatic feature registration. Howev
 Whenever the health status of your adapter changes (e.g. you become disconnected from an external service that the adapter relies on), you should call the `OnHealthStatusChanged` method from your implementation. This will recompute the overall health status of the adapter and push the update to any subscribers to the `IHealthCheck` feature.
 
 
+## Tag Management (ITagInfo, ITagSearch Features)
+
+If your adapter will manage its own tag definitions instead of retrieving them from e.g. an external database, you can use the [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) class to handle this functionality on your adapter's behalf.
+
+
 ## Event Message Subscriptions (IEventMessagePush / IEventMessagePushWithTopics Features)
 
 To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) and/or [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) features to your adapter, you can add or extend the [EventMessagePush](/src/DataCore.Adapter/Events/EventMessagePush.cs) and [EventMessagePushWithTopics](/src/DataCore.Adapter/Events/EventMessagePushWithTopics.cs) classes respectively. To push values to subscribers, call the `ValueReceived` method on the feature.
@@ -228,16 +235,16 @@ If your source supports its own subscription mechanism, you can extend the `Snap
 
 ## Historical Tag Value Queries 
 
-If your underlying source does not support aggregated, values-at-times, or plot/best-fit tag value queries (implemented via the [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs), [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs), and [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) respectively), you can use the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class to provide these capabilities, as long as you can provide it with the ability to resolve tag names, and to request raw tag values.
+If your underlying source does not natively support aggregated, values-at-times, or plot/best-fit tag value queries (implemented via the [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs), [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs), and [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) respectively), you can use the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class to provide these capabilities, as long as you can provide it with the ability to resolve tag names, and to request raw tag values.
 
 If your source implements some of these capabilities but not others, you can use the classes in the `DataCore.Adapter.RealTimeData.Utilities` namespace to assist with the implementation of the missing functionality if desired.
 
 > Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
 
 
-## Custom Functions
+## Custom Functions (ICustomFunctions Feature)
 
-An adapter can expose non-standard or vendor-specific functionality via custom functions. Custom functions can be discovered an invoked if an adapter implements the [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature.
+An adapter can expose non-standard or vendor-specific functionality via custom functions. Custom functions can be discovered and invoked if an adapter implements the [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature.
 
 The simplest way to implement [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) is to create an instance of the [CustomFunctions](/src/DataCore.Adapter/Extensions/CustomFunctions.cs) helper class and have your adapter register the instance as a feature provider:
 
@@ -279,7 +286,9 @@ public class GreeterResponse {
 }
 ```
 
-Each registered function has a unique URI identifier. In the example above, the URI will be derived from the base URI specified when creating the `CustomFunctions` (the URI type identifier for the adapter in the above example), and the name of the function. 
+Each registered function has a unique URI identifier. The URI does not have to support dereferencing (i.e. it does not have to be a URL that can be accessed via an HTTP request). 
+
+In the example above, the URI will be derived from the base URI specified when creating the `CustomFunctions` instance (the URI type identifier for the adapter in the above example), and the name of the function. 
 
 Each custom function definition also contains JSON schemas describing valid request and response messages. In the example above, the schemas are automatically generated from the `GreeterRequest` and `GreeterResponse` types. 
 
@@ -368,7 +377,19 @@ Content-Type: application/json
 # Persisting State
 
 The [IKeyValueStore](/src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) service can be injected into an adapter constructor to provide a service for storing arbitrary key-value pairs that can be persisted and restored when an adapter or host application is restarted. 
-> The default [in-memory implementation](/src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use the [Microsoft FASTER-based implementation](/src/DataCore.Adapter.KeyValueStore.FASTER) or write your own implementation.
+> The default [in-memory implementation](/src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use one of the implementations listed below or write your own implementation.
+
+The following `IKeyValueStore` implementations support persistence:
+
+- [File System](/src/DataCore.Adapter.KeyValueStore.FileSystem)
+- [SQLite](/src/DataCore.Adapter.KeyValueStore.Sqlite)
+- [Microsoft FASTER](/src/DataCore.Adapter.KeyValueStore.FASTER)
+
+`IKeyValueStore` expects values to be specified as `byte[]`. Extension methods exist to automatically serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) e.g.
+
+```csharp
+await kvStore.WriteJsonAsync("UtcLastUpdated", DateTime.UtcNow).ConfigureAwait(false);
+```
 
 
 # Telemetry
@@ -401,7 +422,7 @@ private async IAsyncEnumerable<EventMessage> ReadEventMessages(
 
 # Providing Adapter Options From Configuration
 
-`AdapterBase<TAdapterOptions>` and `AdapterBase` both define constructors that allow the options for the adapter to be supplied via an `IOptions<T>` or `IOptionsMonitor<T>` instance supplied by the configuration system of an ASP.NET Core application, or an application using the .NET Core Generic Host. If you implement an appropriate constructor in your adapter implementation, you can receive pass options into your adapter at startup using this mechanism. For example:
+`AdapterBase<TAdapterOptions>` defines constructors that allow the options for the adapter to be supplied via an `IOptions<T>` or `IOptionsMonitor<T>` instance supplied by your application's dependency injection system. For example:
 
 ```json
 // appsettings.json
@@ -429,87 +450,32 @@ private async IAsyncEnumerable<EventMessage> ReadEventMessages(
 ```
 
 ```csharp
-public class Startup {
+[assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
-    public IConfiguration Configuration { get; }
+var builder = WebApplication.CreateBuilder(args);
 
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
+builder.Services
+    .AddDataCoreAdapterAspNetCoreServices()
+    .AddHostInfo(
+       name: "My Host",
+       description: "A brief description of the hosting application"
+     )
+    // Bind adapter options against the application configuration.
+    .AddServices(svc => svc.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
+        "my-csv",
+        builder.Configuration.GetSection("CsvAdapter:my-csv")
+     ))
+    // Register the adapter.
+    .AddAdapter(sp => ActivatorUtilities.CreateInstance<DataCore.Adapter.Csv.CsvAdapter>(
+      sp, 
+      "my-csv",
+      sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+    ));
 
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:my-csv"));
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptions<T> to supply options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID 
-                sp.GetRequiredService<IOptions<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
+// Remaining code removed for brevity.
 ```
 
-Note that, when using `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
-
-```csharp
-public class Startup {
-
-    public IConfiguration Configuration { get; }
-
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
-
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind named CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
-            "my-csv", // Key for this set of options
-            Configuration.GetSection("CsvAdapter:my-csv")
-        );
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptionsMonitor<T> to supply named options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID; also used as the named options key   
-                sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
-```
-
-Passing options to your adapter using an `IOptionsMonitor<T>` also allows you to reconfigure your adapter at runtime when the configuration options change in the ASP.NET Core or generic host application. You can react to configuration changes by overriding the `OnOptionsChange` method in your adapter implementation.
+Passing options to your adapter using an `IOptionsMonitor<T>` also allows you to reconfigure your adapter at runtime when the configuration options change in the host application. You can react to configuration changes by overriding the `OnOptionsChange` method in your adapter implementation.
 
 
 # Structuring Adapter Code
