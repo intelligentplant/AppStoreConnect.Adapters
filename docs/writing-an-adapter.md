@@ -164,47 +164,21 @@ private IEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> t
 
 ## Delegating Feature Implementations to External Providers
 
-Feature implementations can be delegated to another class instead of being implemented directly by the adapter class. Examples of external feature provider classes include the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) class, which can be used to add [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter.
+Feature implementations can be delegated to another class instead of being implemented directly by the adapter class. Examples of external feature provider classes include the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) class, which can be used to add [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter. Examples of additional external providers can be found in the sections below.
 
-When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterBase<TAdapterOptions>`.
+When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterBase<TAdapterOptions>`:
+
+```csharp
+var snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
+    AdapterId = Descriptor.Id,
+    PollingInterval = TimeSpan.FromSeconds(5),
+    TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+}, BackgroundTaskService, Logger);
+
+AddFeatures(snapshotPush);
+```
 
 > Any features that are added to the adapter from an external provider that implement `IDisposable` or `IAsyncDisposable` will be disposed when the adapter is disposed.
-
-Examples of external providers can be found later in this document.
-
-
-## Disabling Automatic Feature Registration
-
-To disable automatic registration of features implemented directly on the adapter class, you can annotate your class with an [AutomaticFeatureRegistrationAttribute](/src/DataCore.Adapter/AutomaticFeatureRegistrationAttribute.cs):
-
-```csharp
-[AutomaticFeatureRegistration(false)]
-public class MyAdapter : AdapterBase<MyAdapterOptions> {
-
-}
-```
-
-> The `IHealthCheck` feature supplied by `AdapterBase<TAdapterOptions>` will always be registered, even if automatic feature registration is disabled.
-
-If automatic feature registration is disabled, you must manually register any features that are directly implemented by the adapter class:
-
-```csharp
-[AutomaticFeatureRegistration(false)]
-public class MyAdapter : AdapterBase<MyAdapterOptions>, ITagSearch {
-
-    private class RegisterTagSearchFeature() {
-        AddFeature<ITagSearch>(this);
-    }
-
-}
-```
-
-### Use Cases
-
-In general, is is not desirable to disable automatic feature registration. However, there are some examples of when this behaviour may be required:
-
-- You are writing an adapter for a protocol that supports both the reading and writing of values (e.g. MQTT), but you want to enable and disable writing to the remote server at runtime based on the supplied adapter options.
-- You are writing a proxy for an adapter hosted in an external system, and you want to add features to your adapter at runtime that match the features implemented by the remote adapter.
 
 
 ## Health Checks (IHealthCheck Feature)
@@ -386,6 +360,40 @@ Content-Type: application/json
     "error": "Value is \"null\" but should be \"string\""
 }
 ```
+
+
+## Disabling Automatic Feature Registration
+
+To disable automatic registration of features implemented directly on the adapter class, you can annotate your class with an [AutomaticFeatureRegistrationAttribute](/src/DataCore.Adapter/AutomaticFeatureRegistrationAttribute.cs):
+
+```csharp
+[AutomaticFeatureRegistration(false)]
+public class MyAdapter : AdapterBase<MyAdapterOptions> {
+
+}
+```
+
+> The `IHealthCheck` feature supplied by `AdapterBase<TAdapterOptions>` will always be registered, even if automatic feature registration is disabled.
+
+If automatic feature registration is disabled, you must manually register any features that are directly implemented by the adapter class:
+
+```csharp
+[AutomaticFeatureRegistration(false)]
+public class MyAdapter : AdapterBase<MyAdapterOptions>, ITagSearch {
+
+    private class RegisterTagSearchFeature() {
+        AddFeature<ITagSearch>(this);
+    }
+
+}
+```
+
+### Use Cases
+
+In general, is is not desirable to disable automatic feature registration. However, there are some examples of when this behaviour may be required:
+
+- You are writing an adapter for a protocol that supports both the reading and writing of values (e.g. MQTT), but you want to enable and disable writing to the remote server at runtime based on the supplied adapter options.
+- You are writing a proxy for an adapter hosted in an external system, and you want to add features to your adapter at runtime that match the features implemented by the remote adapter.
 
 
 # Persisting State
