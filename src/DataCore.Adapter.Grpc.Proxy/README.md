@@ -30,7 +30,7 @@ var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost:5001", n
 });
 ```
 
-> Grpc.Net.Client on .NET Framework does not support duplex streaming calls. Adapter operations that normally use duplex streaming such as tag value subscriptions and writes are translated into unary or streaming invocations by the proxy.
+> Grpc.Net.Client on .NET Framework does not support duplex streaming calls. Adapter operations that normally use duplex streaming such as tag value subscriptions and writes are translated into unary or server streaming invocations by the proxy.
 
 
 # Using the Proxy
