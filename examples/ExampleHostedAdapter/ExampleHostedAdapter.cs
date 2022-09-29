@@ -1,6 +1,5 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 using DataCore.Adapter;
 using DataCore.Adapter.Common;
@@ -38,6 +37,8 @@ namespace ExampleHostedAdapter {
 
         private static readonly AdapterProperty s_tagCreatedAtPropertyDefinition = new AdapterProperty("UTC Created At", DateTime.MinValue, "The UTC creation time for the tag");
 
+        private readonly ConfigurationChanges _configurationChanges;
+
         private readonly TagManager _tagManager;
 
         private readonly PollingSnapshotTagValuePush _snapshotPush;
@@ -53,6 +54,17 @@ namespace ExampleHostedAdapter {
             IBackgroundTaskService taskScheduler,
             ILogger<ExampleHostedAdapter> logger
         ) : base(id, options, taskScheduler, logger) {
+            // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
+            // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
+            // when e.g. tags or asset model nodes are created by our adapter.
+            _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() { 
+                AdapterId = Descriptor.Id
+            }, BackgroundTaskService, Logger);
+
+            // Tell the adapter to advertise that it supports all of the adapter features
+            // implemented by the ConfigurationChanges object.
+            AddFeatures(_configurationChanges);
+
             // The TagManager class implements the ITagSearch adapter feature on our adapter's
             // behalf, meaning that our adapter allows callers to discover available tags
             // (measurements) that can be read. In our example we use a fixed set of tags created
@@ -75,7 +87,10 @@ namespace ExampleHostedAdapter {
                 BackgroundTaskService,
                 // We need to tell TagManager about the types of bespoke properties that our tags
                 // will define.
-                new[] { s_tagCreatedAtPropertyDefinition }
+                new[] { s_tagCreatedAtPropertyDefinition },
+                // When tags are created, updated or deleted, we will notify interested parties
+                // via the ConfigurationChanges object we created above.
+                _configurationChanges.NotifyAsync
             );
 
             // Tell the adapter to advertise that it supports all of the adapter features
@@ -94,7 +109,7 @@ namespace ExampleHostedAdapter {
             _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
                 AdapterId = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
-                TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+                TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
             }, BackgroundTaskService, Logger);
 
             // Tell the adapter to advertise that it supports all of the adapter features
