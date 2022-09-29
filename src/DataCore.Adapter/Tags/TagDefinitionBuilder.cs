@@ -90,6 +90,25 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <summary>
+        /// Creates a new <see cref="TagDefinitionBuilder"/> object that is configured to use the 
+        /// specified value as both the tag ID and name.
+        /// </summary>
+        /// <param name="identifier">
+        ///   The identifier to use as both the ID and name of the tag.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="TagDefinitionBuilder"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="identifier"/> is <see langword="null"/>.
+        /// </exception>
+        public TagDefinitionBuilder(string identifier) {
+            WithId(identifier);
+            WithName(identifier);
+        }
+
+
+        /// <summary>
         /// Creates a new <see cref="TagDefinitionBuilder"/> object that is initialised from an 
         /// existing tag definition.
         /// </summary>
