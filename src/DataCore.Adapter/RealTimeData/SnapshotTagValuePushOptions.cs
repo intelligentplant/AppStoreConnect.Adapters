@@ -17,8 +17,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <see cref="TagIdentifier"/>.
         /// </summary>
         /// <remarks>
-        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromAdapter(IAdapter)"/> or 
-        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromFeature(ITagInfo)"/> can be 
+        ///   <see cref="SnapshotTagValuePushBase.CreateTagResolverFromAdapter(IAdapter)"/> or 
+        ///   <see cref="SnapshotTagValuePushBase.CreateTagResolverFromFeature(ITagInfo)"/> can be 
         ///   used to generate a compatible delegate using an existing adapter or 
         ///   <see cref="ITagInfo"/> implementation.
         /// </remarks>
