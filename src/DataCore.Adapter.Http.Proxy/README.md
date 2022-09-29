@@ -99,18 +99,3 @@ async Task<IAdapter> CreateProxy(IHttpClientFactory factory) {
 
 The `ClaimsPrincipal` that is passed to the callback delegate is passed through from the `IAdapterCallContext` that is specified when an adapter feature method is called.
 
-
-# Adding Extension Feature Support
-
-You can add support for adapter extension features by providing an `ExtensionFeatureFactory` delegate in the proxy options. This delegate will be invoked for every extension feature that the remote proxy reports that it supports:
-
-```csharp
-var options = new HttpAdapterProxyOptions() {
-    Id = "some-id",
-    Name = "some-name",
-    RemoteId = "{SOME_ADAPTER_ID}",
-    ExtensionFeatureFactory = (featureName, proxy) => {
-        return GetFeatureImplementation(featureName, proxy);
-    }
-};
-```
