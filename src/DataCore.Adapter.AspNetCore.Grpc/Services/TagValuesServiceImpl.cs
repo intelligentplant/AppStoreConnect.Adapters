@@ -359,7 +359,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 ResolvedAdapterFeature<IWriteSnapshotTagValues> adapter = default;
-                WriteTagValuesRequest adapterRequest = null!;
+                RealTimeData.WriteTagValuesRequest adapterRequest = null!;
 
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
@@ -371,7 +371,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     // We received a create request!
 
                     adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
-                    adapterRequest = new Adapter.RealTimeData.WriteTagValuesRequest() {
+                    adapterRequest = new RealTimeData.WriteTagValuesRequest() {
                         Properties = new Dictionary<string, string>(requestStream.Current.Init.Properties)
                     };
 
@@ -430,6 +430,43 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        public override async Task<WriteTagValuesResponse> WriteFixedSnapshotTagValues(WriteTagValuesRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+
+            var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+
+            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
+                foreach (var item in request.Values) {
+                    await valueChannel.Writer.WriteAsync(item.ToAdapterWriteTagValueItem(), cancellationToken).ConfigureAwait(false);
+                }
+
+                var response = new WriteTagValuesResponse();
+
+                try {
+                    await foreach (var val in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (val == null) {
+                            continue;
+                        }
+                        response.Results.Add(val.ToGrpcWriteTagValueResult());
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(response.Results.Count);
+                }
+
+                return response;
+            }
+        }
+
+
+        /// <inheritdoc/>
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -438,7 +475,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 ResolvedAdapterFeature<IWriteHistoricalTagValues> adapter = default;
-                WriteTagValuesRequest adapterRequest = null!;
+                RealTimeData.WriteTagValuesRequest adapterRequest = null!;
 
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
@@ -504,6 +541,43 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 valueChannel.Writer.TryComplete();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task<WriteTagValuesResponse> WriteFixedHistoricalTagValues(WriteTagValuesRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+
+            var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+
+            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
+                foreach (var item in request.Values) {
+                    await valueChannel.Writer.WriteAsync(item.ToAdapterWriteTagValueItem(), cancellationToken).ConfigureAwait(false);
+                }
+
+                var response = new WriteTagValuesResponse();
+
+                try {
+                    await foreach (var val in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (val == null) {
+                            continue;
+                        }
+                        response.Results.Add(val.ToGrpcWriteTagValueResult());
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(response.Results.Count);
+                }
+
+                return response;
             }
         }
 

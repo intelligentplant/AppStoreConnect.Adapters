@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var grpcRequest = new CreateSnapshotPushChannelMessage() {
-                    AdapterId = Proxy.RemoteDescriptor.Id
+                    AdapterId = AdapterId
                 };
 
                 grpcRequest.Tags.Add(tag.Id);

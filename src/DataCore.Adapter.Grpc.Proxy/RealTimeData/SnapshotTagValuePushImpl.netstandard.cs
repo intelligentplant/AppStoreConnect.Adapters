@@ -28,7 +28,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
 
             var createSubscriptionMessage = new CreateSnapshotPushChannelMessage() {
-                AdapterId = Proxy.RemoteDescriptor.Id
+                AdapterId = AdapterId
             };
 
             if (request.PublishInterval > TimeSpan.Zero) {
