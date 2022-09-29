@@ -436,7 +436,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-
             var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
                 Properties = new Dictionary<string, string>(request.Properties)
             };
@@ -551,7 +550,6 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
-
 
             var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
                 Properties = new Dictionary<string, string>(request.Properties)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.RealTimeData;
 
 using Grpc.Core;
 
@@ -313,7 +313,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 ResolvedAdapterFeature<IWriteEventMessages> adapter = default;
-                WriteEventMessagesRequest adapterRequest = null!;
+                Events.WriteEventMessagesRequest adapterRequest = null!;
 
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
@@ -379,6 +379,42 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
             finally {
                 valueChannel.Writer.TryComplete();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task<WriteEventMessagesResponse> WriteFixedEventMessages(WriteEventMessagesRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Events.WriteEventMessagesRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+
+            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
+                var valueChannel = Channel.CreateUnbounded<Events.WriteEventMessageItem>();
+                foreach (var item in request.Messages) {
+                    await valueChannel.Writer.WriteAsync(item.ToAdapterWriteEventMessageItem(), cancellationToken).ConfigureAwait(false);
+                }
+
+                var response = new WriteEventMessagesResponse();
+
+                try {
+                    await foreach (var val in adapter.Feature.WriteEventMessages(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                        if (val == null) {
+                            continue;
+                        }
+                        response.Results.Add(val.ToGrpcWriteEventMessageResult());
+                    }
+                }
+                finally {
+                    activity.SetResponseItemCountTag(response.Results.Count);
+                }
+
+                return response;
             }
         }
 
