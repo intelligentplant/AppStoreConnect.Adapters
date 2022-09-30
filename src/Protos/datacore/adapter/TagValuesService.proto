@@ -31,7 +31,10 @@ service TagValuesService {
     // Write tag values
 
     rpc WriteSnapshotTagValues(stream WriteTagValueRequest) returns (stream WriteTagValueResult);
+    rpc WriteFixedSnapshotTagValues(WriteTagValuesRequest) returns (WriteTagValuesResponse);
+
     rpc WriteHistoricalTagValues(stream WriteTagValueRequest) returns (stream WriteTagValueResult);
+    rpc WriteFixedHistoricalTagValues(WriteTagValuesRequest) returns (WriteTagValuesResponse);
 }
 
 
@@ -127,4 +130,16 @@ message WriteTagValueRequest {
 message WriteTagValueInitMessage {
     string adapter_id = 1;
     map<string,string> properties = 2;
+}
+
+
+message WriteTagValuesRequest {
+    string adapter_id = 1;
+    repeated WriteTagValueItem values = 2;
+    map<string,string> properties = 3;
+}
+
+
+message WriteTagValuesResponse {
+    repeated WriteTagValueResult results = 1;
 }

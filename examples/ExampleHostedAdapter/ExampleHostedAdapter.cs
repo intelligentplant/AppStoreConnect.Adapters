@@ -58,7 +58,7 @@ namespace ExampleHostedAdapter {
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
             // when e.g. tags or asset model nodes are created by our adapter.
             _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() { 
-                AdapterId = Descriptor.Id
+                Id = Descriptor.Id
             }, BackgroundTaskService, Logger);
 
             // Tell the adapter to advertise that it supports all of the adapter features
@@ -107,7 +107,7 @@ namespace ExampleHostedAdapter {
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
             _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
-                AdapterId = Descriptor.Id,
+                Id = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
             }, BackgroundTaskService, Logger);
