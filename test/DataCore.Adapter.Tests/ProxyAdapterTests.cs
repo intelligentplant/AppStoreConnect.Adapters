@@ -265,7 +265,7 @@ namespace DataCore.Adapter.Tests {
                         CorrelationId = msg.Id,
                         EventMessage = msg
                     }).ToArray()
-                }).ConfigureAwait(false);
+                }).ToArrayAsync().ConfigureAwait(false);
 
                 Assert.IsNotNull(writeResult);
                 Assert.AreEqual(messages.Length, writeResult.Count());
@@ -300,7 +300,7 @@ namespace DataCore.Adapter.Tests {
                         CorrelationId = correlationId
                     }
                 }
-            }).ConfigureAwait(false);
+            }).ToArrayAsync().ConfigureAwait(false);
 
             return true;
         }

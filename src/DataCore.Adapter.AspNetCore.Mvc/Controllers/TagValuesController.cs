@@ -631,8 +631,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Writes values to an adapter's snapshot. Up to <see cref="MaxSamplesPerWriteRequest"/> 
-        /// values can be written in a single request.
+        /// Writes values to an adapter's snapshot.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
@@ -679,8 +678,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Writes values to an adapter's historical archive. Up to <see cref="MaxSamplesPerWriteRequest"/>
-        /// values can be written in a single request.
+        /// Writes values to an adapter's historical archive.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
@@ -695,11 +693,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
         ///   objects (one per sample written).
         /// </returns>
-        /// <remarks>
-        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
-        ///   in a single request. Subsequent values will be ignored. No corresponding 
-        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
-        /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/history")]
         [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
