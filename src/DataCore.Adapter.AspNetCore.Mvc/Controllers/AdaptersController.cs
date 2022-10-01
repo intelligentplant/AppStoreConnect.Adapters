@@ -70,7 +70,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
         public Task<IActionResult> FindAdapters(string? id = null, string? name = null, string? description = null, [FromQuery] string[]? feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             var request = new FindAdaptersRequest() { 
                 Id = id,
@@ -100,21 +100,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
         public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             if (request.PageSize > 100) {
                 // Don't allow arbitrarily large queries!
                 request.PageSize = 100;
             }
+
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
-
-            var result = new List<AdapterDescriptor>(request.PageSize);
-            await foreach (var item in adapters.ConfigureAwait(false)) {
-                result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
-            }
-
-            return Ok(result); // 200
+            return await Util.StreamResultAsync(adapters, null).ConfigureAwait(false);
         }
 
 
@@ -183,6 +178,45 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     return Forbid(); // 403
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Subscribes to health checks on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses will stream the <see cref="HealthCheckResult"/> for the requested 
+        ///   adapter to the caller as they occur.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/health-status/subscribe")]
+        [ProducesResponseType(typeof(IAsyncEnumerable<HealthCheckResult>), 200)]
+        public async Task<IActionResult> CreateAdapterHealthSubscriptionChannel(string adapterId, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+
+            var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(resolvedFeature.Adapter.Descriptor.Id);
+
+            return await Util.StreamResultAsync(
+                feature.Subscribe(callContext, cancellationToken), 
+                activity
+            ).ConfigureAwait(false);
         }
 
     }
