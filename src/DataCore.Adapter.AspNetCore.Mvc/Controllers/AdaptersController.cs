@@ -194,10 +194,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses will stream the <see cref="HealthCheckResult"/> for the requested 
         ///   adapter to the caller as they occur.
         /// </returns>
-        [HttpGet]
+        [HttpPost]
         [Route("{adapterId}/health-status/subscribe")]
         [ProducesResponseType(typeof(IAsyncEnumerable<HealthCheckResult>), 200)]
-        public async Task<IActionResult> CreateAdapterHealthSubscriptionChannel(string adapterId, CancellationToken cancellationToken) {
+        public async Task<IActionResult> CreateAdapterHealthCheckChannel(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IHealthCheck>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

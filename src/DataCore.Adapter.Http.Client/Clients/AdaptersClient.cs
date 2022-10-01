@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,9 +57,10 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <returns>
         ///   A task that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
+        public async IAsyncEnumerable<AdapterDescriptor> FindAdaptersAsync(
             FindAdaptersRequest request,
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             AdapterHttpClient.ValidateObject(request);
@@ -66,7 +69,12 @@ namespace DataCore.Adapter.Http.Client.Clients {
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<AdapterDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<AdapterDescriptor>(await httpRequest.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 
@@ -142,6 +150,46 @@ namespace DataCore.Adapter.Http.Client.Clients {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<HealthCheckResult>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a health check subscription on a remote adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the adapter health status.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public async IAsyncEnumerable<HealthCheckResult> CreateAdapterHealthCheckSubscriptionAsync(
+            string adapterId,
+            RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/health-status/subscribe";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<HealthCheckResult>(await httpRequest.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
             }
         }
 
