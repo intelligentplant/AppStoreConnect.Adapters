@@ -38,16 +38,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         private readonly IBackgroundTaskService _backgroundTaskService;
 
         /// <summary>
-        /// The maximum number of samples that can be requested overall per request.
-        /// </summary>
-        public const int MaxSamplesPerReadRequest = 20000;
-
-        /// <summary>
-        /// The maximum number of samples that can be written per request.
-        /// </summary>
-        public const int MaxSamplesPerWriteRequest = 5000;
-
-        /// <summary>
         /// Default query time range to use in a historical query if a start or end time is not 
         /// specified on a route that accepts the time range as query string parameters.
         /// </summary>
@@ -657,11 +647,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
         ///   objects (one per sample written).
         /// </returns>
-        /// <remarks>
-        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
-        ///   in a single request. Subsequent values will be ignored. No corresponding 
-        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
-        /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]

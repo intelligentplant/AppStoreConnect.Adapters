@@ -27,11 +27,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
-        /// <summary>
-        /// The maximum number of annotations that can be returned per query.
-        /// </summary>
-        public const int MaxAnnotationsPerQuery = 1000;
-
 
         /// <summary>
         /// Creates a new <see cref="TagAnnotationsController"/> object.
