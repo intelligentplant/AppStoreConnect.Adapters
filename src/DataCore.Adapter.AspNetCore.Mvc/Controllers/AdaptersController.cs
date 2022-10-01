@@ -109,7 +109,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
-            return await Util.StreamResultAsync(adapters, null).ConfigureAwait(false);
+            return await Util.StreamResultsAsync(adapters, null).ConfigureAwait(false);
         }
 
 
@@ -213,7 +213,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(resolvedFeature.Adapter.Descriptor.Id);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.Subscribe(callContext, cancellationToken), 
                 activity
             ).ConfigureAwait(false);

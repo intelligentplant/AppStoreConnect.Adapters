@@ -76,7 +76,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadAnnotations(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);

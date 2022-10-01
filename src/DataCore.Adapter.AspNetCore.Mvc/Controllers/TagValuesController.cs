@@ -127,7 +127,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadSnapshotTagValues(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -232,7 +232,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadRawTagValues(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -341,7 +341,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadPlotTagValues(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -419,7 +419,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadTagValuesAtTimes(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -545,7 +545,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadProcessedTagValues(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -623,7 +623,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.GetSupportedDataFunctions(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -670,7 +670,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Values.PublishToChannel();
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -717,7 +717,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Values.PublishToChannel();
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
             ).ConfigureAwait(false);

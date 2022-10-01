@@ -109,7 +109,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.BrowseAssetModelNodes(callContext, request, cancellationToken), 
                 activity
             ).ConfigureAwait(false);
@@ -153,7 +153,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.GetAssetModelNodes(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -197,7 +197,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.FindAssetModelNodes(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);

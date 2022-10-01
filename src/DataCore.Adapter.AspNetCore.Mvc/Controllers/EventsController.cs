@@ -88,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -133,7 +133,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken),
                 activity
             ).ConfigureAwait(false);
@@ -180,7 +180,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Events.PublishToChannel();
 
-            return await Util.StreamResultAsync(
+            return await Util.StreamResultsAsync(
                 feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
             ).ConfigureAwait(false);

@@ -87,7 +87,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <remarks>
         /// 
         /// <para>
-        ///   <see cref="StreamResultAsync{T}(IAsyncEnumerable{T}, Activity?)"/> will enumerate the 
+        ///   <see cref="StreamResultsAsync{T}(IAsyncEnumerable{T}, Activity?)"/> will enumerate the 
         ///   first item in the <paramref name="stream"/> in case evaluating the stream throws an 
         ///   exception. If no exception is thrown, an <see cref="OkObjectResult"/> containing the 
         ///   streamed items will be returned. ASP.NET Core automatically chunks <see cref="OkObjectResult"/> 
@@ -105,7 +105,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </para>
         /// 
         /// </remarks>
-        internal static async ValueTask<IActionResult> StreamResultAsync<T>(
+        internal static async ValueTask<IActionResult> StreamResultsAsync<T>(
             IAsyncEnumerable<T> stream,
             Activity? activity
         ) {
