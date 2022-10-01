@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
 
@@ -46,8 +47,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                     Properties = request.Properties
                 };
 
-                var clientResponse = await client.TagValues.WriteSnapshotValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.TagValues.WriteSnapshotValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }
