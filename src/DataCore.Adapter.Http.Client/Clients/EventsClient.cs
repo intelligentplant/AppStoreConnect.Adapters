@@ -42,6 +42,61 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
 
         /// <summary>
+        /// Creates an event message subscription channel on an adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the results back to the caller.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async IAsyncEnumerable<EventMessage> CreateEventMessageSubscriptionAsync(
+            string adapterId,
+            CreateEventMessageSubscriptionRequest request,
+            RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/subscribe";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<EventMessage>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
+            }
+        }
+
+
+        /// <summary>
         /// Reads historical event messages from an adapter using a time range.
         /// </summary>
         /// <param name="adapterId">

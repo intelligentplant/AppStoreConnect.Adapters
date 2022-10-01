@@ -52,6 +52,50 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
+        /// Creates an event message subscription on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The search filter.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses will stream <see cref="EventMessage"/> objects to the caller.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/subscribe")]
+        [ProducesResponseType(typeof(IAsyncEnumerable<EventMessage>), 200)]
+        public async Task<IActionResult> CreateEventMessageChannel(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IEventMessagePush>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesForTimeRange))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+
+            var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(resolvedFeature.Adapter.Descriptor.Id, request);
+
+            return await Util.StreamResultsAsync(
+                feature.Subscribe(callContext, request, cancellationToken),
+                activity
+            ).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
         /// Reads historical event messages for the specified time range.
         /// </summary>
         /// <param name="adapterId">
