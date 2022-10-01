@@ -92,7 +92,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public Task<IActionResult> ReadSnapshotValues(string adapterId, [FromQuery] string[] tag = null!, CancellationToken cancellationToken = default) {
             return ReadSnapshotValues(adapterId, new ReadSnapshotTagValuesRequest() { 
                 Tags = tag ?? Array.Empty<string>()
@@ -117,7 +117,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -173,7 +173,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/raw")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public Task<IActionResult> ReadRawValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -280,7 +280,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpGet]
         [Route("{adapterId}/plot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public Task<IActionResult> ReadPlotValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -331,7 +331,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpPost]
         [Route("{adapterId}/plot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -378,7 +378,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/values-at-times")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public Task<IActionResult> ReadValuesAtTimes(
             string adapterId, 
             [FromQuery] string[] tag = null!,
@@ -409,7 +409,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/values-at-times")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -473,7 +473,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
         [Route("{adapterId}/processed")]
-        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
         public Task<IActionResult> ReadProcessedValues(
             string adapterId,
             [FromQuery] string[] tag = null!,
@@ -535,7 +535,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
         [Route("{adapterId}/processed")]
-        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -583,7 +583,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
-        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
         public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
         }
@@ -613,7 +613,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
         [Route("{adapterId}/supported-aggregations")]
-        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, GetSupportedDataFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -664,7 +664,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -717,7 +717,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/history")]
-        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
