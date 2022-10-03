@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -26,6 +25,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     // Legacy route for compatibility with v1 of the toolkit
     [Route("api/data-core/v1.0/tag-values")] 
     public class TagValuesController: ControllerBase {
+
+        /// <summary>
+        /// Holds channels for updating active snapshot subscriptions.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Guid, Channel<TagValueSubscriptionUpdate>> s_activeSubscriptions = new ConcurrentDictionary<Guid, Channel<TagValueSubscriptionUpdate>>();
 
         /// <summary>
         /// The service for accessing the running adapters.
@@ -127,10 +131,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadSnapshotTagValues(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -232,10 +236,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadRawTagValues(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -341,10 +345,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadPlotTagValues(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -419,10 +423,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadTagValuesAtTimes(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -545,10 +549,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadProcessedTagValues(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -623,10 +627,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.GetSupportedDataFunctions(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -670,10 +674,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Values.PublishToChannel();
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -717,11 +721,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Values.PublishToChannel();
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
-            ).ConfigureAwait(false);
-        }
+            );
+        } 
 
     }
 }

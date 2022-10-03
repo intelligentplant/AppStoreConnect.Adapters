@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/snapshot";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<TagValueQueryResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
@@ -136,7 +136,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/raw";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach(var item in JsonSerializer.DeserializeAsyncEnumerable<TagValueQueryResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
@@ -296,7 +296,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/supported-aggregations";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<DataFunctionDescriptor>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
@@ -351,7 +351,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/processed";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<ProcessedTagValueQueryResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
@@ -406,7 +406,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write/snapshot";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<WriteTagValueResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
@@ -461,7 +461,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write/history";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<WriteTagValueResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {

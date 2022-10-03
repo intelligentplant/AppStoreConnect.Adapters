@@ -77,10 +77,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.GetTagProperties(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -151,10 +151,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.FindTags(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -237,10 +237,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.GetTags(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 

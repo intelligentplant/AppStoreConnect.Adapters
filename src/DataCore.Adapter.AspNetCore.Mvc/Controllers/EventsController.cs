@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Threading.Channels;
@@ -26,6 +28,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     public class EventsController : ControllerBase {
 
         /// <summary>
+        /// Holds channels for updating active topic-based event subscriptions.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Guid, Channel<EventMessageSubscriptionUpdate>> s_activeSubscriptions = new ConcurrentDictionary<Guid, Channel<EventMessageSubscriptionUpdate>>();
+
+
+        /// <summary>
         /// For accessing the available adapters.
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
@@ -48,50 +56,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         public EventsController(IAdapterAccessor adapterAccessor, IBackgroundTaskService backgroundTaskService) {
             _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
-        }
-
-
-        /// <summary>
-        /// Creates an event message subscription on the specified adapter.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The search filter.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   Successful responses will stream <see cref="EventMessage"/> objects to the caller.
-        /// </returns>
-        [HttpPost]
-        [Route("{adapterId}/subscribe")]
-        [ProducesResponseType(typeof(IAsyncEnumerable<EventMessage>), 200)]
-        public async Task<IActionResult> CreateEventMessageChannel(string adapterId, CreateEventMessageSubscriptionRequest request, CancellationToken cancellationToken) {
-            var callContext = new HttpAdapterCallContext(HttpContext);
-            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IEventMessagePush>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (!resolvedFeature.IsAdapterResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
-            }
-            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
-            }
-            if (!resolvedFeature.IsFeatureResolved) {
-                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IReadEventMessagesForTimeRange))); // 400
-            }
-            if (!resolvedFeature.IsFeatureAuthorized) {
-                return Forbid(); // 403
-            }
-
-            var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartEventMessagePushSubscribeActivity(resolvedFeature.Adapter.Descriptor.Id, request);
-
-            return await Util.StreamResultsAsync(
-                feature.Subscribe(callContext, request, cancellationToken),
-                activity
-            ).ConfigureAwait(false);
         }
 
 
@@ -132,10 +96,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -177,10 +141,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             var feature = resolvedFeature.Feature;
             var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
 
@@ -224,10 +188,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var channel = request.Events.PublishToChannel();
 
-            return await Util.StreamResultsAsync(
+            return Util.StreamResults(
                 feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
                 activity
-            ).ConfigureAwait(false);
+            );
         }
 
     }

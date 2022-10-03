@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.Security.Principal;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Diagnostics;
@@ -19,23 +21,10 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     internal static class Util {
 
         /// <summary>
-        /// HTTP response header that indicates that a query generated too many results to return.
+        /// HTTP request header that is used to manage state for mutable topic-based subscriptions 
+        /// (such as snapshot tag value subscriptions).
         /// </summary>
-        private const string IncompleteResponseHeaderName = "DataCore-IncompleteResponse";
-
-        /// <summary>
-        /// Adds a header to an HTTP response to indicate that a query returned too many 
-        /// items to include in a response object.
-        /// </summary>
-        /// <param name="response">
-        ///   The response.
-        /// </param>
-        /// <param name="reason">
-        ///   An explanation of the limit.
-        /// </param>
-        internal static void AddIncompleteResponseHeader(HttpResponse response, string reason) {
-            response.Headers.Add(IncompleteResponseHeaderName, reason);
-        }
+        internal const string SubscriptionIdHeaderName = "X-SubscriptionId";
 
 
         /// <summary>
@@ -81,93 +70,86 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="activity">
         ///   The <see cref="Activity"/> associated with reading the <paramref name="stream"/>.
         /// </param>
+        /// <param name="onBeforeSendHeaders">
+        ///   A callback to invoke before writing of the <paramref name="stream"/> to the response 
+        ///   begins.
+        /// </param>
+        /// <param name="onCompleted">
+        ///   A callback to invoke when the <paramref name="stream"/> has completed.
+        /// </param>
         /// <returns>
         ///   An <see cref="IActionResult"/> that will contain the streamed items.
         /// </returns>
         /// <remarks>
-        /// 
-        /// <para>
-        ///   <see cref="StreamResultsAsync{T}(IAsyncEnumerable{T}, Activity?)"/> will enumerate the 
-        ///   first item in the <paramref name="stream"/> in case evaluating the stream throws an 
-        ///   exception. If no exception is thrown, an <see cref="OkObjectResult"/> containing the 
-        ///   streamed items will be returned. ASP.NET Core automatically chunks <see cref="OkObjectResult"/> 
-        ///   instances that return an <see cref="IAsyncEnumerable{T}"/>.
-        /// </para>
-        /// 
-        /// <para>
-        ///   If evaluation of the first <paramref name="stream"/> item throws a <see cref="SecurityException"/>, 
-        ///   a new <see cref="ForbidResult"/> will be returned.
-        /// </para>
-        /// 
-        /// <para>
         ///   The provided <paramref name="activity"/> will always be disposed once the <paramref name="stream"/> 
         ///   has completed.
-        /// </para>
-        /// 
         /// </remarks>
-        internal static async ValueTask<IActionResult> StreamResultsAsync<T>(
+        internal static IActionResult StreamResults<T>(
             IAsyncEnumerable<T> stream,
-            Activity? activity
+            Activity? activity = null,
+            Action? onBeforeSendHeaders = null,
+            Action? onCompleted = null
         ) {
             try {
-                var enumerator = stream.ConfigureAwait(false).GetAsyncEnumerator();
-                await enumerator.MoveNextAsync();
-                return new OkObjectResult(EnumerateAsync(enumerator, activity));
+                onBeforeSendHeaders?.Invoke();
+                return new OkObjectResult(EnumerateAsync(stream, activity, onCompleted));
             }
             catch (OperationCanceledException) {
                 activity?.Dispose();
+                onCompleted?.Invoke();
                 return new StatusCodeResult(0);
             }
             catch (SecurityException) {
                 activity?.Dispose();
+                onCompleted?.Invoke();
                 return new ForbidResult();
             }
             catch (Exception) {
                 activity?.Dispose();
+                onCompleted?.Invoke();
                 throw;
             }
         }
 
 
         /// <summary>
-        /// Generates a new <see cref="IAsyncEnumerable{T}"/> from a <see cref="ConfiguredCancelableAsyncEnumerable{T}.Enumerator"/> 
-        /// and disposes of the provided <paramref name="activity"/> once the <paramref name="enumerator"/> 
-        /// has completed.
+        /// Enumerates the specified <paramref name="stream"/>.
         /// </summary>
         /// <typeparam name="T">
         ///   The value type.
         /// </typeparam>
-        /// <param name="enumerator">
-        ///   The <see cref="ConfiguredCancelableAsyncEnumerable{T}.Enumerator"/> to enumerate.
+        /// <param name="stream">
+        ///   The <see cref="IAsyncEnumerable{T}"/> to enumerate.
         /// </param>
         /// <param name="activity">
-        ///   The <see cref="Activity"/> associated with the <paramref name="enumerator"/>.
+        ///   The <see cref="Activity"/> associated with the <paramref name="stream"/>.
+        /// </param>
+        /// <param name="onCompleted">
+        ///   A callback to invoke when the <paramref name="stream"/> has completed.
         /// </param>
         /// <returns>
         ///   A new <see cref="IAsyncEnumerable{T}"/>.
         /// </returns>
         private static async IAsyncEnumerable<T> EnumerateAsync<T>(
-            ConfiguredCancelableAsyncEnumerable<T>.Enumerator enumerator, 
-            Activity? activity
+            IAsyncEnumerable<T> stream,
+            Activity? activity,
+            Action? onCompleted
         ) {
             var itemCount = 0;
 
             try {
-                if (enumerator.Current != null) {
-                    ++itemCount;
-                    yield return enumerator.Current;
-                }
-
-                while (await enumerator.MoveNextAsync()) {
-                    if (enumerator.Current != null) {
-                        ++itemCount;
-                        yield return enumerator.Current;
+                await foreach (var item in stream.ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
                     }
+                    ++itemCount;
+                    yield return item;
                 }
             }
             finally {
                 activity.SetResponseItemCountTag(itemCount);
                 activity?.Dispose();
+                onCompleted?.Invoke();
             }
         }
 
