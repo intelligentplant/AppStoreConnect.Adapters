@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Tests {
                 .WithAutomaticReconnect();
 
             await using (var client = new AdapterSignalRClient(builder.Build())) {
-                CancelAfter(TimeSpan.FromSeconds(1));
+                CancelAfter(TimeSpan.FromSeconds(10));
 
                 var funcs = await client.TagValues.GetSupportedDataFunctionsAsync(
                     WebHostConfiguration.AdapterId, 
