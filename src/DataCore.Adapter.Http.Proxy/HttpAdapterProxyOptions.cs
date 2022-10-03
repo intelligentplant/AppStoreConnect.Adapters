@@ -24,8 +24,12 @@ namespace DataCore.Adapter.Http.Proxy {
 
         /// <summary>
         /// The interval to use between re-polling the health status of the remote adapter. 
-        /// Ignored if the remote adapter does not support <see cref="Diagnostics.IHealthCheck"/>.
+        /// Ignored if the remote adapter does not support <see cref="Adapter.Diagnostics.IHealthCheck"/>.
         /// </summary>
+        /// <remarks>
+        ///   Specifying a value less than or equal to <see cref="TimeSpan.Zero"/> will result in 
+        ///   periodic health check updates being disabled.
+        /// </remarks>
         public TimeSpan HealthCheckPushInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>

@@ -84,7 +84,10 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <param name="remoteAdapterFeatures">
         ///   The features supported by the remote adapter.
         /// </param>
-        internal static void AddFeaturesToProxy(HttpAdapterProxy proxy, IEnumerable<string> remoteAdapterFeatures) {
+        /// <param name="predicate">
+        ///   A predicate that allows features to be omitted on a case-by-case basis.
+        /// </param>
+        internal static void AddFeaturesToProxy(HttpAdapterProxy proxy, IEnumerable<string> remoteAdapterFeatures, Func<Type, bool>? predicate = null) {
             // Tracks feature instances as we go, in case the same type implements multiple 
             // features.
             var featureInstances = new Dictionary<Type, object>();
@@ -97,7 +100,7 @@ namespace DataCore.Adapter.Http.Proxy {
                 // .Key = adapter feature interface
                 // .Value = implementation type
 
-                if (implementation.Key == null) {
+                if (implementation.Key == null || !(predicate?.Invoke(implementation.Key) ?? true)) {
                     continue;
                 }
 
