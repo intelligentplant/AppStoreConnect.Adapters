@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Http.Client.Clients;
-using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Http.Client {
 
@@ -133,6 +132,31 @@ namespace DataCore.Adapter.Http.Client {
             return new Jaahas.Http.HttpRequestPipelineHandler(async (request, next, cancellationToken) => {
                 await callback(request, request.GetStateProperty<RequestMetadata>(), cancellationToken).ConfigureAwait(false);
                 return await next(request, cancellationToken).ConfigureAwait(false);
+            });
+        }
+
+
+        /// <summary>
+        /// Creates a <see cref="DelegatingHandler"/> that sets the HTTP version for outgoing 
+        /// requests to the specified version.
+        /// </summary>
+        /// <param name="version">
+        ///   The HTTP version to use.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="DelegatingHandler"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="version"/> is <see langword="null"/>.
+        /// </exception>
+        public static DelegatingHandler CreateHttpVersionHandler(Version version) {
+            if (version == null) {
+                throw new ArgumentNullException(nameof(version));
+            }
+
+            return CreateRequestTransformHandler((request, metadata, cancellationToken) => {
+                request.Version = version;
+                return Task.CompletedTask;
             });
         }
 
