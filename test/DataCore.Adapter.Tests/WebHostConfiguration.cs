@@ -46,17 +46,11 @@ namespace DataCore.Adapter.Tests {
 
             services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
                 AllowUntrustedCertificates(builder.PrimaryHandler);
-                builder.AdditionalHandlers.Add(Http.Client.AdapterHttpClient.CreateRequestTransformHandler((req, metadata, ct) => {
-                    req.Version = new Version(2, 0);
-                    req.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
-                    return Task.CompletedTask;
-                }));
+                builder.AdditionalHandlers.Add(Http.Client.AdapterHttpClient.CreateHttpVersionHandler(new Version(2, 0)));
             }).ConfigureHttpClient(client => {
                 client.BaseAddress = new Uri(DefaultUrl + "/");
-                client.DefaultRequestVersion = new Version(2, 0);
             });
             
-
             services.AddTransient(sp => {
                 return GrpcNet.Client.GrpcChannel.ForAddress(DefaultUrl, new GrpcNet.Client.GrpcChannelOptions() {
                     HttpClient = sp.GetService<IHttpClientFactory>().CreateClient(HttpClientName)

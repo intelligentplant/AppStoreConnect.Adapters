@@ -17,7 +17,7 @@ namespace DataCore.Adapter.Tests {
 
         protected override IEnumerable<string> UnsupportedStandardFeatures {
             get {
-                // HTTP proxy does not support any push-based features.
+                // HTTP proxy does not currently support any push-based features.
                 yield return WellKnownFeatures.Diagnostics.ConfigurationChanges;
                 yield return WellKnownFeatures.Events.EventMessagePush;
                 yield return WellKnownFeatures.Events.EventMessagePushWithTopics;
