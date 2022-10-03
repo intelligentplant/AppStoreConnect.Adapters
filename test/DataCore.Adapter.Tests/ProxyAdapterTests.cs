@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Http.Client;
@@ -54,6 +55,23 @@ namespace DataCore.Adapter.Tests {
             }
 
             return true;
+        }
+
+
+        protected override BrowseAssetModelNodesRequest CreateBrowseAssetModelNodesRequest(TestContext context) {
+            return new BrowseAssetModelNodesRequest();
+        }
+
+
+        protected override FindAssetModelNodesRequest CreateFindAssetModelNodesRequest(TestContext context) {
+            return new FindAssetModelNodesRequest() { Name = "*child" };
+        }
+
+
+        protected override GetAssetModelNodesRequest CreateGetAssetModelNodesRequest(TestContext context) {
+            return new GetAssetModelNodesRequest() {
+                Nodes = new[] { "3" }
+            };
         }
 
 
