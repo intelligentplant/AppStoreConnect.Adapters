@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
@@ -34,8 +32,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.Events.ReadEventMessagesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.Events.ReadEventMessagesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

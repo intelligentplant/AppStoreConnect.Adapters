@@ -57,7 +57,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/properties")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterProperty>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterProperty>), 200)]
         public async Task<IActionResult> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -75,26 +75,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<AdapterProperty>();
-
-                    await foreach (var item in feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.GetTagProperties(callContext, request, cancellationToken),
+                activity
+            );
         }
 
 
@@ -118,7 +104,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/properties")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTagProperties(string adapterId, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await GetTagProperties(adapterId, new GetTagPropertiesRequest() {
                 PageSize = pageSize,
@@ -145,7 +131,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/find")]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -163,26 +149,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagDefinition>();
-
-                    await foreach (var item in feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.FindTags(callContext, request, cancellationToken),
+                activity
+            );
         }
 
 
@@ -216,7 +188,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/find")]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
@@ -246,7 +218,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/get-by-id")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -263,26 +235,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagDefinition>();
-
-                    await foreach (var item in feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.GetTags(callContext, request, cancellationToken),
+                activity
+            );
         }
 
 
@@ -304,7 +262,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/get-by-id")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTags(string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
             return await GetTags(adapterId, new GetTagsRequest() {
                 Tags = tag

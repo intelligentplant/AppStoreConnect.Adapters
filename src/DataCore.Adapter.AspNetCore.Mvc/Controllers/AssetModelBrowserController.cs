@@ -27,11 +27,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
-        /// <summary>
-        /// Maximum number of asset model nodes that will be returned in a single query.
-        /// </summary>
-        public const int MaxNodesPerQuery = 1000;
-
 
         /// <summary>
         /// Creates a new <see cref="AssetModelBrowserController"/> object.
@@ -45,8 +40,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Browses the asset model hierarchy. Up to <see cref="MaxNodesPerQuery"/> will be 
-        /// returned.
+        /// Browses the asset model hierarchy.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID to query.
@@ -69,7 +63,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/browse")]
-        [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public Task<IActionResult> BrowseNodes(string adapterId, string? start = null, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default) {
             return BrowseNodesPost(adapterId, new BrowseAssetModelNodesRequest() { 
                 ParentId = start,
@@ -80,8 +74,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Browses the asset model hierarchy. Up to <see cref="MaxNodesPerQuery"/> will be 
-        /// returned.
+        /// Browses the asset model hierarchy.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID to query.
@@ -97,7 +90,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/browse")]
-        [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodesPost(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -114,36 +107,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
-
-                    var itemsRead = 0;
-                    await foreach (var item in feature.BrowseAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item != null) {
-                            ++itemsRead;
-                            result.Add(item);
-
-                            if (itemsRead >= MaxNodesPerQuery) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                                break;
-                            }
-                        }
-                    }
-
-                    activity.SetResponseItemCountTag(itemsRead);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.BrowseAssetModelNodes(callContext, request, cancellationToken), 
+                activity
+            );
         }
 
 
         /// <summary>
-        /// Gets a collection of nodes by ID. Up to <see cref="MaxNodesPerQuery"/> will be returned.
+        /// Gets a collection of nodes by ID.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID to query.
@@ -159,7 +133,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/get-by-id")]
-        [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> GetNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelBrowse>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -175,38 +149,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
-
-                    var itemsRead = 0;
-                    await foreach (var item in feature.GetAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item != null) {
-                            ++itemsRead;
-                            result.Add(item);
-
-                            if (itemsRead >= MaxNodesPerQuery) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                                break;
-                            }
-                        }
-                    }
-
-                    activity.SetResponseItemCountTag(itemsRead);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.GetAssetModelNodes(callContext, request, cancellationToken),
+                activity
+            );
         }
 
 
         /// <summary>
-        /// Finds nodes matching the specified search filter. Up to <see cref="MaxNodesPerQuery"/> 
-        /// will be returned.
+        /// Finds nodes matching the specified search filter.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID to query.
@@ -222,7 +177,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/find")]
-        [ProducesResponseType(typeof(IEnumerable<AssetModelNode>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> FindNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IAssetModelSearch>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -238,32 +193,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<AssetModelNode>(MaxNodesPerQuery);
-
-                    var itemsRead = 0;
-                    await foreach (var item in feature.FindAssetModelNodes(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item != null) {
-                            ++itemsRead;
-                            result.Add(item);
-
-                            if (itemsRead >= MaxNodesPerQuery) {
-                                Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxNodesPerQuery));
-                                break;
-                            }
-                        }
-                    }
-
-                    activity.SetResponseItemCountTag(itemsRead);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.FindAssetModelNodes(callContext, request, cancellationToken),
+                activity
+            );
+        
         }
 
     }

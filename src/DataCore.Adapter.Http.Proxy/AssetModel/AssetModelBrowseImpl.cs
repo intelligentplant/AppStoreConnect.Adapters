@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
 
@@ -30,8 +31,7 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }
@@ -49,8 +49,7 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.AssetModel.GetNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.AssetModel.GetNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

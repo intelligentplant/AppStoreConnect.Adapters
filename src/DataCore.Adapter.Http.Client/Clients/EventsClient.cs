@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
 
@@ -66,10 +66,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<EventMessage>> ReadEventMessagesAsync(
+        public async IAsyncEnumerable<EventMessage> ReadEventMessagesAsync(
             string adapterId, 
             ReadEventMessagesForTimeRangeRequest request, 
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -80,10 +81,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-time-range";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<EventMessage>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<EventMessage>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 
@@ -115,10 +121,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<EventMessageWithCursorPosition>> ReadEventMessagesAsync(
+        public async IAsyncEnumerable<EventMessageWithCursorPosition> ReadEventMessagesAsync(
             string adapterId, 
             ReadEventMessagesUsingCursorRequest request, 
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -129,10 +136,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/by-cursor";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<EventMessageWithCursorPosition>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<EventMessageWithCursorPosition>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 
@@ -140,7 +152,6 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <summary>
         /// Writes event messages to an adapter.
         /// </summary>
-        /// 
         /// <param name="adapterId">
         ///   The ID of the adapter to query.
         /// </param>
@@ -165,10 +176,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<WriteEventMessageResult>> WriteEventMessagesAsync(
+        public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessagesAsync(
             string adapterId, 
             WriteEventMessagesRequestExtended request, 
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -179,10 +191,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/write";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<WriteEventMessageResult>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<WriteEventMessageResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Events;
-using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Http.Proxy.Events {
     /// <summary>
@@ -44,8 +41,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
                     Properties = request.Properties
                 };
 
-                var clientResponse = await client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

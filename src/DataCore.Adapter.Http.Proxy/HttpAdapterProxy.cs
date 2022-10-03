@@ -160,8 +160,8 @@ namespace DataCore.Adapter.Http.Proxy {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
 #pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
-#pragma warning restore CS0618 // Type or member is obsolete
             _snapshotRefreshInterval = Options?.TagValuePushInterval ?? TimeSpan.FromMinutes(1);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 
@@ -185,7 +185,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        private async Task Init(CancellationToken cancellationToken = default) {
+        private async Task InitAsync(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(null, cancellationToken).ConfigureAwait(false);
             var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, null, cancellationToken).ConfigureAwait(false);
@@ -194,8 +194,8 @@ namespace DataCore.Adapter.Http.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
-            if (_snapshotRefreshInterval > TimeSpan.Zero && this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
-                // We are able to simulate tag value push functionality.
+            if (!this.TryGetFeature<Adapter.RealTimeData.ISnapshotTagValuePush>(out _) && _snapshotRefreshInterval > TimeSpan.Zero && this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
+                // We are able to simulate tag value push functionality via polling.
                 var simulatedPush = new Adapter.RealTimeData.PollingSnapshotTagValuePush(
                     readSnapshot!, 
                     new Adapter.RealTimeData.PollingSnapshotTagValuePushOptions() { 
@@ -231,28 +231,42 @@ namespace DataCore.Adapter.Http.Proxy {
                 }
             }
 
-            if (Options.HealthCheckPushInterval > TimeSpan.Zero && RemoteDescriptor.HasFeature<IHealthCheck>()) {
-                // Remote adapter supports health checks. Although the HTTP client does not support 
-                // push notifications, we can periodically signal that the status should be re-polled.
-                BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                    do {
-                        await Task.Delay(Options.HealthCheckPushInterval, ct).ConfigureAwait(false);
-                        OnHealthStatusChanged();
-                    } while (!ct.IsCancellationRequested);
-                });
+            if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
+                BackgroundTaskService.QueueBackgroundWorkItem(RunPollingRemoteHealthSubscriptionAsync);
             }
         }
 
 
         /// <inheritdoc/>
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            await Init(cancellationToken).ConfigureAwait(false);
+            await InitAsync(cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
         protected override Task StopAsync(CancellationToken cancellationToken) {
             return Task.CompletedTask;
+        }
+
+
+        /// <summary>
+        /// Long-running task that tells the adapter to recompute the overall health status of the 
+        /// adapter on a periodic basis.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will fire when the task should end.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
+        /// </returns>
+        private async Task RunPollingRemoteHealthSubscriptionAsync(CancellationToken cancellationToken) {
+            var interval = Options.HealthCheckPushInterval;
+            if (interval > TimeSpan.Zero) {
+                do {
+                    await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                    OnHealthStatusChanged();
+                } while (!cancellationToken.IsCancellationRequested);
+            }
         }
 
 

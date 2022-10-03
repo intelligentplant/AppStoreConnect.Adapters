@@ -34,8 +34,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             var client = GetClient();
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.TagValues.ReadPlotTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.TagValues.ReadPlotTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

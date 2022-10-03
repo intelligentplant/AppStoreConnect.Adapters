@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -115,10 +117,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(
+        public async IAsyncEnumerable<TagValueAnnotationQueryResult> ReadAnnotationsAsync(
             string adapterId, 
             ReadAnnotationsRequest request, 
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -129,10 +132,15 @@ namespace DataCore.Adapter.Http.Client.Clients {
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
             using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<TagValueAnnotationQueryResult>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<TagValueAnnotationQueryResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 

@@ -47,8 +47,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                     Properties = request.Properties
                 };
 
-                var clientResponse = await client.TagValues.WriteHistoricalValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.TagValues.WriteHistoricalValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

@@ -12,6 +12,8 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.Http.
 
 # Notes
 
+## Base Address
+
 All API routes are relative to the base URL for the HTTP client supplied to the `AdapterHttpClient`. Therefore, you _must_ set a `BaseAddress` property on the `HttpClient` instance i.e.
 
 ```csharp
@@ -19,6 +21,8 @@ var httpClient = new HttpClient() {
     BaseAddress = "https://my-site.com/"
 };
 ```
+
+## Authentication and Request Metadata
 
 All query methods optionally accept a `RequestMetadata` as a parameter, allowing you to associate additional metadata with an outgoing request. This is useful if e.g. you are using a back-channel HTTP connection to query remote adapters on behalf of one of your app's users, and you need to add an `Authorize` header to an outgoing request to represent the calling user.
 
@@ -62,4 +66,39 @@ public class MyController : ControllerBase {
     }
 
 }
+```
+
+## Enabling HTTP/2 Support
+
+Requests sent by an `HttpClient` default to using HTTP 1.1. To allow the use of HTTP/2 (or HTTP/3), you can add a `DelegatingHandler` to your request pipeline to set a higher default version:
+
+```csharp
+services
+    .AddHttpClient<AdapterHttpClient>()
+    .ConfigureHttpMessageHandlerBuilder(builder => {
+        var httpVersionHandler = AdapterHttpClient.CreateHttpVersionHandler(new Version(2, 0));
+        builder.AdditionalHandlers.Add(httpVersionHandler);
+    };
+```
+
+Note that setting the default HTTP version on the `HttpClient` via `HttpClient.DefaultRequestVersion` will _not_ correctly set the HTTP version here, due to [this issue](https://github.com/dotnet/runtime/issues/31190) in the .NET runtime.  
+
+The default behaviour of an HTTP request is to downgrade to a lower HTTP version if the requested version is not supported by the server, so specifying a higher version is safe by default.
+
+
+### HTTP/2 Support on .NET Framework
+
+HTTP/2 is supported on .NET Framework on Windows 11 and Windows Server 2022 or higher via the `System.Net.Http.WinHttpHandler` NuGet package. You must explicitly configure the primary HTTP handler for an HTTP client to be able to use it:
+
+```csharp
+services
+    .AddHttpClient<AdapterHttpClient>()
+    .ConfigureHttpMessageHandlerBuilder(builder => {
+        builder.PrimaryHandler = new WinHttpHandler();
+
+        builder.AdditionalHandlers.Add(AdapterHttpClient.CreateRequestTransformHandler((req, metadata, ct) => {
+            req.Version = new Version(2, 0);
+            return Task.CompletedTask;
+        }));
+    };
 ```

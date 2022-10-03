@@ -27,11 +27,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
-        /// <summary>
-        /// The maximum number of annotations that can be returned per query.
-        /// </summary>
-        public const int MaxAnnotationsPerQuery = 1000;
-
 
         /// <summary>
         /// Creates a new <see cref="TagAnnotationsController"/> object.
@@ -61,7 +56,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueAnnotationQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueAnnotationQueryResult>), 200)]
         public async Task<IActionResult> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -77,33 +72,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
+            var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagValueAnnotationQueryResult>();
-
-                    await foreach (var item in feature.ReadAnnotations(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxAnnotationsPerQuery) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxAnnotationsPerQuery));
-                            break;
-                        }
-
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadAnnotations(callContext, request, cancellationToken),
+                activity
+            );
         }
 
 
