@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+using DataCore.Adapter.Common;
+
 namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
