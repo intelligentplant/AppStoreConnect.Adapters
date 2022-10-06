@@ -7,6 +7,7 @@ using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Http.Proxy;
 using DataCore.Adapter.RealTimeData;
 
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,13 +36,29 @@ namespace DataCore.Adapter.Tests {
 
         protected override HttpAdapterProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider) {
             var options = new HttpAdapterProxyOptions() {
-                RemoteId = remoteAdapterId
+                RemoteId = remoteAdapterId,
+                SignalROptions = new SignalROptions() {
+                    ConnectionFactory = (url, ctx) => new HubConnectionBuilder()
+                        .WithUrl(url, options => {
+                            options.HttpMessageHandlerFactory = handler => {
+                                WebHostConfiguration.AllowUntrustedCertificates(handler);
+                                return handler;
+                            };
+                        })
+                        .WithAutomaticReconnect()
+                        .AddJsonProtocol(options => {
+                            options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                        })
+                        .Build()
+                }
             };
 
             if (string.Equals(context.TestName, nameof(HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsZero))) {
+                options.SignalROptions = null;
                 options.TagValuePushInterval = TimeSpan.Zero;
             }
             else if (string.Equals(context.TestName, nameof(HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsNegative))) {
+                options.SignalROptions = null;
                 options.TagValuePushInterval = TimeSpan.FromSeconds(-1);
             }
 

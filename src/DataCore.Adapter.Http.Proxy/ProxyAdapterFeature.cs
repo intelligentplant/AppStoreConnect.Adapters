@@ -135,5 +135,17 @@ namespace DataCore.Adapter.Http.Proxy {
             return Proxy.GetClient();
         }
 
+
+        /// <summary>
+        /// Gets the <see cref="SignalRClientWrapper"/> to use for SignalR-specific functionality.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller
+        /// </param>
+        /// <returns>
+        ///   The <see cref="SignalRClientWrapper"/> for the calling <paramref name="context"/>.
+        /// </returns>
+        internal SignalRClientWrapper GetSignalRClient(IAdapterCallContext context) => Proxy.GetSignalRClient(context);
+
     }
 }
