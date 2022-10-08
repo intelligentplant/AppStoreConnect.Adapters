@@ -36,7 +36,7 @@ var readRaw = proxy.Features.Get<IReadRawTagValues>();
 
 var now = DateTime.UtcNow;
 
-await foreach (ver item in readRaw.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
+await foreach (var item in readRaw.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
     Tags = new[] { "Sensor_001", "Sensor_002" },
     UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
     UtcEndTime = now,
