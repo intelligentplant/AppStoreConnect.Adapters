@@ -63,11 +63,11 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 _ = Task.Run(async () => {
-                    await Task.Delay(1000, ct);
+                    await Task.Delay(200, ct);
                     await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
                 });
 
-                using (var ctSource = new CancellationTokenSource(10000)) {
+                using (var ctSource = new CancellationTokenSource(2000)) {
                     var val = await feature.Subscribe(context, new CreateEventMessageSubscriptionRequest() { SubscriptionType = EventMessageSubscriptionType.Passive }, ctSource.Token).FirstOrDefaultAsync(ctSource.Token);
                     Assert.IsNotNull(val);
                 }
