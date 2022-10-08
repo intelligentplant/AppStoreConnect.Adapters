@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// Specifies if the proxy can use SignalR connections.
         /// </summary>
-        private bool _canUseSignalR;
+        internal bool CanUseSignalR { get; private set; }
 
         /// <summary>
         /// The active SignalR clients.
@@ -243,7 +243,7 @@ namespace DataCore.Adapter.Http.Proxy {
                 throw new ArgumentNullException(nameof(context));
             }
             
-            if (!_canUseSignalR) {
+            if (!CanUseSignalR) {
                 client = null;
                 return false;
             }
@@ -282,7 +282,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
             RemoteDescriptor = descriptor;
 
-            _canUseSignalR = Options.CompatibilityVersion < CompatibilityVersion.Version_3_0
+            CanUseSignalR = Options.CompatibilityVersion < CompatibilityVersion.Version_3_0
                 ? Options.SignalROptions != null
                 : Options.SignalROptions != null && (await client.HostInfo.GetAvailableApisAsync(null, cancellationToken).ConfigureAwait(false)).Any(x => x.Enabled && "SignalR".Equals(x.Name, StringComparison.OrdinalIgnoreCase));
 
@@ -299,7 +299,7 @@ namespace DataCore.Adapter.Http.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features, type => {
                 if (requiresSignalRFeatures.Contains(type)) {
-                    return _canUseSignalR;
+                    return CanUseSignalR;
                 }
 
                 if (Options.CompatibilityVersion >= CompatibilityVersion.Version_3_0) {
@@ -347,7 +347,7 @@ namespace DataCore.Adapter.Http.Proxy {
             }
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
-                if (_canUseSignalR) {
+                if (CanUseSignalR) {
                     BackgroundTaskService.QueueBackgroundWorkItem(RunPushRemoteHealthSubscriptionAsync);
                 }
                 else {
