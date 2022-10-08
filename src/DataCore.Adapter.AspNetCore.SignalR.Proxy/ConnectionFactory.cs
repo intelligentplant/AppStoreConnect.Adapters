@@ -3,11 +3,10 @@
 namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
     /// <summary>
-    /// Delegate for creating SignalR hub connections on behalf of a proxy.
+    /// Delegate for creating SignalR hub connections.
     /// </summary>
     /// <param name="key">
-    ///   The key for the connection. The value will be <see langword="null"/> unless a connection is 
-    ///   being requested for an extension feature.
+    ///   The identifier for the connection. Can be <see langword="null"/>.
     /// </param>
     /// <returns>
     ///   The configured hub connection.

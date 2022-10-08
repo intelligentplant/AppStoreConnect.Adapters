@@ -1,6 +1,8 @@
 ﻿#if NETCOREAPP
 
 using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 using DataCore.Adapter.AspNetCore.SignalR.Proxy;
 
@@ -27,6 +29,13 @@ namespace DataCore.Adapter.Tests {
                     return AddProtocol(builder).Build();
                 }
             });
+        }
+
+
+        protected override async Task BeforeAdapterTestAsync(SignalRAdapterProxy adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
+            await base.BeforeAdapterTestAsync(adapter, context, cancellationToken).ConfigureAwait(false);
+            // Pre-start the connection to help avoid timeout issues in some tests.
+            await adapter.GetClient().GetHubConnection(true, cancellationToken).ConfigureAwait(false);
         }
 
 

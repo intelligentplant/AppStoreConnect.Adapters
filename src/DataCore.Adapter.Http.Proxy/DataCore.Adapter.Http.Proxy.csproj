@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.AspNetCore.SignalR.Client\DataCore.Adapter.AspNetCore.SignalR.Client.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Http.Client\DataCore.Adapter.Http.Client.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Proxy\DataCore.Adapter.Proxy.csproj" />
   </ItemGroup>

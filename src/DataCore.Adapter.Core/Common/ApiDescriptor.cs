@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.AspNetCore {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes an API that can be used to query adapters (e.g. REST, gRPC, SignalR).
@@ -33,6 +35,7 @@
         /// <param name="enabled">
         ///   Specifies if the API is enabled or not.
         /// </param>
+        [JsonConstructor]
         public ApiDescriptor(string name, string? version, bool enabled) {
             Name = name;
             Version = version;

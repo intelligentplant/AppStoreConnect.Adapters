@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Routing;
+﻿using DataCore.Adapter.Common;
+
+using Microsoft.AspNetCore.Routing;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Internal {
 

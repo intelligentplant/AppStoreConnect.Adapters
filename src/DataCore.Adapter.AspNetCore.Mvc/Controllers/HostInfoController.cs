@@ -55,7 +55,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// Gets descriptors for the standard adapter features.
         /// </summary>
         /// <returns>
-        ///   Successful responses contain a collection of <see cref="FeatureDescriptor"/> object 
+        ///   Successful responses contain a collection of <see cref="FeatureDescriptor"/> objects
         ///   describing the standard adapter features.
         /// </returns>
         [HttpGet]
@@ -64,6 +64,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IEnumerable<FeatureDescriptor>), 200)]
         public IActionResult GetStandardFeatureDescriptors() {
             return Ok(TypeExtensions.GetStandardAdapterFeatureTypes().Select(x => x.CreateFeatureDescriptor()).ToArray()); // 200
+        }
+
+
+        /// <summary>
+        /// Gets the available APIs for the host.
+        /// </summary>
+        /// <param name="apiService">
+        ///   The <see cref="IAvailableApiService"/> that returns information about the enabled APIs.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a collection of <see cref="ApiDescriptor"/> objects 
+        ///   describing the available APIs.
+        /// </returns>
+        [HttpGet]
+        [Route("available-apis")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(IEnumerable<ApiDescriptor>), 200)]
+        public IActionResult GetAvailableApis([FromServices] IAvailableApiService apiService) {
+            return Ok(apiService.GetApiDescriptors().Where(x => x.Enabled).ToArray()); // 200
         }
 
     }

@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.AspNetCore {
+﻿using DataCore.Adapter.Common;
+
+namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
     /// Service that provides information about an API that is registered with the adapter host.

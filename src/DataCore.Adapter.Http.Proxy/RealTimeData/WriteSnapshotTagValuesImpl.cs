@@ -33,22 +33,43 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
         ) {
             Proxy.ValidateInvocation(context, request, channel);
 
-            var client = GetClient();
-
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                const int maxItems = 5000;
-                var items = (await channel.ToEnumerable(maxItems, ctSource.Token).ConfigureAwait(false)).ToArray();
-                if (items.Length >= maxItems) {
-                    Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
+                if (Proxy.CanUseSignalR) {
+                    var client = GetSignalRClient(context);
+                    await client.StreamStartedAsync().ConfigureAwait(false);
+                    try { 
+                        await foreach (var item in client.Client.TagValues.WriteSnapshotTagValuesAsync(AdapterId, request, channel, ctSource.Token).ConfigureAwait(false)) {
+                            if (item == null) {
+                                continue;
+                            }
+                            yield return item;
+                        }
+                    }
+                    finally {
+                        await client.StreamCompletedAsync().ConfigureAwait(false);
+                    }
                 }
+                else {
+                    var client = GetClient();
 
-                var req = new WriteTagValuesRequestExtended() {
-                    Values = items,
-                    Properties = request.Properties
-                };
+                    const int maxItems = 5000;
+                    var items = (await channel.ToEnumerable(maxItems, ctSource.Token).ConfigureAwait(false)).ToArray();
+                    if (items.Length >= maxItems) {
+                        Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
+                    }
 
-                await foreach (var item in client.TagValues.WriteSnapshotValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
+                    var req = new WriteTagValuesRequestExtended() {
+                        Values = items,
+                        Properties = request.Properties
+                    };
+
+                    await foreach (var item in client.TagValues.WriteSnapshotValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        yield return item;
+                    }
+
                 }
             }
         }

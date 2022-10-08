@@ -23,6 +23,27 @@ namespace DataCore.Adapter.Http.Proxy {
         public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
 
         /// <summary>
+        ///The SignalR options for the proxy.
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   If <see cref="SignalROptions"/> is <see langword="null"/>, SignalR functionality 
+        ///   will be disabled.
+        /// </para>
+        /// 
+        /// <para>
+        ///   When <see cref="CompatibilityVersion"/> is <see cref="CompatibilityVersion.Version_3_0"/> 
+        ///   or higher, SignalR capabilities will only be enabled if the remote host spcifies 
+        ///   that the adapter SignalR API is enabled. If a lower <see cref="CompatibilityVersion"/> 
+        ///   is specified, SignalR capabilities will always be enabled when a <see cref="SignalROptions"/> 
+        ///   is specified.
+        /// </para>
+        /// 
+        /// </remarks>
+        public SignalROptions? SignalROptions { get; set; }
+
+        /// <summary>
         /// The interval to use between re-polling the health status of the remote adapter. 
         /// Ignored if the remote adapter does not support <see cref="Adapter.Diagnostics.IHealthCheck"/>.
         /// </summary>

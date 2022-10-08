@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DataCore.Adapter.Http.Client {
+﻿namespace DataCore.Adapter.Http.Client {
 
     /// <summary>
     /// Describes the App Store Connect adapter toolkit version that the client should use.
@@ -17,6 +13,10 @@ namespace DataCore.Adapter.Http.Client {
         /// v2.0
         /// </summary>
         Version_2_0 = 2,
+        /// <summary>
+        /// v3.0
+        /// </summary>
+        Version_3_0 = 3,
         /// <summary>
         /// The current version.
         /// </summary>

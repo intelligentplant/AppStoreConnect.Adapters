@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,6 +65,16 @@ namespace DataCore.Adapter.Http.Proxy {
         /// the remote adapter does not support <see cref="Adapter.RealTimeData.ISnapshotTagValuePush"/>.
         /// </summary>
         private readonly TimeSpan _snapshotRefreshInterval;
+
+        /// <summary>
+        /// Specifies if the proxy can use SignalR connections.
+        /// </summary>
+        internal bool CanUseSignalR { get; private set; }
+
+        /// <summary>
+        /// The active SignalR clients.
+        /// </summary>
+        private readonly ConcurrentDictionary<string, SignalRClientWrapper> _signalRClients = new ConcurrentDictionary<string, SignalRClientWrapper>(StringComparer.Ordinal);
 
         /// <summary>
         /// The proxy's logger.
@@ -177,6 +190,83 @@ namespace DataCore.Adapter.Http.Proxy {
 
 
         /// <summary>
+        /// Gets or creates the <see cref="SignalRClientWrapper"/> for the specified 
+        /// <see cref="IAdapterCallContext"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="SignalRClientWrapper"/> for the <paramref name="context"/>.
+        /// </returns>
+        internal SignalRClientWrapper GetSignalRClient(IAdapterCallContext context) {
+            var getKeys = Options.SignalROptions?.ConnectionIdentityFactory;
+            if (getKeys == null) {
+                getKeys = ctx => new[] { context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? context.User?.Identity?.Name ?? string.Empty };
+            }
+            
+            var key = Convert.ToBase64String(SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(string.Join(",", getKeys.Invoke(context)))));
+            
+            return _signalRClients.GetOrAdd(key, k => {
+                var client = new SignalRClientWrapper(
+                    k,
+                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context)),
+                    Options.SignalROptions.TimeToLive <= TimeSpan.Zero
+                        ? TimeSpan.FromSeconds(30)
+                        : Options.SignalROptions.TimeToLive
+                );
+
+                client.Disposed += OnSignalRClientDisposed;
+
+                return client;
+            });
+        }
+
+
+        /// <summary>
+        /// Tries to get the SignalR client for the specified <see cref="IAdapterCallContext"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/>.
+        /// </param>
+        /// <param name="client">
+        ///   The SignalR client for the <paramref name="context"/>, or <see langword="null"/> if 
+        ///   SignalR functionality is not available.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the SignalR functionalty is available, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public bool TryGetSignalRClient(IAdapterCallContext context, out AspNetCore.SignalR.Client.AdapterSignalRClient? client) {
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            
+            if (!CanUseSignalR) {
+                client = null;
+                return false;
+            }
+
+            var wrapper = GetSignalRClient(context);
+            client = wrapper.Client;
+            return true;
+        }
+
+
+        /// <summary>
+        /// Removes a disposed <see cref="SignalRClientWrapper"/> from the <see cref="_signalRClients"/> 
+        /// dictionary.
+        /// </summary>
+        /// <param name="client">
+        ///   The disposed <see cref="SignalRClientWrapper"/>.
+        /// </param>
+        private void OnSignalRClientDisposed(SignalRClientWrapper client) {
+            _signalRClients.TryRemove(client.Key, out _);
+        }
+
+
+        /// <summary>
         /// Initialises the proxy.
         /// </summary>
         /// <param name="cancellationToken">
@@ -192,7 +282,32 @@ namespace DataCore.Adapter.Http.Proxy {
 
             RemoteDescriptor = descriptor;
 
-            ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
+            CanUseSignalR = Options.CompatibilityVersion < CompatibilityVersion.Version_3_0
+                ? Options.SignalROptions != null
+                : Options.SignalROptions != null && (await client.HostInfo.GetAvailableApisAsync(null, cancellationToken).ConfigureAwait(false)).Any(x => x.Enabled && "SignalR".Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+
+            var v3OrLaterFeatures = new[] { 
+                typeof(Adapter.Extensions.ICustomFunctions)
+            };
+
+            var requiresSignalRFeatures = new[] {
+                typeof(IConfigurationChanges),
+                typeof(Adapter.Events.IEventMessagePush),
+                typeof(Adapter.Events.IEventMessagePushWithTopics),
+                typeof(Adapter.RealTimeData.ISnapshotTagValuePush)
+            };
+
+            ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features, type => {
+                if (requiresSignalRFeatures.Contains(type)) {
+                    return CanUseSignalR;
+                }
+
+                if (Options.CompatibilityVersion >= CompatibilityVersion.Version_3_0) {
+                    return true;
+                }
+
+                return !v3OrLaterFeatures.Contains(type);
+            });
 
             if (!this.TryGetFeature<Adapter.RealTimeData.ISnapshotTagValuePush>(out _) && _snapshotRefreshInterval > TimeSpan.Zero && this.TryGetFeature<Adapter.RealTimeData.IReadSnapshotTagValues>(out var readSnapshot)) {
                 // We are able to simulate tag value push functionality via polling.
@@ -232,7 +347,12 @@ namespace DataCore.Adapter.Http.Proxy {
             }
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
-                BackgroundTaskService.QueueBackgroundWorkItem(RunPollingRemoteHealthSubscriptionAsync);
+                if (CanUseSignalR) {
+                    BackgroundTaskService.QueueBackgroundWorkItem(RunPushRemoteHealthSubscriptionAsync);
+                }
+                else {
+                    BackgroundTaskService.QueueBackgroundWorkItem(RunPollingRemoteHealthSubscriptionAsync);
+                }
             }
         }
 
@@ -266,6 +386,24 @@ namespace DataCore.Adapter.Http.Proxy {
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
                     OnHealthStatusChanged();
                 } while (!cancellationToken.IsCancellationRequested);
+            }
+        }
+
+
+        /// <summary>
+        /// Long-running task that tells the adapter to recompute the overall health status of the 
+        /// adapter when a status change is received from the remote adapter via push notification.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token that will fire when the task should end.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
+        /// </returns>
+        private async Task RunPushRemoteHealthSubscriptionAsync(CancellationToken cancellationToken) {
+            var client = GetSignalRClient(new DefaultAdapterCallContext());
+            await foreach (var item in client.Client.Adapters.CreateAdapterHealthChannelAsync(RemoteDescriptor.Id, cancellationToken).ConfigureAwait(false)) {
+                OnHealthStatusChanged();
             }
         }
 
@@ -336,6 +474,27 @@ namespace DataCore.Adapter.Http.Proxy {
             );
 
             return results;
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask DisposeAsyncCore() {
+            await base.DisposeAsyncCore().ConfigureAwait(false);
+            foreach (var item in _signalRClients.Values) {
+                item.Dispose();
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
+
+            if (disposing) {
+                foreach (var item in _signalRClients.Values) {
+                    item.Dispose();
+                }
+            }
         }
 
     }
