@@ -36,18 +36,14 @@ var readRaw = proxy.Features.Get<IReadRawTagValues>();
 
 var now = DateTime.UtcNow;
 
-var rawChannel = readRaw.ReadRawTagValues(null, new ReadRawTagValuesRequest() {
+await foreach (ver item in readRaw.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
     Tags = new[] { "Sensor_001", "Sensor_002" },
     UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
     UtcEndTime = now,
     SampleCount = 0, // i.e. all raw values inside the time range
     BoundaryType = RawDataBoundaryType.Inside
-}, cancellationToken);
-
-while (await rawChannel.WaitToReadAsync()) {
-    if (rawChannel.TryRead(out var val)) {
-        DoSomethingWithValue(val);
-    }
+}, cancellationToken)) {
+    DoSomethingWithValue(item);
 }
 ```
 
