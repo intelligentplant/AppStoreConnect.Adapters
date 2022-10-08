@@ -1,4 +1,4 @@
-﻿# DataCore.Adapter.AspNetCoreHttp.Proxy
+﻿# DataCore.Adapter.Http.Proxy
 
 Proxy adapter that connects to a remote adapter via HTTP.
 
