@@ -10,6 +10,8 @@ using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Json.Schema;
+
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
@@ -19,9 +21,9 @@ namespace DataCore.Adapter.RealTimeData {
     public sealed class InMemoryTagValueAnnotationManager : TagValueAnnotationManagerBase {
 
         /// <summary>
-        /// Annotations indexed by tag.
+        /// Annotations indexed by tag ID.
         /// </summary>
-        private readonly Dictionary<TagIdentifier, List<TagValueAnnotationExtended>> _annotations = new Dictionary<TagIdentifier, List<TagValueAnnotationExtended>>();
+        private readonly Dictionary<string, List<TagValueAnnotationExtended>> _annotations = new Dictionary<string, List<TagValueAnnotationExtended>>(StringComparer.Ordinal);
 
         /// <summary>
         /// Lock for accessing <see cref="_annotations"/>.
@@ -51,7 +53,7 @@ namespace DataCore.Adapter.RealTimeData {
         ) {
             using (await _annotationsLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
                 await foreach (var tag in ResolveTagsAsync(context, request.Tags, cancellationToken).ConfigureAwait(false)) {
-                    if (!_annotations.TryGetValue(tag, out var annotations)) {
+                    if (!_annotations.TryGetValue(tag.Id, out var annotations)) {
                         continue;
                     }
 
@@ -84,7 +86,7 @@ namespace DataCore.Adapter.RealTimeData {
                     return null;
                 }
 
-                if (!_annotations.TryGetValue(enumerator.Current, out var annotations)) {
+                if (!_annotations.TryGetValue(enumerator.Current.Id, out var annotations)) {
                     return null;
                 }
 
@@ -105,9 +107,9 @@ namespace DataCore.Adapter.RealTimeData {
                     throw new ArgumentOutOfRangeException(string.Format(CultureInfo.CurrentUICulture, SharedResources.Error_UnableToResolveNameOrId, request.Tag), nameof(request));
                 }
 
-                if (!_annotations.TryGetValue(enumerator.Current, out var annotations)) {
+                if (!_annotations.TryGetValue(enumerator.Current.Id, out var annotations)) {
                     annotations = new List<TagValueAnnotationExtended>();
-                    _annotations[enumerator.Current] = annotations;
+                    _annotations[enumerator.Current.Id] = annotations;
                 }
 
                 var id = Guid.NewGuid().ToString();
@@ -129,9 +131,9 @@ namespace DataCore.Adapter.RealTimeData {
                     throw new ArgumentOutOfRangeException(string.Format(CultureInfo.CurrentUICulture, SharedResources.Error_UnableToResolveNameOrId, request.Tag), nameof(request));
                 }
 
-                if (!_annotations.TryGetValue(enumerator.Current, out var annotations)) {
+                if (!_annotations.TryGetValue(enumerator.Current.Id, out var annotations)) {
                     annotations = new List<TagValueAnnotationExtended>();
-                    _annotations[enumerator.Current] = annotations;
+                    _annotations[enumerator.Current.Id] = annotations;
                 }
 
                 var annotation = annotations.FirstOrDefault(x => string.Equals(x.Id, request.AnnotationId, StringComparison.OrdinalIgnoreCase));
@@ -157,9 +159,8 @@ namespace DataCore.Adapter.RealTimeData {
                     throw new ArgumentOutOfRangeException(string.Format(CultureInfo.CurrentUICulture, SharedResources.Error_UnableToResolveNameOrId, request.Tag), nameof(request));
                 }
 
-                if (!_annotations.TryGetValue(enumerator.Current, out var annotations)) {
-                    annotations = new List<TagValueAnnotationExtended>();
-                    _annotations[enumerator.Current] = annotations;
+                if (!_annotations.TryGetValue(enumerator.Current.Id, out var annotations)) {
+                    return new WriteTagValueAnnotationResult(enumerator.Current.Id, request.AnnotationId, Common.WriteStatus.Fail, null, null);
                 }
 
                 var annotation = annotations.FirstOrDefault(x => string.Equals(x.Id, request.AnnotationId, StringComparison.OrdinalIgnoreCase));
@@ -169,6 +170,96 @@ namespace DataCore.Adapter.RealTimeData {
                 else {
                     return new WriteTagValueAnnotationResult(enumerator.Current.Id, annotation.Id, Common.WriteStatus.Success, null, null);
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Creates or updates an annotation.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID for the annotation.
+        /// </param>
+        /// <param name="annotation">
+        ///   The annotation.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will create or update the annotation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="annotation"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="annotation"/> is not valid.
+        /// </exception>
+        public async Task CreateOrUpdateAnnotationAsync(string tagId, TagValueAnnotationExtended annotation, CancellationToken cancellationToken) {
+            if (tagId == null) {
+                throw new ArgumentNullException(nameof(tagId));
+            }
+            ValidationExtensions.ValidateObject(annotation);
+
+            using (await _annotationsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!_annotations.TryGetValue(tagId, out var annotations)) {
+                    annotations = new List<TagValueAnnotationExtended>();
+                    _annotations[tagId] = annotations;
+                }
+
+                var existing = annotations.FirstOrDefault(x => x.Id.Equals(annotation.Id, StringComparison.OrdinalIgnoreCase));
+                if (existing != null) {
+                    annotations.Remove(existing);
+                }
+                annotations.Add(new TagValueAnnotationBuilder(annotation).Build());
+            }
+        }
+
+
+        /// <summary>
+        /// Deletes an annotation.
+        /// </summary>
+        /// <param name="tagId">
+        ///   The tag ID for the annotation.
+        /// </param>
+        /// <param name="annotationId">
+        ///   The annotation ID for the annotation.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return <see langword="true"/> if the 
+        ///   annotation was deleted or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tagId"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="annotationId"/> is <see langword="null"/>.
+        /// </exception>
+        public async Task<bool> DeleteAnnotationAsync(string tagId, string annotationId, CancellationToken cancellationToken) {
+            if (tagId == null) {
+                throw new ArgumentNullException(nameof(tagId));
+            }
+            if (annotationId == null) {
+                throw new ArgumentNullException(nameof(annotationId));
+            }
+
+            using (await _annotationsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (!_annotations.TryGetValue(tagId, out var annotations)) {
+                    return false;
+                }
+
+                var existing = annotations.FirstOrDefault(x => x.Id.Equals(annotationId, StringComparison.OrdinalIgnoreCase));
+                if (existing != null) {
+                    annotations.Remove(existing);
+                    return true;
+                }
+                return false;
             }
         }
 
