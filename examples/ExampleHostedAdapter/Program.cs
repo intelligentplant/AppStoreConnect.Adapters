@@ -37,7 +37,7 @@ builder.Services
     })
     // Register the adapter options
     .AddAdapterOptions<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
-        // Our adapter will look for a named instance of the options that matches its ID.
+        // The adapter will look for an instance of the options with a name that matches its ID.
         ExampleHostedAdapter.Constants.AdapterId,
         // Bind the adapter options against the application configuration and ensure that they are
         // valid at startup.
