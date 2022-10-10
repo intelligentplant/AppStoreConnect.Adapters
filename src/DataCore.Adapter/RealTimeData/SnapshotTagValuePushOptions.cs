@@ -22,7 +22,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   used to generate a compatible delegate using an existing adapter or 
         ///   <see cref="ITagInfo"/> implementation.
         /// </remarks>
-        public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, IAsyncEnumerable<TagIdentifier>>? TagResolver { get; set; }
+        public TagResolver? TagResolver { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
