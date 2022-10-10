@@ -14,6 +14,8 @@ using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
+using Json.Schema;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -1669,6 +1671,144 @@ namespace DataCore.Adapter.Tests {
                 var annotation = await feature.ReadAnnotation(context, request, ct).ConfigureAwait(false);
                 Assert.IsNotNull(annotation, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IReadTagValueAnnotations)}.{nameof(IReadTagValueAnnotations.ReadAnnotation)}"));
                 Assert.AreEqual(request.AnnotationId, annotation!.Id, Resources.IncorrectAnnotationIdReturned);
+            });
+        }
+
+        #endregion
+
+        #region [ IWriteTagValueAnnotations ]
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="CreateTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="CreateAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual CreateAnnotationRequest CreateCreateAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="UpdateTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="UpdateAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual UpdateAnnotationRequest CreateUpdateAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="DeleteTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="DeleteAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual DeleteAnnotationRequest CreateDeleteAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.CreateAnnotation"/> successfully 
+        /// creates an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateCreateAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task CreateTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateCreateAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateCreateAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.CreateAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.CreateAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.UpdateAnnotation"/> successfully 
+        /// updates an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateUpdateAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task UpdateTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateUpdateAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateUpdateAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.UpdateAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.UpdateAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.DeleteAnnotation"/> successfully 
+        /// deletes an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateDeleteAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task DeleteTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateDeleteAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateDeleteAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.DeleteAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.DeleteAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
             });
         }
 
