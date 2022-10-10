@@ -101,7 +101,14 @@ namespace DataCore.Adapter.Tests {
                     // Add asset model.
                     adapter.AddStandardFeatures(
                         ActivatorUtilities.CreateInstance<AssetModel.AssetModelManager>(sp, AssetModel.AssetModelManager.CreateConfigurationChangeDelegate(configurationChanges))
-                    );;
+                    );
+
+                    // Add tag annotations.
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<RealTimeData.InMemoryTagValueAnnotationManager>(sp, new RealTimeData.TagValueAnnotationManagerOptions() { 
+                            TagResolver = RealTimeData.InMemoryTagValueAnnotationManager.CreateTagResolverFromAdapter(adapter)
+                        })    
+                    );
 
                     // Add custom functions.
                     adapter.AddStandardFeatures(
