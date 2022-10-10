@@ -23,11 +23,11 @@
   <ItemGroup>
     <PackageVersion Include="Castle.Core" Version="5.1.0" />
     <PackageVersion Include="CsvHelper" Version="28.0.1" />
-    <PackageVersion Include="Google.Protobuf" Version="3.21.6" />
-    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.48.0" />
+    <PackageVersion Include="Google.Protobuf" Version="3.21.7" />
+    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.49.0" />
     <PackageVersion Include="Grpc.Core" Version="2.46.3" />
-    <PackageVersion Include="Grpc.Net.Client" Version="2.48.0" />
-    <PackageVersion Include="Grpc.Tools" Version="2.48.1" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.49.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.49.1" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks" Version="8.1.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="8.1.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="8.1.0" />
@@ -42,8 +42,8 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="3.1.27" />
-    <PackageVersion Include="Microsoft.FASTER.Core" Version="2.0.17" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+    <PackageVersion Include="Microsoft.FASTER.Core" Version="2.0.21" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="$(PkgVersion_Microsoft_Web_LibraryManager_Build)" />
@@ -51,7 +51,7 @@
     <PackageVersion Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageVersion Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
-    <PackageVersion Include="NSwag.AspNetCore" Version="13.16.1" />
+    <PackageVersion Include="NSwag.AspNetCore" Version="13.17.0" />
     <PackageVersion Include="OpenTelemetry" Version="$(PkgVersion_OpenTelemetry)" />
     <PackageVersion Include="OpenTelemetry.Api" Version="$(PkgVersion_OpenTelemetry_Api)" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(PkgVersion_OpenTelemetry_Exporter_Console)" />
@@ -61,13 +61,13 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(PkgVersion_OpenTelemetry_Instrumentation_Http)" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="$(PkgVersion_OpenTelemetry_Instrumentation_SqlClient)" />
     <PackageVersion Include="Semver" Version="2.2.0" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.0" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.2" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Net.Http.Json" Version="6.0.0" />
     <PackageVersion Include="System.Net.Http.WinHttpHandler" Version="6.0.1" />
-    <PackageVersion Include="System.Text.Json" Version="6.0.5" />
+    <PackageVersion Include="System.Text.Json" Version="6.0.6" />
     <PackageVersion Include="System.Threading.Channels" Version="6.0.0" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
