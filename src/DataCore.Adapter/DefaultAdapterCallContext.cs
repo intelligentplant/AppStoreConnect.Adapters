@@ -51,7 +51,7 @@ namespace DataCore.Adapter {
             User = user;
             ConnectionId = connectionId ?? Guid.NewGuid().ToString();
             CorrelationId = correlationId ?? Guid.NewGuid().ToString();
-            CultureInfo = cultureInfo ?? CultureInfo.CurrentCulture;
+            CultureInfo = cultureInfo ?? CultureInfo.CurrentUICulture;
             Items = new ConcurrentDictionary<object, object?>();
         }
 
