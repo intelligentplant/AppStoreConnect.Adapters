@@ -104,7 +104,7 @@ app.MapRazorPages();
 
 // Fallback route that redirects to the UI home page
 app.MapFallback("/{*url}", context => {
-    context.Response.Redirect($"/");
+    context.Response.Redirect("/");
     return Task.CompletedTask;
 });
 
