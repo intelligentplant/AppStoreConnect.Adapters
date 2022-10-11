@@ -242,6 +242,10 @@
   <data name="Error_TypeIsUnsupported" xml:space="preserve">
     <value>Type is unsupported.</value>
   </data>
+  <data name="Error_UnableToResolveNameOrId" xml:space="preserve">
+    <value>Unable to resolve name or ID '{0}'.</value>
+    <comment>{0} - name or ID.</comment>
+  </data>
   <data name="HostInfo_Unspecified_Description" xml:space="preserve">
     <value>Host information has not been provided.</value>
   </data>

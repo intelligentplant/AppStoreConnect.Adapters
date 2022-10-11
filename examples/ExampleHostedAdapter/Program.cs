@@ -35,13 +35,20 @@ builder.Services
 
         return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
     })
-    // Bind adapter options against the application configuration.
-    .AddServices(svc => svc.Configure<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
+    // Register the adapter options
+    .AddAdapterOptions<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
+        // The adapter will look for an instance of the options with a name that matches its ID.
         ExampleHostedAdapter.Constants.AdapterId,
-        builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
-     ))
-    // Register the adapter.
-    .AddAdapter(sp => ActivatorUtilities.CreateInstance<ExampleHostedAdapter.ExampleHostedAdapter>(sp, ExampleHostedAdapter.Constants.AdapterId));
+        // Bind the adapter options against the application configuration and ensure that they are
+        // valid at startup.
+        opts => opts
+            .Bind(builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart()
+    )
+    // Register the adapter. We specify the adapter ID as an additional constructor parameter
+    // since this will not be supplied by the service provider.
+    .AddAdapter<ExampleHostedAdapter.ExampleHostedAdapter>(ExampleHostedAdapter.Constants.AdapterId);
 
 // Register adapter MVC controllers.
 builder.Services
@@ -55,7 +62,8 @@ builder.Services
 
 // Register adapter gRPC services.
 builder.Services
-    .AddGrpc();
+    .AddGrpc()
+    .AddDataCoreAdapterGrpc();
 
 // Register adapter health checks. See https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks
 // for more information about ASP.NET Core health checks.
@@ -99,12 +107,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapDataCoreAdapterHubs();
+app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
 app.MapRazorPages();
 
 // Fallback route that redirects to the UI home page
 app.MapFallback("/{*url}", context => {
-    context.Response.Redirect($"/");
+    context.Response.Redirect("/");
     return Task.CompletedTask;
 });
 

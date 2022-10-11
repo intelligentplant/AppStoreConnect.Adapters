@@ -80,7 +80,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="feature"/> is <see langword="null"/>.
         /// </exception>
-        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, IAsyncEnumerable<TagIdentifier>> CreateTagResolverFromFeature(ITagInfo feature) {
+        public static TagResolver CreateTagResolverFromFeature(ITagInfo feature) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
@@ -109,7 +109,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="adapter"/> is <see langword="null"/>.
         /// </exception>
-        public static Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, IAsyncEnumerable<TagIdentifier>> CreateTagResolverFromAdapter(IAdapter adapter) {
+        public static TagResolver CreateTagResolverFromAdapter(IAdapter adapter) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }

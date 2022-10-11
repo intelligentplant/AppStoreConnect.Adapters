@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Tests {
 
         public const string AdapterId = AssemblyInitializer.AdapterId;
 
-        public const string TestTagId = "Sensor_001";
+        public const string TestTagId = AssemblyInitializer.TestTagId;
 
         public const string HttpClientName = "AdapterHttpClient";
 

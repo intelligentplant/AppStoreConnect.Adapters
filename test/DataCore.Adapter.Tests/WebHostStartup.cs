@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Tests {
                 .AddDataCoreAdapterMvc();
 
             services
-                .AddSignalR()
+                .AddSignalR(options => options.EnableDetailedErrors = true)
                 .AddDataCoreAdapterSignalR()
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());

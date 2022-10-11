@@ -24,14 +24,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="request">
         ///   The read request.
         /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
         /// <returns>
         ///   The matching annotation.
         /// </returns>
-        public async Task<TagValueAnnotationExtended?> ReadAnnotation(string adapterId, ReadAnnotationRequest request, CancellationToken cancellationToken) {
+        public async Task<TagValueAnnotationExtended?> ReadAnnotation(string adapterId, ReadAnnotationRequest request) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var cancellationToken = Context.ConnectionAborted;
             var adapter = await ResolveAdapterAndFeature<IReadTagValueAnnotations>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 

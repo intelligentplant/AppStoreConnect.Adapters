@@ -63,12 +63,26 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="existing"/> is <see langword="null"/>.
         /// </exception>
-        public TagValueAnnotationBuilder(TagValueAnnotationExtended existing) {
+        public TagValueAnnotationBuilder(TagValueAnnotationExtended existing) : this((TagValueAnnotation) existing) {
+            _id = existing.Id;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="TagValueAnnotationBuilder"/> object that is initialised using an 
+        /// existing tag value annotation.
+        /// </summary>
+        /// <param name="existing">
+        ///   The existing annotation.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public TagValueAnnotationBuilder(TagValueAnnotation existing) {
             if (existing == null) {
                 throw new ArgumentNullException(nameof(existing));
             }
 
-            _id = existing.Id;
             _annotationType = existing.AnnotationType;
             _utcStartTime = existing.UtcStartTime;
             _utcEndTime = existing.UtcEndTime;

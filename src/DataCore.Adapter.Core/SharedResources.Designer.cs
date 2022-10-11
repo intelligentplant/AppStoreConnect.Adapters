@@ -412,6 +412,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve name or ID &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToResolveNameOrId {
+            get {
+                return ResourceManager.GetString("Error_UnableToResolveNameOrId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Host information has not been provided..
         /// </summary>
         public static string HostInfo_Unspecified_Description {
