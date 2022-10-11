@@ -48,7 +48,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
         ) {
             var options = new SnapshotTagValuePushOptions() { 
                 OnTagSubscriptionsAdded = async (instance, tags, _) => await OnTagsAddedAsync((SnapshotTagValuePush) instance, context, client, tags, request, cancellationToken).ConfigureAwait(false),
-                OnTagSubscriptionsRemoved = async (instance, tags, _) => await OnTagsRemovedAsync((SnapshotTagValuePush) instance, tags).ConfigureAwait(false)
+                OnTagSubscriptionsRemoved = async (instance, tags, _) => await OnTagsRemovedAsync((SnapshotTagValuePush) instance, tags).ConfigureAwait(false),
+                IsTopicMatch = (subscribed, actual, ct) => new ValueTask<bool>(subscribed.Id.Equals(actual.Id, StringComparison.OrdinalIgnoreCase) || subscribed.Name.Equals(actual.Name, StringComparison.OrdinalIgnoreCase))
             };
             var result = new SnapshotTagValuePush(options, BackgroundTaskService, Logger);
 
