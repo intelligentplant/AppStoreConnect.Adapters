@@ -275,7 +275,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// </returns>
         protected virtual async ValueTask DisposeAsyncCore() {
             if (_disposeConnection) {
-                await _hubConnection.StopAsync().ConfigureAwait(false);
                 await _hubConnection.DisposeAsync().ConfigureAwait(false);
             }
         }
@@ -297,7 +296,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
                 if (_disposeConnection) {
                     _ = Task.Run(async () => {
                         try {
-                            await _hubConnection.StopAsync().ConfigureAwait(false);
                             await _hubConnection.DisposeAsync().ConfigureAwait(false);
                         }
                         catch { }
