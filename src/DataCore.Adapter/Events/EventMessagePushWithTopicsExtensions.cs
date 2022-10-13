@@ -49,5 +49,46 @@ namespace DataCore.Adapter.Events {
             return feature.Subscribe(context, request, channel.Reader.ReadAllAsync(cancellationToken), cancellationToken);
         }
 
+
+        /// <summary>
+        /// Creates a topic-based event message subscription.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   A request specifying parameters for the subscription, such as whether a passive or 
+        ///   active subscription should be created. Some adapters will only emit event messages 
+        ///   when they have at least one active subscriber.
+        /// </param>
+        /// <param name="subscriptionUpdates">
+        ///   A channel that will add topics to or remove topics from the subscription.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit event messages as they occur.
+        /// </returns>
+        public static IAsyncEnumerable<EventMessage> Subscribe(
+            this IEventMessagePushWithTopics feature,
+            IAdapterCallContext context,
+            CreateEventMessageTopicSubscriptionRequest request,
+            ChannelReader<EventMessageSubscriptionUpdate> subscriptionUpdates,
+            CancellationToken cancellationToken
+        ) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (subscriptionUpdates == null) {
+                throw new ArgumentNullException(nameof(subscriptionUpdates));
+            }
+
+            return feature.Subscribe(context, request, subscriptionUpdates.ReadAllAsync(cancellationToken), cancellationToken);
+        }
+
     }
 }
