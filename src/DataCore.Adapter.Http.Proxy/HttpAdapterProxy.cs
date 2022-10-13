@@ -129,6 +129,16 @@ namespace DataCore.Adapter.Http.Proxy {
         /// </summary>
         private readonly AdapterHttpClient _client;
 
+        /// <summary>
+        /// The last health check result that was received from the remote adapter.
+        /// </summary>
+        private HealthCheckResult? _lastRemoteHealthCheckResult;
+
+        /// <summary>
+        /// Lock for reading/writing <see cref="_lastRemoteHealthCheckResult"/>.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncReaderWriterLock _lastRemoteHealthCheckResultLock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
 
         /// <summary>
         /// Creates a new <see cref="HttpAdapterProxy"/> object.
@@ -384,6 +394,7 @@ namespace DataCore.Adapter.Http.Proxy {
             if (interval > TimeSpan.Zero) {
                 do {
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                    
                     OnHealthStatusChanged();
                 } while (!cancellationToken.IsCancellationRequested);
             }
@@ -407,11 +418,19 @@ namespace DataCore.Adapter.Http.Proxy {
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     await foreach (var item in client.Client.Adapters.CreateAdapterHealthChannelAsync(RemoteDescriptor.Id, cancellationToken).ConfigureAwait(false)) {
+                        using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            _lastRemoteHealthCheckResult = CreateRemoteAdapterHealthCheckResult(item);
+                        }
                         OnHealthStatusChanged();
                     }
                 }
                 catch {
-                    OnHealthStatusChanged();
+                    if (!cancellationToken.IsCancellationRequested) {
+                        using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            _lastRemoteHealthCheckResult = null;
+                        }
+                        OnHealthStatusChanged();
+                    }
                 }
             }
         }
@@ -447,14 +466,7 @@ namespace DataCore.Adapter.Http.Proxy {
                     .CheckAdapterHealthAsync(RemoteDescriptor.Id, context?.ToRequestMetadata(), cancellationToken)
                     .ConfigureAwait(false);
 
-                return new HealthCheckResult(
-                    Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
-                    result.Description,
-                    result.Error,
-                    result.Data,
-                    result.InnerResults
-                );
+                return CreateRemoteAdapterHealthCheckResult(result);
             }
             catch (Exception e) {
                 return HealthCheckResult.Unhealthy(
@@ -465,11 +477,45 @@ namespace DataCore.Adapter.Http.Proxy {
         }
 
 
+        /// <summary>
+        /// Converts a <see cref="HealthCheckResult"/> received from a remote adapter into a local 
+        /// <see cref="HealthCheckResult"/> for the proxy.
+        /// </summary>
+        /// <param name="result">
+        ///   The <see cref="HealthCheckResult"/> received from the remote adapter.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HealthCheckResult"/> for use in the local proxy.
+        /// </returns>
+        private static HealthCheckResult CreateRemoteAdapterHealthCheckResult(HealthCheckResult result) {
+            return new HealthCheckResult(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    result.Status,
+                    result.Description,
+                    result.Error,
+                    result.Data,
+                    result.InnerResults
+                );
+        }
+
+
         /// <inheritdoc/>
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
             if (!IsRunning) {
                 return results;
+            }
+
+            using (await _lastRemoteHealthCheckResultLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (_lastRemoteHealthCheckResult != null) {
+                    results.Add(HealthCheckResult.Composite(
+                        Resources.HealthCheck_DisplayName_Connection,
+                        new[] { _lastRemoteHealthCheckResult.Value },
+                        Resources.HealthChecks_RemoteHeathDescription
+                    ));
+
+                    return results;
+                }
             }
 
             results.Add(
