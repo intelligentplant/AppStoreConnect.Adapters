@@ -112,9 +112,8 @@ namespace DataCore.Adapter {
         public CancellationToken StopToken => _stopTokenSource.Token;
 
         /// <summary>
-        /// Allows the adapter to register work items to be run in the background. The adapter's 
-        /// <see cref="StopToken"/> is always added to the list of <see cref="CancellationToken"/> 
-        /// instances that the background task observes.
+        /// Allows the adapter to register work items to be run in the background. The adapter 
+        /// ensures that cancellation of work items is requested when the adapter is disposed.
         /// </summary>
         public IBackgroundTaskService BackgroundTaskService { get; }
 
@@ -991,7 +990,7 @@ namespace DataCore.Adapter {
 
                         IsStarting = true;
                         try {
-                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
+                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {                                
                                 await StartAsync(ctSource.Token).ConfigureAwait(false);
                                 _isRunning = true;
                                 await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);

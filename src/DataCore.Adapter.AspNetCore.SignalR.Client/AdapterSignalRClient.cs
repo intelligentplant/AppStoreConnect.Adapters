@@ -4,7 +4,9 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.SignalR.Client.Clients;
+
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DataCore.Adapter.AspNetCore.SignalR.Client {
@@ -290,8 +292,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
                 return;
             }
 
-            if (disposing && _disposeConnection) {
-                Task.Run(async () => await _hubConnection.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
+            if (disposing) {
+                if (_disposeConnection) {
+                    _ = Task.Run(async () => {
+                        try {
+                            await _hubConnection.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch { }
+                    });
+                }
             }
 
             _isDisposed = true;

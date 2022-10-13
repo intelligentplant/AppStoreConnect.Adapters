@@ -24,7 +24,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="request">
         ///   A request describing the subscription settings.
         /// </param>
-        /// <param name="channel">
+        /// <param name="subscriptionUpdates">
         ///   An <see cref="IAsyncEnumerable{T}"/> that will add tags to or remove tags from the 
         ///   subscription.
         /// </param>
@@ -37,7 +37,7 @@ namespace DataCore.Adapter.RealTimeData {
         IAsyncEnumerable<TagValueQueryResult> Subscribe(
             IAdapterCallContext context,
             CreateSnapshotTagValueSubscriptionRequest request,
-            IAsyncEnumerable<TagValueSubscriptionUpdate> channel,
+            IAsyncEnumerable<TagValueSubscriptionUpdate> subscriptionUpdates,
             CancellationToken cancellationToken
         );
 

@@ -26,7 +26,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The cancellation token for the subscription.
         /// </param>
         /// <returns>
-        ///   A channel reader that will emit tag values as they occur.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit tag values as they occur.
         /// </returns>
         public static IAsyncEnumerable<TagValueQueryResult> Subscribe(
             this ISnapshotTagValuePush feature,
@@ -41,6 +41,45 @@ namespace DataCore.Adapter.RealTimeData {
             var channel = Array.Empty<TagValueSubscriptionUpdate>().PublishToChannel();
 
             return feature.Subscribe(context, request, channel.ReadAllAsync(cancellationToken), cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Creates a snapshot value change subscription.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="request">
+        ///   A request describing the subscription settings.
+        /// </param>
+        /// <param name="subscriptionUpdates">
+        ///   A channel that provides subscription updates.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the subscription.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit tag values as they occur.
+        /// </returns>
+        public static IAsyncEnumerable<TagValueQueryResult> Subscribe(
+            this ISnapshotTagValuePush feature,
+            IAdapterCallContext context,
+            CreateSnapshotTagValueSubscriptionRequest request,
+            ChannelReader<TagValueSubscriptionUpdate> subscriptionUpdates,
+            CancellationToken cancellationToken
+        ) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (subscriptionUpdates == null) {
+                throw new ArgumentNullException(nameof(subscriptionUpdates));
+            }
+
+            return feature.Subscribe(context, request, subscriptionUpdates.ReadAllAsync(cancellationToken), cancellationToken);
         }
 
     }
