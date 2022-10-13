@@ -23,6 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
             builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Mvc.Internal.ApiDescriptorProvider>();
+            builder.AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
             return builder;
         }
