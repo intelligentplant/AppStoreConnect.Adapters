@@ -4,8 +4,21 @@
   ViewData["Title"] = "Home";
 }
 
+@Html.HiddenFor(x => x.Adapter.Descriptor.Id)
+
 <div id="adapter-status">
   @await Html.PartialAsync("_AdapterStatusPartial")
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div id="adapter-id-copied-notification" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        Adapter ID copied to clipboard
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
 </div>
 
 @section Scripts {
@@ -24,7 +37,7 @@
             try {
                 const response = await $.get('@Url.Page("Index", "Status")');
                 $('#adapter-status').html(response);
-                setLastUpdatedTime();;
+                setLastUpdatedTime();
             }
             finally {
                 updateInProgress = false;
@@ -36,6 +49,16 @@
         setInterval(async () => { 
             await updateStatus();
         }, 15000);
+
+        document.addEventListener('click', async (evt) => {
+            if (!event.composedPath().some(x => x.matches('.copy-adapter-id'))) {
+                return;
+            }
+            await navigator.clipboard.writeText($('#@Html.IdFor(x => x.Adapter.Descriptor.Id)').val());
+
+            const toast = new bootstrap.Toast($('#adapter-id-copied-notification')[0]);
+            toast.show();
+        });
     });
   </script>
 }
