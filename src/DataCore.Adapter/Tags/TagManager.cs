@@ -460,7 +460,7 @@ namespace DataCore.Adapter.Tags {
                 if (cancellationToken.IsCancellationRequested) {
                     break;
                 }
-                yield return item;
+                yield return item.Clone(request.ResultFields);
             }
         }
 
