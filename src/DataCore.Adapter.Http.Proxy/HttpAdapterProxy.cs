@@ -401,9 +401,18 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
         /// </returns>
         private async Task RunPushRemoteHealthSubscriptionAsync(CancellationToken cancellationToken) {
+            OnHealthStatusChanged();
+
             var client = GetSignalRClient(new DefaultAdapterCallContext());
-            await foreach (var item in client.Client.Adapters.CreateAdapterHealthChannelAsync(RemoteDescriptor.Id, cancellationToken).ConfigureAwait(false)) {
-                OnHealthStatusChanged();
+            while (!cancellationToken.IsCancellationRequested) {
+                try {
+                    await foreach (var item in client.Client.Adapters.CreateAdapterHealthChannelAsync(RemoteDescriptor.Id, cancellationToken).ConfigureAwait(false)) {
+                        OnHealthStatusChanged();
+                    }
+                }
+                catch {
+                    OnHealthStatusChanged();
+                }
             }
         }
 
