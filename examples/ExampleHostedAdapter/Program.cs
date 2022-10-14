@@ -1,5 +1,7 @@
 ﻿using DataCore.Adapter.KeyValueStore.Sqlite;
 
+using ExampleHostedAdapter;
+
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -11,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Our adapter settings are stored in adaptersettings.json.
 builder.Configuration
-    .AddJsonFile(ExampleHostedAdapter.Constants.AdapterSettingsFilePath, false, true);
+    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
 builder.Services
     .AddLocalization();
@@ -36,9 +38,9 @@ builder.Services
         return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
     })
     // Register the adapter options
-    .AddAdapterOptions<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
+    .AddAdapterOptions<ExampleHostedAdapterOptions>(
         // The adapter will look for an instance of the options with a name that matches its ID.
-        ExampleHostedAdapter.Constants.AdapterId,
+        Constants.AdapterId,
         // Bind the adapter options against the application configuration and ensure that they are
         // valid at startup.
         opts => opts
@@ -48,7 +50,7 @@ builder.Services
     )
     // Register the adapter. We specify the adapter ID as an additional constructor parameter
     // since this will not be supplied by the service provider.
-    .AddAdapter<ExampleHostedAdapter.ExampleHostedAdapter>(ExampleHostedAdapter.Constants.AdapterId);
+    .AddAdapter<ExampleHostedAdapterImpl>(Constants.AdapterId);
 
 // Register adapter MVC controllers.
 builder.Services
@@ -73,9 +75,8 @@ builder.Services
 
 // Register OpenTelemetry trace instrumentation. This can be safely removed if not required.
 builder.Services.AddOpenTelemetryTracing(otel => otel
-    // Specify an OpenTelemetry service instance ID in AddDataCoreAdapterApiService below to
-    // override the use of the DNS host name for the local machine.
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
+    // We will use the adapter ID as the OpenTelemetry service instance ID for the host.
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(Constants.AdapterId))
     // Records incoming HTTP requests made to the adapter host.
     .AddAspNetCoreInstrumentation()
     // Records outgoing HTTP requests made by the adapter host.

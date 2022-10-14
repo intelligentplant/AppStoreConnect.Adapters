@@ -10,7 +10,7 @@ namespace ExampleHostedAdapter {
     //
     // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
 
-    partial class ExampleHostedAdapter : IReadSnapshotTagValues {
+    partial class ExampleHostedAdapterImpl : IReadSnapshotTagValues {
 
         public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
             IAdapterCallContext context, 
