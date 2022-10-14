@@ -33,7 +33,7 @@ namespace ExampleHostedAdapter {
         // You can optionally specify a help URL for the adapter type.
         HelpUrl = "https://my-company.com/app-store-connect/adapters/my-adapter/help"
     )]
-    public partial class ExampleHostedAdapter : AdapterBase<ExampleHostedAdapterOptions> {
+    public partial class ExampleHostedAdapterImpl : AdapterBase<ExampleHostedAdapterOptions> {
 
         private static readonly AdapterProperty s_tagCreatedAtPropertyDefinition = new AdapterProperty("UTC Created At", DateTime.MinValue, "The UTC creation time for the tag");
 
@@ -46,13 +46,13 @@ namespace ExampleHostedAdapter {
         private readonly CustomFunctions _customFunctions;
 
 
-        public ExampleHostedAdapter(
+        public ExampleHostedAdapterImpl(
             string id, 
             IOptionsMonitor<ExampleHostedAdapterOptions> options,
             IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService taskScheduler,
-            ILogger<ExampleHostedAdapter> logger
+            ILogger<ExampleHostedAdapterImpl> logger
         ) : base(id, options, taskScheduler, logger) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
