@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.SignalR.Client;
+using DataCore.Adapter.Json;
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ namespace DataCore.Adapter.Tests {
                 })
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                    options.PayloadSerializerOptions.AddDataCoreAdapterContext();
                 })
                 .WithAutomaticReconnect();
 

@@ -9,6 +9,7 @@ using DataCore.Adapter.AspNetCore.SignalR.Proxy;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Tests {
 
@@ -50,6 +51,7 @@ namespace DataCore.Adapter.Tests {
         protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
             return builder.AddJsonProtocol(options => {
                 options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                options.PayloadSerializerOptions.AddDataCoreAdapterContext();
             });
         }
 
