@@ -110,11 +110,8 @@ var options = new HttpAdapterProxyOptions() {
     SignalROptions = new SignalROptions {
         TimeToLive = TimeSpan.FromSeconds(30),
         ConnectionFactory = (Uri url, IAdapterCallContext context) => new HubConnectionBuilder()
-            .WithUrl(url)
+            .WithDataCoreAdapterConnection(url)
             .WithAutomaticReconnect()
-            .AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            })
             .Build()
     }
 };
