@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Tests {
                 RemoteId = remoteAdapterId,
                 ConnectionFactory = key => {
                     var builder = new HubConnectionBuilder()
-                        .WithUrl(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
+                        .WithDataCoreAdapterConnection(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
                             options.HttpMessageHandlerFactory = handler => {
                                 WebHostConfiguration.AllowUntrustedCertificates(handler);
                                 return handler;
@@ -49,10 +49,8 @@ namespace DataCore.Adapter.Tests {
     public class SignalRProxyJsonTests : SignalRProxyTests {
 
         protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
-            return builder.AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                options.PayloadSerializerOptions.AddDataCoreAdapterContext();
-            });
+            // JSON protocol is already registered; no need to do anything.
+            return builder;
         }
 
     }

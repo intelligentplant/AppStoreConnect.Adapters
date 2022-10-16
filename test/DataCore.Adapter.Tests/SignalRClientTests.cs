@@ -19,15 +19,11 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task GetSupportedDataFunctionsShouldReturnResultsWithoutRequestObject() {
             var builder = new HubConnectionBuilder()
-                .WithUrl(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
+                .WithDataCoreAdapterConnection(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
                     options.HttpMessageHandlerFactory = handler => {
                         WebHostConfiguration.AllowUntrustedCertificates(handler);
                         return handler;
                     };
-                })
-                .AddJsonProtocol(options => {
-                    options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                    options.PayloadSerializerOptions.AddDataCoreAdapterContext();
                 })
                 .WithAutomaticReconnect();
 
@@ -48,14 +44,11 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task GetSupportedDataFunctionsShouldReturnResultsWithRequestObject() {
             var builder = new HubConnectionBuilder()
-                .WithUrl(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
+                .WithDataCoreAdapterConnection(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
                     options.HttpMessageHandlerFactory = handler => {
                         WebHostConfiguration.AllowUntrustedCertificates(handler);
                         return handler;
                     };
-                })
-                .AddJsonProtocol(options => {
-                    options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 })
                 .WithAutomaticReconnect();
 
