@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Common {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes the status of a write operation.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum WriteStatus {
 
         /// <summary>

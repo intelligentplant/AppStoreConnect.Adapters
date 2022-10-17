@@ -40,16 +40,13 @@ namespace DataCore.Adapter.Tests {
                 RemoteId = remoteAdapterId,
                 SignalROptions = new SignalROptions() {
                     ConnectionFactory = (url, ctx) => new HubConnectionBuilder()
-                        .WithUrl(url, options => {
+                        .WithDataCoreAdapterConnection(url, options => {
                             options.HttpMessageHandlerFactory = handler => {
                                 WebHostConfiguration.AllowUntrustedCertificates(handler);
                                 return handler;
                             };
                         })
                         .WithAutomaticReconnect()
-                        .AddJsonProtocol(options => {
-                            options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                        })
                         .Build()
                 }
             };

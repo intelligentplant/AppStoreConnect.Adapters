@@ -1,9 +1,12 @@
-﻿namespace DataCore.Adapter.Common {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Common {
 
     /// <summary>
     /// Describes the type of a variant value.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Enum members all refer to data types")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum VariantType {
 
         /// <summary>

@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.RealTimeData {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes a boundary type used when making a raw data query.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum RawDataBoundaryType {
 
         /// <summary>

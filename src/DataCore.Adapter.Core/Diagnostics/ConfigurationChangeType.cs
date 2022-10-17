@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Diagnostics {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Describes a category for a configuration change.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ConfigurationChangeType {
 
         /// <summary>

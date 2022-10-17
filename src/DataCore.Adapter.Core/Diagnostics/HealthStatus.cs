@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Text.Json.Serialization;
+
 namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Represents the reported status of a health check result.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum HealthStatus {
 
         /// <summary>

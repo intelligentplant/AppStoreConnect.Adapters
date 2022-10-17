@@ -20,6 +20,10 @@ namespace DataCore.Adapter.Json {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
+        /// <remarks>
+        ///   Note that calling this method will make the <see cref="JsonSerializerOptions"/> 
+        ///   immutable!
+        /// </remarks>
         public static JsonSerializerOptions AddDataCoreAdapterContext(this JsonSerializerOptions options) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));

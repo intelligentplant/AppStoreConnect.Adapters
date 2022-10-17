@@ -34,7 +34,6 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 options.PayloadSerializerOptions.AddDataCoreAdapterContext();
             });
 

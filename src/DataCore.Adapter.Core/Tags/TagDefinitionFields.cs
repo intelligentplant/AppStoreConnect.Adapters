@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Tags {
 
@@ -7,6 +8,7 @@ namespace DataCore.Adapter.Tags {
     /// results of a <see cref="FindTagsRequest"/>.
     /// </summary>
     [Flags]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum TagDefinitionFields {
 
         /// <summary>

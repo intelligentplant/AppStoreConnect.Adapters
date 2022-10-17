@@ -107,7 +107,6 @@ namespace Microsoft.AspNetCore.SignalR.Client {
                     configureHttpConnection?.Invoke(options);
                 })
                 .AddJsonProtocol(options => {
-                    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     options.PayloadSerializerOptions.AddDataCoreAdapterContext();
                 });
 
