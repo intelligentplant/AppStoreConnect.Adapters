@@ -109,7 +109,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
-            return Util.StreamResults(adapters);
+            return Util.StreamResults(adapters, x => x.Descriptor);
         }
 
 

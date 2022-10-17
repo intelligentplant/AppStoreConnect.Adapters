@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.RealTimeData {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Specifies the type of an annotation.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum AnnotationType {
 
         /// <summary>

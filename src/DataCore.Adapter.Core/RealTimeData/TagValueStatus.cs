@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.RealTimeData {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes the quality status of a tag value.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum TagValueStatus {
 
         /// <summary>

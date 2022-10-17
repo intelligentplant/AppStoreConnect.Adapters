@@ -9,6 +9,33 @@ namespace DataCore.Adapter.Json {
     public static class JsonExtensions {
 
         /// <summary>
+        /// Registers <see cref="AdapterJsonContext"/> with the <see cref="JsonSerializerOptions"/>.
+        /// </summary>
+        /// <param name="options">
+        ///   The <see cref="JsonSerializerOptions"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="JsonSerializerOptions"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Note that calling this method will make the <see cref="JsonSerializerOptions"/> 
+        ///   immutable!
+        /// </remarks>
+        public static JsonSerializerOptions AddDataCoreAdapterContext(this JsonSerializerOptions options) {
+            if (options == null) {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            options.AddContext<AdapterJsonContext>();
+
+            return options;
+        }
+
+
+        /// <summary>
         /// Reads an N-dimensional array from the specified JSON string.
         /// </summary>
         /// <typeparam name="T">

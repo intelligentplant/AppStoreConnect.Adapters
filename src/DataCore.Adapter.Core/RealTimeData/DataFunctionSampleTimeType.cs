@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.RealTimeData {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Describes how the sample time for a data function calculation is computed.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum DataFunctionSampleTimeType {
 
         /// <summary>

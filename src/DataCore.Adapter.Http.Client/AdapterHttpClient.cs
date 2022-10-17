@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Http.Client.Clients;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Http.Client {
 
@@ -90,10 +91,8 @@ namespace DataCore.Adapter.Http.Client {
         /// </param>
         public AdapterHttpClient(HttpClient httpClient) {
             HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            JsonSerializerOptions = new JsonSerializerOptions() {
-                PropertyNameCaseInsensitive = true
-            };
-            JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            JsonSerializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }
+                .AddDataCoreAdapterContext();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);

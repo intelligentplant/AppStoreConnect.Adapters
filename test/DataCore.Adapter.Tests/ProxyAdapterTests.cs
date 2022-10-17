@@ -401,6 +401,31 @@ namespace DataCore.Adapter.Tests {
         protected abstract TProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider);
 
 
+        [TestMethod]
+        public Task ProxyShouldReceiveLargeRawDataSet() {
+            return RunAdapterTest(async (proxy, context, ct) => {
+                var feature = proxy.GetFeature<IReadRawTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IReadRawTagValues>();
+                    return;
+                }
+
+                var end = DateTime.UtcNow;
+                var start = end.AddYears(-1);
+
+                var request = new ReadRawTagValuesRequest() { 
+                    Tags = new[] { AssemblyInitializer.TestTagId },
+                    SampleCount = 50000,
+                    UtcStartTime = start,
+                    UtcEndTime = end
+                };
+
+                var values = await feature.ReadRawTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.AreEqual(request.SampleCount, values.Count());
+            });
+        }
+
+
 
         [TestMethod]
         public Task ProxyShouldRetrieveRemoteAdapterDetails() {

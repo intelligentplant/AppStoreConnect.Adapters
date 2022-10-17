@@ -113,6 +113,68 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
+        /// Creates an <see cref="IActionResult"/> that will stream the specified <see cref="IAsyncEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="TIn">
+        ///   The value type.
+        /// </typeparam>
+        /// <typeparam name="TOut">
+        ///   The transformed value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The <see cref="IAsyncEnumerable{TOut}"/> to enumerate.
+        /// </param>
+        /// <param name="transform">
+        ///   A callback that will transform each <typeparamref name="TIn"/> emitted by 
+        ///   <paramref name="stream"/> into an instance of <typeparamref name="TOut"/>.
+        /// </param>
+        /// <param name="activity">
+        ///   The <see cref="Activity"/> associated with reading the <paramref name="stream"/>.
+        /// </param>
+        /// <param name="onBeforeSendHeaders">
+        ///   A callback to invoke before writing of the <paramref name="stream"/> to the response 
+        ///   begins.
+        /// </param>
+        /// <param name="onCompleted">
+        ///   A callback to invoke when the <paramref name="stream"/> has completed.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IActionResult"/> that will contain the streamed items.
+        /// </returns>
+        /// <remarks>
+        ///   The provided <paramref name="activity"/> will always be disposed once the <paramref name="stream"/> 
+        ///   has completed.
+        /// </remarks>
+        internal static IActionResult StreamResults<TIn, TOut>(
+            IAsyncEnumerable<TIn> stream,
+            Func<TIn, TOut> transform,
+            Activity? activity = null,
+            Action? onBeforeSendHeaders = null,
+            Action? onCompleted = null
+        ) {
+            try {
+                onBeforeSendHeaders?.Invoke();
+                return new OkObjectResult(EnumerateAsync(stream, transform, activity, onCompleted));
+            }
+            catch (OperationCanceledException) {
+                activity?.Dispose();
+                onCompleted?.Invoke();
+                return new StatusCodeResult(0);
+            }
+            catch (SecurityException) {
+                activity?.Dispose();
+                onCompleted?.Invoke();
+                return new ForbidResult();
+            }
+            catch (Exception) {
+                activity?.Dispose();
+                onCompleted?.Invoke();
+                throw;
+            }
+        }
+
+
+        /// <summary>
         /// Enumerates the specified <paramref name="stream"/>.
         /// </summary>
         /// <typeparam name="T">
@@ -144,6 +206,56 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                     }
                     ++itemCount;
                     yield return item;
+                }
+            }
+            finally {
+                activity.SetResponseItemCountTag(itemCount);
+                activity?.Dispose();
+                onCompleted?.Invoke();
+            }
+        }
+
+
+        /// <summary>
+        /// Enumerates the specified <paramref name="stream"/>.
+        /// </summary>
+        /// <typeparam name="TIn">
+        ///   The value type.
+        /// </typeparam>
+        /// <typeparam name="TOut">
+        ///   The transformed value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The <see cref="IAsyncEnumerable{T}"/> to enumerate.
+        /// </param>
+        /// <param name="transform">
+        ///   A callback that will transform each <typeparamref name="TIn"/> emitted by 
+        ///   <paramref name="stream"/> into an instance of <typeparamref name="TOut"/>.
+        /// </param>
+        /// <param name="activity">
+        ///   The <see cref="Activity"/> associated with the <paramref name="stream"/>.
+        /// </param>
+        /// <param name="onCompleted">
+        ///   A callback to invoke when the <paramref name="stream"/> has completed.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="IAsyncEnumerable{T}"/>.
+        /// </returns>
+        private static async IAsyncEnumerable<TOut> EnumerateAsync<TIn, TOut>(
+            IAsyncEnumerable<TIn> stream,
+            Func<TIn, TOut> transform,
+            Activity? activity,
+            Action? onCompleted
+        ) {
+            var itemCount = 0;
+
+            try {
+                await foreach (var item in stream.ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    ++itemCount;
+                    yield return transform.Invoke(item);
                 }
             }
             finally {

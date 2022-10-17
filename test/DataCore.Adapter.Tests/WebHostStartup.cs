@@ -63,18 +63,11 @@ namespace DataCore.Adapter.Tests {
             services.AddGrpc();
 
             services.AddMvc()
-                .AddJsonOptions(options => {
-                    options.JsonSerializerOptions.WriteIndented = true;
-                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                })
                 .AddDataCoreAdapterMvc();
 
             services
                 .AddSignalR(options => options.EnableDetailedErrors = true)
-                .AddDataCoreAdapterSignalR()
-                .AddJsonProtocol(options => {
-                    options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                });
+                .AddDataCoreAdapterSignalR();
 
             services
                 .AddHealthChecks()

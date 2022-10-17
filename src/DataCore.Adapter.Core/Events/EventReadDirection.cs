@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Events {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Describes the read direction for a historical event message read operation.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EventReadDirection {
 
         /// <summary>
