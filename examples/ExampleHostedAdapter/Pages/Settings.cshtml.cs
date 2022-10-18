@@ -16,11 +16,11 @@ namespace ExampleHostedAdapter.Pages {
         public IAdapter Adapter { get; }
 
         [BindProperty]
-        public ExampleHostedAdapterOptions? Options { get; set; }
+        public MyAdapterOptions? Options { get; set; }
 
-        private readonly IOptionsMonitor<ExampleHostedAdapterOptions> _optionsMonitor;
+        private readonly IOptionsMonitor<MyAdapterOptions> _optionsMonitor;
 
-        public SettingsModel(IAdapter adapter, IOptionsMonitor<ExampleHostedAdapterOptions> optionsMonitor) {
+        public SettingsModel(IAdapter adapter, IOptionsMonitor<MyAdapterOptions> optionsMonitor) {
             Adapter = adapter;
             _optionsMonitor = optionsMonitor;
         }

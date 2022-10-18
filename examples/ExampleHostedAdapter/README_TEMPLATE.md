@@ -15,13 +15,13 @@ Client-side libraries are restored at build time via the LibMan MSBuild task. Th
 
 # Getting Started
 
-The `ExampleHostedAdapterImpl` and `ExampleHostedAdapterOptions` classes define the adapter and its runtime options respectively. You can change the names of these classes as you wish. The `ExampleHostedAdapterImpl` class is split across separate code files (`ExampleHostedAdapterImpl.cs` and `ExampleHostedAdapterImpl.ReadSnapshotTagValues.cs`). The adapter implements snapshot tag value polling directly, and indirectly implements tag search and snapshot tag value subscription features via helper classes.
+The `MyAdapter` and `MyAdapterOptions` classes define the adapter and its runtime options respectively. You can change the names of these classes as you wish. The `MyAdapter` class is split across separate code files (`MyAdapter.cs` and `MyAdapter.ReadSnapshotTagValues.cs`). The adapter implements snapshot tag value polling directly, and indirectly implements tag search and snapshot tag value subscription features via helper classes.
 
 For information about how to implement adapter features, as well as example projects, please visit the [App Store Connect adapters GitHub repository](https://github.com/intelligentplant/AppStoreConnect.Adapters).
 
-The `Program.cs` file configures the dependency injection container and application pipeline for the ASP.NET Core application using a minimal API application builder. The `appsettings.json` file provides configuration settings for the application. The `ExampleHostedAdapterOptions` that is passed to the `ExampleHostedAdapterImpl` instance at runtime is defined in the `adaptersettings.json` file. Changes to the `adaptersettings.json` file will be automatically passed to the adapter at runtime.
+The `Program.cs` file configures the dependency injection container and application pipeline for the ASP.NET Core application using a minimal API application builder. The `appsettings.json` file provides configuration settings for the application. The `MyAdapterOptions` that is passed to the `MyAdapter` instance at runtime is defined in the `adaptersettings.json` file. Changes to the `adaptersettings.json` file will be automatically passed to the adapter at runtime.
 
-The Razor Pages for the application define a basic user interface. The `Settings` page is used to configure the `ExampleHostedAdapterOptions` for the adapter at runtime. Submitting the form will overwrite the contents of the `adaptersettings.json` file. Remember to extend the form when you add new properties to the `ExampleHostedAdapterOptions` class!
+The Razor Pages for the application define a basic user interface. The `Settings` page is used to configure the `MyAdapterOptions` for the adapter at runtime. Submitting the form will overwrite the contents of the `adaptersettings.json` file. Remember to extend the form when you add new properties to the `MyAdapterOptions` class!
 
 
 # Deployment

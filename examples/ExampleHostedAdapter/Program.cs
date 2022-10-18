@@ -21,8 +21,8 @@ builder.Services
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(
-        name: "ExampleHostedAdapter Host",
-        description: "ASP.NET Core adapter host"
+        name: "ASP.NET Core Adapter Host",
+        description: "ASP.NET Core adapter host for My Adapter"
      )
     // Add a SQLite-based key-value store service. This can be used by our adapter to persist data
     // between restarts.
@@ -38,7 +38,7 @@ builder.Services
         return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
     })
     // Register the adapter options
-    .AddAdapterOptions<ExampleHostedAdapterOptions>(
+    .AddAdapterOptions<MyAdapterOptions>(
         // The adapter will look for an instance of the options with a name that matches its ID.
         Constants.AdapterId,
         // Bind the adapter options against the application configuration and ensure that they are
@@ -50,7 +50,7 @@ builder.Services
     )
     // Register the adapter. We specify the adapter ID as an additional constructor parameter
     // since this will not be supplied by the service provider.
-    .AddAdapter<ExampleHostedAdapterImpl>(Constants.AdapterId);
+    .AddAdapter<MyAdapter>(Constants.AdapterId);
 
 // Register adapter MVC controllers.
 builder.Services

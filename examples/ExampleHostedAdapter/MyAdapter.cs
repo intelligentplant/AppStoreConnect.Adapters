@@ -33,7 +33,7 @@ namespace ExampleHostedAdapter {
         // You can optionally specify a help URL for the adapter type.
         HelpUrl = "https://my-company.com/app-store-connect/adapters/my-adapter/help"
     )]
-    public partial class ExampleHostedAdapterImpl : AdapterBase<ExampleHostedAdapterOptions> {
+    public partial class MyAdapter : AdapterBase<MyAdapterOptions> {
 
         private static readonly AdapterProperty s_tagCreatedAtPropertyDefinition = new AdapterProperty("UTC Created At", DateTime.MinValue, "The UTC creation time for the tag");
 
@@ -46,13 +46,13 @@ namespace ExampleHostedAdapter {
         private readonly CustomFunctions _customFunctions;
 
 
-        public ExampleHostedAdapterImpl(
+        public MyAdapter(
             string id, 
-            IOptionsMonitor<ExampleHostedAdapterOptions> options,
+            IOptionsMonitor<MyAdapterOptions> options,
             IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService taskScheduler,
-            ILogger<ExampleHostedAdapterImpl> logger
+            ILogger<MyAdapter> logger
         ) : base(id, options, taskScheduler, logger) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
@@ -183,7 +183,7 @@ namespace ExampleHostedAdapter {
         // options at runtime. You can use this method to trigger any runtime changes required.
         // You can test this functionality by running the application and then changing the
         // adapter name or description in appsettings.json at runtime.
-        protected override void OnOptionsChange(ExampleHostedAdapterOptions options) {
+        protected override void OnOptionsChange(MyAdapterOptions options) {
             base.OnOptionsChange(options);
         }
 
