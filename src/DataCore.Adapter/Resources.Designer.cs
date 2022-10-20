@@ -205,6 +205,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The tag configuration is invalid..
+        /// </summary>
+        internal static string Error_InvalidTagConfiguration {
+            get {
+                return ResourceManager.GetString("Error_InvalidTagConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to locate options for adapter ID &apos;{0}&apos; from the supplied IOptions&lt;T&gt; or IOptionsMonitor&lt;T&gt;..
         /// </summary>
         internal static string Error_NoOptionsFoundForAdapter {
