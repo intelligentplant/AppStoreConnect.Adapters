@@ -376,6 +376,53 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 
         /// <summary>
+        /// Registers a singleton App Store Connect adapter using the specified direct constructor 
+        /// arguments in addition to those provided by the <see cref="IServiceProvider"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The adapter implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="additionalConstructorParameters">
+        ///   A callback that will return direct constructor arguments to use in addition to those 
+        ///   supplied by the <see cref="IServiceProvider"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///
+        /// <para>
+        ///   This overload registers the adapter using an implementation factory that calls 
+        ///   <see cref="ActivatorUtilities.CreateInstance{T}(IServiceProvider, object[])"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   To register an adapter using a custom implementation factory, call 
+        ///   <see cref="AddAdapter{T}(IAdapterConfigurationBuilder, Func{IServiceProvider, T})"/>.
+        /// </para>
+        ///
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddAdapter<T>(
+            this IAdapterConfigurationBuilder builder,
+            Func<IServiceProvider, object[]> additionalConstructorParameters
+        ) where T : class, IAdapter {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IAdapter, T>(sp => ActivatorUtilities.CreateInstance<T>(sp, additionalConstructorParameters.Invoke(sp)));
+
+            return builder;
+        }
+
+
+        /// <summary>
         /// Registers a singleton App Store Connect adapter using the specified implementation 
         /// factory.
         /// </summary>
