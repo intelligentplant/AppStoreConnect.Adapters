@@ -31,7 +31,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   The JSON schema that describes the tag configuration model used by the adapter.
         /// </returns>
-        Task<JsonElement> GetTagSchema(
+        Task<JsonElement> GetTagSchemaAsync(
             IAdapterCallContext context, 
             GetTagSchemaRequest request, 
             CancellationToken cancellationToken
@@ -53,7 +53,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   A <see cref="TagDefinition"/> describing the new tag.
         /// </returns>
-        Task<TagDefinition> CreateTag(
+        Task<TagDefinition> CreateTagAsync(
             IAdapterCallContext context, 
             CreateTagRequest request, 
             CancellationToken cancellationToken
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   A <see cref="TagDefinition"/> describing the updated tag.
         /// </returns>
-        Task<TagDefinition> UpdateTag(IAdapterCallContext context, UpdateTagRequest request, CancellationToken cancellationToken);
+        Task<TagDefinition> UpdateTagAsync(IAdapterCallContext context, UpdateTagRequest request, CancellationToken cancellationToken);
 
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace DataCore.Adapter.Tags {
         ///   <see langword="true"/> if the tag exists and was deleted, or <see langword="false"/> 
         ///   if the tag was not deleted.
         /// </returns>
-        Task<bool> DeleteTag(IAdapterCallContext context, DeleteTagRequest request, CancellationToken cancellationToken);
+        Task<bool> DeleteTagAsync(IAdapterCallContext context, DeleteTagRequest request, CancellationToken cancellationToken);
 
     }
 
