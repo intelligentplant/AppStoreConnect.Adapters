@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "google/protobuf/struct.proto";
 import "Types.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -11,6 +12,10 @@ service TagSearchService {
     rpc FindTags(FindTagsRequest) returns (stream TagDefinition);
     rpc GetTags(GetTagsRequest) returns (stream TagDefinition);
     rpc GetTagProperties(GetTagPropertiesRequest) returns (stream AdapterProperty);
+    rpc GetTagSchema(GetTagSchemaRequest) returns (GetTagSchemaResponse);
+    rpc CreateTag(CreateTagRequest) returns (TagDefinition);
+    rpc UpdateTag(UpdateTagRequest) returns (TagDefinition);
+    rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
 }
 
 
@@ -52,4 +57,46 @@ message GetTagPropertiesRequest {
     int32 page_size = 2;
     int32 page = 3;
     map<string, string> properties = 4;
+}
+
+
+// Get tag configuration schema
+message GetTagSchemaRequest {
+    string adapter_id = 1;
+    map<string, string> properties = 2;
+}
+
+
+message GetTagSchemaResponse {
+    google.protobuf.Value schema = 1;
+}
+
+
+// Create tag
+message CreateTagRequest {
+    string adapter_id = 1;
+    google.protobuf.Value body = 2;
+    map<string, string> properties = 3;
+}
+
+
+// Update tag
+message UpdateTagRequest {
+    string adapter_id = 1;
+    string tag = 2;
+    google.protobuf.Value body = 3;
+    map<string, string> properties = 4;
+}
+
+
+// Delete tag
+message DeleteTagRequest {
+    string adapter_id = 1;
+    string tag = 2;
+    map<string, string> properties = 3;
+}
+
+
+message DeleteTagResponse {
+    bool success = 1;
 }
