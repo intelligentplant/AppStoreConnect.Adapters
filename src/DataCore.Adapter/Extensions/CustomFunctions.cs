@@ -511,12 +511,7 @@ namespace DataCore.Adapter.Extensions {
         /// 
         /// </remarks>
         public JsonElement CreateJsonSchema<T>() {
-            Json.Schema.JsonSchemaUtility.RegisterExtensions();
-            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() { 
-                PropertyNamingMethod = name => _jsonOptions?.PropertyNamingPolicy?.ConvertName(name) ?? name
-            });
-
-            return JsonSerializer.SerializeToElement(builder.Build(), _jsonOptions);
+            return Json.Schema.JsonSchemaUtility.CreateJsonSchema<T>(_jsonOptions);
         }
 
 
@@ -540,12 +535,7 @@ namespace DataCore.Adapter.Extensions {
         ///   against the <paramref name="schema"/>, or <see langword="false"/> otherwise.
         /// </returns>
         public static bool TryValidate(JsonElement data, JsonElement schema, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) {
-            var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema, jsonOptions));
-            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data, jsonOptions), new JsonSchema.ValidationOptions() {  
-                OutputFormat = JsonSchema.OutputFormat.Detailed
-            });
-            validationResults = JsonSerializer.SerializeToElement(result, jsonOptions);
-            return result.IsValid;
+            return Json.Schema.JsonSchemaUtility.TryValidate(data, schema, jsonOptions, out validationResults);
         }
 
 
