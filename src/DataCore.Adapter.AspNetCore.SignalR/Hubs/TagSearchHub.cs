@@ -138,5 +138,75 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
         }
 
+
+        public async Task<System.Text.Json.JsonElement> GetTagSchema(string adapterId, GetTagSchemaRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+
+            using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
+                return await adapter.Feature.GetTagSchemaAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        public async Task<TagDefinition> CreateTag(string adapterId, CreateTagRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+
+            using (Telemetry.ActivitySource.StartCreateTagActivity(adapter.Adapter.Descriptor.Id)) {
+                System.Text.Json.JsonElement schema;
+                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
+                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
+                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
+                }
+
+                return await adapter.Feature.CreateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        public async Task<TagDefinition> UpdateTag(string adapterId, UpdateTagRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+
+            using (Telemetry.ActivitySource.StartUpdateTagActivity(adapter.Adapter.Descriptor.Id, request.Tag)) {
+                System.Text.Json.JsonElement schema;
+                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
+                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
+                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
+                }
+
+                return await adapter.Feature.UpdateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        public async Task<bool> DeleteTag(string adapterId, DeleteTagRequest request) {
+            var cancellationToken = Context.ConnectionAborted;
+
+            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
+            ValidateObject(request);
+
+            using (Telemetry.ActivitySource.StartDeleteTagActivity(adapter.Adapter.Descriptor.Id, request.Tag)) {
+                return await adapter.Feature.DeleteTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
     }
 }
