@@ -529,6 +529,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows tag definitions to be created, updated and deleted..
+        /// </summary>
+        public static string Description_TagConfiguration {
+            get {
+                return ResourceManager.GetString("Description_TagConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows retrieval of an adapter&apos;s tag definitions using the tag&apos;s ID or name..
         /// </summary>
         public static string Description_TagInfo {
@@ -723,6 +732,15 @@ namespace DataCore.Adapter {
         public static string DisplayName_SnapshotTagValuePush {
             get {
                 return ResourceManager.GetString("DisplayName_SnapshotTagValuePush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tag Configuration.
+        /// </summary>
+        public static string DisplayName_TagConfiguration {
+            get {
+                return ResourceManager.GetString("DisplayName_TagConfiguration", resourceCulture);
             }
         }
         
