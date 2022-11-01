@@ -245,7 +245,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
 
                 if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
-                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidCustomFunctionRequestBody);
+                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
                     problem.Extensions["errors"] = validationResults;
                     return new ObjectResult(problem) { StatusCode = 400 }; // 400
                 }

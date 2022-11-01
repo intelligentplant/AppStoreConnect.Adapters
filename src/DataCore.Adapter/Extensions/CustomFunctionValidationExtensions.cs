@@ -48,13 +48,13 @@ namespace DataCore.Adapter.Extensions {
                     return true;
                 }
                 else {
-                    validationResults = JsonSerializer.SerializeToElement(new { Valid = false, Error = SharedResources.Error_InvalidCustomFunctionRequestBody }, jsonOptions);
+                    validationResults = JsonSerializer.SerializeToElement(new { Valid = false, Error = SharedResources.Error_InvalidRequestBody }, jsonOptions);
                     return false;
                 }
             }
             else {
                 if (request.Body == null) {
-                    validationResults = JsonSerializer.SerializeToElement(new { Valid = false, Error = SharedResources.Error_InvalidCustomFunctionRequestBody }, jsonOptions);
+                    validationResults = JsonSerializer.SerializeToElement(new { Valid = false, Error = SharedResources.Error_InvalidRequestBody }, jsonOptions);
                     return false;
                 }
             }

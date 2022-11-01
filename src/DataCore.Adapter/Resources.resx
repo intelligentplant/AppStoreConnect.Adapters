@@ -168,6 +168,9 @@
   <data name="Error_InvalidExtensionFeatureOperationUri" xml:space="preserve">
     <value>The specified URI is not a valid extension feature operation URI.</value>
   </data>
+  <data name="Error_InvalidTagConfiguration" xml:space="preserve">
+    <value>The tag configuration is invalid.</value>
+  </data>
   <data name="Error_NoOptionsFoundForAdapter" xml:space="preserve">
     <value>Unable to locate options for adapter ID '{0}' from the supplied IOptions&lt;T&gt; or IOptionsMonitor&lt;T&gt;.</value>
     <comment>{0} - adapter ID</comment>

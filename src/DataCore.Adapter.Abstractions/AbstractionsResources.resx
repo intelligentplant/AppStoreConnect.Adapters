@@ -273,6 +273,9 @@
   <data name="Description_SnapshotTagValuePush" xml:space="preserve">
     <value>Allows subscribers to receive snapshot tag value updates from an adapter in real-time.</value>
   </data>
+  <data name="Description_TagConfiguration" xml:space="preserve">
+    <value>Allows tag definitions to be created, updated and deleted.</value>
+  </data>
   <data name="Description_TagInfo" xml:space="preserve">
     <value>Allows retrieval of an adapter's tag definitions using the tag's ID or name.</value>
   </data>
@@ -338,6 +341,9 @@
   </data>
   <data name="DisplayName_SnapshotTagValuePush" xml:space="preserve">
     <value>Snapshot Tag Value Push</value>
+  </data>
+  <data name="DisplayName_TagConfiguration" xml:space="preserve">
+    <value>Tag Configuration</value>
   </data>
   <data name="DisplayName_TagInfo" xml:space="preserve">
     <value>Tag Information</value>

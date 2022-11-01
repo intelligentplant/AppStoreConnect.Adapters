@@ -56,6 +56,7 @@ namespace DataCore.Adapter {
             [RealTimeData.WriteSnapshotTagValues] = typeof(IWriteSnapshotTagValues),
             [Tags.TagInfo] = typeof(ITagInfo),
             [Tags.TagSearch] = typeof(ITagSearch),
+            [Tags.TagConfiguration] = typeof(ITagConfiguration)
         });
 
 
@@ -324,6 +325,11 @@ namespace DataCore.Adapter {
             /// URI for <see cref="ITagSearch"/>.
             /// </summary>
             public const string TagSearch = BaseUri + "search/";
+
+            /// <summary>
+            /// URI for <see cref="ITagConfiguration"/>.
+            /// </summary>
+            public const string TagConfiguration = BaseUri + "configuration/";
 
         }
 

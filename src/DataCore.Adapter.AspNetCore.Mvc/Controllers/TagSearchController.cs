@@ -269,6 +269,157 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }, cancellationToken).ConfigureAwait(false);
         }
 
+
+        /// <summary>
+        /// Creates a new tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag creation request.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the created <see cref="TagDefinition"/> object.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/create")]
+        [ProducesResponseType(typeof(TagDefinition), 200)]
+        public async Task<IActionResult> CreateTag(string adapterId, CreateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            using (Telemetry.ActivitySource.StartCreateTagActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+                System.Text.Json.JsonElement schema;
+                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+                    schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                    problem.Extensions["errors"] = validationResults;
+                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
+                }
+
+                return Ok(await feature.CreateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+            }
+        }
+
+
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag update request.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the updated <see cref="TagDefinition"/> object.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/update")]
+        [ProducesResponseType(typeof(TagDefinition), 200)]
+        public async Task<IActionResult> UpdateTag(string adapterId, UpdateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            using (Telemetry.ActivitySource.StartUpdateTagActivity(resolvedFeature.Adapter.Descriptor.Id, request.Tag)) {
+                System.Text.Json.JsonElement schema;
+                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(resolvedFeature.Adapter.Descriptor.Id)) {
+                    schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+                }
+
+                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                    problem.Extensions["errors"] = validationResults;
+                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
+                }
+
+                return Ok(await feature.UpdateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+            }
+        }
+
+
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag delete request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a Boolean value indicating if the tag was deleted.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/delete")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> DeleteTag(string adapterId, DeleteTagRequest request, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            using (Telemetry.ActivitySource.StartDeleteTagActivity(resolvedFeature.Adapter.Descriptor.Id, request.Tag)) {
+                return Ok(await feature.DeleteTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+            }
+        }
+
     }
 
 }

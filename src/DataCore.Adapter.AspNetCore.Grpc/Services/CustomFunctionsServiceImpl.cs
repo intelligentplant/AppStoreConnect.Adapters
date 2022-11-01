@@ -11,7 +11,7 @@ using DataCore.Adapter.Extensions;
 
 using Grpc.Core;
 
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
@@ -39,14 +39,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         ///   The service for resolving adapter references.
         /// </param>
         /// <param name="jsonOptions">
-        ///   The configure JSON options.
+        ///   The configured JSON options.
         /// </param>
         public CustomFunctionsServiceImpl(IAdapterAccessor adapterAccessor, IOptions<JsonOptions> jsonOptions) {
             _adapterAccessor = adapterAccessor;
-
-            // Note that, by receiving the IOptions<JsonOptions> service, we are actually getting
-            // the JSON options that have been configured for ASP.NET Core MVC (if any).
-            _jsonOptions = jsonOptions?.Value?.JsonSerializerOptions;
+            _jsonOptions = jsonOptions?.Value?.SerializerOptions;
         }
 
 
