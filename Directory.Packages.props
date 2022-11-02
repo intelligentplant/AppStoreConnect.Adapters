@@ -26,7 +26,7 @@
   <ItemGroup>
     <PackageVersion Include="Castle.Core" Version="5.1.0" />
     <PackageVersion Include="CsvHelper" Version="28.0.1" />
-    <PackageVersion Include="Google.Protobuf" Version="3.21.5" />
+    <PackageVersion Include="Google.Protobuf" Version="3.21.9" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.47.0" />
     <PackageVersion Include="Grpc.Core" Version="2.46.3" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.47.0" />
