@@ -584,21 +584,32 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // change in the bucket.
                 var currentState = bucket.StartBoundary.ClosestValue?.GetValueOrDefault<string>();
                 var currentQuality = bucket.StartBoundary.ClosestValue?.Status;
+                TagValueExtended? previousValue = null;
 
-                var changes = bucket.RawSamples.Aggregate(new List<TagValueExtended>(), (list, item) => {
-                    var tVal = item.GetValueOrDefault<string>();
+                var changes = bucket.RawSamples.Aggregate(new HashSet<TagValueExtended>(), (list, item) => {
+                    var val = item.GetValueOrDefault<string>();
                     if (currentState == null ||
-                        !string.Equals(currentState, tVal, StringComparison.Ordinal) ||
+                        !string.Equals(currentState, val, StringComparison.Ordinal) ||
                         currentQuality != item.Status) {
+
+                        if (previousValue != null) {
+                            list.Add(previousValue);
+                        }
+
                         list.Add(item);
-                        currentState = tVal;
+                        currentState = val;
                         currentQuality = item.Status;
                     }
-                    
+
+                    previousValue = item;
                     return list;
                 });
 
-                return changes.OrderBy(x => x.UtcSampleTime).Select(x => new PlotValue(x, "change"));
+                // Add first and last values.
+                changes.Add(bucket.RawSamples.First());
+                changes.Add(bucket.RawSamples.Last());
+
+                return changes.OrderBy(x => x.UtcSampleTime).Select(x => new PlotValue(x));
             }
         }
 
