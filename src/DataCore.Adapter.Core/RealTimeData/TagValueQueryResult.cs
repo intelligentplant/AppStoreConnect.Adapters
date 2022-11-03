@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Tags;
@@ -9,6 +10,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a value returned by a tag value query.
     /// </summary>
+    [DebuggerDisplay("Tag = {TagName}, Value = {Value}")]
     public class TagValueQueryResult : TagDataContainer {
 
         /// <summary>
