@@ -4,7 +4,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
     /// <summary>
     /// Defines common tag property names.
     /// </summary>
-    public static class CommonTagPropertyNames {
+    public static class CommonTagValuePropertyNames {
 
         /// <summary>
         /// Values calculated using <see cref="AggregationHelper"/> will contain a property with 
@@ -21,6 +21,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Describes the end time for a tag value bucket used in an aggregation calculation.
         /// </summary>
         public const string BucketEnd = "Bucket-End";
+
+        /// <summary>
+        /// Describes the criteria that were used to select or compute a sample.
+        /// </summary>
+        public const string Criteria = "Criteria";
 
         /// <summary>
         /// Specifies the average value used in variance and standard deviation calculations.

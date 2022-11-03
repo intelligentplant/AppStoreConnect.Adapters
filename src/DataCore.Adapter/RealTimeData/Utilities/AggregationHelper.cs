@@ -602,7 +602,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(CommonTagPropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN))
+                            AdapterProperty.Create(CommonTagValuePropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN))
                          )
                         .Build()
                 };
@@ -618,7 +618,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(CommonTagPropertyNames.Average, avg)
+                        AdapterProperty.Create(CommonTagValuePropertyNames.Average, avg)
                     )
                     .Build()
             };
@@ -665,8 +665,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(CommonTagPropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
-                            AdapterProperty.Create(CommonTagPropertyNames.Variance, 0d)
+                            AdapterProperty.Create(CommonTagValuePropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
+                            AdapterProperty.Create(CommonTagValuePropertyNames.Variance, 0d)
                         )
                         .Build()
                 };
@@ -687,11 +687,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(CommonTagPropertyNames.Average, avg),
-                        AdapterProperty.Create(CommonTagPropertyNames.Variance, variance),
-                        AdapterProperty.Create(CommonTagPropertyNames.LowerBound, lowerBound),
-                        AdapterProperty.Create(CommonTagPropertyNames.UpperBound, upperBound),
-                        AdapterProperty.Create(CommonTagPropertyNames.Sigma, sigma)
+                        AdapterProperty.Create(CommonTagValuePropertyNames.Average, avg),
+                        AdapterProperty.Create(CommonTagValuePropertyNames.Variance, variance),
+                        AdapterProperty.Create(CommonTagValuePropertyNames.LowerBound, lowerBound),
+                        AdapterProperty.Create(CommonTagValuePropertyNames.UpperBound, upperBound),
+                        AdapterProperty.Create(CommonTagValuePropertyNames.Sigma, sigma)
                     )
                     .Build()
             };
@@ -1257,7 +1257,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         internal static AdapterProperty CreateXPoweredByProperty() {
-            return AdapterProperty.Create(CommonTagPropertyNames.XPoweredBy, s_xPoweredByPropertyValue.Value);
+            return AdapterProperty.Create(CommonTagValuePropertyNames.XPoweredBy, s_xPoweredByPropertyValue.Value);
         }
 
 

@@ -206,7 +206,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -276,7 +276,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -340,7 +340,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -402,7 +402,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(TagValueStatus.Bad, val.Value.Status);
             Assert.AreEqual(start, val.Value.UtcSampleTime);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -461,7 +461,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -520,7 +520,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -629,7 +629,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -678,7 +678,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -732,7 +732,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -781,7 +781,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -835,7 +835,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -884,7 +884,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -934,7 +934,7 @@ namespace DataCore.Adapter.Tests {
             // Value should have uncertain status because it has been extrapolated.
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -983,7 +983,7 @@ namespace DataCore.Adapter.Tests {
             // Value should have uncertain status because it has been extrapolated.
             Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
 
-            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagPropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
 
 
@@ -1398,25 +1398,25 @@ namespace DataCore.Adapter.Tests {
                 VariantType.Double
             );
 
-            var end = DateTime.UtcNow;
+            var end = DateTime.Parse("2022-11-02T17:20:00Z", null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
             var start = end.AddSeconds(-60);
             var interval = TimeSpan.FromSeconds(20);
 
             var rawValues = new[] {
                 // Bucket 1: 0-20s
                 new TagValueBuilder().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
-                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max + midpoint
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
                 // Bucket 2: 20-40s
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(21)).WithValue(1.883).Build(), // earliest + min
-                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(27)).WithValue(77.765).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(27)).WithValue(77.765).Build(), // midpoint
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(39)).WithValue(77.766).Build(), // latest + max
                 // Bucket 3: 40-60s
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
-                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(), // midpoint
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
@@ -1432,7 +1432,7 @@ namespace DataCore.Adapter.Tests {
                 plotValues.Add(val);
             }
 
-            Assert.AreEqual(9, plotValues.Count);
+            Assert.AreEqual(11, plotValues.Count);
         }
 
 
@@ -1453,7 +1453,7 @@ namespace DataCore.Adapter.Tests {
             var rawValues = new[] {
                 // Bucket 1: 0-20s
                 new TagValueBuilder().WithUtcSampleTime(start).WithValue(70).Build(), // earliest
-                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(7)).WithValue(100).Build(), // max + midpoint
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(14)).WithValue(0).Build(), // min
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(15)).WithValue(100).Build(),
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(19)).WithValue(100).Build(), // latest
@@ -1461,7 +1461,7 @@ namespace DataCore.Adapter.Tests {
                 // Bucket 3: 40-60s
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(41)).WithValue(88).Build(), // earliest
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(47)).WithValue(13).Build(),
-                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(),
+                new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(49)).WithValue(35).Build(), // midpoint
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(53)).WithValue(116).Build(), // max
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(55)).WithValue(0.8867).Build(),
                 new TagValueBuilder().WithUtcSampleTime(start.AddSeconds(56)).WithValue(23).Build(),
@@ -1477,7 +1477,7 @@ namespace DataCore.Adapter.Tests {
                 plotValues.Add(val);
             }
             
-            Assert.AreEqual(7, plotValues.Count);
+            Assert.AreEqual(8, plotValues.Count);
         }
 
     }
