@@ -251,7 +251,10 @@ namespace DataCore.Adapter {
                     node.HasChildren,
                     node.DataReferences.Select(x => new AssetModel.DataReference(
                         x.AdapterId,
-                        x.TagNameOrId
+                        x.TagNameOrId,
+                        string.IsNullOrEmpty(x.Name)
+                            ? null
+                            : x.Name
                     )),
                     node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
                 );
@@ -273,7 +276,10 @@ namespace DataCore.Adapter {
                 node.HasDataReference
                     ? new AssetModel.DataReference(
                         node.DataReference.AdapterId,
-                        node.DataReference.TagNameOrId
+                        node.DataReference.TagNameOrId,
+                        string.IsNullOrEmpty(node.DataReference.Name)
+                            ? null
+                            : node.DataReference.Name
                     )
                     : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
@@ -312,7 +318,8 @@ namespace DataCore.Adapter {
                     }
                     result.DataReferences.Add(new Grpc.AssetModelDataReference() { 
                         AdapterId = item.AdapterId ?? string.Empty,
-                        TagNameOrId = item.Tag ?? string.Empty
+                        TagNameOrId = item.Tag ?? string.Empty,
+                        Name = item.Name ?? string.Empty
                     });
                 }
             }

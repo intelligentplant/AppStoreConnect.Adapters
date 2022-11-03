@@ -446,7 +446,7 @@ namespace DataCore.Adapter.Tests {
                 true,
                 new[] {
                     new DataReference("AdapterId1", "Id1"),
-                    new DataReference("AdapterId1", "Id2")
+                    new DataReference("AdapterId1", "Id2", "Named Ref")
                 },
                 new [] {
                     AdapterProperty.Create("Prop1", 100),
@@ -473,6 +473,7 @@ namespace DataCore.Adapter.Tests {
 
                 Assert.AreEqual(expectedValue.AdapterId, actualValue.AdapterId);
                 Assert.AreEqual(expectedValue.Tag, actualValue.Tag);
+                Assert.AreEqual(expectedValue.Name, actualValue.Name);
             }
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
