@@ -33,7 +33,8 @@ builder.Services
     .AddDataCoreAdapterSignalR();
 
 builder.Services
-    .AddGrpc();
+    .AddGrpc()
+    .AddDataCoreAdapterGrpc();
 
 builder.Services
     .AddHealthChecks()

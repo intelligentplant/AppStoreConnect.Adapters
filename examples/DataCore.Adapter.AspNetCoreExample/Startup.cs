@@ -76,9 +76,12 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
             // above to register your handler.
 
-            services.AddGrpc();
+            services
+                .AddGrpc()
+                .AddDataCoreAdapterGrpc();
 
-            services.AddMvc()
+            services
+                .AddMvc()
                 .AddJsonOptions(options => {
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                     options.JsonSerializerOptions.WriteIndented = true;
