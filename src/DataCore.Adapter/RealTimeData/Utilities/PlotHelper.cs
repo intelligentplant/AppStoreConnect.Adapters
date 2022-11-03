@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -96,12 +97,80 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </para>
         /// 
         /// </remarks>
-        public static async IAsyncEnumerable<TagValueQueryResult> GetPlotValues(
+        public static IAsyncEnumerable<TagValueQueryResult> GetPlotValues(
             TagSummary tag, 
             DateTime utcStartTime, 
             DateTime utcEndTime, 
             TimeSpan bucketSize, 
             IAsyncEnumerable<TagValueQueryResult> rawData,
+            CancellationToken cancellationToken = default
+        ) {
+            return GetPlotValues(tag, utcStartTime, utcEndTime, bucketSize, rawData, null, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Creates a visualization-friendly data set for a single tag that is suitable for trending.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="utcStartTime">
+        ///   The UTC start time for the plot data set.
+        /// </param>
+        /// <param name="utcEndTime">
+        ///   The UTC end time for the plot data set.
+        /// </param>
+        /// <param name="bucketSize">
+        ///   The bucket size to use when calculating the plot data set.
+        /// </param>
+        /// <param name="rawData">
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will provide the raw data to use in the calculations.
+        /// </param>
+        /// <param name="valueSelector">
+        ///   A delegate that will select the samples to return from each time bucket. 
+        ///   If <see langword="null"/>, <see cref="DefaultPlotValueSelector"/> will be used.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit a set of trend-friendly samples.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="tag"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="utcStartTime"/> is greater than or equal to <paramref name="utcEndTime"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="bucketSize"/> is less than or equal to <see cref="TimeSpan.Zero"/>.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The plot function works by collecting raw values into buckets. Each bucket covers the 
+        ///   same period of time. The method reads from <paramref name="rawData"/> and adds samples 
+        ///   to the bucket, until it encounters a sample that has a time stamp that is after the 
+        ///   bucket's end time. The function then takes the earliest, latest, minimum and maximum 
+        ///   values in the bucket, as well as the first non-good value in the bucket, and adds them 
+        ///   to the result data set.
+        /// </para>
+        /// 
+        /// <para>
+        ///   It is important then to note that method is not guaranteed to give evenly-spaced time 
+        ///   stamps in the resulting data set, but instead returns a data set that 
+        ///   gives a reasonable approximation of the tag when visualized.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static async IAsyncEnumerable<TagValueQueryResult> GetPlotValues(
+            TagSummary tag,
+            DateTime utcStartTime,
+            DateTime utcEndTime,
+            TimeSpan bucketSize,
+            IAsyncEnumerable<TagValueQueryResult> rawData,
+            PlotValueSelector? valueSelector,
             [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
@@ -115,7 +184,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentException(Resources.Error_BucketSizeMustBeGreaterThanZero, nameof(bucketSize));
             }
 
-            await foreach (var item in GetPlotValuesInternal(tag, utcStartTime, utcEndTime, bucketSize, rawData, cancellationToken).ConfigureAwait(false)) {
+            await foreach (var item in GetPlotValuesInternal(tag, utcStartTime, utcEndTime, bucketSize, rawData, valueSelector, cancellationToken).ConfigureAwait(false)) {
                 yield return item;
             }
         }
@@ -304,29 +373,26 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="rawData">
         ///   A channel that will provide the raw data to use in the calculations.
         /// </param>
+        /// <param name="valueSelector">
+        ///   A delegate that will select the samples to return from each time bucket. 
+        ///   If <see langword="null"/>, <see cref="DefaultPlotValueSelector"/> will be used.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the computed values.
         /// </returns>
-        private static async IAsyncEnumerable<TagValueQueryResult> GetPlotValuesInternal(TagSummary tag, DateTime utcStartTime, DateTime utcEndTime, TimeSpan bucketSize, IAsyncEnumerable<TagValueQueryResult> rawData, [EnumeratorCancellation] CancellationToken cancellationToken) {
-            // We will determine the values to return for the plot request by creating aggregation 
-            // buckets that cover a time range that is equal to the bucketSize. For each bucket, we 
-            // will we add up to 5 raw samples into the resulting data set:
-            //
-            // * The earliest value in the bucket.
-            // * The latest value in the bucket.
-            // * The maximum value in the bucket.
-            // * The minimum value in the bucket.
-            // * The first non-good-status value in the bucket.
-            //
-            // If a sample meets more than one of the above conditions, it will only be added to the 
-            // result once.
-
+        private static async IAsyncEnumerable<TagValueQueryResult> GetPlotValuesInternal(
+            TagSummary tag, 
+            DateTime utcStartTime, 
+            DateTime utcEndTime, 
+            TimeSpan bucketSize, 
+            IAsyncEnumerable<TagValueQueryResult> rawData, 
+            PlotValueSelector? valueSelector,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        ) {
             var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(bucketSize), utcStartTime, utcEndTime);
-
-            TagValueExtended lastValuePreviousBucket = null!;
 
             await foreach (var val in rawData.WithCancellation(cancellationToken).ConfigureAwait(false)) {
                 if (val == null) {
@@ -343,14 +409,23 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                 if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
                     if (bucket.RawSampleCount > 0) {
-                        foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket)) {
+                        foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
                             yield return calculatedValue;
                         }
-                        lastValuePreviousBucket = bucket.RawSamples.Last();
                     }
 
                     do {
+                        // Start boundary value for the next bucket is the last raw sample in the
+                        // current bucket, or the start boundary value for the current bucket if
+                        // the current bucket is empty.
+                        var startBoundaryValue = bucket.RawSampleCount > 0 
+                            ? bucket.RawSamples.Last() 
+                            : bucket.StartBoundary.ClosestValue;
+
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(bucketSize), utcStartTime, utcEndTime);
+                        if (startBoundaryValue != null) {
+                            bucket.UpdateStartBoundaryValue(startBoundaryValue);
+                        }
                     } while (bucket.UtcBucketEnd < val.Value.UtcSampleTime);
                 }
 
@@ -358,7 +433,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             if (bucket.RawSampleCount > 0) { 
-                foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, lastValuePreviousBucket)) {
+                foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
                     yield return calculatedValue;
                 }
             }
@@ -374,8 +449,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="bucket">
         ///   The bucket.
         /// </param>
-        /// <param name="lastValuePreviousBucket">
-        ///   The last value that was added to the previous bucket for the same tag.
+        /// <param name="valueSelector">
+        ///   A delegate that will select the samples from the <paramref name="bucket"/> to return. 
+        ///   If <see langword="null"/>, <see cref="DefaultPlotValueSelector"/> will be used.
         /// </param>
         /// <returns>
         ///   An <see cref="IEnumerable{T}"/> that contains the samples.
@@ -383,62 +459,162 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <remarks>
         ///   Assumes that the <paramref name="bucket"/> contains at least one sample.
         /// </remarks>
-        private static IEnumerable<TagValueQueryResult> CalculateAndEmitBucketSamples(TagSummary tag, TagValueBucket bucket, TagValueExtended lastValuePreviousBucket) {
-            var significantValues = new HashSet<TagValueExtended>();
+        private static IEnumerable<TagValueQueryResult> CalculateAndEmitBucketSamples(
+            TagSummary tag, 
+            TagValueBucket bucket, 
+            PlotValueSelector? valueSelector
+        ) {
+            var significantValues = valueSelector == null
+                ? DefaultPlotValueSelector(tag, bucket)
+                : valueSelector.Invoke(tag, bucket);
+
+            foreach (var value in significantValues) {
+                var builder = new TagValueBuilder(value.Sample)
+                    .WithBucketProperties(bucket);
+
+                if (value.Criteria != null) {
+                    builder.WithProperty(CommonTagValuePropertyNames.Criteria, string.Join(", ", value.Criteria));
+                }
+
+                builder.WithProperties(AggregationHelper.CreateXPoweredByProperty());
+
+                yield return TagValueQueryResult.Create(
+                    tag.Id, 
+                    tag.Name, 
+                    builder.Build()
+                );
+            }
+        }
+
+
+        /// <summary>
+        /// Default delegate for selecting the samples to return from a <see cref="TagValueBucket"/> 
+        /// in a plot query.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag that the plot values are being selected for.
+        /// </param>
+        /// <param name="bucket">
+        ///   The <see cref="TagValueBucket"/>.
+        /// </param>
+        /// <returns>
+        ///   The selected samples.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   For numeric tags (i.e. tags where <see cref="VariantExtensions.IsNumericType(VariantType)"/> 
+        ///   is <see langword="true"/> for <see cref="TagSummary.DataType"/> on <paramref name="tag"/>),
+        ///   the following values are selected from the bucket:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>The first sample</item>
+        ///   <item>The last sample</item>
+        ///   <item>The midpoint sample (i.e. the sample with the timestamp closest to the middle of the bucket's time range)</item>
+        ///   <item>The sample with the maximum numeric value and good quality</item>
+        ///   <item>The sample with the minimum numeric value and good quality</item>
+        ///   <item>The first sample with non-good quality</item>
+        /// </list>
+        /// 
+        /// <para>
+        ///   For non-numeric tags, the following values are selected from the bucket:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>The first sample</item>
+        ///   <item>The last sample</item>
+        ///   <item>Any sample that represents a change in value or quality from the previous sample</item>
+        ///   <item>The sample immediately before any sample that represents a change in value or quality</item>
+        /// </list>
+        /// 
+        /// </remarks>
+        /// <seealso cref="PlotValueSelector"/>
+        public static IEnumerable<PlotValue> DefaultPlotValueSelector(TagSummary tag, TagValueBucket bucket) {
+            if (bucket == null || bucket.RawSampleCount < 1) {
+                return Array.Empty<PlotValue>();
+            }
 
             if (tag.DataType.IsNumericType()) {
-                var numericValues = bucket.RawSamples.ToDictionary(x => x, x => x.GetValueOrDefault(double.NaN));
+                // The tag is numeric, so we can select a representative number of samples.
 
-                significantValues.Add(bucket.RawSamples.First());
-                significantValues.Add(bucket.RawSamples.Last());
-                significantValues.Add(bucket.RawSamples.Aggregate((a, b) => {
-                    var nValA = numericValues[a];
-                    var nValB = numericValues[b];
-                    return nValA <= nValB
-                        ? a
-                        : b;
-                })); // min
-                significantValues.Add(bucket.RawSamples.Aggregate((a, b) => {
-                    var nValA = numericValues[a];
-                    var nValB = numericValues[b];
-                    return nValA >= nValB
-                        ? a
-                        : b;
-                })); // max
+                var selectedValues = new ConcurrentDictionary<TagValueExtended, List<string>>();
+
+                // First value
+                selectedValues.GetOrAdd(bucket.RawSamples.First(), _ => new List<string>()).Add("first");
+
+                // Last value
+                selectedValues.GetOrAdd(bucket.RawSamples.Last(), _ => new List<string>()).Add("last");
+
+                // For the midpoint value we need to find the sample with the timestamp that is
+                // closest to the midpoint of the bucket.
+                var midpointTime = bucket.UtcBucketStart.AddSeconds((bucket.UtcBucketEnd - bucket.UtcBucketStart).TotalSeconds / 2);
+                var midpointDiffs = bucket.RawSamples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
+                    Sample = x,
+                    MidpointDiff = Math.Abs((midpointTime - x.UtcSampleTime).TotalSeconds)
+                }).ToArray();
+
+                if (midpointDiffs.Length > 0) {
+                    // Midpoint value
+                    selectedValues.GetOrAdd(midpointDiffs.Aggregate((a, b) => a.MidpointDiff <= b.MidpointDiff ? a : b).Sample, _ => new List<string>()).Add("midpoint");
+                }
+
+                // For maximum/minimum values we need to aggregate based on the numeric values of
+                // the samples. We will do this by converting the numeric value of each sample to
+                // double. If the sample doesn't have a numeric value (e.g. it is text when it is
+                // expected to be int) we will treat it as if it was double.NaN.
+                var numericValues = bucket.RawSamples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
+                    Sample = x,
+                    NumericValue = x.GetValueOrDefault(double.NaN)
+                }).ToArray();
+
+                if (numericValues.Length > 0) {
+                    // Maximum value
+                    selectedValues.GetOrAdd(numericValues.Aggregate((a, b) => a.NumericValue >= b.NumericValue ? a : b).Sample, _ => new List<string>()).Add("max");
+
+                    // Minimum value
+                    selectedValues.GetOrAdd(numericValues.Aggregate((a, b) => a.NumericValue <= b.NumericValue ? a : b).Sample, _ => new List<string>()).Add("min");
+                }
+
+                // First non-good value.
+                var exceptionValue = bucket.RawSamples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
+                if (exceptionValue != null) {
+                    selectedValues.GetOrAdd(exceptionValue, _ = new List<string>()).Add("non-good");
+                }
+
+                return selectedValues.OrderBy(x => x.Key.UtcSampleTime).Select(x => new PlotValue(x.Key, x.Value));
             }
             else {
                 // The tag is not numeric, so we have to add each text value change or quality status 
                 // change in the bucket.
-                var currentState = lastValuePreviousBucket?.GetValueOrDefault<string>();
-                var currentQuality = lastValuePreviousBucket?.Status;
+                var currentState = bucket.StartBoundary.ClosestValue?.GetValueOrDefault<string>();
+                var currentQuality = bucket.StartBoundary.ClosestValue?.Status;
+                TagValueExtended? previousValue = null;
 
-                foreach (var item in bucket.RawSamples) {
-                    var tVal = item.GetValueOrDefault<string>();
-                    if (currentState != null && 
-                        string.Equals(currentState, tVal, StringComparison.Ordinal) && 
-                        currentQuality == item.Status) {
-                        continue;
+                var changes = bucket.RawSamples.Aggregate(new HashSet<TagValueExtended>(), (list, item) => {
+                    var val = item.GetValueOrDefault<string>();
+                    if (currentState == null ||
+                        !string.Equals(currentState, val, StringComparison.Ordinal) ||
+                        currentQuality != item.Status) {
+
+                        if (previousValue != null) {
+                            list.Add(previousValue);
+                        }
+
+                        list.Add(item);
+                        currentState = val;
+                        currentQuality = item.Status;
                     }
-                    currentState = tVal;
-                    currentQuality = item.Status;
-                    significantValues.Add(item);
-                }
-            }
 
-            var exceptionValue = bucket.RawSamples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
-            if (exceptionValue != null) {
-                significantValues.Add(exceptionValue);
-            }
+                    previousValue = item;
+                    return list;
+                });
 
-            foreach (var value in significantValues.OrderBy(x => x.UtcSampleTime)) {
-                yield return TagValueQueryResult.Create(
-                    tag.Id, 
-                    tag.Name, 
-                    new TagValueBuilder(value)
-                        .WithBucketProperties(bucket)
-                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
-                        .Build()
-                );
+                // Add first and last values.
+                changes.Add(bucket.RawSamples.First());
+                changes.Add(bucket.RawSamples.Last());
+
+                return changes.OrderBy(x => x.UtcSampleTime).Select(x => new PlotValue(x));
             }
         }
 
