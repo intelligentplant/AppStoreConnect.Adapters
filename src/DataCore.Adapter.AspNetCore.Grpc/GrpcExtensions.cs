@@ -238,6 +238,31 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(node));
             }
 
+            if (node.DataReferences.Count > 0) {
+                return new AssetModel.AssetModelNode(
+                    node.Id,
+                    node.Name,
+                    node.NodeType.ToAdapterAssetModelNodeType(),
+                    node.NodeSubType,
+                    node.Description,
+                    string.IsNullOrWhiteSpace(node.Parent)
+                        ? null
+                        : node.Parent,
+                    node.HasChildren,
+                    node.DataReferences.Select(x => new AssetModel.DataReference(
+                        x.AdapterId,
+                        x.TagNameOrId,
+                        string.IsNullOrEmpty(x.Name)
+                            ? null
+                            : x.Name
+                    )),
+                    node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
+                );
+            }
+
+            // If no data references then check the HasDataReference field to allow
+            // backwards-compatibility with pre v3.0.
+
             return new AssetModel.AssetModelNode(
                 node.Id,
                 node.Name,
@@ -250,8 +275,11 @@ namespace DataCore.Adapter {
                 node.HasChildren,
                 node.HasDataReference
                     ? new AssetModel.DataReference(
-                        node.DataReference.AdapterId, 
-                        node.DataReference.TagNameOrId
+                        node.DataReference.AdapterId,
+                        node.DataReference.TagNameOrId,
+                        string.IsNullOrEmpty(node.DataReference.Name)
+                            ? null
+                            : node.DataReference.Name
                     )
                     : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
@@ -281,12 +309,20 @@ namespace DataCore.Adapter {
                 Description = node.Description ?? string.Empty,
                 Parent = node.Parent ?? string.Empty,
                 HasChildren = node.HasChildren,
-                HasDataReference = node.DataReference != null,
-                DataReference = new Grpc.AssetModelDataReference() {
-                    AdapterId = node.DataReference?.AdapterId ?? string.Empty,
-                    TagNameOrId = node.DataReference?.Tag ?? string.Empty
-                }
             };
+
+            if (node.DataReferences != null) {
+                foreach (var item in node.DataReferences) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.DataReferences.Add(new Grpc.AssetModelDataReference() { 
+                        AdapterId = item.AdapterId ?? string.Empty,
+                        TagNameOrId = item.Tag ?? string.Empty,
+                        Name = item.Name ?? string.Empty
+                    });
+                }
+            }
 
             if (node.Properties != null) {
                 foreach (var item in node.Properties) {

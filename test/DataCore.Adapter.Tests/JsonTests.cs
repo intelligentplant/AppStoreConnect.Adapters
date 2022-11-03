@@ -436,6 +436,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AssetModelNode_ShouldRoundTrip() {
             var options = GetOptions();
+
             var expected = new AssetModelNode(
                 "Id",
                 "Name",
@@ -444,7 +445,10 @@ namespace DataCore.Adapter.Tests {
                 "Description",
                 "Parent",
                 true,
-                new DataReference("AdapterId1", "Id1"),
+                new[] {
+                    new DataReference("AdapterId1", "Id1"),
+                    new DataReference("AdapterId1", "Id2", "Named Ref")
+                },
                 new [] {
                     AdapterProperty.Create("Prop1", 100),
                     AdapterProperty.Create("Prop2", "Value")
@@ -461,10 +465,17 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Parent, actual.Parent);
             Assert.AreEqual(expected.HasChildren, actual.HasChildren);
-            Assert.IsNotNull(actual.DataReference);
-            Assert.AreEqual(expected.DataReference.AdapterId, actual.DataReference.AdapterId);
-            Assert.IsNotNull(actual.DataReference.Tag);
-            Assert.AreEqual(expected.DataReference.Tag, actual.DataReference.Tag);
+
+            Assert.IsNotNull(actual.DataReferences);
+            Assert.AreEqual(expected.DataReferences.Count(), actual.DataReferences.Count());
+            for (var i = 0; i < expected.DataReferences.Count(); i++) {
+                var expectedValue = expected.DataReferences.ElementAt(i);
+                var actualValue = actual.DataReferences.ElementAt(i);
+
+                Assert.AreEqual(expectedValue.AdapterId, actualValue.AdapterId);
+                Assert.AreEqual(expectedValue.Tag, actualValue.Tag);
+                Assert.AreEqual(expectedValue.Name, actualValue.Name);
+            }
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
             for (var i = 0; i < expected.Properties.Count(); i++) {
@@ -474,6 +485,44 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
             }
+        }
+
+
+        [TestMethod]
+        public void V2AssetModelNodeJson_ShouldDeserialize() {
+            var options = GetOptions();
+
+            var json = @"{
+    ""Id"": ""Id"",
+    ""Name"": ""Name"",
+    ""NodeType"": ""Variable"",
+    ""NodeSubType"": null,
+    ""Description"": ""Description"",
+    ""Parent"": ""Parent"",
+    ""HasChildren"": true,
+    ""DataReference"": {
+        ""AdapterId"": ""AdapterId1"",
+        ""Tag"": ""Id1""
+    },
+    ""Properties"": []
+}";
+
+            var actual = JsonSerializer.Deserialize<AssetModelNode>(json, options);
+
+            Assert.AreEqual("Id", actual.Id);
+            Assert.AreEqual("Name", actual.Name);
+            Assert.AreEqual(NodeType.Variable, actual.NodeType);
+            Assert.AreEqual(null, actual.NodeSubType);
+            Assert.AreEqual("Description", actual.Description);
+            Assert.AreEqual("Parent", actual.Parent);
+            Assert.AreEqual(true, actual.HasChildren);
+
+            Assert.IsNotNull(actual.DataReference);
+            Assert.AreEqual("AdapterId1", actual.DataReference.AdapterId);
+            Assert.AreEqual("Id1", actual.DataReference.Tag);
+            Assert.AreEqual(null, actual.DataReference.Name);
+
+            Assert.AreEqual(0, actual.Properties.Count());
         }
 
 

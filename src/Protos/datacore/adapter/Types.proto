@@ -156,8 +156,11 @@ message AssetModelNode {
     bool has_children = 8;
     AssetModelNodeType node_type = 9;
     string node_sub_type = 10;
+    // Deprecated - use data_references instead
     AssetModelDataReference data_reference = 11;
+    // Deprecated - use data_references instead
     bool has_data_reference = 12;
+    repeated AssetModelDataReference data_references = 13;
 }
 
 
@@ -174,6 +177,7 @@ enum AssetModelNodeType {
 message AssetModelDataReference {
     string adapter_id = 1;
     string tag_name_or_id = 3;
+    string name = 4;
 }
 
 
