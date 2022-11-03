@@ -505,7 +505,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <para>
         ///   For numeric tags (i.e. tags where <see cref="VariantExtensions.IsNumericType(VariantType)"/> 
         ///   is <see langword="true"/> for <see cref="TagSummary.DataType"/> on <paramref name="tag"/>),
-        ///   the following values are selected from the bucket (if available):
+        ///   the following values are selected from the bucket:
         /// </para>
         /// 
         /// <list type="bullet">
@@ -518,10 +518,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </list>
         /// 
         /// <para>
-        ///   For non-numeric tags, every change in text value or quality in the bucket is returned. 
-        ///   The boundary sample from the previous bucket is used to determine the initial value 
-        ///   and quality state.
+        ///   For non-numeric tags, the following values are selected from the bucket:
         /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>The first sample</item>
+        ///   <item>The last sample</item>
+        ///   <item>Any sample that represents a change in value or quality from the previous sample</item>
+        ///   <item>The sample immediately before any sample that represents a change in value or quality</item>
+        /// </list>
         /// 
         /// </remarks>
         /// <seealso cref="PlotValueSelector"/>
