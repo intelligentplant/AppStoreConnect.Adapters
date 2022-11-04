@@ -21,6 +21,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// The SignalR compatibility level to use.
         /// </summary>
+        [Obsolete("ASP.NET Core 2.x is no longer supported", false)]
         public CompatibilityLevel CompatibilityLevel { get; set; } = CompatibilityLevel.Latest;
 
         /// <summary>
