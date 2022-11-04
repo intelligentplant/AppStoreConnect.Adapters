@@ -139,6 +139,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+        /// <summary>
+        /// Gets the schema for creating or updating tags on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="System.Text.Json.JsonElement"/> describing the tag creation JSON schema.
+        /// </returns>
         public async Task<System.Text.Json.JsonElement> GetTagSchema(string adapterId, GetTagSchemaRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
@@ -152,6 +164,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+        /// <summary>
+        /// Creates a tag on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <returns>
+        ///   The created tag.
+        /// </returns>
         public async Task<TagDefinition> CreateTag(string adapterId, CreateTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
@@ -174,6 +198,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+        /// <summary>
+        /// Updates a tag on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <returns>
+        ///   The updated tag.
+        /// </returns>
         public async Task<TagDefinition> UpdateTag(string adapterId, UpdateTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
@@ -196,6 +232,18 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         }
 
 
+        /// <summary>
+        /// Deletes a tag on the specified adapter.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the tag was deleted, or <see langword="false"/> otherwise.
+        /// </returns>
         public async Task<bool> DeleteTag(string adapterId, DeleteTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 

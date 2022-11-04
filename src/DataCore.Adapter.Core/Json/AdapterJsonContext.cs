@@ -94,6 +94,6 @@ namespace DataCore.Adapter.Json {
     [JsonSerializable(typeof(Tags.TagDefinitionFields))]
     [JsonSerializable(typeof(Tags.TagIdentifier))]
     [JsonSerializable(typeof(Tags.TagSummary))]
-    public partial class AdapterJsonContext : JsonSerializerContext { }
+    internal partial class AdapterJsonContext : JsonSerializerContext { }
 
 }
