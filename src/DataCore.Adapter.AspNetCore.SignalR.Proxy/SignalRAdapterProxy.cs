@@ -156,17 +156,17 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             backgroundTaskService, 
             logger
         ) {
+#pragma warning disable CS0618 // Type or member is obsolete
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
-#pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
-#pragma warning restore CS0618 // Type or member is obsolete
             _client = new Lazy<AdapterSignalRClient>(() => {
                 var conn = _connectionFactory.Invoke(null);
                 AddHubEventHandlers(conn);
                 return new AdapterSignalRClient(conn, true, Options!.CompatibilityLevel);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 

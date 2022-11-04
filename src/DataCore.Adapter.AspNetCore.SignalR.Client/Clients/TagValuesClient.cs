@@ -75,6 +75,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
                 await foreach (var item in connection.StreamAsync<TagValueQueryResult>(
@@ -88,6 +89,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
                 yield break;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             // We are using ASP.NET Core 2.x, so we cannot use client-to-server streaming. Instead, 
             // we will make a separate streaming call for each topic, and cancel it when we detect 
@@ -567,6 +569,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+#pragma warning disable CS0618 // Type or member is obsolete
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
                 await foreach (var item in connection.StreamAsync<WriteTagValueResult>(
@@ -580,6 +583,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
                 yield break;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
             // we will read the channel ourselves and make an invocation call for every value.
@@ -670,6 +674,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
 
             var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+#pragma warning disable CS0618 // Type or member is obsolete
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
                 await foreach (var item in connection.StreamAsync<WriteTagValueResult>(
@@ -683,6 +688,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 }
                 yield break;
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             // We are using ASP.NET Core 2.x, so we cannot use bidirectional streaming. Instead, 
             // we will read the channel ourselves and make an invocation call for every value.
