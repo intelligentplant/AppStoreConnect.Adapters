@@ -27,7 +27,7 @@
         let updateInProgress = false;
 
         const setLastUpdatedTime = () => $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
-        
+
         const updateStatus = async () => {
             if (updateInProgress) {
                 return;
@@ -45,13 +45,13 @@
         };
 
         setLastUpdatedTime();
-        
-        setInterval(async () => { 
+
+        setInterval(async () => {
             await updateStatus();
         }, 15000);
 
         document.addEventListener('click', async (evt) => {
-            if (!event.composedPath().some(x => x.matches('.copy-adapter-id'))) {
+            if (!event.composedPath().some(x => x && x.matches && x.matches('.copy-adapter-id'))) {
                 return;
             }
             await navigator.clipboard.writeText($('#@Html.IdFor(x => x.Adapter.Descriptor.Id)').val());
