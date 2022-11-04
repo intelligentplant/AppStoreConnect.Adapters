@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <summary>
         /// The node's data reference.
         /// </summary>
-        private DataReference? _dataReference;
+        private readonly List<DataReference> _dataReferences = new List<DataReference>();
 
         /// <summary>
         /// Bespoke node properties.
@@ -86,7 +86,11 @@ namespace DataCore.Adapter.AssetModel {
             WithDescription(existing.Description);
             WithParent(existing.Parent);
             WithChildren(existing.HasChildren);
-            WithDataReference(existing.DataReference);
+            if (existing.DataReferences != null) {
+                foreach (var item in existing.DataReferences) {
+                    _dataReferences.Add(item);
+                }
+            }
             WithProperties(existing.Properties);
         }
 
@@ -133,7 +137,9 @@ namespace DataCore.Adapter.AssetModel {
                 _description, 
                 _parentId, 
                 _hasChildren, 
-                _dataReference, 
+                _dataReferences.Count == 0 
+                    ? null 
+                    : _dataReferences, 
                 _properties
             );
         }
@@ -234,7 +240,50 @@ namespace DataCore.Adapter.AssetModel {
 
 
         /// <summary>
-        /// Updates the node's data reference.
+        /// Adds a collection of data references to the node.
+        /// </summary>
+        /// <param name="dataReferences">
+        ///   The data references.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="AssetModelNodeBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="dataReferences"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeBuilder WithDataReferences(params DataReference[] dataReferences) {
+            return WithDataReferences((IEnumerable<DataReference>) dataReferences);
+        }
+
+
+        /// <summary>
+        /// Adds a collection of data references to the node.
+        /// </summary>
+        /// <param name="dataReferences">
+        ///   The data references.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="AssetModelNodeBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="dataReferences"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeBuilder WithDataReferences(IEnumerable<DataReference> dataReferences) {
+            if (dataReferences == null) {
+                throw new ArgumentNullException(nameof(dataReferences));
+            }
+            foreach (var item in dataReferences) {
+                if (item == null) {
+                    continue;
+                }
+                WithDataReference(item);
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds a data reference to the node.
         /// </summary>
         /// <param name="dataReference">
         ///   The data reference.
@@ -242,20 +291,26 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        public AssetModelNodeBuilder WithDataReference(DataReference? dataReference) {
-            _dataReference = dataReference;
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="dataReference"/> is <see langword="null"/>.
+        /// </exception>
+        public AssetModelNodeBuilder WithDataReference(DataReference dataReference) {
+            _dataReferences.Add(dataReference ?? throw new ArgumentNullException(nameof(dataReference)));
             return this;
         }
 
 
         /// <summary>
-        /// Updates the node's data reference.
+        /// Adds a data reference to the node.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID for the data reference.
         /// </param>
         /// <param name="tag">
         ///   The tag identifier for the data reference.
+        /// </param>
+        /// <param name="name">
+        ///   The optional display name for the data reference.
         /// </param>
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
@@ -266,20 +321,23 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        public AssetModelNodeBuilder WithDataReference(string adapterId, TagSummary tag) {
-            _dataReference = new DataReference(adapterId, tag?.Name!);
+        public AssetModelNodeBuilder WithDataReference(string adapterId, TagSummary tag, string? name = null) {
+            _dataReferences.Add(new DataReference(adapterId, tag?.Name!, name));
             return this;
         }
 
 
         /// <summary>
-        /// Updates the node's data reference.
+        /// Adds a data reference to the node.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID for the data reference.
         /// </param>
         /// <param name="tag">
         ///   The tag ID or name for the data reference.
+        /// </param>
+        /// <param name="name">
+        ///   The optional display name for the data reference.
         /// </param>
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
@@ -292,9 +350,10 @@ namespace DataCore.Adapter.AssetModel {
         /// </exception>
         public AssetModelNodeBuilder WithDataReference(
             string adapterId, 
-            string tag
+            string tag,
+            string? name = null
         ) {
-            _dataReference = new DataReference(adapterId, tag);
+            _dataReferences.Add(new DataReference(adapterId, tag, name));
             return this;
         }
 
