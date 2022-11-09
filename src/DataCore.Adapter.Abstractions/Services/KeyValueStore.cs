@@ -21,7 +21,7 @@ namespace DataCore.Adapter.Services {
         /// Instrument recording the bytes written to the store.
         /// </summary>
         private static Counter<long> s_bytesWritten = Diagnostics.Telemetry.Meter.CreateCounter<long>(
-            "Services.KeyValueStore.io.bytes.out",
+            "keyvaluestore.io.bytes.out",
             "By",
             "Number of bytes written to the key-value store."
         );
@@ -30,7 +30,7 @@ namespace DataCore.Adapter.Services {
         /// Instrument recording the bytes read from the store.
         /// </summary>
         private static Counter<long> s_bytesRead = Diagnostics.Telemetry.Meter.CreateCounter<long>(
-            "Services.KeyValueStore.io.bytes.in",
+            "keyvaluestore.io.bytes.in",
             "By",
             "Number of bytes read from the key-value store."
         );
