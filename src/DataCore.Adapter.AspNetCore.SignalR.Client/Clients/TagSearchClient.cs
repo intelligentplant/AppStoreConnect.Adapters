@@ -73,7 +73,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<TagDefinition>(
                 "FindTags",
                 adapterId,
@@ -121,7 +121,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach(var item in connection.StreamAsync<TagDefinition>(
                 "GetTags",
                 adapterId,
@@ -169,7 +169,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<AdapterProperty>(
                 "GetTagProperties",
                 adapterId,

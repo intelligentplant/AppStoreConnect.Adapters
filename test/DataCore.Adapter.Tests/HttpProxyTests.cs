@@ -64,16 +64,6 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override async Task BeforeAdapterTestAsync(HttpAdapterProxy adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
-            await base.BeforeAdapterTestAsync(adapter, context, cancellationToken).ConfigureAwait(false);
-            // If SignalR functionality is available, pre-start the connection for the supplied
-            // call context to help avoid timeout issues in some tests.
-            if (adapter.TryGetSignalRClient(context, out var client)) {
-                await client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-
         [TestMethod]
         public Task HttpProxyShouldNotEnableSnapshotPushWhenRepollingIntervalIsZero() {
             return RunAdapterTest((adapter, ctx, ct) => {

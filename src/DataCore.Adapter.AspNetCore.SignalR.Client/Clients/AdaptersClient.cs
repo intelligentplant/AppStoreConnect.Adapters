@@ -54,7 +54,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ) {
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<AdapterDescriptor>(
                 "FindAdapters", 
                 request,
@@ -85,7 +85,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<AdapterDescriptorExtended>(
                 "GetAdapter", 
                 adapterId, 
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<HealthCheckResult>(
                 "CheckAdapterHealth",
                 adapterId,
@@ -145,7 +145,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<HealthCheckResult>(
                 "CreateAdapterHealthChannel",
                 adapterId,

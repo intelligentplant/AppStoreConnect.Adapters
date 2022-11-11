@@ -71,7 +71,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<FeatureDescriptor>(
                 "GetDescriptor",
                 adapterId,
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<ExtensionFeatureOperationDescriptor>>(
                 "GetExtensionOperations",
                 adapterId,
@@ -158,7 +158,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<InvocationResponse>(
                 "InvokeExtension",
                 adapterId,
@@ -203,7 +203,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<InvocationResponse>(
                 "InvokeStreamingExtension",
                 adapterId,
@@ -260,7 +260,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentNullException(nameof(channel));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             if (_client.CompatibilityLevel != CompatibilityLevel.AspNetCore2) {
                 // We are using ASP.NET Core 3.0+ so we can use bidirectional streaming.
                 await foreach (var item in connection.StreamAsync<InvocationResponse>(

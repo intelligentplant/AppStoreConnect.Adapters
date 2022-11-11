@@ -300,8 +300,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <inheritdoc/>
         protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_client.IsValueCreated) {
-                var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                await connection.StopAsync(cancellationToken).ConfigureAwait(false);
+                await _client.Value.StopAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -403,8 +402,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             }
 
             if (_client.IsValueCreated) {
-                var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                var state = hubConnection.State;
+                var state = _client.Value.ConnectionState;
                
                 switch (state) {
                     case HubConnectionState.Connected:

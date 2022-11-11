@@ -69,7 +69,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<IEnumerable<CustomFunctionDescriptor>>(
                 "GetCustomFunctions",
                 adapterId,
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<CustomFunctionDescriptorExtended>(
                 "GetCustomFunction",
                 adapterId,
@@ -158,7 +158,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<CustomFunctionInvocationResponse>(
                 "InvokeCustomFunction",
                 adapterId,
