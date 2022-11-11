@@ -32,6 +32,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         private readonly HubConnection _hubConnection;
 
         /// <summary>
+        /// Ensures that only one connection attempt can be made at a time.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncLock _connectionLock = new Nito.AsyncEx.AsyncLock();
+
+        /// <summary>
         /// When <see langword="true"/>, <see cref="_hubConnection"/> will be disposed when the 
         /// client is disposed.
         /// </summary>
@@ -95,6 +100,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// </summary>
         [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
+
+        /// <summary>
+        /// The SignalR client's connection state.
+        /// </summary>
+        public HubConnectionState ConnectionState => _hubConnection.State;
 
         /// <summary>
         /// Occurs when the connection is closed.
@@ -190,25 +200,57 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
 
         /// <summary>
-        /// Gets the <see cref="HubConnection"/> for the client, optionally starting the 
-        /// connection if it is currently in a disconnected state.
+        /// Gets the <see cref="HubConnection"/> for the client and starts the connection if it is 
+        /// currently in a disconnected state.
         /// </summary>
-        /// <param name="startConnection">
-        ///   When <see langword="true"/>, the connection will be automatically started if it is 
-        ///   in a disconnected state.
-        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   A task that will return the <see cref="HubConnection"/> for the client.
         /// </returns>
-        public async Task<HubConnection> GetHubConnection(bool startConnection = true, CancellationToken cancellationToken = default) {
-            if (startConnection && _hubConnection.State == HubConnectionState.Disconnected) {
-                await _hubConnection.StartAsync(cancellationToken).ConfigureAwait(false);
+        internal async Task<HubConnection> GetHubConnectionAsync(CancellationToken cancellationToken = default) {
+            if (_hubConnection.State == HubConnectionState.Disconnected) {
+                await StartConnectionAsync(cancellationToken).ConfigureAwait(false);
             }
 
             return _hubConnection;
+        }
+
+
+        /// <summary>
+        /// Starts the SignalR connection.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will start the connection.
+        /// </returns>
+        private async Task StartConnectionAsync(CancellationToken cancellationToken) {
+            using (await _connectionLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (_hubConnection.State == HubConnectionState.Disconnected) {
+                    await _hubConnection.StartAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Stops the SignalR connection if it has been started.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will stop the SignalR connection.
+        /// </returns>
+        public async Task StopAsync(CancellationToken cancellationToken = default) {
+            using (await _connectionLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (_hubConnection.State != HubConnectionState.Disconnected) {
+                    await _hubConnection.StopAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
 
 
@@ -275,7 +317,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// </returns>
         protected virtual async ValueTask DisposeAsyncCore() {
             if (_disposeConnection) {
-                await _hubConnection.DisposeAsync().ConfigureAwait(false);
+                using (await _connectionLock.LockAsync().ConfigureAwait(false)) {
+                    await _hubConnection.DisposeAsync().ConfigureAwait(false);
+                }
             }
         }
 
@@ -296,7 +340,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
                 if (_disposeConnection) {
                     _ = Task.Run(async () => {
                         try {
-                            await _hubConnection.DisposeAsync().ConfigureAwait(false);
+                            using (await _connectionLock.LockAsync().ConfigureAwait(false)) {
+                                await _hubConnection.DisposeAsync().ConfigureAwait(false);
+                            }
                         }
                         catch { }
                     });
