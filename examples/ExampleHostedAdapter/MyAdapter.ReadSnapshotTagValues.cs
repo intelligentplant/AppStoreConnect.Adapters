@@ -18,10 +18,6 @@ namespace ExampleHostedAdapter {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            // Always call ValidateInvocation in an adapter feature method to ensure that the call
-            // context and request object(s) are valid!
-            ValidateInvocation(context, request);
-
             await Task.Yield();
             var now = DateTime.UtcNow;
 
