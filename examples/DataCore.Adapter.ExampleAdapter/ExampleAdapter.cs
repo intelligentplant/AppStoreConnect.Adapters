@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Example {
             await InitialiseAssetModelAsync(cancellationToken).ConfigureAwait(false);
 
             while (!cancellationToken.IsCancellationRequested) {
-                var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>();
+                var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>().Unwrap();
                 await evtManager.WriteEventMessages(
                     EventMessageBuilder
                         .Create()

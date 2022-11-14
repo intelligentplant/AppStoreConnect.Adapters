@@ -67,7 +67,7 @@ namespace DataCore.Adapter.Example.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             var nodes = string.IsNullOrWhiteSpace(request.ParentId)
                 ? _nodes.Values.Where(x => string.IsNullOrWhiteSpace(x.Parent))
@@ -85,7 +85,7 @@ namespace DataCore.Adapter.Example.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             foreach (var item in request.Nodes) {
                 if (!_nodes.TryGetValue(item, out var node)) {
@@ -103,7 +103,7 @@ namespace DataCore.Adapter.Example.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             IEnumerable<AssetModelNode> nodes = _nodes.Values.ApplyFilter(request);
 
