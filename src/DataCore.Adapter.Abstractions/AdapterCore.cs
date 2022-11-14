@@ -347,7 +347,7 @@ namespace DataCore.Adapter {
         /// </param>
         protected void UpdateDescriptor(string? name = null, string? description = null) {
             if (!string.IsNullOrWhiteSpace(name)) {
-                Descriptor = new AdapterDescriptor(Descriptor.Id, name, description ?? Descriptor.Description);
+                Descriptor = new AdapterDescriptor(Descriptor.Id, name!, description ?? Descriptor.Description);
             }
             else if (description != null) {
                 Descriptor = new AdapterDescriptor(Descriptor.Id, Descriptor.Name, description);
