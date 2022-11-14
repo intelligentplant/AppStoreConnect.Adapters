@@ -13,37 +13,55 @@ namespace DataCore.Adapter.Diagnostics {
     )]
     public partial class AdapterEventSource : EventSource {
 
-
+        /// <summary>
+        /// Instrument that records the number of feature operations that have been started.
+        /// </summary>
         private static readonly Counter<long> s_operationsStartedCounter = Telemetry.Meter.CreateCounter<long>(
             "operations_started",
             "{operations}",
             "Adapter operations that have been started."
         );
 
+        /// <summary>
+        /// Instrument that records the number of feature operations that have successfully 
+        /// completed.
+        /// </summary>
         private static readonly Counter<long> s_operationsCompletedCounter = Telemetry.Meter.CreateCounter<long>(
             "operations_completed",
             "{operations}",
             "Adapter operations that have successfully completed."
         );
 
+        /// <summary>
+        /// Instrument that records the number of feature operations that have faulted.
+        /// </summary>
         private static readonly Counter<long> s_operationsFaultedCounter = Telemetry.Meter.CreateCounter<long>(
             "operations_faulted",
             "{operations}",
             "Adapter operations that have faulted."
         );
 
+        /// <summary>
+        /// Instrument that records the time taken to perform an operation.
+        /// </summary>
         private static readonly Histogram<double> s_operationTime = Telemetry.Meter.CreateHistogram<double>(
             "operation_time",
             "s",
             "Time taken to perform an adapter operation."
         );
 
+        /// <summary>
+        /// Instrument that records the number of server stream items that have been emitted.
+        /// </summary>
         private static readonly Counter<long> s_streamItemsOutCounter = Telemetry.Meter.CreateCounter<long>(
             "stream_items_out",
             "{items}",
             "Items emitted by server streaming adapter operations."
         );
 
+        /// <summary>
+        /// Instrument that records the number of client stream items that have been consumed.
+        /// </summary>
         private static readonly Counter<long> s_streamItemsInCounter = Telemetry.Meter.CreateCounter<long>(
             "stream_items_in",
             "{items}",
