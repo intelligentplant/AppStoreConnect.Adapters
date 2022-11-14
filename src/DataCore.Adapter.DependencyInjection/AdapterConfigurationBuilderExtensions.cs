@@ -299,7 +299,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// </param>
         /// <param name="configure">
         ///   An optional callback for configuring the <typeparamref name="TOptions"/> (for example, 
-        ///   by binding them to an <see cref="Configuration.IConfiguration"/> instance).
+        ///   by binding them to a <c>Microsoft.Extensions.Configuration.IConfiguration</c> instance).
         /// </param>
         /// <returns>
         ///   The <see cref="IAdapterConfigurationBuilder"/>.
