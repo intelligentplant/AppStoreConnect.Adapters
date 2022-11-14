@@ -8,7 +8,7 @@ All adapters implement the [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapte
 
 > Note that adapters do not have to directly implement the feature interfaces themselves. Instead, the adapter can delegate the feature implementation to a helper class. This is described in more detail [below](#delegating-feature-implementations-to-external-providers).
 
-Adapter implementations should inherit from the abstract [AdapterBase&lt;TAdapterOptions&gt;](/src/DataCore.Adapter/AdapterBaseT.cs) or [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes. Note that `AdapterBase` is a subclass of `AdapterBase<TAdapterOptions>`.
+Adapter implementations should inherit from the abstract [AdapterCore](/src/DataCore.Adapter.Abstractions/AdapterCore.cs), [AdapterBase&lt;TAdapterOptions&gt;](/src/DataCore.Adapter/AdapterBaseT.cs) or [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes. Inheriting from `AdapterBase<TAdapterOptions>` or `AdapterBase` is recommended.
 
 
 ## Adapter Options
@@ -55,6 +55,7 @@ Adapters can implement any number of the following standard feature interfaces:
     - [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagostics/IConfigurationChanges.cs)
     - [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagostics/IHealthCheck.cs)
 - Tags:
+    - [ITagConfiguration](/src/DataCore.Adapter.Abstractions/Tags/ITagConfiguration.cs)
     - [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs)
     - [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagSearch.cs)
 - Events:
@@ -78,34 +79,6 @@ Adapters can implement any number of the following standard feature interfaces:
 The [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature allows an adapter to define bespoke custom functions that can be invoked via standard API calls. This is described in more detail below.
 
 
-## Helper Methods
-
-`AdapterBase<TAdapterOptions>` defines helper methods that should be used in feature implementations:
-
-- The `ValidateInvocation` ensures that the `IAdapterCallContext` and request object passed into a feature method implementation are non-null and pass validation.
-- The `CreateCancellationTokenSource` method takes a params array of `CancellationToken` instances and returns a `CancellationTokenSource` that will request cancellation when any of the supplied cancellation tokens request cancellation, or the adapter is stopped.
-
-```csharp
-async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
-    IAdapterCallContext context, 
-    ReadSnapshotTagValuesRequest request, 
-    [EnumeratorCancellation]
-    CancellationToken cancellationToken
-) {
-    ValidateInvocation(context, request);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
-            yield return item;
-        }
-    }
-}
-
-private IAsyncEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
-    ...
-}
-```
-
 
 ## Working with IAsyncEnumerable<T>
 
@@ -122,12 +95,8 @@ async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotT
     [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateInvocation(context, request);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
-            yield return item;
-        }
+    await foreach (var item in GetSnapshotValues(request.Tags, cancellationToken).ConfigureAwait(false)) {
+        yield return item;
     }
 }
 
@@ -145,14 +114,10 @@ async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotT
     [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateInvocation(context, request);
-
     await Task.Yield();
 
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
-            yield return item;
-        }
+    foreach (var item in GetSnapshotValues(request.Tags, cancellationToken)) {
+        yield return item;
     }
 }
 
@@ -162,11 +127,38 @@ private IEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> t
 ```
 
 
+## Feature Wrappers
+
+All features that are registered with an adapter derived from `AdapterCore` are wrapped inside a special wrapper class that performs the following functions:
+
+- Validates the `IAdapterCallContext` parameter and any request or client streaming parameters passed to each feature method.
+- Generates telemetry ([Activity](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity), metrics, and [EventSource](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.tracing.eventsource)) for each feature invocation. In the case of server and client streaming methods, metrics and `EventSource` logging is generated for each item emitted or ingested by the method.
+
+If you need to access the underlying feature implementation (for example, if it is an external implementation as described below and you need access to another method on the external implementation) you can use the `Unwrap` extension method on the wrapper to get the original feature implementation:
+
+```csharp
+internal class MyTagSearchFeature : ITagSearch {
+  // ITagSearch code removed for brevity
+  public void DeleteAllTags() {
+    // Implementation removed for brevity
+  }
+}
+
+internal static void DeleteAllTagsForAdapter(IAdapter adapter) {
+    if (!(adapter.GetFeature<ITagSearch>().Unwrap() is MyTagSearchFeature feature) {
+        return;
+    }
+
+    feature.DeleteAllTags();
+}
+```
+
+
 ## Delegating Feature Implementations to External Providers
 
 Feature implementations can be delegated to another class instead of being implemented directly by the adapter class. Examples of external feature provider classes include the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) class, which can be used to add [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter. Examples of additional external providers can be found in the sections below.
 
-When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterBase<TAdapterOptions>`:
+When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterCore`:
 
 ```csharp
 var snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
@@ -245,7 +237,7 @@ You can then use the `RegisterFunctionAsync` method to register your functions:
 
 ```csharp
 private async Task AddFunctionsAsync() {
-    var feature = Features.Get<ICustomFunctions>();
+    var feature = Features.Get<ICustomFunctions>().Unwrap() as CustomFunctions;
     if (feature == null) {
         return;
     }
@@ -416,10 +408,16 @@ await kvStore.WriteJsonAsync("UtcLastUpdated", DateTime.UtcNow).ConfigureAwait(f
 
 # Telemetry
 
-Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The [REST API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages automatically create activities when invoking operations on your adapter. You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class to provide adapter-specific telemetry inside your feature implementations (for example, while executing a database query):
+## Traces
+
+Tracing is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). 
+
+Activities are automatically created when invoking features that have been registered with an adapter derived from `AdapterCore` (including both `AdapterBase<TAdapterOptions>` and `AdapterBase`).
+
+You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter.Abstractions/Diagnostics/Telemetry.cs) class to provide adapter-specific trace activities inside your feature implementations (for example, while executing a database query):
 
 ```csharp
-private async IAsyncEnumerable<EventMessage> ReadEventMessages(
+private async IAsyncEnumerable<EventMessage> ReadEventMessagesAsync(
     SqlCommand command, 
     [EnumeratorCancellation]
     CancellationToken cancellationToken
@@ -440,6 +438,20 @@ private async IAsyncEnumerable<EventMessage> ReadEventMessages(
     }
 }
 ```
+
+
+## Metrics
+
+You can use `Meter` property in the static [Telemetry](/src/DataCore.Adapter.Abstractions/Diagnostics/Telemetry.cs) class to add custom metric instrumentation to your adapter.
+
+Instrumentation is automatically generated for the following metrics on all features registered with an adapter derived from `AdapterCore`:
+
+- Operations started
+- Operations completed
+- Operations faulted
+- Operation duration
+- Server stream items emitted
+- Client stream items consumed
 
 
 # Providing Adapter Options From Configuration
