@@ -1,16 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Security;
-using System.Security.Principal;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DataCore.Adapter.AspNetCore.Controllers {
@@ -67,9 +60,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="stream">
         ///   The <see cref="IAsyncEnumerable{T}"/> to return.
         /// </param>
-        /// <param name="activity">
-        ///   The <see cref="Activity"/> associated with reading the <paramref name="stream"/>.
-        /// </param>
         /// <param name="onBeforeSendHeaders">
         ///   A callback to invoke before writing of the <paramref name="stream"/> to the response 
         ///   begins.
@@ -80,32 +70,24 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <returns>
         ///   An <see cref="IActionResult"/> that will contain the streamed items.
         /// </returns>
-        /// <remarks>
-        ///   The provided <paramref name="activity"/> will always be disposed once the <paramref name="stream"/> 
-        ///   has completed.
-        /// </remarks>
         internal static IActionResult StreamResults<T>(
             IAsyncEnumerable<T> stream,
-            Activity? activity = null,
             Action? onBeforeSendHeaders = null,
             Action? onCompleted = null
         ) {
             try {
                 onBeforeSendHeaders?.Invoke();
-                return new OkObjectResult(EnumerateAsync(stream, activity, onCompleted));
+                return new OkObjectResult(EnumerateAsync(stream, onCompleted));
             }
             catch (OperationCanceledException) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 return new StatusCodeResult(0);
             }
             catch (SecurityException) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 return new ForbidResult();
             }
             catch (Exception) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 throw;
             }
@@ -128,9 +110,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   A callback that will transform each <typeparamref name="TIn"/> emitted by 
         ///   <paramref name="stream"/> into an instance of <typeparamref name="TOut"/>.
         /// </param>
-        /// <param name="activity">
-        ///   The <see cref="Activity"/> associated with reading the <paramref name="stream"/>.
-        /// </param>
         /// <param name="onBeforeSendHeaders">
         ///   A callback to invoke before writing of the <paramref name="stream"/> to the response 
         ///   begins.
@@ -141,33 +120,25 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <returns>
         ///   An <see cref="IActionResult"/> that will contain the streamed items.
         /// </returns>
-        /// <remarks>
-        ///   The provided <paramref name="activity"/> will always be disposed once the <paramref name="stream"/> 
-        ///   has completed.
-        /// </remarks>
         internal static IActionResult StreamResults<TIn, TOut>(
             IAsyncEnumerable<TIn> stream,
             Func<TIn, TOut> transform,
-            Activity? activity = null,
             Action? onBeforeSendHeaders = null,
             Action? onCompleted = null
         ) {
             try {
                 onBeforeSendHeaders?.Invoke();
-                return new OkObjectResult(EnumerateAsync(stream, transform, activity, onCompleted));
+                return new OkObjectResult(EnumerateAsync(stream, transform, onCompleted));
             }
             catch (OperationCanceledException) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 return new StatusCodeResult(0);
             }
             catch (SecurityException) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 return new ForbidResult();
             }
             catch (Exception) {
-                activity?.Dispose();
                 onCompleted?.Invoke();
                 throw;
             }
@@ -183,9 +154,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <param name="stream">
         ///   The <see cref="IAsyncEnumerable{T}"/> to enumerate.
         /// </param>
-        /// <param name="activity">
-        ///   The <see cref="Activity"/> associated with the <paramref name="stream"/>.
-        /// </param>
         /// <param name="onCompleted">
         ///   A callback to invoke when the <paramref name="stream"/> has completed.
         /// </param>
@@ -194,7 +162,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         private static async IAsyncEnumerable<T> EnumerateAsync<T>(
             IAsyncEnumerable<T> stream,
-            Activity? activity,
             Action? onCompleted
         ) {
             var itemCount = 0;
@@ -209,8 +176,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
             }
             finally {
-                activity.SetResponseItemCountTag(itemCount);
-                activity?.Dispose();
                 onCompleted?.Invoke();
             }
         }
@@ -232,9 +197,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   A callback that will transform each <typeparamref name="TIn"/> emitted by 
         ///   <paramref name="stream"/> into an instance of <typeparamref name="TOut"/>.
         /// </param>
-        /// <param name="activity">
-        ///   The <see cref="Activity"/> associated with the <paramref name="stream"/>.
-        /// </param>
         /// <param name="onCompleted">
         ///   A callback to invoke when the <paramref name="stream"/> has completed.
         /// </param>
@@ -244,7 +206,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         private static async IAsyncEnumerable<TOut> EnumerateAsync<TIn, TOut>(
             IAsyncEnumerable<TIn> stream,
             Func<TIn, TOut> transform,
-            Activity? activity,
             Action? onCompleted
         ) {
             var itemCount = 0;
@@ -259,8 +220,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 }
             }
             finally {
-                activity.SetResponseItemCountTag(itemCount);
-                activity?.Dispose();
                 onCompleted?.Invoke();
             }
         }

@@ -45,20 +45,15 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartConfigurationChangesSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-
-                await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                    try {
-                        await responseStream.WriteAsync(msg.ToGrpcConfigurationChange()).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(++outputItems);
-                    }
-                    catch (OperationCanceledException) {
-                        // Do nothing
-                    }
-                    catch (System.Threading.Channels.ChannelClosedException) {
-                        // Do nothing
-                    }
+            await foreach (var msg in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                try {
+                    await responseStream.WriteAsync(msg.ToGrpcConfigurationChange()).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) {
+                    // Do nothing
+                }
+                catch (System.Threading.Channels.ChannelClosedException) {
+                    // Do nothing
                 }
             }
         }

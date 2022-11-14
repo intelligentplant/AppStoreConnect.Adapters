@@ -32,7 +32,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The feature descriptor.
         /// </returns>
         [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
-        public async Task<FeatureDescriptor> GetDescriptor(
+        public async Task<FeatureDescriptor?> GetDescriptor(
             string adapterId,
             Uri featureUri
         ) {
@@ -51,13 +51,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetDescriptorActivity(resolved.Adapter.Descriptor.Id, featureUri)) {
-                return (await resolved.Feature.GetDescriptor(
-                    adapterCallContext,
-                    featureUri,
-                    Context.ConnectionAborted
-                ).ConfigureAwait(false))!;
-            }
+            return await resolved.Feature.GetDescriptor(
+                adapterCallContext,
+                featureUri,
+                Context.ConnectionAborted
+            );
         }
 
 
@@ -93,15 +91,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetOperationsActivity(resolved.Adapter.Descriptor.Id, featureUri)) {
-                var ops = await resolved.Feature.GetOperations(
-                    adapterCallContext,
-                    featureUri,
-                    Context.ConnectionAborted
-                ).ConfigureAwait(false);
+            var ops = await resolved.Feature.GetOperations(
+                adapterCallContext,
+                featureUri,
+                Context.ConnectionAborted
+            ).ConfigureAwait(false);
 
-                return ops?.Where(x => x != null)?.ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>();
-            }
+            return ops?.Where(x => x != null)?.ToArray() ?? Array.Empty<ExtensionFeatureOperationDescriptor>();
         }
 
 

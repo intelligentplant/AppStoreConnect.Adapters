@@ -1,13 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -41,18 +37,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.FindTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.FindTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -82,18 +68,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.GetTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.GetTags(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -123,18 +99,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -158,9 +124,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                return await adapter.Feature.GetTagSchemaAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
-            }
+            return await adapter.Feature.GetTagSchemaAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -183,18 +147,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartCreateTagActivity(adapter.Adapter.Descriptor.Id)) {
-                System.Text.Json.JsonElement schema;
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
 
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
-                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
-                }
-
-                return await adapter.Feature.CreateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
             }
+
+            return await adapter.Feature.CreateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -217,18 +176,13 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartUpdateTagActivity(adapter.Adapter.Descriptor.Id, request.Tag)) {
-                System.Text.Json.JsonElement schema;
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
 
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
-                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
-                }
-
-                return await adapter.Feature.UpdateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
             }
+
+            return await adapter.Feature.UpdateTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -251,9 +205,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartDeleteTagActivity(adapter.Adapter.Descriptor.Id, request.Tag)) {
-                return await adapter.Feature.DeleteTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
-            }
+            return await adapter.Feature.DeleteTagAsync(adapterCallContext, request, cancellationToken).ConfigureAwait(false);
         }
 
     }

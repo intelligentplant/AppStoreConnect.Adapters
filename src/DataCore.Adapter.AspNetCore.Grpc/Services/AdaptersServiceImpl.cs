@@ -74,13 +74,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<Diagnostics.IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartCheckHealthActivity(adapter.Adapter.Descriptor.Id)) {
-                var result = await adapter.Feature.CheckHealthAsync(adapterCallContext, context.CancellationToken).ConfigureAwait(false);
+            var result = await adapter.Feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
 
-                return new CheckAdapterHealthResponse() {
-                    Result = result.ToGrpcHealthCheckResult()
-                };
-            }
+            return new CheckAdapterHealthResponse() {
+                Result = result.ToGrpcHealthCheckResult()
+            };
         }
 
 
@@ -91,17 +89,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
-            using (var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
-                long outputItemsWritten = 0;
-                try {
-                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
-                        await responseStream.WriteAsync(item.ToGrpcHealthCheckResult()).ConfigureAwait(false);
-                        ++outputItemsWritten;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItemsWritten);
-                }
+            await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+                await responseStream.WriteAsync(item.ToGrpcHealthCheckResult()).ConfigureAwait(false);
             }
         }
 

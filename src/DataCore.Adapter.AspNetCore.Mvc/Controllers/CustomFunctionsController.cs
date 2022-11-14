@@ -5,8 +5,6 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -73,10 +71,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartGetCustomFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                var functions = await feature.GetFunctionsAsync(callContext, request, cancellationToken).ConfigureAwait(false);
-                return Ok(functions); // 200
-            }
+            var functions = await feature.GetFunctionsAsync(callContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(functions); // 200
         }
 
 
@@ -156,10 +152,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                var function = await feature.GetFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false);
-                return Ok(function); // 200
-            }
+            var function = await feature.GetFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false);
+            return Ok(function); // 200
         }
 
 
@@ -210,7 +204,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/invoke")]
         [ProducesResponseType(typeof(CustomFunctionInvocationResponse), 200)]
         public async Task<IActionResult> InvokeFunctionAsync(
-            string adapterId, 
+            string adapterId,
             CustomFunctionInvocationRequest request,
             [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions,
             CancellationToken cancellationToken
@@ -231,27 +225,21 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartInvokeCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                CustomFunctionDescriptorExtended? function;
+            var function = await feature.GetFunctionAsync(callContext, new GetCustomFunctionRequest() {
+                Id = request.Id,
+            }, cancellationToken).ConfigureAwait(false);
 
-                using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                    function = await feature.GetFunctionAsync(callContext, new GetCustomFunctionRequest() {
-                        Id = request.Id,
-                    }, cancellationToken).ConfigureAwait(false);
-                }
-
-                if (function == null) {
-                    return BadRequest(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id)); // 400
-                }
-
-                if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
-                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
-                    problem.Extensions["errors"] = validationResults;
-                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
-                }
-
-                return Ok(await feature.InvokeFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false)); // 200
+            if (function == null) {
+                return BadRequest(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id)); // 400
             }
+
+            if (!request.TryValidateBody(function, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                problem.Extensions["errors"] = validationResults;
+                return new ObjectResult(problem) { StatusCode = 400 }; // 400
+            }
+
+            return Ok(await feature.InvokeFunctionAsync(callContext, request, cancellationToken).ConfigureAwait(false)); // 200
         }
 
     }

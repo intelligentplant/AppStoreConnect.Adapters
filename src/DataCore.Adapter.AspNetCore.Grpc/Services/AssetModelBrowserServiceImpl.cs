@@ -41,8 +41,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapter = await Util.ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var adapterRequest = new Adapter.AssetModel.BrowseAssetModelNodesRequest() {
-                ParentId = string.IsNullOrWhiteSpace(request.ParentId) 
-                    ? null 
+                ParentId = string.IsNullOrWhiteSpace(request.ParentId)
+                    ? null
                     : request.ParentId,
                 PageSize = request.PageSize,
                 Page = request.Page,
@@ -50,18 +50,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
-
-                long outputItems = 0;
-                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
-                    if (node == null) {
-                        continue;
-                    }
-
-                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+            await foreach (var node in adapter.Feature.BrowseAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (node == null) {
+                    continue;
                 }
+
+                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 
@@ -79,18 +73,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
-
-                long outputItems = 0;
-                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
-                    if (node == null) {
-                        continue;
-                    }
-
-                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+            await foreach (var node in adapter.Feature.GetAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (node == null) {
+                    continue;
                 }
+
+                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 
@@ -111,18 +99,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var reader = adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken);
-
-                long outputItems = 0;
-                await foreach (var node in reader.WithCancellation(cancellationToken).ConfigureAwait(false)) {
-                    if (node == null) {
-                        continue;
-                    }
-
-                    await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(++outputItems);
+            await foreach (var node in adapter.Feature.FindAssetModelNodes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (node == null) {
+                    continue;
                 }
+
+                await responseStream.WriteAsync(node.ToGrpcAssetModelNode()).ConfigureAwait(false);
             }
         }
 

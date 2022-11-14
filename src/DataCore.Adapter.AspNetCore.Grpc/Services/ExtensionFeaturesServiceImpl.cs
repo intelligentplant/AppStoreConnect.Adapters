@@ -60,16 +60,14 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri!, cancellationToken).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetDescriptorActivity(adapter.Adapter.Descriptor.Id, featureUri)) {
-                try {
-                    var result = await adapter.Feature.GetDescriptor(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
-                    return result == null
-                        ? null!
-                        : result.ToGrpcFeatureDescriptor();
-                }
-                catch (SecurityException) {
-                    throw Util.CreatePermissionDeniedException();
-                }
+            try {
+                var result = await adapter.Feature.GetDescriptor(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
+                return result == null
+                    ? null!
+                    : result.ToGrpcFeatureDescriptor();
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
             }
         }
 
@@ -97,24 +95,21 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var cancellationToken = context.CancellationToken;
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri!, cancellationToken).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetOperationsActivity(adapter.Adapter.Descriptor.Id, featureUri)) {
-                try {
-                    var result = await adapter.Feature.GetOperations(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
-                    var response = new GetExtensionOperationsResponse();
-                    if (result != null) {
-                        foreach (var item in result) {
-                            if (item == null) {
-                                continue;
-                            }
-                            response.Operations.Add(item.ToGrpcExtensionOperatorDescriptor());
+            try {
+                var result = await adapter.Feature.GetOperations(adapterCallContext, featureUri, cancellationToken).ConfigureAwait(false);
+                var response = new GetExtensionOperationsResponse();
+                if (result != null) {
+                    foreach (var item in result) {
+                        if (item == null) {
+                            continue;
                         }
+                        response.Operations.Add(item.ToGrpcExtensionOperatorDescriptor());
                     }
-                    return response;
                 }
-                catch (SecurityException) {
-                    throw Util.CreatePermissionDeniedException();
-
-                }
+                return response;
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
             }
         }
 
@@ -152,18 +147,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (Telemetry.ActivitySource.StartInvokeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                try {
-                    var result = await adapter.Feature.Invoke(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await adapter.Feature.Invoke(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
 
-                    var response = new InvokeExtensionResponse();
-                    response.Results.AddRange(result.Results.Select(x => x.ToGrpcVariant()));
+                var response = new InvokeExtensionResponse();
+                response.Results.AddRange(result.Results.Select(x => x.ToGrpcVariant()));
 
-                    return response;
-                }
-                catch (SecurityException) {
-                    throw Util.CreatePermissionDeniedException();
-                }
+                return response;
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
             }
         }
 
@@ -203,21 +196,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartStreamActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                try {
-                    long outputItems = 0;
+            try {
+                await foreach (var val in adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                    var response = new InvokeExtensionResponse();
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
 
-                    await foreach (var val in adapter.Feature.Stream(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        var response = new InvokeExtensionResponse();
-                        response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
-
-                        await responseStream.WriteAsync(response).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(++outputItems);
-                    }
+                    await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }
-                catch (SecurityException) {
-                    throw Util.CreatePermissionDeniedException();
-                }
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
             }
         }
 
@@ -259,54 +247,46 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             }
 
             var adapterId = request.AdapterId;
-            
+
             var adapter = await Util.ResolveAdapterAndExtensionFeature(adapterCallContext, _adapterAccessor, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             var adapterRequest = new DuplexStreamInvocationRequest() {
                 OperationId = operationId!
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartDuplexStreamActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                try {
-                    long inputItems = 1;
-                    activity.SetRequestItemCountTag(inputItems);
+            try {
+                var inputChannel = Channel.CreateUnbounded<InvocationStreamItem>(new UnboundedChannelOptions() {
+                    SingleReader = true,
+                    SingleWriter = true
+                });
 
-                    var inputChannel = Channel.CreateUnbounded<InvocationStreamItem>(new UnboundedChannelOptions() {
-                        SingleReader = true,
-                        SingleWriter = true
-                    });
-
-                    // Run a background operation to process the remaining request stream items.
-                    _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        try {
-                            while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
-                                await inputChannel.Writer.WriteAsync(new InvocationStreamItem() {
-                                    Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
-                                }, ct).ConfigureAwait(false);
-                                activity.SetRequestItemCountTag(++inputItems);
-                            }
+                // Run a background operation to process the remaining request stream items.
+                _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
+                    try {
+                        while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
+                            await inputChannel.Writer.WriteAsync(new InvocationStreamItem() {
+                                Arguments = requestStream.Current.Arguments.Select(x => x.ToAdapterVariant()).ToArray()
+                            }, ct).ConfigureAwait(false);
                         }
-                        catch (OperationCanceledException) { }
-                        catch (Exception e) {
-                            inputChannel.Writer.TryComplete(e);
-                        }
-                        finally {
-                            inputChannel.Writer.TryComplete();
-                        }
-                    }, null, true, cancellationToken);
-
-                    long outputItems = 0;
-                    await foreach (var val in adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                        var response = new InvokeExtensionResponse();
-                        response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
-
-                        await responseStream.WriteAsync(response).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(++outputItems);
                     }
+                    catch (OperationCanceledException) { }
+                    catch (Exception e) {
+                        inputChannel.Writer.TryComplete(e);
+                    }
+                    finally {
+                        inputChannel.Writer.TryComplete();
+                    }
+                }, null, true, cancellationToken);
+
+                await foreach (var val in adapter.Feature.DuplexStream(adapterCallContext, adapterRequest, inputChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                    var response = new InvokeExtensionResponse();
+                    response.Results.AddRange(val.Results.Select(x => x.ToGrpcVariant()));
+
+                    await responseStream.WriteAsync(response).ConfigureAwait(false);
                 }
-                catch (SecurityException) {
-                    throw Util.CreatePermissionDeniedException();
-                }
+            }
+            catch (SecurityException) {
+                throw Util.CreatePermissionDeniedException();
             }
         }
 
