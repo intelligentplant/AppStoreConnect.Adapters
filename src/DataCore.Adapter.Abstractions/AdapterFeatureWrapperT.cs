@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -133,6 +134,48 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Sets tags on the current activity based on a request object.
+        /// </summary>
+        /// <typeparam name="TRequest">
+        ///   The request object.
+        /// </typeparam>
+        /// <param name="activity">
+        ///   The activity.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        private void SetActivityTags<TRequest>(Activity? activity, TRequest request) {
+            if (activity == null) {
+                return;
+            }
+
+            if (request is Common.IPageableAdapterRequest pageable) {
+                activity.SetTag("page_size", pageable.PageSize);
+                activity.SetTag("page", pageable.Page);
+            }
+
+            if (request is Events.ReadHistoricalEventMessagesRequest readEventHistory) {
+                activity.SetTag("direction", readEventHistory.Direction);
+
+                if (request is Events.ReadEventMessagesForTimeRangeRequest readEventsForTimeRange) {
+                    activity.SetTag("topic_count", readEventsForTimeRange.Topics?.Count() ?? 0);
+                    activity.SetTag("query_start_time", readEventsForTimeRange.UtcStartTime);
+                    activity.SetTag("query_end_time", readEventsForTimeRange.UtcEndTime);
+                }
+            }
+            else if (request is RealTimeData.ReadTagDataRequest readTagData) {
+                activity.SetTag("tag_count", readTagData.Tags.Count());
+
+                if (request is RealTimeData.ReadHistoricalTagValuesRequest readHistory) {
+                    activity.SetTag("query_start_time", readHistory.UtcStartTime);
+                    activity.SetTag("query_end_time", readHistory.UtcEndTime);
+                }
+            }
+        }
+
+
+        /// <summary>
         /// Invokes a unary feature operation.
         /// </summary>
         /// <typeparam name="TRequest">
@@ -175,6 +218,8 @@ namespace DataCore.Adapter {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
                 throw;
             }
+
+            SetActivityTags(activity, request);
 
             using (var ctSource = Adapter.CreateCancellationTokenSource(cancellationToken)) {
                 try {
@@ -285,6 +330,8 @@ namespace DataCore.Adapter {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
                 throw;
             }
+
+            SetActivityTags(activity, request);
 
             using (var ctSource = Adapter.CreateCancellationTokenSource(cancellationToken))
             await using (var enumerator = callback(context, request, ctSource.Token).ConfigureAwait(false).GetAsyncEnumerator()) {
@@ -417,6 +464,8 @@ namespace DataCore.Adapter {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
                 throw;
             }
+
+            SetActivityTags(activity, request);
 
             using (var ctSource = Adapter.CreateCancellationTokenSource(cancellationToken))
             await using (var enumerator = callback(context, request, ProcessInputStream(inStream, operationName, ctSource.Token), ctSource.Token).ConfigureAwait(false).GetAsyncEnumerator()) {
