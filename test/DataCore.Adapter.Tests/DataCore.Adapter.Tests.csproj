@@ -56,6 +56,8 @@
     <!-- .NET Framework 4.8 references -->
     <Otherwise>
       <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Options" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
         <!-- Explicit Sqlite reference required on .NET Framework because the package reference 
              from Microsoft.Data.Sqlite on the Sqlite key-value store project seems to not be 
              transitive, so tests fail. This does not happen against .NET for some reason... -->

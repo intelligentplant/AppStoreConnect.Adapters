@@ -49,7 +49,7 @@ namespace DataCore.Adapter.Tests {
                 );
 
             services.AddSingleton<IAdapterLifetime>(new AdapterLifetime(async (adapter, ct) => {
-                var customFunctions = adapter.GetFeature<Extensions.ICustomFunctions>() as Extensions.CustomFunctions;
+                var customFunctions = adapter.GetFeature<Extensions.ICustomFunctions>().Unwrap() as Extensions.CustomFunctions;
                 if (customFunctions != null) { 
                     await customFunctions.RegisterFunctionAsync<PingMessage, PongMessage>("Ping", null, (ctx, req, ct) => {
                         return Task.FromResult(new PongMessage() {
