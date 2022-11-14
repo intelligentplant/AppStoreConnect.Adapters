@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +14,7 @@ using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+
 namespace DataCore.Adapter {
 
     /// <summary>
@@ -26,44 +24,9 @@ namespace DataCore.Adapter {
     ///   The options type for the adapter.
     /// </typeparam>
     [AutomaticFeatureRegistration(true)]
-    public abstract partial class AdapterBase<TAdapterOptions> : IAdapter where TAdapterOptions : AdapterOptions, new() {
+    public abstract partial class AdapterBase<TAdapterOptions> : AdapterCore where TAdapterOptions : AdapterOptions, new() {
 
         #region [ Fields / Properties ]
-
-        /// <summary>
-        /// Indicates if the adapter is disposed.
-        /// </summary>
-        private bool _isDisposed;
-
-        /// <summary>
-        /// Indicates if the resources disposed by <see cref="DisposeCommon"/> have been disposed.
-        /// </summary>
-        private bool _isDisposedCommon;
-
-        /// <summary>
-        /// Specifies if the adapter is currently running.
-        /// </summary>
-        private bool _isRunning;
-
-        /// <summary>
-        /// Specifies if <see cref="IAdapter.StartAsync"/> has been called at least once.
-        /// </summary>
-        private bool _hasStartBeenCalled;
-
-        /// <summary>
-        /// Logging.
-        /// </summary>
-        protected internal ILogger Logger { get; }
-
-        /// <summary>
-        /// Scope for the <see cref="Logger"/> that gets set when the adapter is created.
-        /// </summary>
-        private readonly IDisposable _loggerScope;
-
-        /// <summary>
-        /// The <see cref="AdapterEventSource"/> for the adapter.
-        /// </summary>
-        protected internal virtual AdapterEventSource EventSource => Telemetry.EventSource;
 
         /// <summary>
         /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
@@ -76,109 +39,9 @@ namespace DataCore.Adapter {
         protected TAdapterOptions Options { get; private set; }
 
         /// <summary>
-        /// Indicates if the adapter is starting.
-        /// </summary>
-        protected bool IsStarting { get; private set; }
-
-        /// <summary>
-        /// Ensures that only one startup attempt can occur at a time.
-        /// </summary>
-        private readonly Nito.AsyncEx.AsyncLock _startupLock = new Nito.AsyncEx.AsyncLock();
-
-        /// <summary>
-        /// Ensures that only one shutdown attempt can occur at a time.
-        /// </summary>
-        private readonly Nito.AsyncEx.AsyncLock _shutdownLock = new Nito.AsyncEx.AsyncLock();
-
-        /// <summary>
-        /// Manual reset event that is reset when a shutdown starts and is set when a shutdown 
-        /// completes.
-        /// </summary>
-        private readonly Nito.AsyncEx.AsyncManualResetEvent _shutdownInProgress = new Nito.AsyncEx.AsyncManualResetEvent(true); // Initial state is set
-
-        /// <summary>
-        /// Fires when <see cref="Dispose()"/> or <see cref="DisposeAsync"/> are called.
-        /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Fires when <see cref="IAdapter.StopAsync(CancellationToken)"/> is called.
-        /// </summary>
-        private CancellationTokenSource _stopTokenSource;
-
-        /// <summary>
-        /// Gets a cancellation token that will fire when the adapter is stopped.
-        /// </summary>
-        public CancellationToken StopToken => _stopTokenSource.Token;
-
-        /// <summary>
-        /// Allows the adapter to register work items to be run in the background. The adapter 
-        /// ensures that cancellation of work items is requested when the adapter is disposed.
-        /// </summary>
-        public IBackgroundTaskService BackgroundTaskService { get; }
-
-        /// <summary>
         /// The <see cref="HealthCheckManager{TAdapterOptions}"/> that provides the <see cref="IHealthCheck"/> feature.
         /// </summary>
         private readonly HealthCheckManager<TAdapterOptions> _healthCheckManager;
-
-        /// <summary>
-        /// Adapter properties.
-        /// </summary>
-        private ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
-
-        /// <inheritdoc/>
-        public bool IsEnabled { get { return Options.IsEnabled; } }
-
-        /// <inheritdoc/>
-        public bool IsRunning => _isRunning && !_isDisposed;
-
-        /// <inheritdoc/>
-        public AdapterDescriptor Descriptor { get; private set; }
-
-        /// <inheritdoc/>
-        public AdapterTypeDescriptor TypeDescriptor { get; }
-
-        /// <inheritdoc/>
-        public IAdapterFeaturesCollection Features {
-            get {
-                CheckDisposed();
-                return (IAdapterFeaturesCollection) this;
-            }
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<AdapterProperty> Properties {
-            get {
-                CheckDisposed();
-                return _properties
-                    .Values
-                    .Select(x => AdapterProperty.FromExisting(x))
-                    .OrderBy(x => x.Name)
-                    .ToArray();
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="System.Diagnostics.ActivitySource"/> that can be used to create 
-        /// activities for the adapter.
-        /// </summary>
-        /// <remarks>
-        ///   By default, the property returns <see cref="Telemetry.ActivitySource"/>. You don't 
-        ///   need to override the property unless you want your adapter traces to be generated 
-        ///   by a custom source.
-        /// </remarks>
-        protected virtual ActivitySource ActivitySource => Telemetry.ActivitySource;
-
-        #endregion
-
-        #region [ Events ]
-
-        /// <inheritdoc/>
-        public event Func<IAdapter, Task> Started;
-
-        /// <inheritdoc/>
-        public event Func<IAdapter, Task> Stopped;
 
         #endregion
 
@@ -197,10 +60,11 @@ namespace DataCore.Adapter {
         /// <param name="logger">
         ///   The logger for the adapter. Can be <see langword="null"/>.
         /// </param>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        private AdapterBase(string id, IBackgroundTaskService? backgroundTaskService, ILogger? logger) {
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-            
+        private AdapterBase(
+            string id, 
+            IBackgroundTaskService? backgroundTaskService, 
+            ILogger? logger
+        ) : base(new AdapterDescriptor(id, id, null), backgroundTaskService, logger) {           
             if (string.IsNullOrWhiteSpace(id)) {
                 throw new ArgumentException(Resources.Error_AdapterIdIsRequired);
             }
@@ -209,16 +73,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, AdapterConstants.MaxIdLength), nameof(id));
             }
 
-            // Create initial stopped token source and cancel it immediately so that StopToken is
-            // initially in a cancelled state.
-            _stopTokenSource = new CancellationTokenSource();
-            _stopTokenSource.Cancel();
-
-            TypeDescriptor = this.CreateTypeDescriptor();
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-            _loggerScope = Logger.BeginScope(id);
-
+            Options = default!;
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
 
             // Register default features.
@@ -315,7 +170,10 @@ namespace DataCore.Adapter {
             }
             Validator.ValidateObject(opts, new ValidationContext(opts), true);
             Options = opts;
-            Descriptor = CreateDescriptor(id, opts);
+            UpdateDescriptor(opts.Name, opts.Description);
+            if (Options.IsEnabled) {
+                Enable();
+            }
         }
 
 
@@ -385,7 +243,10 @@ namespace DataCore.Adapter {
             );
 
             Options = options;
-            Descriptor = CreateDescriptor(id, options);
+            UpdateDescriptor(options.Name, options.Description);
+            if (Options.IsEnabled) {
+                Enable();
+            }
 
             _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
                 if (!string.Equals(name, id, StringComparison.Ordinal)) {
@@ -419,31 +280,10 @@ namespace DataCore.Adapter {
         #region [ Helper Methods ]
 
         /// <summary>
-        /// Creates a new adapter descriptor.
+        /// Adds the default features for the adapter.
         /// </summary>
-        /// <param name="id">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="options">
-        ///   The adapter options.
-        /// </param>
-        /// <param name="nameOverride">
-        ///   When specified, overrides the name supplied in the <paramref name="options"/>.
-        /// </param>
-        /// <param name="descriptionOverride">
-        ///   When specified, overrides the description supplied in the <paramref name="options"/>.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="AdapterDescriptor"/>.
-        /// </returns>
-        private static AdapterDescriptor CreateDescriptor(string id, TAdapterOptions? options, string? nameOverride = null, string? descriptionOverride = null) {
-            return new AdapterDescriptor(
-                id,
-                string.IsNullOrWhiteSpace(nameOverride ?? options?.Name)
-                    ? id
-                    : nameOverride ?? options?.Name!,
-                descriptionOverride ?? options?.Description
-            );
+        private void AddDefaultFeatures() {
+            AddFeature<IHealthCheck>(_healthCheckManager);
         }
 
 
@@ -470,226 +310,17 @@ namespace DataCore.Adapter {
                 UpdateDescriptor(newOptions.Name, newOptions.Description);
             }
 
-            if (newOptions.IsEnabled != previousOptions.IsEnabled) {
-                if (!newOptions.IsEnabled && (IsStarting || IsRunning)) {
-                    // The adapter is already running and has now been disabled.
-
-                    BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        await ((IAdapter) this).StopAsync(ct).ConfigureAwait(false);
-                    });
-
-                    // No need to call the OnOptionsChange handler on the implementing class, since
-                    // we've just stopped the adapter.
-                    return;
-                }
-                if (_hasStartBeenCalled && newOptions.IsEnabled && !(IsStarting || IsRunning)) {
-                    // The adapter was disabled but has now been enabled, and StartAsync has been
-                    // called at least once before.
-
-                    BackgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        await ((IAdapter) this).StartAsync(ct).ConfigureAwait(false);
-                    });
-
-                    // No need to call the OnOptionsChange handler on the implementing class, since
-                    // we've just started the adapter.
-                    return;
-                }
+            if (newOptions.IsEnabled) {
+                Enable();
+            }
+            else {
+                Disable();
+                return;
             }
 
             // Call the handler on the implementing class.
 
             OnOptionsChange(newOptions);
-        }
-
-
-        /// <summary>
-        /// Throws an <see cref="ObjectDisposedException"/> if the adapter has been disposed.
-        /// </summary>
-        protected void CheckDisposed() {
-            if (_isDisposed) {
-                throw new ObjectDisposedException(GetType().Name);
-            }
-        }
-
-
-        /// <summary>
-        /// Throws an <see cref="InvalidOperationException"/> if the adapter has not been started.
-        /// </summary>
-        /// <param name="allowStarting">
-        ///   When <see langword="true"/>, an error will not be thrown if the adapter is currently 
-        ///   starting.
-        /// </param>
-        protected void CheckStarted(bool allowStarting = false) {
-            if (IsEnabled && (IsRunning || (allowStarting && IsStarting))) {
-                return;
-            }
-
-            throw new InvalidOperationException(Resources.Error_AdapterIsNotStarted);
-        }
-
-
-        /// <summary>
-        /// Updates the name and/or description for the adapter.
-        /// </summary>
-        /// <param name="name">
-        ///   The new adapter name. Specify a <see langword="null"/> or white space value to leave 
-        ///   the name unchanged.
-        /// </param>
-        /// <param name="description">
-        ///   The new adapter description. Specify <see langword="null"/> to leave the description 
-        ///   unchanged.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="name"/> is longer than <see cref="AdapterConstants.MaxNameLength"/>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="description"/> is longer than <see cref="AdapterConstants.MaxDescriptionLength"/>.
-        /// </exception>
-        private void UpdateDescriptor(string? name = null, string? description = null) {
-            if (!string.IsNullOrWhiteSpace(name)) {
-                if (name!.Length > AdapterConstants.MaxNameLength) {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterNameIsTooLong, AdapterConstants.MaxNameLength), nameof(name));
-                }
-                if (description != null && description.Length > AdapterConstants.MaxDescriptionLength) {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, AdapterConstants.MaxDescriptionLength), nameof(description));
-                }
-
-                Descriptor = CreateDescriptor(Descriptor.Id, null, name!, description ?? Descriptor.Description);
-            }
-            else if (description != null) {
-                if (description.Length > AdapterConstants.MaxDescriptionLength) {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterDescriptionIsTooLong, AdapterConstants.MaxDescriptionLength), nameof(description));
-                }
-
-                Descriptor = CreateDescriptor(Descriptor.Id, null, Descriptor.Name, description);
-            }
-        }
-
-
-        /// <summary>
-        /// <strong>[INFRASTRUCTURE METHOD]</strong> 
-        /// Validates the <see cref="IAdapterCallContext"/> passed to an adapter feature method.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/>.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="context"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   This method is not intended to be called directly from your adapter implementation; 
-        ///   you should call <see cref="ValidateInvocation(IAdapterCallContext, object[])"/> 
-        ///   instead when validating a call to your adapter.
-        /// </para>
-        /// 
-        /// <para>
-        ///   Override this method to customise the validation of <see cref="IAdapterCallContext"/> 
-        ///   objects passed into your adapter. The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/>
-        ///   is to ensure that the <paramref name="context"/> is not <see langword="null"/>.
-        /// </para>
-        /// 
-        /// </remarks>
-        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
-        protected virtual void ValidateContext(IAdapterCallContext context) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-        }
-
-
-        /// <summary>
-        /// <strong>[INFRASTRUCTURE METHOD]</strong> 
-        /// Validates a parameter passed to an adapter feature method.
-        /// </summary>
-        /// <param name="parameter">
-        ///   The request object for the invocation.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="parameter"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ValidationException">
-        ///   <paramref name="parameter"/> fails validation.
-        /// </exception>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   This method is not intended to be called directly from your adapter implementation; 
-        ///   you should call <see cref="ValidateInvocation(IAdapterCallContext, object[])"/> 
-        ///   instead when validating a call to your adapter.
-        /// </para>
-        /// 
-        /// <para>
-        ///   Override this method to customise the validation of parameters passed to an adapter 
-        ///   feature invocation. The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/>
-        ///   is to ensure that the <paramref name="parameter"/> is not <see langword="null"/>, and 
-        ///   to validate the <paramref name="parameter"/> by calling 
-        ///   <see cref="Validator.ValidateObject(object, ValidationContext, bool)"/>.
-        /// </para>
-        /// 
-        /// </remarks>
-        /// <seealso cref="ValidateInvocation(IAdapterCallContext, object[])"/>
-        protected virtual void ValidateInvocationParameter(object parameter) {
-            if (parameter == null) {
-                throw new ArgumentNullException(nameof(parameter));
-            }
-            Validator.ValidateObject(parameter, new ValidationContext(parameter), true);
-        }
-
-
-        /// <summary>
-        /// Validates the invocation of an adapter feature method.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the invocation.
-        /// </param>
-        /// <param name="invocationParameters">
-        ///   The invocation parameters to validate (such as request DTOs).
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="context"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   Any item in <paramref name="invocationParameters"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ValidationException">
-        ///   Any item in <paramref name="invocationParameters"/> fails validation.
-        /// </exception>
-        /// <exception cref="ObjectDisposedException">
-        ///   The adapter has been disposed.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        ///   The adapter is not running.
-        /// </exception>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   Call this method at the start of every adapter feature implementation method to 
-        ///   validate the feature method's parameters.
-        /// </para>
-        /// 
-        /// <para>
-        ///   Override this method to perform any additional invocation checks required by your 
-        ///   adapter.  
-        /// </para>
-        /// 
-        /// <para>
-        ///   The default behaviour in <see cref="AdapterBase{TAdapterOptions}"/> is to ensure that 
-        ///   the adapter has not been disposed and that it is currently running, and to validate 
-        ///   the <paramref name="context"/> and <paramref name="invocationParameters"/> by calling 
-        ///   <see cref="ValidateContext(IAdapterCallContext)"/> and <see cref="ValidateInvocationParameter(object)"/> 
-        ///   respectively.
-        /// </para>
-        /// 
-        /// </remarks>
-        public virtual void ValidateInvocation(IAdapterCallContext context, params object[] invocationParameters) {
-            CheckDisposed();
-            CheckStarted();
-            ValidateContext(context);
-            foreach (var item in invocationParameters) {
-                ValidateInvocationParameter(item);
-            }
         }
 
 
@@ -725,13 +356,12 @@ namespace DataCore.Adapter {
             var result = new List<HealthCheckResult>();
             var processedFeatures = new HashSet<object>();
 
-            foreach (var item in _featureLookup) {
+            foreach (var key in Features.Keys) {
                 if (cancellationToken.IsCancellationRequested) {
                     return Array.Empty<HealthCheckResult>();
                 }
 
-                var key = item.Key;
-                var feature = item.Value;
+                var feature = Features[key];
 
                 if (feature == null || feature == this || !processedFeatures.Add(feature) || !(feature is IFeatureHealthCheck healthCheck)) {
                     continue;
@@ -770,84 +400,22 @@ namespace DataCore.Adapter {
             _healthCheckManager.RecalculateHealthStatus();
         }
 
-
-        /// <summary>
-        /// Creates a new <see cref="CancellationTokenSource"/> that will cancel when the 
-        /// adapter's <see cref="StopToken"/> or any of the specified additional tokens 
-        /// request cancellation.
-        /// </summary>
-        /// <param name="additionalTokens">
-        ///   The additional cancellation tokens to monitor.
-        /// </param>
-        /// <returns>
-        ///   A new <see cref="CancellationTokenSource"/> instance. Note that it is the caller's 
-        ///   responsibility to dispose of the <see cref="CancellationTokenSource"/> when it is no 
-        ///   longer required.
-        /// </returns>
-        public CancellationTokenSource CreateCancellationTokenSource(params CancellationToken[] additionalTokens) {
-            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken }.ToArray());
-        }
-
-        #endregion
-
-        #region [ Property Management ]
-
-        /// <summary>
-        /// Adds a bespoke adapter property.
-        /// </summary>
-        /// <param name="key">
-        ///   The property key.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <param name="description">
-        ///   The property description.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="key"/> i <see langword="null"/>.
-        /// </exception>
-        protected void AddProperty(string key, object value, string? description = null) {
-            CheckDisposed();
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-            _properties[key] = AdapterProperty.Create(key, value, description);
-        }
-
-
-        /// <summary>
-        /// Removes a bespoke adapter property.
-        /// </summary>
-        /// <param name="key">
-        ///   The property key.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the property was removed, or <see langword="false"/>
-        ///   otherwise.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="key"/> i <see langword="null"/>.
-        /// </exception>
-        protected bool RemoveProperty(string key) {
-            CheckDisposed();
-            if (key == null) {
-                throw new ArgumentNullException(nameof(key));
-            }
-            return _properties.TryRemove(key, out var _);
-        }
-
-
-        /// <summary>
-        /// Removes all bespoke adapter properties.
-        /// </summary>
-        protected void RemoveAllProperties() {
-            _properties.Clear();
-        }
-
         #endregion
 
         #region [ Abstract / Virtual Methods ]
+
+        /// <inheritdoc/>
+        protected sealed override async Task StartAsyncCore(CancellationToken cancellationToken) {
+            await _healthCheckManager.Init(cancellationToken).ConfigureAwait(false);
+            await StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected sealed override async Task StopAsyncCore(CancellationToken cancellationToken) {
+            await StopAsync(cancellationToken).ConfigureAwait(false);
+        }
+
 
         /// <summary>
         /// Starts the adapter.
@@ -874,38 +442,9 @@ namespace DataCore.Adapter {
         ///   The <see cref="StopAsync"/> method is intended to allow the same adapter to be 
         ///   started and stopped multiple times. Therefore, only resources that are created 
         ///   when <see cref="StartAsync"/> is called should be disposed when <see cref="StopAsync"/> 
-        ///   is called. The <see cref="Dispose(bool)"/> and <see cref="DisposeAsyncCore"/> 
-        ///   methods should be used to dispose of all resources, including those created by 
-        ///   calls to <see cref="StartAsync"/>.
+        ///   is called.
         /// </remarks>
         protected abstract Task StopAsync(CancellationToken cancellationToken);
-
-
-        /// <summary>
-        /// Called once the adapter has started.
-        /// </summary>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the operation.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task"/> that will be run once the adapter has started.
-        /// </returns>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   <see cref="OnStartedAsync(CancellationToken)"/> is run in the background using the 
-        ///   adapter's <see cref="BackgroundTaskService"/>. The <paramref name="cancellationToken"/> 
-        ///   will request cancellation when the adapter is stopped.
-        /// </para>
-        /// 
-        /// <para>
-        ///   The method can return a long-running task that runs until the adapter is stopped.
-        /// </para>
-        /// 
-        /// </remarks>
-        protected virtual Task OnStartedAsync(CancellationToken cancellationToken) {
-            return Task.CompletedTask;
-        }
 
 
         /// <summary>
@@ -924,7 +463,7 @@ namespace DataCore.Adapter {
         /// </returns>
         /// <remarks>
         ///   Override this method to perform custom health checks for your adapter. The default 
-        ///   implementation will return unhealthy status if <see cref="IsRunning"/> is 
+        ///   implementation will return unhealthy status if <see cref="AdapterCore.IsRunning"/> is 
         ///   <see langword="false"/>, or a collection of health check results for all features 
         ///   implementing <see cref="IFeatureHealthCheck"/> otherwise.
         /// </remarks>
@@ -955,205 +494,26 @@ namespace DataCore.Adapter {
 
         #endregion
 
-        #region [ IAdapter Methods ]
-
-        /// <inheritdoc/>
-        async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
-            _hasStartBeenCalled = true;
-
-            var descriptorId = Descriptor.Id;
-
-            if (!IsEnabled) {
-                Logger.LogWarning(Resources.Log_AdapterIsDisabled, descriptorId);
-                return;
-            }
-
-            CheckDisposed();
-            using (await _startupLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
-                await _shutdownInProgress.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                if (IsRunning) {
-                    return;
-                }
-
-                if (StopToken.IsCancellationRequested) {
-                    _stopTokenSource = new CancellationTokenSource();
-                }
-
-                using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StartAsync)))) {
-                    if (activity != null) {
-                        activity.SetAdapterTag(this);
-                    }
-
-                    try {
-                        Logger.LogInformation(Resources.Log_StartingAdapter, descriptorId);
-
-                        IsStarting = true;
-                        try {
-                            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {                                
-                                await StartAsync(ctSource.Token).ConfigureAwait(false);
-                                _isRunning = true;
-                                await _healthCheckManager.Init(ctSource.Token).ConfigureAwait(false);
-                            }
-                        }
-                        finally {
-                            IsStarting = false;
-                        }
-
-                        EventSource.AdapterStarted(descriptorId);
-                        Logger.LogInformation(Resources.Log_StartedAdapter, descriptorId);
-                    }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_AdapterStartupError, descriptorId);
-                        throw;
-                    }
-                }
-
-                BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
-                if (Started != null) {
-                    await Started.Invoke(this).ConfigureAwait(false);
-                }
-            }
-        }
-
-
-        /// <inheritdoc/>
-        async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
-            CheckDisposed();
-            using (await _shutdownLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
-                if (!IsStarting && !IsRunning) {
-                    return;
-                }
-
-                _shutdownInProgress.Reset();
-                var descriptorId = Descriptor.Id;
-
-                try {
-                    using (var activity = Telemetry.ActivitySource.StartActivity(ActivitySourceExtensions.GetActivityName(typeof(IAdapter), nameof(IAdapter.StopAsync)))) {
-                        if (activity != null) {
-                            activity.SetAdapterTag(this);
-                        }
-                        Logger.LogInformation(Resources.Log_StoppingAdapter, descriptorId);
-                        await StopAsync(default).ConfigureAwait(false);
-                        EventSource.AdapterStopped(descriptorId);
-                        Logger.LogInformation(Resources.Log_StoppedAdapter, descriptorId);
-                    }
-                }
-                catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_AdapterStopError, descriptorId);
-                    throw;
-                }
-                finally {
-                    _isRunning = false;
-                    _stopTokenSource.Cancel();
-                    _healthCheckManager.RecalculateHealthStatus();
-                    _shutdownInProgress.Set();
-                }
-
-                if (Stopped != null) {
-                    await Stopped.Invoke(this).ConfigureAwait(false);
-                }
-            }
-        }
-
-        #endregion
 
         #region [ Disposable Pattern ]
 
         /// <inheritdoc/>
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-            EventSource.AdapterDisposed(Descriptor.Id);
-        }
+        protected override void Dispose(bool disposing) {
+            base.Dispose(disposing);
 
+            if (disposing) {
+                _optionsMonitorSubscription?.Dispose();
+                _healthCheckManager.Dispose();
+            }
+        }
 
 
         /// <inheritdoc/>
-        public async ValueTask DisposeAsync() {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(false);
-            GC.SuppressFinalize(this);
-            EventSource.AdapterDisposed(Descriptor.Id);
-        }
-
-
-        /// <summary>
-        /// Class finalizer.
-        /// </summary>
-        ~AdapterBase() {
-            Dispose(false);
-        }
-
-
-        /// <summary>
-        /// Disposes of items common to both <see cref="Dispose(bool)"/> and 
-        /// <see cref="DisposeAsyncCore"/>.
-        /// </summary>
-        private void DisposeCommon() {
-            if (_isDisposedCommon || _isDisposed) {
-                return;
-            }
+        protected override async ValueTask DisposeAsyncCore() {
+            await base.DisposeAsyncCore().ConfigureAwait(false);
 
             _optionsMonitorSubscription?.Dispose();
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-            _stopTokenSource?.Cancel();
-            _stopTokenSource?.Dispose();
             _healthCheckManager.Dispose();
-            _properties.Clear();
-            _loggerScope.Dispose();
-
-            _isDisposedCommon = true;
-        }
-
-
-        /// <summary>
-        /// Releases adapter resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the adapter is being disposed synchronously, or <see langword="false"/> 
-        ///   if it is being disposed asynchronously, or finalized.
-        /// </param>
-        /// <remarks>
-        ///   Override both this method and <see cref="DisposeAsyncCore"/> if your adapter requires 
-        ///   a separate asynchronous resource cleanup implementation. When calling <see cref="DisposeAsync"/>, 
-        ///   both <see cref="DisposeAsyncCore"/> and <see cref="Dispose(bool)"/> will be called. 
-        ///   The call to <see cref="Dispose(bool)"/> will be passed <see langword="false"/> when 
-        ///   the object is being disposed asynchronously.
-        /// </remarks>
-        /// <seealso cref="DisposeAsyncCore"/>
-        protected virtual void Dispose(bool disposing) {
-            if (_isDisposed) {
-                return;
-            }
-
-            if (disposing) {
-                DisposeCommon();
-                DisposeFeatures();
-            }
-
-            _isDisposed = true;
-        }
-
-
-        /// <summary>
-        /// Asynchronously releases adapter resources.
-        /// </summary>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that will perform the operation.
-        /// </returns>
-        /// <remarks>
-        ///   Override both this method and <see cref="Dispose(bool)"/> if your adapter requires 
-        ///   a separate asynchronous resource cleanup implementation. When calling <see cref="DisposeAsync"/>, 
-        ///   both <see cref="DisposeAsyncCore"/> and <see cref="Dispose(bool)"/> will be called. 
-        ///   The call to <see cref="Dispose(bool)"/> will be passed <see langword="false"/> when 
-        ///   the object is being disposed asynchronously.
-        /// </remarks>
-        /// <seealso cref="Dispose(bool)"/>
-        protected virtual async ValueTask DisposeAsyncCore() {
-            DisposeCommon();
-            await DisposeFeaturesAsync().ConfigureAwait(false);
         }
 
         #endregion

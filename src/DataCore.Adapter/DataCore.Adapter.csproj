@@ -11,14 +11,12 @@
   <ItemGroup>
     <PackageReference Include="JsonSchema.Net.Generation" />
     <PackageReference Include="Microsoft.Extensions.Options" />
-    <PackageReference Include="Nito.AsyncEx.Coordination" />
     <PackageReference Include="System.Threading.Channels" />
     <PackageReference Include="System.ValueTuple" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
-    <ProjectReference Include="..\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
   </ItemGroup>
 
   <ItemGroup>
