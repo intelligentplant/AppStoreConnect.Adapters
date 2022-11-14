@@ -84,6 +84,11 @@ namespace DataCore.Adapter {
             if (autoRegisterFeatures?.IsEnabled ?? true) {
                 AddFeatures(this);
             }
+
+            Started += adapter => {
+                OnHealthStatusChanged();
+                return Task.CompletedTask;
+            };
         }
 
 
