@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.AspNetCore.Mvc;

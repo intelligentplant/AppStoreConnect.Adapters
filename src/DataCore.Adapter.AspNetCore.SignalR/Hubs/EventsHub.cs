@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {

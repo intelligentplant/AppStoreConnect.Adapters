@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Diagnostics;
 
 using Grpc.Core;
 

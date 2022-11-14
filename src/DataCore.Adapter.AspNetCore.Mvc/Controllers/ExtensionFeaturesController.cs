@@ -6,8 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Mvc;

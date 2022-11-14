@@ -5,8 +5,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.RealTimeData;
 

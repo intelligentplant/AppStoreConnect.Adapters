@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Grpc.Core;

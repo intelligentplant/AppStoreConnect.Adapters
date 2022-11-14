@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Microsoft.AspNetCore.Mvc;

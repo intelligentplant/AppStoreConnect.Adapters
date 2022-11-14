@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -133,13 +130,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartInvokeActivity(resolved.Adapter.Descriptor.Id, request)) {
-                return await resolved.Feature.Invoke(
-                    adapterCallContext,
-                    request,
-                    Context.ConnectionAborted
-                ).ConfigureAwait(false);
-            }
+            return await resolved.Feature.Invoke(
+                adapterCallContext,
+                request,
+                Context.ConnectionAborted
+            ).ConfigureAwait(false);
         }
 
 
@@ -180,17 +175,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in resolved.Feature.Stream(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++outputItems;
-                        yield return item;
-                    }
-                }
-                finally {
-                    Activity.Current.SetResponseItemCountTag(outputItems);
-                }
+            await foreach (var item in resolved.Feature.Stream(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -236,17 +222,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 cancellationToken
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartDuplexStreamActivity(resolved.Adapter.Descriptor.Id, request)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in resolved.Feature.DuplexStream(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
-                        ++outputItems;
-                        yield return item;
-                    }
-                }
-                finally {
-                    Activity.Current.SetResponseItemCountTag(outputItems);
-                }
+            await foreach (var item in resolved.Feature.DuplexStream(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
