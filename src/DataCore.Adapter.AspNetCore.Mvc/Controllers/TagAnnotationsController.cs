@@ -4,8 +4,6 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.AspNetCore.Mvc;
@@ -74,11 +72,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadAnnotations(callContext, request, cancellationToken),
-                activity
+                feature.ReadAnnotations(callContext, request, cancellationToken)
             );
         }
 
@@ -125,15 +121,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 AnnotationId = annotationId
             };
 
-            using (var activity = Telemetry.ActivitySource.StartReadAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = await feature.ReadAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
-                    activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+            try {
+                var result = await feature.ReadAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
             }
         }
 
@@ -181,16 +174,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 Annotation = annotation
             };
 
-            using (Telemetry.ActivitySource.StartCreateAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = await feature.CreateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.CreateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
 
-                }
             }
         }
 
@@ -243,15 +234,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 Annotation = annotation
             };
 
-            using (Telemetry.ActivitySource.StartUpdateAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = await feature.UpdateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.UpdateAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
             }
         }
 
@@ -300,15 +289,13 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 AnnotationId = annotationId
             };
 
-            using (Telemetry.ActivitySource.StartDeleteAnnotationActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = await feature.DeleteAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
+            try {
+                var result = await feature.DeleteAnnotation(callContext, request, cancellationToken).ConfigureAwait(false);
 
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+                return Ok(result); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
             }
         }
 

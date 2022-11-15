@@ -544,35 +544,27 @@ namespace DataCore.Adapter.Csv {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-            
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
-                foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
-                    yield return item.Clone(request.ResultFields);
-                }
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            foreach (var item in dataSet.Tags.Values.ApplyFilter(request)) {
+                yield return item.Clone(request.ResultFields);
             }
         }
 
 
         /// <inheritdoc/>
         public async IAsyncEnumerable<TagDefinition> GetTags(
-            IAdapterCallContext context, 
-            GetTagsRequest request, 
+            IAdapterCallContext context,
+            GetTagsRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
-                foreach (var item in request.Tags) {
-                    var tag = GetTagByIdOrName(item, dataSet);
-                    if (tag == null) {
-                        continue;
-                    }
-                    yield return TagDefinition.FromExisting(tag);
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            foreach (var item in request.Tags) {
+                var tag = GetTagByIdOrName(item, dataSet);
+                if (tag == null) {
+                    continue;
                 }
+                yield return TagDefinition.FromExisting(tag);
             }
         }
 
@@ -583,7 +575,6 @@ namespace DataCore.Adapter.Csv {
             GetTagPropertiesRequest request, 
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
             return Array.Empty<AdapterProperty>().ToAsyncEnumerable(cancellationToken);
         }
 
@@ -611,18 +602,14 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public virtual async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
-            IAdapterCallContext context, 
-            ReadSnapshotTagValuesRequest request, 
+            IAdapterCallContext context,
+            ReadSnapshotTagValuesRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
-                foreach (var item in ReadSnapshotTagValuesInternal(dataSet, request, ctSource.Token)) {
-                    yield return item;
-                }
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            foreach (var item in ReadSnapshotTagValuesInternal(dataSet, request, cancellationToken)) {
+                yield return item;
             }
         }
 
@@ -763,19 +750,16 @@ namespace DataCore.Adapter.Csv {
 
         /// <inheritdoc/>
         public virtual async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
-            IAdapterCallContext context, 
-            ReadRawTagValuesRequest request, 
+            IAdapterCallContext context,
+            ReadRawTagValuesRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                var dataSet = await _csvParseTask.Value.WithCancellation(ctSource.Token).ConfigureAwait(false);
-                foreach (var item in ReadRawTagValues(dataSet, request, cancellationToken)) {
-                    yield return item;
-                }
+            var dataSet = await _csvParseTask.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
+            foreach (var item in ReadRawTagValues(dataSet, request, cancellationToken)) {
+                yield return item;
             }
         }
 

@@ -78,7 +78,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions.Features {
 
             using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
                 var grpcResponse = await client.GetCustomFunctionAsync(grpcRequest, GetCallOptions(context, ctSource.Token)).ConfigureAwait(false);
-                if (string.IsNullOrWhiteSpace(grpcResponse?.Function.Function.Id)) {
+                if (string.IsNullOrWhiteSpace(grpcResponse?.Function?.Function?.Id)) {
                     return null;
                 }
 

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Diagnostics;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -170,13 +169,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartCheckHealthActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                try {
-                    return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+            try {
+                return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
             }
         }
 

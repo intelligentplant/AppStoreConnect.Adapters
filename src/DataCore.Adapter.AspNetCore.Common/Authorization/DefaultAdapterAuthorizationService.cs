@@ -58,7 +58,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapter(IAdapter adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
-            using (Diagnostics.Telemetry.ActivitySource.StartActivity(Diagnostics.ActivitySourceExtensions.GetActivityName(typeof(IAdapterAuthorizationService), nameof(AuthorizeAdapter)))) {
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("AuthorizeAdapter")) {
                 if (!UseAuthorization || context == null) {
                     return true;
                 }
@@ -71,7 +71,7 @@ namespace DataCore.Adapter.AspNetCore.Authorization {
 
         /// <inheritdoc/>
         public async Task<bool> AuthorizeAdapterFeature(IAdapter adapter, IAdapterCallContext context, Uri featureUri, CancellationToken cancellationToken) {
-            using (Diagnostics.Telemetry.ActivitySource.StartActivity(Diagnostics.ActivitySourceExtensions.GetActivityName(typeof(IAdapterAuthorizationService), nameof(AuthorizeAdapterFeature)))) {
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("AuthorizeAdapterFeature")) {
                 if (!UseAuthorization || context == null) {
                     return true;
                 }

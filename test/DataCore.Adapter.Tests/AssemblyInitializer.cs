@@ -130,7 +130,7 @@ namespace DataCore.Adapter.Tests {
 
 
         private static async Task OnAdapterStarted(IAdapter adapter) {
-            var assetModelManager = adapter.GetFeature<AssetModel.IAssetModelBrowse>() as AssetModel.AssetModelManager;
+            var assetModelManager = adapter.GetFeature<AssetModel.IAssetModelBrowse>().Unwrap() as AssetModel.AssetModelManager;
             if (assetModelManager != null) {
                 await assetModelManager.InitAsync().ConfigureAwait(false);
 
@@ -158,7 +158,7 @@ namespace DataCore.Adapter.Tests {
                 await assetModelManager.AddOrUpdateNodeAsync(grandchild).ConfigureAwait(false);
             }
 
-            var annotationManager = adapter.GetFeature<RealTimeData.IReadTagValueAnnotations>() as RealTimeData.InMemoryTagValueAnnotationManager;
+            var annotationManager = adapter.GetFeature<RealTimeData.IReadTagValueAnnotations>().Unwrap() as RealTimeData.InMemoryTagValueAnnotationManager;
             if (annotationManager != null) {
                 await annotationManager.CreateOrUpdateAnnotationAsync(
                     TestTagId, 

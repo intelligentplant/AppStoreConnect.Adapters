@@ -10,7 +10,7 @@ using DataCore.Adapter.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter {
-    partial class AdapterBase<TAdapterOptions> : IAdapterFeaturesCollection {
+    partial class AdapterCore : IAdapterFeaturesCollection {
 
         /// <summary>
         /// The feature lookup for the adapter.
@@ -18,10 +18,22 @@ namespace DataCore.Adapter {
         private readonly ConcurrentDictionary<Uri, IAdapterFeature> _featureLookup = new ConcurrentDictionary<Uri, IAdapterFeature>();
 
         /// <inheritdoc/>
-        IEnumerable<Uri> IAdapterFeaturesCollection.Keys => _featureLookup.Keys;
+        IEnumerable<Uri> IAdapterFeaturesCollection.Keys { 
+            get {
+                CheckDisposed();
+                return _featureLookup.Keys;
+            }
+        }
 
         /// <inheritdoc/>
-        IAdapterFeature? IAdapterFeaturesCollection.this[Uri key] => _featureLookup.TryGetValue(key ?? throw new ArgumentNullException(nameof(key)), out var feature) ? feature : null;
+        IAdapterFeature? IAdapterFeaturesCollection.this[Uri key] {
+            get {
+                CheckDisposed();
+                return _featureLookup.TryGetValue(key ?? throw new ArgumentNullException(nameof(key)), out var feature) 
+                    ? feature 
+                    : null;
+            }
+        }
 
 
         /// <summary>
@@ -46,19 +58,96 @@ namespace DataCore.Adapter {
         ///   An implementation of <paramref name="featureType"/> has already been registered and 
         ///   <paramref name="throwOnAlreadyAdded"/> is <see langword="true"/>.
         /// </exception>
-        private void AddFeatureInternal(Type featureType, IAdapterFeature feature, bool throwOnAlreadyAdded) {
+        private void AddFeatureCore(Type featureType, IAdapterFeature feature, bool throwOnAlreadyAdded) {
             if (feature == null) {
                 throw new ArgumentNullException(nameof(feature));
             }
             if (!featureType.IsInstanceOfType(feature)) {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_NotAFeatureImplementation, featureType.FullName), nameof(feature));
             }
 
             var uri = featureType.GetAdapterFeatureUri();
 
-            if (!_featureLookup.TryAdd(uri!, feature)) {
+            AdapterFeatureWrapper? wrapper = null;
+
+            if (featureType.Equals(typeof(AssetModel.IAssetModelBrowse))) {
+                wrapper = new AssetModel.AssetModelBrowseWrapper(this, (AssetModel.IAssetModelBrowse) feature);
+            }
+            else if (featureType.Equals(typeof(AssetModel.IAssetModelSearch))) {
+                wrapper = new AssetModel.AssetModelSearchWrapper(this, (AssetModel.IAssetModelSearch) feature);
+            }
+            else if (featureType.Equals(typeof(Diagnostics.IConfigurationChanges))) {
+                wrapper = new Diagnostics.ConfigurationChangesWrapper(this, (Diagnostics.IConfigurationChanges) feature);
+            }
+            else if (featureType.Equals(typeof(Diagnostics.IHealthCheck))) {
+                wrapper = new Diagnostics.HealthCheckWrapper(this, (Diagnostics.IHealthCheck) feature);
+            }
+            else if (featureType.Equals(typeof(Events.IEventMessagePush))) {
+                wrapper = new Events.EventMessagePushWrapper(this, (Events.IEventMessagePush) feature);
+            }
+            else if (featureType.Equals(typeof(Events.IEventMessagePushWithTopics))) {
+                wrapper = new Events.EventMessagePushWithTopicsWrapper(this, (Events.IEventMessagePushWithTopics) feature);
+            }
+            else if (featureType.Equals(typeof(Events.IReadEventMessagesForTimeRange))) {
+                wrapper = new Events.ReadEventMessagesForTimeRangeWrapper(this, (Events.IReadEventMessagesForTimeRange) feature);
+            }
+            else if (featureType.Equals(typeof(Events.IReadEventMessagesUsingCursor))) {
+                wrapper = new Events.ReadEventMessagesUsingCursorWrapper(this, (Events.IReadEventMessagesUsingCursor) feature);
+            }
+            else if (featureType.Equals(typeof(Events.IWriteEventMessages))) {
+                wrapper = new Events.WriteEventMessagesWrapper(this, (Events.IWriteEventMessages) feature);
+            }
+            else if (featureType.Equals(typeof(Extensions.ICustomFunctions))) {
+                wrapper = new Extensions.CustomFunctionsWrapper(this, (Extensions.ICustomFunctions) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadPlotTagValues))) {
+                wrapper = new RealTimeData.ReadPlotTagValuesWrapper(this, (RealTimeData.IReadPlotTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadProcessedTagValues))) {
+                wrapper = new RealTimeData.ReadProcessedTagValuesWrapper(this, (RealTimeData.IReadProcessedTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadRawTagValues))) {
+                wrapper = new RealTimeData.ReadRawTagValuesWrapper(this, (RealTimeData.IReadRawTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadSnapshotTagValues))) {
+                wrapper = new RealTimeData.ReadSnapshotTagValuesWrapper(this, (RealTimeData.IReadSnapshotTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadTagValueAnnotations))) {
+                wrapper = new RealTimeData.ReadTagValueAnnotationsWrapper(this, (RealTimeData.IReadTagValueAnnotations) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IReadTagValuesAtTimes))) {
+                wrapper = new RealTimeData.ReadTagValuesAtTimesWrapper(this, (RealTimeData.IReadTagValuesAtTimes) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.ISnapshotTagValuePush))) {
+                wrapper = new RealTimeData.SnapshotTagValuePushWrapper(this, (RealTimeData.ISnapshotTagValuePush) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IWriteHistoricalTagValues))) {
+                wrapper = new RealTimeData.WriteHistoricalTagValuesWrapper(this, (RealTimeData.IWriteHistoricalTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IWriteSnapshotTagValues))) {
+                wrapper = new RealTimeData.WriteSnapshotTagValuesWrapper(this, (RealTimeData.IWriteSnapshotTagValues) feature);
+            }
+            else if (featureType.Equals(typeof(RealTimeData.IWriteTagValueAnnotations))) {
+                wrapper = new RealTimeData.WriteTagValueAnnotationsWrapper(this, (RealTimeData.IWriteTagValueAnnotations) feature);
+            }
+            else if (featureType.Equals(typeof(Tags.ITagConfiguration))) {
+                wrapper = new Tags.TagConfigurationWrapper(this, (Tags.ITagConfiguration) feature);
+            }
+            else if (featureType.Equals(typeof(Tags.ITagInfo))) {
+                wrapper = new Tags.TagInfoWrapper(this, (Tags.ITagInfo) feature);
+            }
+            else if (featureType.Equals(typeof(Tags.ITagSearch))) {
+                wrapper = new Tags.TagSearchWrapper(this, (Tags.ITagSearch) feature);
+
+            }
+
+            if (wrapper == null) {
+                Logger.LogWarning(AbstractionsResources.Log_UnableToCreateFeatureWrapper, featureType.FullName);
+            }
+
+            if (!_featureLookup.TryAdd(uri!, wrapper ?? feature)) {
                 if (throwOnAlreadyAdded) {
-                    throw new ArgumentException(Resources.Error_FeatureIsAlreadyRegistered, nameof(featureType));
+                    throw new ArgumentException(AbstractionsResources.Error_FeatureIsAlreadyRegistered, nameof(featureType));
                 }
             }
         }
@@ -89,7 +178,7 @@ namespace DataCore.Adapter {
 #pragma warning disable CS0618 // Type or member is obsolete
                 throw new ArgumentException(string.Format(
                     CultureInfo.CurrentCulture,
-                    Resources.Error_NotAnAdapterFeature,
+                    AbstractionsResources.Error_NotAnAdapterFeature,
                     typeof(TFeature).FullName,
                     nameof(IAdapterFeature),
                     nameof(AdapterFeatureAttribute),
@@ -99,7 +188,7 @@ namespace DataCore.Adapter {
 #pragma warning restore CS0618 // Type or member is obsolete
             }
 
-            AddFeatureInternal(typeof(TFeature), feature, true);
+            AddFeatureCore(typeof(TFeature), feature, true);
         }
 
 
@@ -137,7 +226,7 @@ namespace DataCore.Adapter {
 #pragma warning disable CS0618 // Type or member is obsolete
                 throw new ArgumentException(string.Format(
                     CultureInfo.CurrentCulture,
-                    Resources.Error_NotAnAdapterFeature,
+                    AbstractionsResources.Error_NotAnAdapterFeature,
                     featureType.FullName,
                     nameof(IAdapterFeature),
                     nameof(AdapterFeatureAttribute),
@@ -147,15 +236,7 @@ namespace DataCore.Adapter {
 #pragma warning restore CS0618 // Type or member is obsolete
             }
 
-            AddFeatureInternal(featureType, feature, true);
-        }
-
-
-        /// <summary>
-        /// Adds the default features for the adapter.
-        /// </summary>
-        private void AddDefaultFeatures() {
-            AddFeatureInternal(typeof(Diagnostics.IHealthCheck), _healthCheckManager, false);
+            AddFeatureCore(featureType, feature, true);
         }
 
 
@@ -198,11 +279,11 @@ namespace DataCore.Adapter {
                 if (!addExtensionFeatures && feature.IsExtensionAdapterFeature()) {
                     continue;
                 }
-                AddFeatureInternal(feature, (IAdapterFeature) provider, false);
+                AddFeatureCore(feature, (IAdapterFeature) provider, false);
             }
 
             if (addExtensionFeatures && type.IsConcreteExtensionAdapterFeature()) {
-                AddFeatureInternal(type, (IAdapterFeature) provider, false);
+                AddFeatureCore(type, (IAdapterFeature) provider, false);
             }
         }
 
@@ -251,6 +332,7 @@ namespace DataCore.Adapter {
         /// </list>
         /// 
         /// </remarks>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public void AddExtensionFeatures(object provider) {
             AddFeatures(provider, false, true);
         }
@@ -360,29 +442,26 @@ namespace DataCore.Adapter {
                     continue;
                 }
 
-                // Prefer synchronous dispose over asynchronous.
-                if (item is IDisposable d) {
-                    try {
-                        d.Dispose();
-                    }
-                    catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfFeature, item);
+                try {
+                    var ad = DisposeFeature(item);
+                    if (ad != null) {
+                        asyncDisposableItems.Add(ad);
                     }
                 }
-                else if (item is IAsyncDisposable ad) {
-                    asyncDisposableItems.Add(ad);
+                catch (Exception e) {
+                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
                 }
             }
 
             if (asyncDisposableItems.Count > 0) {
                 // Dispose of IAsyncDisposable items in a background task.
-                _ = Task.Run(async () => { 
+                _ = Task.Run(async () => {
                     foreach (var item in asyncDisposableItems) {
                         try {
                             await item.DisposeAsync().ConfigureAwait(false);
                         }
                         catch (Exception e) {
-                            Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfFeature, item);
+                            Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
                         }
                     }
                 });
@@ -418,17 +497,46 @@ namespace DataCore.Adapter {
                 }
 
                 try {
-                    // Prefer asynchronous dispose over synchronous.
-                    if (item is IAsyncDisposable ad) {
-                        await ad.DisposeAsync().ConfigureAwait(false);
-                    }
-                    else if (item is IDisposable d) {
-                        d.Dispose();
-                    }
+                    await DisposeFeatureAsync(item).ConfigureAwait(false);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorWhileDisposingOfFeature, item);
+                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
                 }
+            }
+        }
+
+
+        private IAsyncDisposable? DisposeFeature(IAdapterFeature item) {
+            if (item is AdapterFeatureWrapper wrapper) {
+                return DisposeFeature(wrapper.InnerFeature);
+            }
+
+            // Prefer synchronous dispose over asynchronous.
+            if (item is IDisposable d) {
+                d.Dispose();
+                return null;
+            }
+
+            if (item is IAsyncDisposable ad) {
+                return ad;
+            }
+
+            return null;
+        }
+
+
+        private async ValueTask DisposeFeatureAsync(IAdapterFeature item) {
+            if (item is AdapterFeatureWrapper wrapper) {
+                await DisposeFeatureAsync(wrapper.InnerFeature).ConfigureAwait(false);
+                return;
+            }
+
+            // Prefer asynchronous dispose over synchronous.
+            if (item is IAsyncDisposable ad) {
+                await ad.DisposeAsync().ConfigureAwait(false);
+            }
+            else if (item is IDisposable d) {
+                d.Dispose();
             }
         }
 

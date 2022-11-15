@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.AssetModel;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -107,12 +104,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
-
-            return Util.StreamResults(
-                feature.BrowseAssetModelNodes(callContext, request, cancellationToken), 
-                activity
-            );
+            return Util.StreamResults(feature.BrowseAssetModelNodes(callContext, request, cancellationToken));
         }
 
 
@@ -151,12 +143,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartGetAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return Util.StreamResults(
-                feature.GetAssetModelNodes(callContext, request, cancellationToken),
-                activity
-            );
+            return Util.StreamResults(feature.GetAssetModelNodes(callContext, request, cancellationToken));
         }
 
 
@@ -195,12 +183,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartFindAssetModelNodesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
-            return Util.StreamResults(
-                feature.FindAssetModelNodes(callContext, request, cancellationToken),
-                activity
-            );
+            return Util.StreamResults(feature.FindAssetModelNodes(callContext, request, cancellationToken));
         
         }
 

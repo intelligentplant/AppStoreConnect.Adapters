@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Extensions;
 using DataCore.Adapter.Extensions;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -35,14 +32,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
 
             var resolvedFeature = await ResolveAdapterAndFeature<ICustomFunctions>(
-                adapterCallContext, 
-                adapterId, 
+                adapterCallContext,
+                adapterId,
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetCustomFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                return await resolvedFeature.Feature.GetFunctionsAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
-            }
+            return await resolvedFeature.Feature.GetFunctionsAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -75,9 +70,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                return await resolvedFeature.Feature.GetFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
-            }
+            return await resolvedFeature.Feature.GetFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -110,25 +103,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
                 Context.ConnectionAborted
             ).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartInvokeCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                CustomFunctionDescriptorExtended? function;
+            var function = await resolvedFeature.Feature.GetFunctionAsync(adapterCallContext, new GetCustomFunctionRequest() {
+                Id = request.Id,
+            }, Context.ConnectionAborted).ConfigureAwait(false);
 
-                using (Telemetry.ActivitySource.StartGetCustomFunctionActivity(resolvedFeature.Adapter.Descriptor.Id, request.Id)) {
-                    function = await resolvedFeature.Feature.GetFunctionAsync(adapterCallContext, new GetCustomFunctionRequest() {
-                        Id = request.Id,
-                    }, Context.ConnectionAborted).ConfigureAwait(false);
-                }
-
-                if (function == null) {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id), nameof(request));
-                }
-
-                if (!request.TryValidateBody(function, _jsonOptions, out var validationResults)) {
-                    throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
-                }
-
-                return await resolvedFeature.Feature.InvokeFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
+            if (function == null) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id), nameof(request));
             }
+
+            if (!request.TryValidateBody(function, _jsonOptions, out var validationResults)) {
+                throw new System.ComponentModel.DataAnnotations.ValidationException(System.Text.Json.JsonSerializer.Serialize(validationResults));
+            }
+
+            return await resolvedFeature.Feature.InvokeFunctionAsync(adapterCallContext, request, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
     }

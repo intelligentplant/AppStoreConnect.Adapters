@@ -115,6 +115,24 @@ namespace DataCore.Adapter.Diagnostics {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation received a client streaming item on adapter &apos;{0}&apos;: {1}.
+        /// </summary>
+        internal static string event_AdapterStreamItemIn {
+            get {
+                return ResourceManager.GetString("event_AdapterStreamItemIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation emitted a server streaming item on adapter &apos;{0}&apos;: {1}.
+        /// </summary>
+        internal static string event_AdapterStreamItemOut {
+            get {
+                return ResourceManager.GetString("event_AdapterStreamItemOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adapter &apos;{0}&apos; was updated..
         /// </summary>
         internal static string event_AdapterUpdated {

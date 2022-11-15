@@ -82,18 +82,20 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(featureUri));
             }
 
-            var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null || !adapter.IsEnabled) {
-                return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
-            }
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("GetAdapterAndFeature")) {
+                var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+                if (adapter == null || !adapter.IsEnabled) {
+                    return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
+                }
 
-            var feature = adapter.GetFeature<TFeature>(featureUri);
-            if (feature == null) {
-                return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
-            }
+                var feature = adapter.GetFeature<TFeature>(featureUri);
+                if (feature == null) {
+                    return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
+                }
 
-            var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, featureUri, cancellationToken).ConfigureAwait(false);
-            return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
+                var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, featureUri, cancellationToken).ConfigureAwait(false);
+                return new ResolvedAdapterFeature<TFeature>(adapter, feature, isAuthorized);
+            }
         }
 
 
@@ -130,20 +132,22 @@ namespace DataCore.Adapter {
             if (adapterAccessor == null) {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
-            
-            var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null || !adapter.IsEnabled) {
-                return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
+
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("GetAdapterAndFeature")) {
+                var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+                if (adapter == null || !adapter.IsEnabled) {
+                    return new ResolvedAdapterFeature<TFeature>(null!, default!, false);
+                }
+
+                var uri = typeof(TFeature).GetAdapterFeatureUri();
+
+                if (uri == null || !adapter.TryGetFeature<TFeature>(uri, out var feature)) {
+                    return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
+                }
+
+                var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, uri, cancellationToken).ConfigureAwait(false);
+                return new ResolvedAdapterFeature<TFeature>(adapter, feature!, isAuthorized);
             }
-
-            var uri = typeof(TFeature).GetAdapterFeatureUri();
-
-            if (uri == null || !adapter.TryGetFeature<TFeature>(uri, out var feature)) {
-                return new ResolvedAdapterFeature<TFeature>(adapter, default!, false);
-            }
-
-            var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, uri, cancellationToken).ConfigureAwait(false);
-            return new ResolvedAdapterFeature<TFeature>(adapter, feature!, isAuthorized);
         }
 
 

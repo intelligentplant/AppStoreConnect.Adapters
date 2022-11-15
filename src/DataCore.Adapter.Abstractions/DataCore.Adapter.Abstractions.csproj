@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="IntelligentPlant.BackgroundTasks" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" />
   </ItemGroup>
   
   <ItemGroup>

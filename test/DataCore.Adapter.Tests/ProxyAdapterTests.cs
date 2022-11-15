@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Tests {
                 case nameof(DeleteTagValueAnnotationShouldSucceed):
                     var accessor = AssemblyInitializer.ApplicationServices.GetRequiredService<IAdapterAccessor>();
                     var remoteAdapter = await accessor.GetAdapter(context, AssemblyInitializer.AdapterId, cancellationToken).ConfigureAwait(false);
-                    var annotationManager = remoteAdapter.GetFeature<IWriteTagValueAnnotations>() as InMemoryTagValueAnnotationManager;
+                    var annotationManager = remoteAdapter.GetFeature<IWriteTagValueAnnotations>().Unwrap() as InMemoryTagValueAnnotationManager;
                     if (annotationManager != null) {
                         await annotationManager.CreateOrUpdateAnnotationAsync(
                             AssemblyInitializer.TestTagId, 
@@ -69,7 +69,7 @@ namespace DataCore.Adapter.Tests {
                 return false;
             }
 
-            var feature = remoteAdapter.GetFeature<IConfigurationChanges>() as ConfigurationChanges;
+            var feature = remoteAdapter.GetFeature<IConfigurationChanges>().Unwrap() as ConfigurationChanges;
             if (feature == null) {
                 return false;
             }

@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Grpc.Core;
@@ -60,21 +58,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcAdapterProperty()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcAdapterProperty()).ConfigureAwait(false);
             }
         }
 
@@ -99,21 +88,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
             }
         }
 
@@ -131,21 +111,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
             }
         }
 
@@ -162,12 +133,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                var result = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return new GetTagSchemaResponse() {
-                    Schema = result.ToProtoValue()
-                };
-            }
+            var result = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return new GetTagSchemaResponse() {
+                Schema = result.ToProtoValue()
+            };
         }
 
 
@@ -184,20 +153,13 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (Telemetry.ActivitySource.StartCreateTagActivity(adapter.Adapter.Descriptor.Id)) {
-               JsonElement schema;
-
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
-
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
-                    throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
-                }
-
-                var result = await adapter.Feature.CreateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcTagDefinition();
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
             }
+
+            var result = await adapter.Feature.CreateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcTagDefinition();
         }
 
 
@@ -215,21 +177,16 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (Telemetry.ActivitySource.StartUpdateTagActivity(adapter.Adapter.Descriptor.Id, request.Tag)) {
-                JsonElement schema;
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
 
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(adapter.Adapter.Descriptor.Id)) {
-                    schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
-
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
-                    throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
-                }
-
-                var result = await adapter.Feature.UpdateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcTagDefinition();
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
             }
+
+            var result = await adapter.Feature.UpdateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcTagDefinition();
         }
+
 
 
         /// <inheritdoc/>
@@ -245,13 +202,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (Telemetry.ActivitySource.StartDeleteTagActivity(adapter.Adapter.Descriptor.Id, adapterRequest.Tag)) {
-                var result = await adapter.Feature.DeleteTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return new DeleteTagResponse() {
-                    Success = result
-                };
-            }
+            var result = await adapter.Feature.DeleteTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return new DeleteTagResponse() {
+                Success = result
+            };
         }
 
     }
+
 }

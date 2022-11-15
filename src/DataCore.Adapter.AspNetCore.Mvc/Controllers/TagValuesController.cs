@@ -6,8 +6,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using IntelligentPlant.BackgroundTasks;
@@ -129,11 +127,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadSnapshotTagValues(callContext, request, cancellationToken),
-                activity
+                feature.ReadSnapshotTagValues(callContext, request, cancellationToken)
             );
         }
 
@@ -234,11 +230,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadRawTagValues(callContext, request, cancellationToken),
-                activity
+                feature.ReadRawTagValues(callContext, request, cancellationToken)
             );
         }
 
@@ -343,11 +337,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadPlotTagValues(callContext, request, cancellationToken),
-                activity
+                feature.ReadPlotTagValues(callContext, request, cancellationToken)
             );
         }
 
@@ -421,11 +413,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadTagValuesAtTimes(callContext, request, cancellationToken),
-                activity
+                feature.ReadTagValuesAtTimes(callContext, request, cancellationToken)
             );
         }
 
@@ -547,11 +537,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.ReadProcessedTagValues(callContext, request, cancellationToken),
-                activity
+                feature.ReadProcessedTagValues(callContext, request, cancellationToken)
             );
         }
 
@@ -625,11 +613,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id);
 
             return Util.StreamResults(
-                feature.GetSupportedDataFunctions(callContext, request, cancellationToken),
-                activity
+                feature.GetSupportedDataFunctions(callContext, request, cancellationToken)
             );
         }
 
@@ -670,13 +656,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             var channel = request.Values.PublishToChannel();
 
             return Util.StreamResults(
-                feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
-                activity
+                feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken)
             );
         }
 
@@ -717,13 +701,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             var channel = request.Values.PublishToChannel();
 
             return Util.StreamResults(
-                feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken),
-                activity
+                feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken)
             );
         } 
 

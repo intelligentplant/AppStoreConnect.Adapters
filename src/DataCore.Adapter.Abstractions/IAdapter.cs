@@ -9,6 +9,11 @@ namespace DataCore.Adapter {
     /// <summary>
     /// Describes an App Store Connect adapter.
     /// </summary>
+    /// <remarks>
+    ///   Implementers should inherit from <see cref="AdapterCore"/> or a another derived type 
+    ///   rather than implementing <see cref="IAdapter"/> directly. 
+    /// </remarks>
+    /// <seealso cref="AdapterCore"/>
     public interface IAdapter : IBackgroundTaskServiceProvider, IDisposable, IAsyncDisposable {
 
         /// <summary>
@@ -44,12 +49,12 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Raised when the adapter is started.
         /// </summary>
-        event Func<IAdapter, Task> Started;
+        event Func<IAdapter, Task>? Started;
 
         /// <summary>
         /// Raised when the adapter is stopped.
         /// </summary>
-        event Func<IAdapter, Task> Stopped;
+        event Func<IAdapter, Task>? Stopped;
 
         /// <summary>
         /// Starts the adapter.

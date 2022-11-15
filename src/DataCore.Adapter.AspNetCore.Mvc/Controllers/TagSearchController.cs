@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Microsoft.AspNetCore.Mvc;
@@ -75,11 +72,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.GetTagProperties(callContext, request, cancellationToken),
-                activity
+                feature.GetTagProperties(callContext, request, cancellationToken)
             );
         }
 
@@ -149,11 +144,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.FindTags(callContext, request, cancellationToken),
-                activity
+                feature.FindTags(callContext, request, cancellationToken)
             );
         }
 
@@ -235,11 +228,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 return Forbid(); // 403
             }
             var feature = resolvedFeature.Feature;
-            var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request);
 
             return Util.StreamResults(
-                feature.GetTags(callContext, request, cancellationToken),
-                activity
+                feature.GetTags(callContext, request, cancellationToken)
             );
         }
 
@@ -308,20 +299,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartCreateTagActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                System.Text.Json.JsonElement schema;
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                    schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
 
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
-                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
-                    problem.Extensions["errors"] = validationResults;
-                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
-                }
-
-                return Ok(await feature.CreateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                problem.Extensions["errors"] = validationResults;
+                return new ObjectResult(problem) { StatusCode = 400 }; // 400
             }
+
+            return Ok(await feature.CreateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -363,20 +349,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartUpdateTagActivity(resolvedFeature.Adapter.Descriptor.Id, request.Tag)) {
-                System.Text.Json.JsonElement schema;
-                using (Telemetry.ActivitySource.StartGetTagSchemaActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                    schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
-                }
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
 
-                if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
-                    var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
-                    problem.Extensions["errors"] = validationResults;
-                    return new ObjectResult(problem) { StatusCode = 400 }; // 400
-                }
-
-                return Ok(await feature.UpdateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                problem.Extensions["errors"] = validationResults;
+                return new ObjectResult(problem) { StatusCode = 400 }; // 400
             }
+
+            return Ok(await feature.UpdateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -415,9 +396,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartDeleteTagActivity(resolvedFeature.Adapter.Descriptor.Id, request.Tag)) {
-                return Ok(await feature.DeleteTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
-            }
+            return Ok(await feature.DeleteTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
         }
 
     }
