@@ -341,6 +341,18 @@ namespace DataCore.Adapter {
                             break;
                         }
                     }
+                    catch (OperationCanceledException e) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            // Caller has cancelled the operation, so break and consider the
+                            // operation complete.
+                            break;
+                        }
+
+                        // Cancellation was not requested by the caller, so consider this a faulted
+                        // operation.
+                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        throw;
+                    }
                     catch (Exception e) {
                         OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
                         throw;
@@ -400,6 +412,18 @@ namespace DataCore.Adapter {
                         if (!await enumerator.MoveNextAsync()) {
                             break;
                         }
+                    }
+                    catch (OperationCanceledException e) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            // Caller has cancelled the operation, so break and consider the
+                            // operation complete.
+                            break;
+                        }
+
+                        // Cancellation was not requested by the caller, so consider this a faulted
+                        // operation.
+                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        throw;
                     }
                     catch (Exception e) {
                         OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
@@ -474,6 +498,18 @@ namespace DataCore.Adapter {
                         if (!await enumerator.MoveNextAsync()) {
                             break;
                         }
+                    }
+                    catch (OperationCanceledException e) {
+                        if (cancellationToken.IsCancellationRequested) {
+                            // Caller has cancelled the operation, so break and consider the
+                            // operation complete.
+                            break;
+                        }
+
+                        // Cancellation was not requested by the caller, so consider this a faulted
+                        // operation.
+                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        throw;
                     }
                     catch (Exception e) {
                         OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
