@@ -433,23 +433,27 @@ namespace DataCore.Adapter {
                 if (item == null) {
                     continue;
                 }
-                if (ReferenceEquals(item, this)) {
+
+                var unwrapped = item.Unwrap();
+                
+                if (ReferenceEquals(unwrapped, this)) {
                     continue;
                 }
-                if (!processedItems.Add(item)) {
+
+                if (!processedItems.Add(unwrapped)) {
                     // Item has already been dealt with (e.g. if it implements multiple features
                     // and has already been disposed using one of the other feature IDs).
                     continue;
                 }
 
                 try {
-                    var ad = DisposeFeature(item);
+                    var ad = DisposeFeature(unwrapped);
                     if (ad != null) {
                         asyncDisposableItems.Add(ad);
                     }
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
+                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, unwrapped);
                 }
             }
 
@@ -480,37 +484,33 @@ namespace DataCore.Adapter {
             var processedItems = new HashSet<object>();
 
             foreach (var item in features) {
-                if (ReferenceEquals(item, this)) {
-                    continue;
-                }
-
                 if (item == null) {
                     continue;
                 }
-                if (ReferenceEquals(item, this)) {
+                
+                var unwrapped = item.Unwrap();
+
+                if (ReferenceEquals(unwrapped, this)) {
                     continue;
                 }
-                if (!processedItems.Add(item)) {
+
+                if (!processedItems.Add(unwrapped)) {
                     // Item has already been dealt with (e.g. if it implements multiple features
                     // and has already been disposed using one of the other feature IDs).
                     continue;
                 }
 
                 try {
-                    await DisposeFeatureAsync(item).ConfigureAwait(false);
+                    await DisposeFeatureAsync(unwrapped).ConfigureAwait(false);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
+                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, unwrapped);
                 }
             }
         }
 
 
         private IAsyncDisposable? DisposeFeature(IAdapterFeature item) {
-            if (item is AdapterFeatureWrapper wrapper) {
-                return DisposeFeature(wrapper.InnerFeature);
-            }
-
             // Prefer synchronous dispose over asynchronous.
             if (item is IDisposable d) {
                 d.Dispose();
@@ -526,11 +526,6 @@ namespace DataCore.Adapter {
 
 
         private async ValueTask DisposeFeatureAsync(IAdapterFeature item) {
-            if (item is AdapterFeatureWrapper wrapper) {
-                await DisposeFeatureAsync(wrapper.InnerFeature).ConfigureAwait(false);
-                return;
-            }
-
             // Prefer asynchronous dispose over synchronous.
             if (item is IAsyncDisposable ad) {
                 await ad.DisposeAsync().ConfigureAwait(false);
