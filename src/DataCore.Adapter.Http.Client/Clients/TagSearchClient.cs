@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Tags;
@@ -201,6 +203,203 @@ namespace DataCore.Adapter.Http.Client.Clients {
                     }
                     yield return item;
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the JSON schema to use when creating or updating tag definitions.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to query.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the JSON configuration schema.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<JsonElement> GetTagSchemaAsync(
+            string adapterId, 
+            GetTagSchemaRequest request,
+            RequestMetadata? metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/schema";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                return await httpResponse.Content.ReadFromJsonAsync<JsonElement>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to create the tag on.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the new tag.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<TagDefinition> CreateTagAsync(
+            string adapterId, 
+            CreateTagRequest request, 
+            RequestMetadata? metadata = null, 
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/create";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                return (await httpResponse.Content.ReadFromJsonAsync<TagDefinition>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
+
+
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to update the tag on.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return the updated tag.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<TagDefinition> UpdateTagAsync(
+            string adapterId,
+            UpdateTagRequest request,
+            RequestMetadata? metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/update";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                return (await httpResponse.Content.ReadFromJsonAsync<TagDefinition>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
+
+
+        /// <summary>
+        /// Deletes a tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter to delete the tag on.
+        /// </param>
+        /// <param name="request">
+        ///   The request.
+        /// </param>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return <see langword="true"/> if the tag was deleted or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="request"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
+        ///   <paramref name="request"/> fails validation.
+        /// </exception>
+        public async Task<bool> DeleteTagAsync(
+            string adapterId,
+            DeleteTagRequest request,
+            RequestMetadata? metadata = null,
+            CancellationToken cancellationToken = default
+        ) {
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
+            }
+            AdapterHttpClient.ValidateObject(request);
+
+            var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/delete";
+
+            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                return (await httpResponse.Content.ReadFromJsonAsync<bool>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 
