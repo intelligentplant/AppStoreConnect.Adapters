@@ -262,6 +262,44 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
+        /// Gets the configuration schema to use when creating or updating tags.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to retrieve the tag configuration schema for.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the JSON schema for the adapter's tag configuration 
+        ///   model.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/schema")]
+        [ProducesResponseType(typeof(System.Text.Json.JsonElement), 200)]
+        public async Task<IActionResult> GetTagSchema(string adapterId, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+            return Ok(schema);
+        }
+
+
+        /// <summary>
         /// Creates a new tag.
         /// </summary>
         /// <param name="adapterId">
