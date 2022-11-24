@@ -29,6 +29,8 @@ namespace DataCore.Adapter.Json {
                 throw new ArgumentNullException(nameof(options));
             }
 
+            // We need to be able to read/write "NaN" etc.
+            options.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
             options.AddContext<AdapterJsonContext>();
 
             return options;
