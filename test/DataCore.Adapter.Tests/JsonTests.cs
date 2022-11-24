@@ -7,6 +7,7 @@ using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Json;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
@@ -19,6 +20,7 @@ namespace DataCore.Adapter.Tests {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();
+            result.AddDataCoreAdapterContext();
 
             return result;
         }
@@ -110,6 +112,9 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(double.MinValue)]
         [DataRow(double.MaxValue)]
+        [DataRow(double.NaN)]
+        [DataRow(double.PositiveInfinity)]
+        [DataRow(double.NegativeInfinity)]
         [DataRow(double.MinValue, double.MaxValue)]
         public void Variant_DoubleShouldRoundTrip(params double[] values) {
             var options = GetOptions();
@@ -125,6 +130,9 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(float.MinValue)]
         [DataRow(float.MaxValue)]
+        [DataRow(float.NaN)]
+        [DataRow(float.PositiveInfinity)]
+        [DataRow(float.NegativeInfinity)]
         [DataRow(float.MinValue, float.MaxValue)]
         public void Variant_FloatShouldRoundTrip(params float[] values) {
             var options = GetOptions();

@@ -1151,39 +1151,39 @@ namespace DataCore.Adapter.Common {
                 case VariantType.Boolean:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<bool>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetBoolean();
+                        : valueElement.Deserialize<bool>(options);
                 case VariantType.Byte:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<byte>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetByte();
+                        : valueElement.Deserialize<byte>(options);
                 case VariantType.DateTime:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<DateTime>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetDateTime();
+                        : valueElement.Deserialize<DateTime>(options);
                 case VariantType.ExtensionObject:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<EncodedObject>(valueElement, arrayDimensions!, options))
-                        : JsonSerializer.Deserialize<EncodedObject>(valueElement.GetRawText(), options)!;
+                        : valueElement.Deserialize<EncodedObject>(options)!;
                 case VariantType.Double:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<double>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetDouble();
+                        : valueElement.Deserialize<double>(options);
                 case VariantType.Float:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<float>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetSingle();
+                        : valueElement.Deserialize<float>(options);
                 case VariantType.Int16:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<short>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetInt16();
+                        : valueElement.Deserialize<short>(options);
                 case VariantType.Int32:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<int>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetInt32();
+                        : valueElement.Deserialize<int>(options);
                 case VariantType.Int64:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<long>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetInt64();
+                        : valueElement.Deserialize<long>(options);
                 case VariantType.Json:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<JsonElement>(valueElement, arrayDimensions!, options))
@@ -1191,11 +1191,11 @@ namespace DataCore.Adapter.Common {
                 case VariantType.SByte:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<sbyte>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetSByte();
+                        : valueElement.Deserialize<sbyte>(options);
                 case VariantType.String:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<string>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetString();
+                        : valueElement.Deserialize<string>(options);
                 case VariantType.TimeSpan:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<TimeSpan>(valueElement, arrayDimensions!, options))
@@ -1205,15 +1205,15 @@ namespace DataCore.Adapter.Common {
                 case VariantType.UInt16:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<ushort>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetUInt16();
+                        : valueElement.Deserialize<ushort>(options);
                 case VariantType.UInt32:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<uint>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetUInt32();
+                        : valueElement.Deserialize<uint>(options);
                 case VariantType.UInt64:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<ulong>(valueElement, arrayDimensions!, options))
-                        : valueElement.GetUInt64();
+                        : valueElement.Deserialize<ulong>(options);
                 case VariantType.Url:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<Uri>(valueElement, arrayDimensions!, options))
