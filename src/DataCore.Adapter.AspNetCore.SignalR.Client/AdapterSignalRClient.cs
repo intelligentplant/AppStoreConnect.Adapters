@@ -131,7 +131,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   This event directly maps to the equivalent event on the underlying 
         ///   <see cref="HubConnection"/>.
         /// </remarks>
-        public event Func<Exception>, Task> Closed {
+        public event Func<Exception, Task> Closed {
             add { _hubConnection.Closed += value; }
             remove { _hubConnection.Closed -= value; }
         }
