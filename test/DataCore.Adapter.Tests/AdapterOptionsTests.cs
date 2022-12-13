@@ -139,7 +139,7 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public void UtcOptionsTimestampShouldChangeAfterConfigurationReload() {
+        public async Task UtcOptionsTimestampShouldChangeAfterConfigurationReloadAsync() {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             var provider = configuration.Providers.OfType<MemoryConfigurationProvider>().First();
 
@@ -160,10 +160,16 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(description, adapter.Descriptor.Description);
 
                 var time = adapter.UtcOptionsTime;
+
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                adapter.OptionsChanged += opts => tcs.TrySetResult(null);
+
                 provider.Set(nameof(OptionsMonitorAdapterOptions.UtcOptionsTime), time.AddHours(1).ToString("u"));
                 configuration.Reload();
 
-                Assert.IsTrue(adapter.UtcOptionsTime > time);
+                await tcs.Task.ConfigureAwait(false);
+
+                Assert.AreNotEqual(time, adapter.UtcOptionsTime);
             }
         }
 

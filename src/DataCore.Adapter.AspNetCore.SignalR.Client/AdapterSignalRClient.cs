@@ -22,6 +22,18 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public const string DefaultHubRoute = "/signalr/app-store-connect/v2.0";
 
         /// <summary>
+        /// Indicates if either <see cref="Dispose"/> or <see cref="DisposeAsync"/> have been 
+        /// called (regardless of whether or not the methods have finished executing).
+        /// </summary>
+        private bool _disposeCalled;
+
+        /// <summary>
+        /// Indicates if <see cref="StopAsync"/> has been called. Automatic reconnection will not 
+        /// be attempted if the connection has been explicitly stopped.
+        /// </summary>
+        private bool _stopCalled;
+
+        /// <summary>
         /// Indicates if the client has been diposed.
         /// </summary>
         private bool _isDisposed;
@@ -41,6 +53,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// client is disposed.
         /// </summary>
         private readonly bool _disposeConnection;
+
+        /// <summary>
+        /// <see cref="CancellationTokenSource"/> that will request cancellation when the client is 
+        /// disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// The ASP.NET Core SignalR compatibility level for the client.
@@ -125,7 +143,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   This event directly maps to the equivalent event on the underlying 
         ///   <see cref="HubConnection"/>.
         /// </remarks>
-        public event Func<Exception, Task> Reconnecting {
+        public event Func<Exception?, Task> Reconnecting {
             add { _hubConnection.Reconnecting += value; }
             remove { _hubConnection.Reconnecting -= value; }
         }
@@ -137,7 +155,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   This event directly maps to the equivalent event on the underlying 
         ///   <see cref="HubConnection"/>.
         /// </remarks>
-        public event Func<string, Task> Reconnected {
+        public event Func<string?, Task> Reconnected {
             add { _hubConnection.Reconnected += value; }
             remove { _hubConnection.Reconnected -= value; }
         }
@@ -175,6 +193,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             TagSearch = new TagSearchClient(this);
             TagValueAnnotations = new TagValueAnnotationsClient(this);
             TagValues = new TagValuesClient(this);
+
+            Closed += OnClosedAsync;
         }
 
 
@@ -210,6 +230,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   A task that will return the <see cref="HubConnection"/> for the client.
         /// </returns>
         internal async Task<HubConnection> GetHubConnectionAsync(CancellationToken cancellationToken = default) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
             if (_hubConnection.State == HubConnectionState.Disconnected) {
                 await StartConnectionAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -228,11 +252,37 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   A <see cref="Task"/> that will start the connection.
         /// </returns>
         private async Task StartConnectionAsync(CancellationToken cancellationToken) {
-            using (await _connectionLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token))
+            using (await _connectionLock.LockAsync(ctSource.Token).ConfigureAwait(false)) {
                 if (_hubConnection.State == HubConnectionState.Disconnected) {
-                    await _hubConnection.StartAsync(cancellationToken).ConfigureAwait(false);
+                    _stopCalled = false;
+                    await _hubConnection.StartAsync(ctSource.Token).ConfigureAwait(false);
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Handles <see cref="Closed"/> events.
+        /// </summary>
+        /// <param name="error">
+        ///   The optional error that caused the connection to be closed.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will re-open the connection if it was not closed due to an 
+        ///   explicit call to <see cref="StopAsync"/>, <see cref="Dispose"/> or <see cref="DisposeAsync"/>.
+        /// </returns>
+        private async Task OnClosedAsync(Exception? error) {
+            if (_disposeCalled || _stopCalled) {
+                // Disposing or the connection was closed gracefully.
+                return;
+            }
+
+            await StartConnectionAsync(default).ConfigureAwait(false);
         }
 
 
@@ -246,9 +296,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   A <see cref="Task"/> that will stop the SignalR connection.
         /// </returns>
         public async Task StopAsync(CancellationToken cancellationToken = default) {
-            using (await _connectionLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token))
+            using (await _connectionLock.LockAsync(ctSource.Token).ConfigureAwait(false)) {
                 if (_hubConnection.State != HubConnectionState.Disconnected) {
-                    await _hubConnection.StopAsync(cancellationToken).ConfigureAwait(false);
+                    _stopCalled = true;
+                    await _hubConnection.StopAsync(ctSource.Token).ConfigureAwait(false);
                 }
             }
         }
@@ -316,11 +372,22 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   A <see cref="ValueTask"/> that represents the dispose operation.
         /// </returns>
         protected virtual async ValueTask DisposeAsyncCore() {
+            if (_isDisposed) {
+                return;
+            }
+
+            _disposeCalled = true;
+            _hubConnection.Closed -= OnClosedAsync;
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+
             if (_disposeConnection) {
                 using (await _connectionLock.LockAsync().ConfigureAwait(false)) {
                     await _hubConnection.DisposeAsync().ConfigureAwait(false);
                 }
             }
+
+            _isDisposed = true;
         }
 
 
@@ -337,6 +404,11 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
             }
 
             if (disposing) {
+                _disposeCalled = true;
+                _hubConnection.Closed -= OnClosedAsync;
+                _disposedTokenSource.Cancel();
+                _disposedTokenSource.Dispose();
+
                 if (_disposeConnection) {
                     _ = Task.Run(async () => {
                         try {

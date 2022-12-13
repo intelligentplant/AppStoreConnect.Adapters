@@ -45,6 +45,15 @@ namespace DataCore.Adapter {
 
         #endregion
 
+        #region [ Events ]
+
+        /// <summary>
+        /// Invoked when <see cref="Options"/> is modified.
+        /// </summary>
+        public event Action<TAdapterOptions>? OptionsChanged;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -494,11 +503,10 @@ namespace DataCore.Adapter {
         ///   options.
         /// </remarks>
         protected virtual void OnOptionsChange(TAdapterOptions options) {
-            // Do nothing.
+            OptionsChanged?.Invoke(options);
         }
 
         #endregion
-
 
         #region [ Disposable Pattern ]
 
