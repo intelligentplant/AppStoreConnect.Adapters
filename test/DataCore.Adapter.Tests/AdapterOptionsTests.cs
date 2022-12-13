@@ -160,10 +160,14 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(description, adapter.Descriptor.Description);
 
                 var time = adapter.UtcOptionsTime;
+
+                var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                adapter.OptionsChanged += opts => tcs.TrySetResult(null);
+
                 provider.Set(nameof(OptionsMonitorAdapterOptions.UtcOptionsTime), time.AddHours(1).ToString("u"));
                 configuration.Reload();
 
-                await Task.Delay(200).ConfigureAwait(false);
+                await tcs.Task.ConfigureAwait(false);
 
                 Assert.IsTrue(adapter.UtcOptionsTime > time);
             }
