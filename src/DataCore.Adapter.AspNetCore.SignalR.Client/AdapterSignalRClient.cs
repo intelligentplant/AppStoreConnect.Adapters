@@ -372,6 +372,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         ///   A <see cref="ValueTask"/> that represents the dispose operation.
         /// </returns>
         protected virtual async ValueTask DisposeAsyncCore() {
+            if (_isDisposed) {
+                return;
+            }
+
             _disposeCalled = true;
             _hubConnection.Closed -= OnClosedAsync;
             _disposedTokenSource.Cancel();
@@ -382,6 +386,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
                     await _hubConnection.DisposeAsync().ConfigureAwait(false);
                 }
             }
+
+            _isDisposed = true;
         }
 
 
