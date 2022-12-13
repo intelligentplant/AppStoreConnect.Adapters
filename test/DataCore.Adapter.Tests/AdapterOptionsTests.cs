@@ -169,7 +169,7 @@ namespace DataCore.Adapter.Tests {
 
                 await tcs.Task.ConfigureAwait(false);
 
-                Assert.IsTrue(adapter.UtcOptionsTime > time);
+                Assert.AreNotEqual(time, adapter.UtcOptionsTime);
             }
         }
 
