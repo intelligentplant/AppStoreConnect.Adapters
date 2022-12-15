@@ -179,6 +179,7 @@ namespace DataCore.Adapter.Http.Proxy {
         ) {
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            _client.DefaultRequestVersion = Options.DefaultRequestVersion;
             _client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
 #pragma warning disable CS0618 // Type or member is obsolete

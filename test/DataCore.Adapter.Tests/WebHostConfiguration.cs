@@ -46,7 +46,6 @@ namespace DataCore.Adapter.Tests {
 
             services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
                 AllowUntrustedCertificates(builder.PrimaryHandler);
-                builder.AdditionalHandlers.Add(Http.Client.AdapterHttpClient.CreateHttpVersionHandler(new Version(2, 0)));
             }).ConfigureHttpClient(client => {
                 client.BaseAddress = new Uri(DefaultUrl + "/");
             });
