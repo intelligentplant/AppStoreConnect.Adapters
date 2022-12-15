@@ -18,6 +18,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public async Task HttpClientShouldDeserializeProblemDetailsResponse() {
             var client = AssemblyInitializer.ApplicationServices.GetRequiredService<AdapterHttpClient>();
+            client.DefaultRequestVersion = new Version(2, 0);
 
             // Request will fail validation because it does not specify any tags.
             var requestContent = new ReadSnapshotTagValuesRequest();
