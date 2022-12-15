@@ -18,6 +18,11 @@ namespace DataCore.Adapter.Http.Proxy {
         public string RemoteId { get; set; } = default!;
 
         /// <summary>
+        /// The default HTTP version to use when making requests.
+        /// </summary>
+        public Version? DefaultRequestVersion { get; set; }
+
+        /// <summary>
         /// The App Store Connect adapter toolkit version to use when querying the remote adapter.
         /// </summary>
         public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
