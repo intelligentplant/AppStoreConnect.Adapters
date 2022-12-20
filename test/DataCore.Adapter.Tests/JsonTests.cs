@@ -20,7 +20,7 @@ namespace DataCore.Adapter.Tests {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();
-            result.AddDataCoreAdapterContext();
+            result.UseDataCoreAdapterDefaults();
 
             return result;
         }
@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Tests {
         private void VariantRoundTripTestCompare<T>(object expected, object actual, JsonSerializerOptions options, string message = null) {
             if (typeof(T) == typeof(JsonElement) || (typeof(T).IsArray && typeof(T).GetElementType() == typeof(JsonElement))) {
                 // For JsonElement, compare the raw JSON
-                Assert.AreEqual(JsonSerializer.Serialize(expected, options), JsonSerializer.Serialize(actual, options), message);
+                Assert.AreEqual(JsonSerializer.Serialize(expected, typeof(JsonElement), options), JsonSerializer.Serialize(actual, typeof(JsonElement), options), message);
             }
             else {
                 // For everything else, compare the variant values.

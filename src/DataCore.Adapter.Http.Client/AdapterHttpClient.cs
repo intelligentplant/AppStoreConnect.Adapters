@@ -101,7 +101,7 @@ namespace DataCore.Adapter.Http.Client {
         public AdapterHttpClient(HttpClient httpClient) {
             HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             JsonSerializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }
-                .AddDataCoreAdapterContext();
+                .UseDataCoreAdapterDefaults();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
