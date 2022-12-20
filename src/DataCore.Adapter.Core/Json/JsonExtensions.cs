@@ -9,7 +9,8 @@ namespace DataCore.Adapter.Json {
     public static class JsonExtensions {
 
         /// <summary>
-        /// Registers <see cref="AdapterJsonContext"/> with the <see cref="JsonSerializerOptions"/>.
+        /// Sets default settings on the <see cref="JsonSerializerOptions"/> for use with Data 
+        /// Core adapter hosting.
         /// </summary>
         /// <param name="options">
         ///   The <see cref="JsonSerializerOptions"/>.
@@ -20,18 +21,14 @@ namespace DataCore.Adapter.Json {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        /// <remarks>
-        ///   Note that calling this method will make the <see cref="JsonSerializerOptions"/> 
-        ///   immutable!
-        /// </remarks>
-        public static JsonSerializerOptions AddDataCoreAdapterContext(this JsonSerializerOptions options) {
+        public static JsonSerializerOptions UseDataCoreAdapterDefaults(this JsonSerializerOptions options) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
 
             // We need to be able to read/write "NaN" etc.
             options.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
-            options.AddContext<AdapterJsonContext>();
+            //options.AddContext<AdapterJsonContext>();
 
             return options;
         }

@@ -1234,12 +1234,15 @@ namespace DataCore.Adapter.Common {
             writer.WriteStartObject();
 
             WritePropertyValue(writer, nameof(Variant.Type), value.Type, options);
-            if (value.Value is Array arr) {
+            if (value.Value == null) {
+                WriteNullPropertyValue(writer, nameof(Variant.Value), options);
+            }
+            else if (value.Value is Array arr) {
                 writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
                 JsonExtensions.WriteArray(writer, arr, options);
             }
             else {
-                WritePropertyValue(writer, nameof(Variant.Value), value.Value, options);
+                WritePropertyValue(writer, nameof(Variant.Value), value.Value, value.Value.GetType(), options);
             }
             WritePropertyValue(writer, nameof(Variant.ArrayDimensions), value.ArrayDimensions, options);
 

@@ -73,6 +73,56 @@ namespace DataCore.Adapter.Json {
             JsonSerializer.Serialize(writer, value, options);
         }
 
+
+        /// <summary>
+        /// Writes a property name and value to the specified JSON writer.
+        /// </summary>
+        /// <param name="writer">
+        ///   The JSON writer.
+        /// </param>
+        /// <param name="propertyName">
+        ///   The property name.
+        /// </param>
+        /// <param name="value">
+        ///   The property value.
+        /// </param>
+        /// <param name="inputType">
+        ///   The value type.
+        /// </param>
+        /// <param name="options">
+        ///   The JSON options.
+        /// </param>
+        protected void WritePropertyValue(Utf8JsonWriter writer, string propertyName, object? value, Type inputType, JsonSerializerOptions options) {
+            if (writer == null) {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            writer.WritePropertyName(ConvertPropertyName(propertyName, options));
+            JsonSerializer.Serialize(writer, value, inputType, options);
+        }
+
+
+        /// <summary>
+        /// Writes a property name with a null value to the specified JSON writer.
+        /// </summary>
+        /// <param name="writer">
+        ///   The JSON writer.
+        /// </param>
+        /// <param name="propertyName">
+        ///   The property name.
+        /// </param>
+        /// <param name="options">
+        ///   The JSON options.
+        /// </param>
+        protected void WriteNullPropertyValue(Utf8JsonWriter writer, string propertyName, JsonSerializerOptions options) {
+            if (writer == null) {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            writer.WritePropertyName(ConvertPropertyName(propertyName, options));
+            writer.WriteNullValue();
+        }
+
     }
 
 }
