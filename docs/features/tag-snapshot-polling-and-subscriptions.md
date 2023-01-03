@@ -109,7 +109,7 @@ private async Task OnValueChangedAsync(TagValueQueryResult newSnapshot, Cancella
 
 The [PollingSnapshotTagValuePush](../../src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) class implements `ISnapshotTagValuePush`. Unlike the `SnapshotTagValuePush` class, it does not require you to tell it when snapshot values have changed. Instead, it accepts an `IReadSnapshotTagValues` parameter when it is created, and then periodically polls this provider for the current value for all tags that currently have subscribers. This ensures that polling only occurs when an external caller is actively observing value changes.
 
-The constructor accepts a [PollingSnapshotTagValuePushOptions](../../src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) parameter, which is used to configure how frequently the `IReadSnapshotTagValues` feature will be polled:
+The constructor also accepts a [PollingSnapshotTagValuePushOptions](../../src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) parameter, which is used to configure how frequently the `IReadSnapshotTagValues` feature will be polled:
 
 ```cs
 public class MyAdapter : AdapterBase<MyAdapterOptions> {
@@ -122,9 +122,10 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         IBackgroundTaskService backgroundTaskService,
         ILogger<MyAdapter> logger
     ) : base(id, options, backgroundTaskService, logger) {
-        // TODO: Implement the ITagInfo feature or delegate it to an external provider.
+        // TODO: Implement the ITagInfo and IReadSnapshotTagValues features or delegate them to external providers.
 
         _snapshotPush = new PollingSnapshotTagValuePush(
+            this.GetFeature<IReadSnapshotTagValues>(),
             new PollingSnapshotTagValuePushOptions() {
                 PollingInterval = TimeSpan.FromSeconds(15),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
