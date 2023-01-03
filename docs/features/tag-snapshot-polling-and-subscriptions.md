@@ -191,7 +191,7 @@ As with `SnapshotTagValuePush` and `PollingSnapshotTagValuePush`, an appropriate
 
 ## Initialising the SnapshotTagValueManager
 
-`SnapshotTagValueManager` must be initialised before it can be used, to allow it to load tag definitions from the `IKeyValueStore`. `SnapshotTagValueManager` will lazily initialise itself the first time a method is invoked, but can be eagerly initialised by calling its `InitAsync` method. This should be performed in the adapter's `StartAsync` method:
+`SnapshotTagValueManager` must be initialised before it can be used, to allow it to load persisted tag values from the `IKeyValueStore`. `SnapshotTagValueManager` will lazily initialise itself the first time a method is invoked, but can be eagerly initialised by calling its `InitAsync` method. This should be performed in the adapter's `StartAsync` method:
 
 ```cs
 protected override async Task StartAsync(CancellationToken cancellationToken) {
