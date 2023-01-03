@@ -46,35 +46,31 @@ Every feature defines a URI that uniquely identifies the feature. URIs for well-
 
 Adapters can implement any number of the following standard feature interfaces:
 
-- Asset Model:
-    - [IAssetModelBrowse](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs)
-    - [IAssetModelSearch](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs)
-- Custom Functions:
-    - [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) 
-- Diagnostics:
-    - [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagostics/IConfigurationChanges.cs)
-    - [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagostics/IHealthCheck.cs)
-- Tags:
-    - [ITagConfiguration](/src/DataCore.Adapter.Abstractions/Tags/ITagConfiguration.cs)
-    - [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs)
-    - [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagSearch.cs)
-- Events:
-    - [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs)
-    - [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs)
-    - [IReadEventMessagesForTimeRange](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesForTimeRange.cs)
-    - [IReadEventMessagesUsingCursor](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesUsingCursor.cs)
-    - [IWriteEventMessages](/src/DataCore.Adapter.Abstractions/Events/IWriteEventMessages.cs)
-- Real-Time Data:
-    - [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs)
-    - [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs)
-    - [IReadRawTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadRawTagValues.cs)
-    - [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs)
-    - [IReadTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValueAnnotations.cs)
-    - [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs)
-    - [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs)
-    - [IWriteHistoricalTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteHistoricalTagValues.cs)
-    - [IWriteSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteSnapshotTagValues.cs)
-    - [IWriteTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteTagValueAnnotations.cs)
+| Category | Name | Description |
+| -------- | ---- | ----------- |
+| Asset Model | [IAssetModelBrowse](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs) | Asset model browsing |
+| Asset Model | [IAssetModelSearch](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs) | Asset model search |
+| Custom Functions | [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) | Vendor- or adapter-specific custom RPC functions |
+| Diagnostics | [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagostics/IConfigurationChanges.cs) | Notifications about changes to an adapter's available tags, assets, etc. |
+| Diagnostics | [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagostics/IHealthCheck.cs) | Reports the health status of the adapter and its external dependencies. |
+| Events | [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) | Push subscriptions that notify callers about events in real-time. |
+| Events | [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) | Push subscriptions that notify callers about events in real-time via topics. |
+| Events | [IReadEventMessagesForTimeRange](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesForTimeRange.cs) | Retrieval of historical event messages within a given time range. |
+| Events | [IReadEventMessagesUsingCursor](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesUsingCursor.cs) | Retrieval of historical event messages starting from a given cursor position. |
+| Events | [IWriteEventMessages](/src/DataCore.Adapter.Abstractions/Events/IWriteEventMessages.cs) | Ingestion of event messages from an external source. |
+| Real-Time Data | [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) | Retrieval of a best-fit curve of raw historical tag values for visualization in a chart. |
+| Real-Time Data | [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs) | Retrieval of aggregated tag values (such as the average value of a tag over an hourly interval), and for discovering the aggregations that the adapter supports. |
+| Real-Time Data | [IReadRawTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadRawTagValues.cs) | Polling of raw, unprocessed historical tag values. |
+| Real-Time Data | [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) | Polling of the current tag values. |
+| Real-Time Data | [IReadTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValueAnnotations.cs) | Retrieval of annotations associated with tag values (such as when a value exceeded its operating limits). |
+| Real-Time Data | [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs) | Retrieval of tag values at specific points in history. |
+| Real-Time Data | [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) | Push subscriptions that notify callers about changes in the current values for subscribed tags. |
+| Real-Time Data | [IWriteHistoricalTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteHistoricalTagValues.cs) | Ingestion of tag values directly into a historical archive. |
+| Real-Time Data | [IWriteSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteSnapshotTagValues.cs) | Ingestion of tag values into a snapshot pipeline where data filters can be used to determine when values should be written to a historical archive. |
+| Real-Time Data | [IWriteTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteTagValueAnnotations.cs) | Management of annotations associated with tag values. |
+| Tags | [ITagConfiguration](/src/DataCore.Adapter.Abstractions/Tags/ITagConfiguration.cs) | Management of tag definitions using adapter-specific schemas. |
+| Tags | [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) | Retrieval of information about tags by ID or name. |
+| Tags | [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagSearch.cs) | Discovery of tags via search operations. |
 
 The [ICustomFunctions](/src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature allows an adapter to define bespoke custom functions that can be invoked via standard API calls. This is described in more detail below.
 
@@ -182,6 +178,8 @@ Whenever the health status of your adapter changes (e.g. you become disconnected
 
 ## Tag Management (ITagInfo, ITagSearch Features)
 
+*This topic is described in more detail [here](./features/tag-search.md).*
+
 If your adapter will manage its own tag definitions instead of retrieving them from e.g. an external database, you can use the [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) class to implement the [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) and [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) features on your adapter's behalf.
 
 
@@ -206,6 +204,8 @@ If your source supports its own subscription mechanism, you can extend the `Even
 
 ## Snapshot Tag Value Subscriptions (ISnapshotTagValuePush Feature)
 
+*This topic is described in more detail [here](./features/tag-snapshot-polling-and-subscriptions.md).*
+
 To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis. To push values to subscribers, call the `ValueReceived` method on the feature.
 
 If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class and override the appropriate extension points. For example, if you were writing an MQTT adapter that treats individual MQTT channels as tags, you could extend `SnapshotTagValuePush` so that it subscribes to an MQTT channel when a subscriber subscribes to a given tag name.
@@ -214,6 +214,8 @@ Note that you can also use the [SnapshotTagValueManager](/src/DataCore.Adapter/R
 
 
 ## Historical Tag Value Queries 
+
+*This topic is described in more detail [here](./features/tag-history-polling.md).*
 
 If your underlying source does not natively support aggregated, values-at-times, or plot/best-fit tag value queries (implemented via the [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs), [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs), and [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) respectively), you can use the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class to provide these capabilities, as long as you can provide it with the ability to resolve tag names, and to request raw tag values.
 
