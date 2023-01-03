@@ -127,6 +127,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueSt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApiExample", "examples\MinimalApiExample\MinimalApiExample.csproj", "{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{4AA5F467-4724-42CC-B7B8-DC8D4C7CE7FE}"
+	ProjectSection(SolutionItems) = preProject
+		docs\features\tag-history-polling.md = docs\features\tag-history-polling.md
+		docs\features\tag-search.md = docs\features\tag-search.md
+		docs\features\tag-snapshot-polling-and-subscriptions.md = docs\features\tag-snapshot-polling-and-subscriptions.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -296,6 +303,7 @@ Global
 		{22DD3CC9-034B-4C43-A143-6240E8E833CC} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{8C225A69-794C-4451-B5CE-91EAD5269C87} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
+		{4AA5F467-4724-42CC-B7B8-DC8D4C7CE7FE} = {C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

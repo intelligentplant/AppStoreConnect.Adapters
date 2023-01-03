@@ -51,9 +51,9 @@ namespace ExampleHostedAdapter {
             IOptionsMonitor<MyAdapterOptions> options,
             IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
-            IBackgroundTaskService taskScheduler,
+            IBackgroundTaskService backgroundTaskService,
             ILogger<MyAdapter> logger
-        ) : base(id, options, taskScheduler, logger) {
+        ) : base(id, options, backgroundTaskService, logger) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
             // when e.g. tags or asset model nodes are created by our adapter.
