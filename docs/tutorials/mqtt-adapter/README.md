@@ -23,7 +23,7 @@ The tutorial also explains how to connect App Store Connect to the adapter, and 
 
 In Visual Studio, create a new project named `MqttAdapter` using the `Industrial App Store Connect Adapter Host` template by following the instructions [here](/src/DataCore.Adapter.Templates).
 
-You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support versions at time of writing). You can accept the default values for all other settings; they can be changed in code later if desired.
+You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support version respectively at time of writing). You can accept the default values for all other settings; they can be changed in code later if desired.
 
 
 # Configure App Store Connect
