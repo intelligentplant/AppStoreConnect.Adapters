@@ -34,7 +34,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddJsonProtocol(options => {
-                options.PayloadSerializerOptions.AddDataCoreAdapterContext();
+                options.PayloadSerializerOptions.UseDataCoreAdapterDefaults();
             });
 
             builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.SignalR.Internal.ApiDescriptorProvider>();

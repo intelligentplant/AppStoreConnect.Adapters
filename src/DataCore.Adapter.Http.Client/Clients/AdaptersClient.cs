@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
         ) {
             AdapterHttpClient.ValidateObject(request);
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -108,7 +108,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -145,7 +145,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/health-status";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 

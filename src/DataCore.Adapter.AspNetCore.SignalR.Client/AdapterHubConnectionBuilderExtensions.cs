@@ -58,7 +58,7 @@ namespace Microsoft.AspNetCore.SignalR.Client {
                 })
                 .AddJsonProtocol(options => {
                     options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                    options.PayloadSerializerOptions.AddDataCoreAdapterContext();
+                    options.PayloadSerializerOptions.UseDataCoreAdapterDefaults();
                 });
 
             return builder;
@@ -107,7 +107,7 @@ namespace Microsoft.AspNetCore.SignalR.Client {
                     configureHttpConnection?.Invoke(options);
                 })
                 .AddJsonProtocol(options => {
-                    options.PayloadSerializerOptions.AddDataCoreAdapterContext();
+                    options.PayloadSerializerOptions.UseDataCoreAdapterDefaults();
                 });
 
             return builder;

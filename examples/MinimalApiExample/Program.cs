@@ -1,5 +1,6 @@
 ﻿using DataCore.Adapter.WaveGenerator;
 
+using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -40,12 +41,15 @@ builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
-builder.Services.AddOpenTelemetryTracing(otel => otel
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
-    .AddAspNetCoreInstrumentation()
-    .AddDataCoreAdapterInstrumentation()
-    .AddJaegerExporter()
-    .AddConsoleExporter());
+builder.Services
+    .AddOpenTelemetry()
+    .WithTracing(otel => otel
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
+        .AddAspNetCoreInstrumentation()
+        .AddDataCoreAdapterInstrumentation()
+        .AddJaegerExporter()
+        .AddConsoleExporter())
+    .StartWithHost();
 
 var app = builder.Build();
 

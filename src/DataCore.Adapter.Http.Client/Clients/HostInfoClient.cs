@@ -55,7 +55,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -81,7 +81,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             CancellationToken cancellationToken = default
         ) {
             var url = UrlPrefix + "/available-apis";
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 

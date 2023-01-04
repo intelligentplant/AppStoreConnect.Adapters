@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -97,14 +98,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 .AddAdapterHealthChecks();
 
             // Add OpenTelemetry tracing
-            services.AddOpenTelemetryTracing(builder => {
-                builder
+            services
+                .AddOpenTelemetry()
+                .WithTracing(builder => builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
-                    .AddJaegerExporter();
-                    //.AddConsoleExporter();
-            });
+                    .AddJaegerExporter())
+                .StartWithHost();
 
             services.AddOpenApiDocument(options => {
                 options.DocumentName = "v2.0";

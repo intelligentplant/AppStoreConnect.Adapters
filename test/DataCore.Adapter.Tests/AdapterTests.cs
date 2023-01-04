@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 _ = Task.Run(async () => {
-                    await Task.Delay(200, ct);
+                    await Task.Delay(500, ct);
                     await EmitTestEvent(TestContext, adapter, ct).ConfigureAwait(false);
                 });
 

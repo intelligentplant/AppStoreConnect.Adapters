@@ -80,7 +80,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
                 return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<CustomFunctionDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
@@ -129,7 +129,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/details";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
                 return (await httpResponse.Content.ReadFromJsonAsync<CustomFunctionDescriptorExtended>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
@@ -177,7 +177,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/invoke";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
                 return (await httpResponse.Content.ReadFromJsonAsync<CustomFunctionInvocationResponse>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
