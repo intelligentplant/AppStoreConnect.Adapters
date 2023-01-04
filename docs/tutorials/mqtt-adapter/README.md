@@ -2,7 +2,7 @@
 
 In this tutorial, we will create a simple MQTT adapter that performs the following actions:
 
-- Connects to the public [Mosquitto](https://mosquitto.org/) MQTT server at `test.mosquitto.org` at startup.
+- Connects to the public [Mosquitto](https://mosquitto.org/) MQTT broker at `test.mosquitto.org` at startup.
 - Subscribes to a configurable set of MQTT topics.
 - Maintains an in-memory list of tags (one per distinct topic).
 - Supports snapshot polling and subscription features.
