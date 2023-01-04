@@ -2,26 +2,28 @@
 
 In this tutorial, we will create a simple MQTT adapter that performs the following actions:
 
-- Subscribes to a configurable set of MQTT topics at startup.
+- Connects to the public [Mosquitto](https://mosquitto.org/) MQTT server at `test.mosquitto.org` at startup.
+- Subscribes to a configurable set of MQTT topics.
 - Maintains an in-memory list of tags (one per distinct topic).
 - Supports snapshot polling and subscription features.
 
-The full source code is available [here](/).
+The tutorial also explains how to connect App Store Connect to the adapter, and how to record values received from the MQTT 
+
+> The full source code for this tutorial is available [here](../../../examples/SimpleMqttExample/).
 
 
 # Pre-requisites
 
-- Visual Studio 2022
-- [App Store Connect adapter project templates](/src/DataCore.Adapter.Templates)
+- Visual Studio 2022 17.4 or later with the [App Store Connect adapter project templates](/src/DataCore.Adapter.Templates) installed
 - An [Industrial App Store](https://appstore.intelligentplant.com) user account
-- Intelligent Plant [App Store Connect](https://appstore.intelligentplant.com/Home/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5)
+- Intelligent Plant [App Store Connect](https://appstore.intelligentplant.com/Home/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5) installed on your machine and connected to the Industrial App Store
 
 
 # Getting Started
 
-In Visual Studio, create a new project named `MqttAdapter` using the `Industrial App Store Connect Adapter Host` template by following the instructions [here](/src/DataCore.Adapter.Templates). 
+In Visual Studio, create a new project named `MqttAdapter` using the `Industrial App Store Connect Adapter Host` template by following the instructions [here](/src/DataCore.Adapter.Templates).
 
-Accept the default values for all settings; we will change them in code later.
+You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support versions at time of writing). You can accept the default values for all other settings; they can be changed in code later if desired.
 
 
 # Configure App Store Connect
@@ -47,7 +49,7 @@ Click "Create" to create the data source. You will be taken to the data source's
 
 # Add Required Package References
 
-Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient) to the adapter project.
+Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient @ v4.1.4.563](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient/4.1.4.563) to the adapter project.
 
 
 # Update the Adapter Options Class
@@ -59,6 +61,8 @@ using System.ComponentModel.DataAnnotations;
 
 using DataCore.Adapter;
 
+#nullable disable warnings
+
 namespace MqttAdapter {
 
     public class MyAdapterOptions : AdapterOptions {
@@ -66,24 +70,27 @@ namespace MqttAdapter {
         [Display(Description = "The MQTT server hostname")]
         [Required(ErrorMessage = "You must specify a hostname")]
         [MaxLength(500, ErrorMessage = "Hostname cannot be longer than 500 characters")]
-        public string Hostname { get; set; } = "test.mosquitto.org";
+        public string Hostname { get; set; }
 
         [Display(Description = "The port number for the MQTT server")]
         [Range(1, 65535, ErrorMessage = "Port must be in the range 1 - 65535")]
-        public int Port { get; set; } = 1883;
+        public int Port { get; set; }
 
         [Display(Description = "A comma-delimited list of MQTT topics to subscribe to")]
-        public string Topics { get; set; } = default!;
+        [Required(ErrorMessage = "You must specify a list of MQTT topics to subscribe to")]
+        public string Topics { get; set; }
 
     }
 
 }
 ```
 
+As you can see, we are specifying the bare minimum options required to connect to an MQTT broker and subscribe to topics. If we were connecting to a broker that required authentication or TLS, we would need to add properties to the `MyAdapterOptions` class to accomodate this.
+
 
 # Update the Runtime Adapter Settings
 
-We will pre-configure the adapter to connect to `test.mosquitto.org` and subscribe to topics that notify us about connected clients. Replace the contents of `adaptersettings.json` with the following:
+We will pre-configure the adapter to connect to `test.mosquitto.org` on port 1833 (the standard non-TLS MQTT port) and subscribe to topics that notify us about connected clients. Replace the contents of `adaptersettings.json` with the following:
 
 ```json
 {
@@ -105,7 +112,7 @@ We will pre-configure the adapter to connect to `test.mosquitto.org` and subscri
 
 # Update the Adapter
 
-Delete `MyAdapter.ReadSnapshotTagValues.cs`; we will use a helper class to implement snapshot tag value polling instead.
+Delete `MyAdapter.ReadSnapshotTagValues.cs`; we will use a helper class to implement snapshot tag value polling instead. In Visual Studio, you may need to expand `MyAdapter.cs` in the Solution Explorer to find this file!
 
 Replace the contents of `MyAdapter.cs` with the following code:
 
@@ -187,10 +194,8 @@ namespace MqttAdapter {
 
 
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            using var ctSource = CreateCancellationTokenSource(cancellationToken);
-
-            await _tagManager.InitAsync(ctSource.Token).ConfigureAwait(false);
-            await InitMqttClientAsync(ctSource.Token);
+            await _tagManager.InitAsync(cancellationToken).ConfigureAwait(false);
+            await InitMqttClientAsync(cancellationToken);
         }
 
 
@@ -344,8 +349,8 @@ namespace MqttAdapter {
 
 The updated adapter class uses the following helper classes to implement all of the features it exposes (namely tag search, snapshot value polling and subscriptions, and notifications when new tags are created):
 
-- [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs)
-- [SnapshotTagValueManager](/src/DataCore.Adapter/RealTimeData/SnapshotTagValueManager.cs)
+- [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) ([more information](../../features/tag-search.md))
+- [SnapshotTagValueManager](/src/DataCore.Adapter/RealTimeData/SnapshotTagValueManager.cs) ([more information](../../features/tag-snapshot-polling-and-subscriptions.md))
 - [ConfigurationChanges](/src/DataCore.Adapter/Diagnostics/ConfigurationChanges.cs)
 
 [MQTTnet](https://github.com/dotnet/MQTTnet) is used to connect to the MQTT broker.
@@ -362,6 +367,8 @@ The `MyAdapter` class creates a static metric counter that is incremented every 
 
 
 # Update the Adapter Options Editor Form
+
+The `Pages/Settings.cshtml` file and its associated code-behind file contain the Razor markup and logic that is used to edit our adapter settings at runtime via the browser.
 
 Replace the contents of `Pages/Settings.cshtml` with the following code to allow editing of the MQTT-specific properties in the `MyAdapterOptions` class:
 
@@ -532,6 +539,6 @@ If you browse your Edge Historian tags you will see the new tag:
 This example is intended for demonstration purposes only. The adapter host does not implement a number of security features that would need to be added in a production application, including:
 
 - Preventing over-posting when configuring MQTT topics to subscribe to via the UI.
-- Validating MQTT topic names, including ensuring that topic names do not exceed 65535 bytes when encoded as UTF-8.
+- Validating MQTT topic names, including ensuring that topic names do not exceed the MQTT standard's limit of 65535 bytes when encoded as UTF-8.
 
 Additionally, the adapter host would need to be installed as a service or an IIS website on a production machine. Microsoft documentation about ASP.NET Core deployment can be found [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy).
