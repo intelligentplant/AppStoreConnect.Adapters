@@ -1,0 +1,14 @@
+{
+  "AppStoreConnect": {
+    "Adapter": {
+      "Settings": {
+        "Hostname": "test.mosquitto.org",
+        "Port": 1883,
+        "Topics": "$SYS/broker/clients/connected,$SYS/broker/messages/sent,$SYS/broker/messages/received",
+        "Name": "Mosquitto Client",
+        "Description": "Connects to the MQTT broker at test.mosquitto.org",
+        "IsEnabled": true
+      }
+    }
+  }
+}
