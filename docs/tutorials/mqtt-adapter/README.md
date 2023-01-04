@@ -347,6 +347,8 @@ namespace MqttAdapter {
 
 ## Implementation Notes
 
+### Helper Classes
+
 The updated adapter class uses the following helper classes to implement all of the features it exposes (namely tag search, snapshot value polling and subscriptions, and notifications when new tags are created):
 
 - [TagManager](/src/DataCore.Adapter/Tags/TagManager.cs) ([more information](../../features/tag-search.md))
@@ -355,13 +357,19 @@ The updated adapter class uses the following helper classes to implement all of 
 
 [MQTTnet](https://github.com/dotnet/MQTTnet) is used to connect to the MQTT broker.
 
+### MQTT Message Processing
+
 The `InitMqttClientAsync` method connects to the MQTT broker and subscribes to the topics specified in the adapter's runtime options. This method is called when the adapter's `StartAsync` method is called, and also whenever the adapter's options are modified at runtime.
 
 The `OnMessageReceivedAsync` method processes messages received from the MQTT broker. The message payload is initially converted to a string. If that string can be parsed to a valid `double` value, the tag value emitted for the message will be numeric; otherwise, the string value of the message is emitted.
 
-When an MQTT message is processed, a tag definition will be created if one does not already exist for the message's topic. Tag definitions are not persisted between restarts of the adapter host application.
+When an MQTT message is processed, a tag definition will be created if one does not already exist for the message's topic. Tag definitions are **not** persisted between restarts of the adapter host application, since the tags will be automatically recreated at startup when messages are received from the MQTT broker. If we really wanted to persist the tag definitions (and the last-received values for each tag) we could do so by passing the `IKeyValueStore` service to the adapter's constructor and then passing the service into the constructors for the `TagManager` and `SnapshotTagValueManager` helper classes.
 
-The adapter constructor accepts an `IOptionsMonitor<MyAdapterOptions>` parameter. This allows the adapter's settings in `adaptersettings.json` to be modified at runtime and the adapter will automatically reconfigure itself to use the updated settings. 
+### Monitoring Changes to Adapter Options
+
+The adapter constructor accepts an `IOptionsMonitor<MyAdapterOptions>` parameter. Since `IOptionsMonitor<T>` supports change notifications, this allows the adapter's settings in `adaptersettings.json` to be modified at runtime and the adapter will automatically reconfigure itself to use the updated settings. Runtime changes are handled by overriding the `OnOptionsChange` method from the `AdapterBase<TAdapterOptions>` base class.
+
+### Telemetry
 
 The `MyAdapter` class creates a static metric counter that is incremented every time a message is received from the MQTT broker. The counter can be observed via the [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-counters) tool (by observing the `IntelligentPlant.AppStoreConnect.Adapter:mqtt.messages_received` counter) or via the adapter host's Prometheus scraping endpoint at `/metrics`.
 
