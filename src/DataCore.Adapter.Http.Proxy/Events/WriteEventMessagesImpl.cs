@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Http.Proxy.Events {
                     Properties = request.Properties
                 };
 
-                await foreach (var item in client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
+                await foreach (var item in client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
                     if (item == null) {
                         continue;
                     }
