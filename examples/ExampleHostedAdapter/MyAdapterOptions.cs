@@ -2,6 +2,8 @@
 
 using DataCore.Adapter;
 
+#nullable disable warnings
+
 namespace ExampleHostedAdapter {
 
     // This class defines the runtime options used to configure your adapter.

@@ -1,0 +1,122 @@
+﻿@page
+@model MqttAdapter.Pages.SettingsModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+  ViewData["Title"] = "Adapter Settings";
+}
+
+<form id="settings-form" asp-page="Settings" method="post" class="g-3">
+  <div class="card">
+    <div class="card-header">
+      <i class="fa-solid fa-puzzle-piece fa-fw"></i>
+      Adapter Settings
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="card-body text-danger"></div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Adapter.TypeDescriptor.HelpUrl)) {
+      <div class="card-body pb-0">
+        <p class="small text-muted">
+          Click
+          <a href="@Model.Adapter.TypeDescriptor.HelpUrl" target="_blank" title="View help documentation for this adapter type">here</a>
+          to view help documentation for this adapter type.
+        </p>
+      </div>
+    }
+
+    <div class="card-body pb-0">
+      <div class="w-100">
+        <label asp-for="Options!.Name" class="form-label"></label>
+        <input asp-for="Options!.Name" asp-placeholder-for="Options!.Name" class="form-control" />
+        <span asp-validation-for="Options!.Name" class="small text-danger"></span>
+        <p asp-description-for="Options!.Name" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <div class="card-body pt-0 pb-0">
+      <div class="w-100">
+        <label asp-for="Options!.Description" class="form-label"></label>
+        <textarea asp-for="Options!.Description" asp-placeholder-for="Options!.Description" class="form-control"></textarea>
+        <span asp-validation-for="Options!.Description" class="small text-danger"></span>
+        <p asp-description-for="Options!.Description" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <div class="card-body pt-0 pb-0">
+      <div class="w-100">
+        <div class="form-check">
+          <input asp-for="Options!.IsEnabled" class="form-check-input" />
+          <label asp-for="Options!.IsEnabled" class="form-check-label"></label>
+        </div>
+        <p asp-description-for="Options!.IsEnabled" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <div class="card-body pt-0 pb-0">
+      <div class="w-100">
+        <label asp-for="Options!.Hostname" class="form-label"></label>
+        <input asp-for="Options!.Hostname" asp-placeholder-for="Options!.Hostname" class="form-control" />
+        <span asp-validation-for="Options!.Hostname" class="small text-danger"></span>
+        <p asp-description-for="Options!.Hostname" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <div class="card-body pt-0 pb-0">
+      <div class="w-100">
+        <label asp-for="Options!.Port" class="form-label"></label>
+        <input asp-for="Options!.Port" asp-placeholder-for="Options!.Port" class="form-control" />
+        <span asp-validation-for="Options!.Port" class="small text-danger"></span>
+        <p asp-description-for="Options!.Port" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <div class="card-body pt-0 pb-0">
+      <div class="w-100">
+        <label asp-for="Options!.Topics" class="form-label"></label>
+        <input asp-for="Options!.Topics" asp-placeholder-for="Options!.Topics" class="form-control" />
+        <span asp-validation-for="Options!.Topics" class="small text-danger"></span>
+        <p asp-description-for="Options!.Topics" class="small text-muted"></p>
+      </div>
+    </div>
+
+    <!-- Add additional controls for other adapter options fields as required. -->
+
+    <div class="card-footer">
+      <button type="submit" class="btn btn-sm btn-outline-success" title="Save adapter settings">
+        <i class="fa-solid fa-check fa-fw"></i>
+        Save Changes
+      </button>
+    </div>
+  </div>
+
+</form>
+
+@section Scripts {
+  <partial name="_ValidationScriptsPartial" />
+  <script defer>
+    $(() => {
+        const form = $('#settings-form');
+
+        const observer = new MutationObserver(mutations => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && (mutation.target.nodeName === 'INPUT' || mutation.target.nodeName === 'TEXTAREA' || mutation.target.nodeName === 'SELECT')) {
+                    const target = $(mutation.target);
+                    if (target.hasClass('input-validation-error')) {
+                        target.removeClass('is-valid').addClass('is-invalid');
+                    }
+                    else {
+                        target.removeClass('is-invalid').addClass('is-valid');
+                    }
+                }
+            }
+        });
+
+        observer.observe(form[0], {
+            subtree: true,
+            attributeFilter: [
+                'class'
+            ]
+        });
+    });
+  </script>
+}
