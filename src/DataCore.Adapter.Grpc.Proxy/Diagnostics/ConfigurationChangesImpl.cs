@@ -27,8 +27,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<ConfigurationChangesService.ConfigurationChangesServiceClient>();
 
             var grpcRequest = new CreateConfigurationChangePushChannelRequest() {
@@ -45,13 +43,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
             using (var grpcChannel = client.CreateConfigurationChangesPushChannel(
                grpcRequest,
-               GetCallOptions(context, ctSource.Token)
+               GetCallOptions(context, cancellationToken)
             )) {
                 // Read event messages.
-                while (await grpcChannel.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                while (await grpcChannel.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcChannel.ResponseStream.Current == null) {
                         continue;
                     }

@@ -17,30 +17,26 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
-
             var client = CreateClient<EventsService.EventsServiceClient>();
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var callOptions = GetCallOptions(context, ctSource.Token);
+            var callOptions = GetCallOptions(context, cancellationToken);
 
-                await foreach (var item in channel.ConfigureAwait(false)) {
-                    var grpcRequest = new WriteEventMessagesRequest() { 
-                        AdapterId = AdapterId
-                    };
+            await foreach (var item in channel.ConfigureAwait(false)) {
+                var grpcRequest = new WriteEventMessagesRequest() {
+                    AdapterId = AdapterId
+                };
 
-                    if (request.Properties != null) {
-                        foreach (var prop in request.Properties) {
-                            grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
-                        }
+                if (request.Properties != null) {
+                    foreach (var prop in request.Properties) {
+                        grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);
                     }
+                }
 
-                    grpcRequest.Messages.Add(item.ToGrpcWriteEventMessageItem());
+                grpcRequest.Messages.Add(item.ToGrpcWriteEventMessageItem());
 
-                    var grpcResponse = await client.WriteFixedEventMessagesAsync(grpcRequest, callOptions).ConfigureAwait(false);
-                    foreach (var result in grpcResponse.Results) {
-                        yield return result.ToAdapterWriteEventMessageResult();
-                    }
+                var grpcResponse = await client.WriteFixedEventMessagesAsync(grpcRequest, callOptions).ConfigureAwait(false);
+                foreach (var result in grpcResponse.Results) {
+                    yield return result.ToAdapterWriteEventMessageResult();
                 }
             }
         }

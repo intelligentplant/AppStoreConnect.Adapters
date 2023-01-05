@@ -28,8 +28,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new ReadAnnotationsRequest() {
                 AdapterId = AdapterId,
@@ -44,9 +42,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.ReadAnnotations(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }
@@ -58,8 +55,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended?> ReadAnnotation(IAdapterCallContext context, Adapter.RealTimeData.ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new ReadAnnotationRequest() {
                 AdapterId = AdapterId,
@@ -67,8 +62,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AnnotationId = request.AnnotationId
             };
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.ReadAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+            using (var grpcResponse = client.ReadAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken))) {
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.ToAdapterTagValueAnnotation();

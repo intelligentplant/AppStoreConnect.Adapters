@@ -37,15 +37,12 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
-
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
             using (var response = client.GetDescriptorAsync(new GetExtensionDescriptorRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
                 FeatureUri = featureUri?.ToString() ?? string.Empty
-            }, Proxy.GetCallOptions(context, ctSource.Token))) {
+            }, Proxy.GetCallOptions(context, cancellationToken))) {
                 var result = await response.ResponseAsync.ConfigureAwait(false);
                 return result.ToAdapterFeatureDescriptor();
             }
@@ -58,15 +55,12 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
-
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
             using (var response = client.GetOperationsAsync(new GetExtensionOperationsRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
                 FeatureUri = featureUri?.ToString() ?? string.Empty
-            }, Proxy.GetCallOptions(context, ctSource.Token))) {
+            }, Proxy.GetCallOptions(context, cancellationToken))) {
                 var result = await response.ResponseAsync.ConfigureAwait(false);
                 return result.Operations.Select(x => x.ToAdapterExtensionOperatorDescriptor()).ToArray();
             }
@@ -75,8 +69,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
 
         /// <inheritdoc/>
         protected override async Task<Adapter.Extensions.InvocationResponse> InvokeInternal(IAdapterCallContext context, Adapter.Extensions.InvocationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context);
-
             var client = Proxy.CreateClient<ExtensionFeaturesService.ExtensionFeaturesServiceClient>();
             var req = new InvokeExtensionRequest() {
                 AdapterId = Proxy.RemoteDescriptor.Id,
@@ -87,8 +79,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Extensions {
                 req.Arguments.Add(item.ToGrpcVariant());
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, ctSource.Token))) {
+            using (var response = client.InvokeExtensionAsync(req, Proxy.GetCallOptions(context, cancellationToken))) {
                 var result = await response.ResponseAsync.ConfigureAwait(false);
                 return new InvocationResponse() {
                     Results = result.Results.Select(x => x.ToAdapterVariant()).ToArray()

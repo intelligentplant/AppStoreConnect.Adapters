@@ -19,12 +19,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
-
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcStream = client.WriteHistoricalTagValues(GetCallOptions(context, ctSource.Token))) {
+            using (var grpcStream = client.WriteHistoricalTagValues(GetCallOptions(context, cancellationToken))) {
                 // Create the subscription.
                 var initMessage = new WriteTagValueInitMessage() {
                     AdapterId = Proxy.RemoteDescriptor.Id
@@ -52,9 +49,9 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                     finally {
                         await grpcStream.RequestStream.CompleteAsync().ConfigureAwait(false);
                     }
-                }, ctSource.Token);
+                }, cancellationToken);
 
-                while (await grpcStream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                while (await grpcStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     yield return grpcStream.ResponseStream.Current.ToAdapterWriteTagValueResult();
                 }
             }
