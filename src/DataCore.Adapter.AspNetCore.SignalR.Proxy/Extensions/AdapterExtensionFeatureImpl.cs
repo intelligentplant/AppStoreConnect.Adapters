@@ -35,12 +35,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri!, ctSource.Token).ConfigureAwait(false);
-            }
+            return await client.Extensions.GetDescriptorAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -50,23 +46,15 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri!, ctSource.Token).ConfigureAwait(false);
-            }
+            return await client.Extensions.GetOperationsAsync(Proxy.RemoteDescriptor.Id, featureUri!, cancellationToken).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
         protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, request, ctSource.Token).ConfigureAwait(false);
-            }
+            return await client.Extensions.InvokeExtensionAsync(Proxy.RemoteDescriptor.Id, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -77,13 +65,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.Extensions.InvokeStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -96,13 +80,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, channel, ctSource.Token)) {
-                    yield return item;
-                }
+            await foreach (var item in client.Extensions.InvokeDuplexStreamingExtensionAsync(Proxy.RemoteDescriptor.Id, request, channel, cancellationToken)) {
+                yield return item;
             }
         }
 

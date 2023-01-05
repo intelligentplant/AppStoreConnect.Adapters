@@ -29,18 +29,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagSearch.FindTagsAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagSearch.FindTagsAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -52,18 +47,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagSearch.GetTagsAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagSearch.GetTagsAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -75,18 +65,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagSearch.GetTagPropertiesAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagSearch.GetTagPropertiesAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

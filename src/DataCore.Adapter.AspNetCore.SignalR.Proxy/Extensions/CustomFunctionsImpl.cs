@@ -26,16 +26,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             GetCustomFunctionsRequest request, 
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.GetFunctionsAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.GetFunctionsAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -45,16 +37,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             GetCustomFunctionRequest request, 
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.GetFunctionAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.GetFunctionAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -64,16 +48,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.Extensions {
             CustomFunctionInvocationRequest request, 
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.InvokeFunctionAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.InvokeFunctionAsync(AdapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
     }
