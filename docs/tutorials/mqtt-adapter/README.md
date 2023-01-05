@@ -7,23 +7,33 @@ In this tutorial, we will create a simple MQTT adapter that performs the followi
 - Maintains an in-memory list of tags (one per distinct topic).
 - Supports snapshot polling and subscription features.
 
-The tutorial also explains how to connect App Store Connect to the adapter, and how to record values received from the MQTT 
+The tutorial also explains how to connect App Store Connect to the adapter, and how to record values received by the MQTT broker to App Store Connect's Edge Historian.
 
 > The full source code for this tutorial is available [here](../../../examples/SimpleMqttExample/).
 
 
 # Pre-requisites
 
-- Visual Studio 2022 17.4 or later with the [App Store Connect adapter project templates](/src/DataCore.Adapter.Templates) installed
+- Visual Studio 2022 17.4 or later with the [App Store Connect adapter project templates](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Templates) installed
 - An [Industrial App Store](https://appstore.intelligentplant.com) user account
 - Intelligent Plant [App Store Connect](https://appstore.intelligentplant.com/Home/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5) installed on your machine and connected to the Industrial App Store
 
 
 # Getting Started
 
-In Visual Studio, create a new project named `MqttAdapter` using the `Industrial App Store Connect Adapter Host` template by following the instructions [here](/src/DataCore.Adapter.Templates).
+In Visual Studio, create a new project and select `Industrial App Store` from the project template types:
 
-You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support version respectively at time of writing). You can accept the default values for all other settings; they can be changed in code later if desired.
+![Visual Studio template selection window](../../../src/DataCore.Adapter.Templates/img/template_selection.png)
+
+Name the project `MqttAdapter` and choose a project location.
+
+Click `Next` to configure the project settings: 
+
+![Visual Studio template parameters window](../../../src/DataCore.Adapter.Templates/img/template_parameters.png)
+
+You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support version respectively at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
+
+Click `Create` to create the project.
 
 
 # Configure App Store Connect
@@ -85,7 +95,7 @@ namespace MqttAdapter {
 }
 ```
 
-As you can see, we are specifying the bare minimum options required to connect to an MQTT broker and subscribe to topics. If we were connecting to a broker that required authentication or TLS, we would need to add properties to the `MyAdapterOptions` class to accomodate this.
+As you can see, we are specifying the bare minimum options required to connect to an MQTT broker and subscribe to topics. If we were connecting to a broker that required authentication or TLS, we would need to add properties to the `MyAdapterOptions` class to accommodate this.
 
 
 # Update the Runtime Adapter Settings
@@ -548,5 +558,6 @@ This example is intended for demonstration purposes only. The adapter host does 
 
 - Preventing over-posting when configuring MQTT topics to subscribe to via the UI.
 - Validating MQTT topic names, including ensuring that topic names do not exceed the MQTT standard's limit of 65535 bytes when encoded as UTF-8.
+- Use of a non-development TLS certificate for HTTPS connections.
 
 Additionally, the adapter host would need to be installed as a service or an IIS website on a production machine. Microsoft documentation about ASP.NET Core deployment can be found [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy).
