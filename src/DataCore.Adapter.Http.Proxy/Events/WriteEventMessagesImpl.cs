@@ -26,48 +26,44 @@ namespace DataCore.Adapter.Http.Proxy.Events {
 
         /// <inheritdoc />
         public async IAsyncEnumerable<WriteEventMessageResult> WriteEventMessages(
-            IAdapterCallContext context, 
+            IAdapterCallContext context,
             WriteEventMessagesRequest request,
-            IAsyncEnumerable<WriteEventMessageItem> channel, 
+            IAsyncEnumerable<WriteEventMessageItem> channel,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                if (Proxy.CanUseSignalR) {
-                    var client = GetSignalRClient(context);
-                    await client.StreamStartedAsync().ConfigureAwait(false);
-                    try {
-                        await foreach (var item in client.Client.Events.WriteEventMessagesAsync(AdapterId, request, channel, ctSource.Token).ConfigureAwait(false)) {
-                            if (item == null) {
-                                continue;
-                            }
-                            yield return item;
-                        }
-                    }
-                    finally {
-                        await client.StreamCompletedAsync().ConfigureAwait(false);
-                    }
-                }
-                else {
-                    var client = GetClient();
-
-                    var items = (await channel.ToEnumerable(1000, ctSource.Token).ConfigureAwait(false)).ToArray();
-
-                    var req = new WriteEventMessagesRequestExtended() {
-                        Events = items,
-                        Properties = request.Properties
-                    };
-
-                    await foreach (var item in client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
+            if (Proxy.CanUseSignalR) {
+                var client = GetSignalRClient(context);
+                await client.StreamStartedAsync().ConfigureAwait(false);
+                try {
+                    await foreach (var item in client.Client.Events.WriteEventMessagesAsync(AdapterId, request, channel, cancellationToken).ConfigureAwait(false)) {
                         if (item == null) {
                             continue;
                         }
                         yield return item;
                     }
-
                 }
+                finally {
+                    await client.StreamCompletedAsync().ConfigureAwait(false);
+                }
+            }
+            else {
+                var client = GetClient();
+
+                var items = (await channel.ToEnumerable(1000, cancellationToken).ConfigureAwait(false)).ToArray();
+
+                var req = new WriteEventMessagesRequestExtended() {
+                    Events = items,
+                    Properties = request.Properties
+                };
+
+                await foreach (var item in client.Events.WriteEventMessagesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
+
             }
         }
     }

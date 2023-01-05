@@ -26,17 +26,13 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             GetCustomFunctionsRequest request,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.GetFunctionsAsync(
-                    AdapterId,
-                    request,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.GetFunctionsAsync(
+                AdapterId,
+                request,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
 
@@ -46,17 +42,13 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             GetCustomFunctionRequest request,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.GetFunctionAsync(
-                    AdapterId,
-                    request,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.GetFunctionAsync(
+                AdapterId,
+                request,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
 
@@ -66,17 +58,13 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             CustomFunctionInvocationRequest request,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.CustomFunctions.InvokeFunctionAsync(
-                    AdapterId,
-                    request,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.CustomFunctions.InvokeFunctionAsync(
+                AdapterId,
+                request,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
     }
