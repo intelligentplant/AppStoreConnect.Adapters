@@ -95,7 +95,7 @@ namespace MqttAdapter {
 }
 ```
 
-As you can see, we are specifying the bare minimum options required to connect to an MQTT broker and subscribe to topics. If we were connecting to a broker that required authentication or TLS, we would need to add properties to the `MyAdapterOptions` class to accomodate this.
+As you can see, we are specifying the bare minimum options required to connect to an MQTT broker and subscribe to topics. If we were connecting to a broker that required authentication or TLS, we would need to add properties to the `MyAdapterOptions` class to accommodate this.
 
 
 # Update the Runtime Adapter Settings
