@@ -29,24 +29,19 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetSignalRClient(context);
+            await client.StreamStartedAsync().ConfigureAwait(false);
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await client.StreamStartedAsync().ConfigureAwait(false);
-
-                try {
-                    await foreach (var item in client.Client.TagValues.CreateSnapshotTagValueChannelAsync(AdapterId, request, channel, ctSource.Token).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        yield return item;
+            try {
+                await foreach (var item in client.Client.TagValues.CreateSnapshotTagValueChannelAsync(AdapterId, request, channel, cancellationToken).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
                     }
+                    yield return item;
                 }
-                finally {
-                    await client.StreamCompletedAsync().ConfigureAwait(false);
-                }
+            }
+            finally {
+                await client.StreamCompletedAsync().ConfigureAwait(false);
             }
         }
     }

@@ -30,8 +30,6 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<AssetModelBrowserService.AssetModelBrowserServiceClient>();
             var grpcRequest = new FindAssetModelNodesRequest() {
                 AdapterId = AdapterId,
@@ -46,15 +44,13 @@ namespace DataCore.Adapter.Grpc.Proxy.AssetModel.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, ctSource.Token));
+            var grpcResponse = client.FindAssetModelNodes(grpcRequest, GetCallOptions(context, cancellationToken));
 
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
-                    if (grpcResponse.ResponseStream.Current == null) {
-                        continue;
-                    }
-                    yield return grpcResponse.ResponseStream.Current.ToAdapterAssetModelNode();
+            while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                if (grpcResponse.ResponseStream.Current == null) {
+                    continue;
                 }
+                yield return grpcResponse.ResponseStream.Current.ToAdapterAssetModelNode();
             }
         }
 

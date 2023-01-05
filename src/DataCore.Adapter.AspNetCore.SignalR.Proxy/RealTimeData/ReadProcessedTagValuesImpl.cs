@@ -28,18 +28,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagValues.GetSupportedDataFunctionsAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValues.GetSupportedDataFunctionsAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -50,18 +45,13 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagValues.ReadProcessedTagValuesAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValues.ReadProcessedTagValuesAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
         

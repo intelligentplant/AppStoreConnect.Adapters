@@ -136,15 +136,12 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
-
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             
-            using var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken);
-            using var handler = CreateInnerHandler(context, client, request, ctSource.Token);
+            using var handler = CreateInnerHandler(context, client, request, cancellationToken);
 
             try {
-                await foreach (var item in handler.Subscribe(context, request, channel, ctSource.Token).ConfigureAwait(false)) {
+                await foreach (var item in handler.Subscribe(context, request, channel, cancellationToken).ConfigureAwait(false)) {
                     yield return item;
                 }
             }

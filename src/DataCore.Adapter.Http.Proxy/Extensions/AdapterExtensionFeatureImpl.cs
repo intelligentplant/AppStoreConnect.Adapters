@@ -32,18 +32,13 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
-
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) { 
-                return await client.Extensions.GetDescriptorAsync(
-                    Proxy.RemoteDescriptor.Id,
-                    featureUri!,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.Extensions.GetDescriptorAsync(
+                Proxy.RemoteDescriptor.Id,
+                featureUri!,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
 
@@ -53,35 +48,25 @@ namespace DataCore.Adapter.Http.Proxy.Extensions {
             Uri? featureUri,
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context);
-
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.Extensions.GetOperationsAsync(
-                    Proxy.RemoteDescriptor.Id,
-                    featureUri!,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.Extensions.GetOperationsAsync(
+                Proxy.RemoteDescriptor.Id,
+                featureUri!,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
         protected override async Task<InvocationResponse> InvokeInternal(IAdapterCallContext context, InvocationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = Proxy.GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.Extensions.InvokeExtensionAsync(
-                    Proxy.RemoteDescriptor.Id,
-                    request,
-                    context?.ToRequestMetadata(),
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.Extensions.InvokeExtensionAsync(
+                Proxy.RemoteDescriptor.Id,
+                request,
+                context?.ToRequestMetadata(),
+                cancellationToken
+            ).ConfigureAwait(false);
         }
 
     }

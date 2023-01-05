@@ -28,8 +28,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadTagValuesAtTimesRequest() {
                 AdapterId = AdapterId
@@ -42,9 +40,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.ReadTagValuesAtTimes(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.ReadTagValuesAtTimes(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }

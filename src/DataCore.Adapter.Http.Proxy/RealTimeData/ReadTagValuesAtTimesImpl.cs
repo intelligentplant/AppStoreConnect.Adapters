@@ -30,14 +30,9 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagValues.ReadTagValuesAtTimesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValues.ReadTagValuesAtTimesAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

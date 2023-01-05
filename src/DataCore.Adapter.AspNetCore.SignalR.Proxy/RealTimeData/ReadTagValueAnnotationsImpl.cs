@@ -25,34 +25,24 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.TagValueAnnotations.ReadAnnotationsAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValueAnnotations.ReadAnnotationsAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended?> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.TagValueAnnotations.ReadAnnotationAsync(
-                    AdapterId,
-                    request,
-                    ctSource.Token
-                ).ConfigureAwait(false);
-            }
+            return await client.TagValueAnnotations.ReadAnnotationAsync(
+                AdapterId,
+                request,
+                cancellationToken
+            ).ConfigureAwait(false);
         }
     }
 }

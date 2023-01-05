@@ -23,8 +23,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
-
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
 
             var createSubscriptionMessage = new CreateSnapshotPushChannelMessage() {
@@ -42,8 +40,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcStream = client.CreateSnapshotPushChannel(GetCallOptions(context, ctSource.Token))) {
+            using (var grpcStream = client.CreateSnapshotPushChannel(GetCallOptions(context, cancellationToken))) {
 
                 // Create the subscription.
                 await grpcStream.RequestStream.WriteAsync(new CreateSnapshotPushChannelRequest() {
@@ -71,10 +68,10 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                             Update = msg
                         }).ConfigureAwait(false);
                     }
-                }, ctSource.Token);
+                }, cancellationToken);
 
                 // Stream the results.
-                while (await grpcStream.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+                while (await grpcStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcStream.ResponseStream.Current == null) {
                         continue;
                     }

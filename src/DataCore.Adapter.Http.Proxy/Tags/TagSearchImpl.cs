@@ -28,13 +28,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                await foreach (var item in client.TagSearch.FindTagsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.FindTagsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -46,13 +42,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                await foreach (var item in client.TagSearch.GetTagsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.GetTagsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -65,12 +57,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                await foreach (var item in client.TagSearch.GetTagPropertiesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.GetTagPropertiesAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

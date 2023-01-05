@@ -30,13 +30,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.AssetModel.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.AssetModel.FindAssetModelNodesAsync(AdapterId, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
