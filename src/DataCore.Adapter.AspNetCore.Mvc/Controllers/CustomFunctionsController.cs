@@ -17,6 +17,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [ApiController]
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/custom-functions")]
+    [UseAdapterRequestValidation(false)]
     public class CustomFunctionsController : ControllerBase {
 
         /// <summary>
@@ -106,6 +107,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IEnumerable<CustomFunctionDescriptor>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetFunctionsAsync(string adapterId, string? id = null, string? name = null, string? description = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await GetFunctionsAsync(adapterId, new GetCustomFunctionsRequest() { 
                 Id = id,
@@ -175,6 +177,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/details")]
         [ProducesResponseType(typeof(CustomFunctionDescriptorExtended), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetFunctionAsync(string adapterId, [FromQuery] Uri id, CancellationToken cancellationToken) {
             return await GetFunctionAsync(adapterId, new GetCustomFunctionRequest() { 
                 Id = id

@@ -70,7 +70,10 @@ namespace DataCore.Adapter {
 
             AdapterFeatureWrapper? wrapper = null;
 
-            if (featureType.Equals(typeof(AssetModel.IAssetModelBrowse))) {
+            if (feature is AdapterFeatureWrapper afw) {
+                wrapper = afw;
+            }
+            else if (featureType.Equals(typeof(AssetModel.IAssetModelBrowse))) {
                 wrapper = new AssetModel.AssetModelBrowseWrapper(this, (AssetModel.IAssetModelBrowse) feature);
             }
             else if (featureType.Equals(typeof(AssetModel.IAssetModelSearch))) {

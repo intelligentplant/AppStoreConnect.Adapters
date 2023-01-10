@@ -22,6 +22,10 @@ namespace DataCore.Adapter.Tests {
         public void ShouldResolveStandardFeatureDescriptorFromUri() {
             foreach (var featureType in TypeExtensions.GetStandardAdapterFeatureTypes()) {
                 var uri = featureType.GetAdapterFeatureUri();
+                if (uri.ToString().StartsWith("unit-tests:")) {
+                    // Feature was added by another unit test.
+                    continue;
+                }
                 Assert.IsTrue(WellKnownFeatures.TryGetFeatureDescriptor(uri, out var descriptor), $"Should have resolved descriptor for {uri}");
                 Assert.IsNotNull(descriptor, $"Decriptor for {uri} should not be null.");
                 Assert.AreEqual(uri, descriptor.Uri);

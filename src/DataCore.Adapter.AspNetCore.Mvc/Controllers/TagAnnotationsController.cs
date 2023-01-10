@@ -17,7 +17,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/tag-annotations")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/tag-annotations")] 
+    [Route("api/data-core/v1.0/tag-annotations")]
+    [UseAdapterRequestValidation(false)]
     public class TagAnnotationsController: ControllerBase {
 
         /// <summary>
@@ -100,6 +101,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(TagValueAnnotationExtended), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -153,6 +155,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/{tagId}/create")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -211,6 +214,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPut]
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -267,6 +271,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpDelete]
         [Route("{adapterId}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> DeleteAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteTagValueAnnotations>(callContext, adapterId, cancellationToken).ConfigureAwait(false);

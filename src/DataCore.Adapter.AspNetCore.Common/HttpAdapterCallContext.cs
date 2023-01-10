@@ -51,7 +51,7 @@ namespace DataCore.Adapter.AspNetCore {
         ///   The <see cref="HttpContext"/> to use.
         /// </param>
         /// <exception cref="ArgumentNullException">
-        /// 
+        ///   <paramref name="httpContext"/> is <see langword="null"/>
         /// </exception>
         public HttpAdapterCallContext(HttpContext httpContext) {
             _httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));

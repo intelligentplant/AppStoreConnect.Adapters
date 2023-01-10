@@ -17,7 +17,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/tags")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/tags")] 
+    [Route("api/data-core/v1.0/tags")]
+    [UseAdapterRequestValidation(false)]
     public class TagSearchController : ControllerBase {
 
         /// <summary>
@@ -100,6 +101,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/properties")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTagProperties(string adapterId, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await GetTagProperties(adapterId, new GetTagPropertiesRequest() {
                 PageSize = pageSize,
@@ -182,6 +184,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [Route("{adapterId}/find")]
         [Route("{adapterId}")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
@@ -254,6 +257,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/get-by-id")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTags(string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
             return await GetTags(adapterId, new GetTagsRequest() {
                 Tags = tag
@@ -400,7 +404,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
 
         /// <summary>
-        /// Updates an existing tag.
+        /// Deletes an existing tag.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID.

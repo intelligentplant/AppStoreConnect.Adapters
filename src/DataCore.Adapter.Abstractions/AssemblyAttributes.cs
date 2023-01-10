@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-// Allow DataCore.Adapter to call internal extension methods.
+// Allow selected assemblies to access internals
 [assembly: InternalsVisibleTo("DataCore.Adapter")]
+[assembly: InternalsVisibleTo("DataCore.Adapter.Tests")]

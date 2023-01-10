@@ -212,7 +212,12 @@ namespace DataCore.Adapter {
             OnOperationStarted(operationName);
 
             try {
-                Adapter.ValidateInvocation(context, request!);
+                if (context.ShouldValidateRequests()) {
+                    Adapter.ValidateInvocation(context, request!);
+                }
+                else {
+                    Adapter.ValidateInvocation(context);
+                }
             }
             catch (Exception e) {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
@@ -324,7 +329,12 @@ namespace DataCore.Adapter {
             OnOperationStarted(operationName);
 
             try {
-                Adapter.ValidateInvocation(context, request!);
+                if (context.ShouldValidateRequests()) {
+                    Adapter.ValidateInvocation(context, request!);
+                }
+                else {
+                    Adapter.ValidateInvocation(context);
+                }
             }
             catch (Exception e) {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
@@ -482,7 +492,12 @@ namespace DataCore.Adapter {
             OnOperationStarted(operationName);
 
             try {
-                Adapter.ValidateInvocation(context, request!);
+                if (context.ShouldValidateRequests()) {
+                    Adapter.ValidateInvocation(context, request!, inStream);
+                }
+                else {
+                    Adapter.ValidateInvocation(context, inStream);
+                }
             }
             catch (Exception e) {
                 OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
