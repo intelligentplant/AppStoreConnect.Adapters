@@ -21,7 +21,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/tag-values")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/tag-values")] 
+    [Route("api/data-core/v1.0/tag-values")]
+    [UseAdapterRequestValidation(false)]
     public class TagValuesController: ControllerBase {
 
         /// <summary>
@@ -85,6 +86,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/snapshot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadSnapshotValues(string adapterId, [FromQuery] string[] tag = null!, CancellationToken cancellationToken = default) {
             return ReadSnapshotValues(adapterId, new ReadSnapshotTagValuesRequest() { 
                 Tags = tag ?? Array.Empty<string>()
@@ -164,6 +166,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/raw")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadRawValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -269,6 +272,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/plot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadPlotValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -365,6 +369,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/values-at-times")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadValuesAtTimes(
             string adapterId, 
             [FromQuery] string[] tag = null!,
@@ -458,6 +463,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/processed")]
         [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadProcessedValues(
             string adapterId,
             [FromQuery] string[] tag = null!,
@@ -566,6 +572,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
         [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
         }

@@ -50,20 +50,11 @@ namespace DataCore.Adapter.AspNetCore {
         /// <param name="httpContext">
         ///   The <see cref="HttpContext"/> to use.
         /// </param>
-        /// <param name="validateRequests">
-        ///   Specifies if adapters need to validate request objects when adapter features are 
-        ///   invoked using this call context. Specify <see langword="false"/> if the request 
-        ///   objects have already been validated by the route handler for the 
-        ///   <paramref name="httpContext"/>.
-        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="httpContext"/> is <see langword="null"/>
         /// </exception>
-        public HttpAdapterCallContext(HttpContext httpContext, bool validateRequests = false) {
+        public HttpAdapterCallContext(HttpContext httpContext) {
             _httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
-            if (!validateRequests) {
-                this.UseRequestValidation(false);
-            }
         }
 
     }

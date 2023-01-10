@@ -16,7 +16,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/asset-model")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/asset-model")] 
+    [Route("api/data-core/v1.0/asset-model")]
+    [UseAdapterRequestValidation(false)]
     public class AssetModelBrowserController : ControllerBase {
 
         /// <summary>
@@ -61,6 +62,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/browse")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> BrowseNodes(string adapterId, string? start = null, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default) {
             return BrowseNodesPost(adapterId, new BrowseAssetModelNodesRequest() { 
                 ParentId = start,

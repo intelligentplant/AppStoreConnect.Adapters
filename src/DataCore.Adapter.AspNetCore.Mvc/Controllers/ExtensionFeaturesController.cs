@@ -20,6 +20,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Route("api/[area]/v2.0/extensions")]
     // Legacy route for compatibility with v1 of the toolkit
     [Route("api/data-core/v1.0/extensions")]
+    [UseAdapterRequestValidation(false)]
     [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeaturesController : ControllerBase {
 

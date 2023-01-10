@@ -8,6 +8,12 @@ namespace DataCore.Adapter {
     public static class AdapterCallContextExtensions {
 
         /// <summary>
+        /// The name of the entry in <see cref="IAdapterCallContext.Items"/> that controls if 
+        /// requests should be validated at the adapter level.
+        /// </summary>
+        public const string ValidateRequestsItemName = "adapter:validate-request-objects";
+
+        /// <summary>
         /// Sets an entry in the <see cref="IAdapterCallContext.Items"/> dictionary.
         /// </summary>
         /// <typeparam name="TKey">
@@ -114,7 +120,51 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            context.SetItem("adapter:validate-request-objects", enabled);
+            context.SetItem(ValidateRequestsItemName, enabled);
+        }
+
+
+        /// <summary>
+        /// Tries to specify if <see cref="AdapterFeatureWrapper{TFeature}"/> instances should 
+        /// validate request objects prior to invoking methods on their wrapped features that 
+        /// use this <see cref="IAdapterCallContext"/>.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/>.
+        /// </param>
+        /// <param name="enabled">
+        ///   <see langword="true"/> to require request validation or <see langword="false"/> 
+        ///   otherwise.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the request validation flag was successfully set, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   It may be desirable to disable request validation at the <see cref="AdapterFeatureWrapper{TFeature}"/> 
+        ///   level if the request object has already been validated (for example, by an ASP.NET 
+        ///   Core route handler).
+        /// </para>
+        /// 
+        /// <para>
+        ///   If the flag that controls request validation has already been set (either positively 
+        ///   or negatively), this method will always return <see langword="false"/>.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static bool TryUseRequestValidation(this IAdapterCallContext context, bool enabled) {
+            if (context?.Items == null) {
+                return false;
+            }
+
+            if (context.Items.ContainsKey(ValidateRequestsItemName)) {
+                return false;
+            }
+
+            context.SetItem(ValidateRequestsItemName, enabled);
+            return true;
         }
 
 
@@ -129,7 +179,7 @@ namespace DataCore.Adapter {
         ///   <see langword="true"/> to require request validation or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
-        internal static bool ShouldValidateRequests(this IAdapterCallContext context) => context?.Items == null || !context.TryGetItem<string, bool>("adapter:validate-request-objects", out var value) || value;
+        internal static bool ShouldValidateRequests(this IAdapterCallContext context) => context?.Items == null || !context.TryGetItem<string, bool>(ValidateRequestsItemName, out var value) || value;
 
     }
 }
