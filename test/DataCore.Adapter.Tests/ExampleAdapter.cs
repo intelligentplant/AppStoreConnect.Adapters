@@ -21,27 +21,27 @@ using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DataCore.Adapter.Tests {
-    public class ExampleAdapter : IAdapter, ITagInfo, IReadSnapshotTagValues {
+    public class ExampleAdapter : AdapterCore, ITagInfo, IReadSnapshotTagValues {
 
-        private CancellationTokenSource _stopTokenSource;
+        //private CancellationTokenSource _stopTokenSource;
 
-        public IBackgroundTaskService BackgroundTaskService { get; }
+        //public IBackgroundTaskService BackgroundTaskService { get; }
 
-        public AdapterDescriptor Descriptor { get; }
+        //public AdapterDescriptor Descriptor { get; }
 
-        public AdapterTypeDescriptor TypeDescriptor { get; }
+        //public AdapterTypeDescriptor TypeDescriptor { get; }
 
-        public IAdapterFeaturesCollection Features { get; }
+        //public IAdapterFeaturesCollection Features { get; }
 
-        public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
+        //public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
 
-        public bool IsEnabled { get; set; } = true;
+        //public bool IsEnabled { get; set; } = true;
 
-        public bool IsRunning { get; } = true;
+        //public bool IsRunning { get; } = true;
 
-        public event Func<IAdapter, Task> Started;
+        //public event Func<IAdapter, Task> Started;
 
-        public event Func<IAdapter, Task> Stopped;
+        //public event Func<IAdapter, Task> Stopped;
 
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 
@@ -54,33 +54,33 @@ namespace DataCore.Adapter.Tests {
         private readonly CustomFunctions _customFunctions;
 
 
-        public ExampleAdapter() {
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(
-                IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
-                () => _stopTokenSource?.Token ?? default
-            );
-            Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
-            TypeDescriptor = this.CreateTypeDescriptor();
-            var features = new AdapterFeaturesCollection();
+        public ExampleAdapter() : base(AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests")) {
+            //BackgroundTaskService = new BackgroundTaskServiceWrapper(
+            //    IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
+            //    () => _stopTokenSource?.Token ?? default
+            //);
+            //Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
+            //TypeDescriptor = this.CreateTypeDescriptor();
+            //var features = new AdapterFeaturesCollection();
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
             _assetModelManager = new AssetModelManager(new InMemoryKeyValueStore());
             _customFunctions = new CustomFunctions(TypeDescriptor.Id, BackgroundTaskService);
 
-            features.AddFromProvider(this);
-            features.AddFromProvider(_snapshotSubscriptionManager);
-            features.AddFromProvider(_eventSubscriptionManager);
-            features.AddFromProvider(_eventTopicSubscriptionManager);
-            features.AddFromProvider(_assetModelManager);
-            features.AddFromProvider(_customFunctions);
-            features.AddFromProvider(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
-            Features = features;
+            AddFeatures(this);
+            AddFeatures(_snapshotSubscriptionManager);
+            AddFeatures(_eventSubscriptionManager);
+            AddFeatures(_eventTopicSubscriptionManager);
+            AddFeatures(_assetModelManager);
+            AddFeatures(_customFunctions);
+            AddFeatures(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
+            //Features = features;
         }
 
 
-        public async Task StartAsync(CancellationToken cancellationToken = default) {
-            _stopTokenSource = new CancellationTokenSource();
+        protected override async Task StartAsyncCore(CancellationToken cancellationToken = default) {
+            //_stopTokenSource = new CancellationTokenSource();
 
             using var sha = System.Security.Cryptography.SHA256.Create();
 
@@ -100,9 +100,9 @@ namespace DataCore.Adapter.Tests {
                 });
             }, cancellationToken: cancellationToken);
 
-            if (Started != null) {
-                await Started.Invoke(this).ConfigureAwait(false);
-            }
+            //if (Started != null) {
+            //    await Started.Invoke(this).ConfigureAwait(false);
+            //}
         }
 
 
@@ -112,13 +112,14 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public async Task StopAsync(CancellationToken cancellationToken = default) {
-            _stopTokenSource?.Cancel();
-            _stopTokenSource?.Dispose();
+        protected override Task StopAsyncCore(CancellationToken cancellationToken = default) {
+            //_stopTokenSource?.Cancel();
+            //_stopTokenSource?.Dispose();
 
-            if (Stopped != null) {
-                await Stopped.Invoke(this).ConfigureAwait(false);
-            }
+            //if (Stopped != null) {
+            //    await Stopped.Invoke(this).ConfigureAwait(false);
+            //}
+            return Task.CompletedTask;
         }
 
 
@@ -176,20 +177,20 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public void AddFeatures(object provider) {
-            ((AdapterFeaturesCollection) Features).AddFromProvider(provider);
-        }
+        //public void AddFeatures(object provider) {
+        //    ((AdapterFeaturesCollection) Features).AddFromProvider(provider);
+        //}
 
 
-        public void Dispose() {
-            _snapshotSubscriptionManager.Dispose();
-        }
+        //protected override void Dispose() {
+        //    _snapshotSubscriptionManager.Dispose();
+        //}
 
 
-        public ValueTask DisposeAsync() {
-            Dispose();
-            return default;
-        }
+        //public ValueTask DisposeAsync() {
+        //    Dispose();
+        //    return default;
+        //}
 
 
         public ValueTask<bool> WriteSnapshotValue(TagValueQueryResult value) {
