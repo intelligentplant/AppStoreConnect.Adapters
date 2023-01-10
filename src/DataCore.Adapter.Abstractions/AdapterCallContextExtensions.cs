@@ -109,7 +109,7 @@ namespace DataCore.Adapter {
         ///   level if the request object has already been validated (for example, by an ASP.NET 
         ///   Core route handler).
         /// </remarks>
-        public static void ValidateRequests(this IAdapterCallContext context, bool enabled) { 
+        public static void UseRequestValidation(this IAdapterCallContext context, bool enabled) { 
             if (context == null) {
                 return;
             }

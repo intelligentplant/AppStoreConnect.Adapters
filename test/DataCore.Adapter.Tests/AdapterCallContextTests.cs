@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Tests {
                 Name = invalidName
             };
 
-            context.ValidateRequests(false);
+            context.UseRequestValidation(false);
 
             Assert.AreEqual(isValid, await feature.IsValid(context, request, default));
         }

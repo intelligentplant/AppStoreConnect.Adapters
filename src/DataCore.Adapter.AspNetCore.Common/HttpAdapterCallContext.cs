@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore {
         public HttpAdapterCallContext(HttpContext httpContext, bool validateRequests = false) {
             _httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
             if (!validateRequests) {
-                this.ValidateRequests(false);
+                this.UseRequestValidation(false);
             }
         }
 
