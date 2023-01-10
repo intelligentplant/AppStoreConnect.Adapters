@@ -139,6 +139,8 @@ namespace DataCore.Adapter {
             // initially in a cancelled state.
             _stopTokenSource = new CancellationTokenSource();
             _stopTokenSource.Cancel();
+
+            Enable();
         }
 
 

@@ -185,8 +185,8 @@ namespace DataCore.Adapter {
             Validator.ValidateObject(opts, new ValidationContext(opts), true);
             Options = opts;
             UpdateDescriptor(opts.Name, opts.Description);
-            if (Options.IsEnabled) {
-                Enable();
+            if (!Options.IsEnabled) {
+                Disable();
             }
         }
 
@@ -258,8 +258,8 @@ namespace DataCore.Adapter {
 
             Options = options;
             UpdateDescriptor(options.Name, options.Description);
-            if (Options.IsEnabled) {
-                Enable();
+            if (!Options.IsEnabled) {
+                Disable();
             }
 
             _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
