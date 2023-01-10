@@ -26,17 +26,76 @@ namespace DataCore.Adapter {
 #pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
-        /// Array of all standard adapter feature type interfaces.
+        /// Standard feature types. 
         /// </summary>
-        private static readonly Type[] s_standardAdapterFeatureTypes = typeof(IAdapterFeature)
-            .Assembly
-            .GetTypes()
-            .Where(x => x.IsInterface)
-            .Where(x => s_adapterFeatureType.IsAssignableFrom(x))
-            .Where(x => x != s_adapterFeatureType)
-            .Where(x => x != s_adapterExtensionFeatureType)
-            .Where(x => x.IsAnnotatedWithAttributeFeatureAttribute<AdapterFeatureAttribute>())
-            .ToArray();
+        private static readonly HashSet<Type> s_standardAdapterFeatureTypes;
+
+
+        /// <summary>
+        /// Type initializer.
+        /// </summary>
+        static TypeExtensions() {
+            s_standardAdapterFeatureTypes = new HashSet<Type>(typeof(IAdapterFeature).Assembly.GetTypes().Where(CanRegisterStandardAdapterFeature));
+        }
+
+
+        /// <summary>
+        /// Tests if the specified <paramref name="type"/> can be registered with the set of known 
+        /// standard adapter features.
+        /// </summary>
+        /// <param name="type">
+        ///   The type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <paramref name="type"/> can be registered, or 
+        ///   <see langword="false"/> otherwise.
+        /// </returns>
+        private static bool CanRegisterStandardAdapterFeature(Type type) {
+            if (type == s_adapterFeatureType) {
+                return false;
+            }
+
+            if (type == s_adapterExtensionFeatureType) {
+                return false;
+            }
+
+            if (!type.IsInterface) {
+                return false;
+            }
+
+            if (!s_adapterFeatureType.IsAssignableFrom(type)) {
+                return false;
+            }
+
+            return type.IsAnnotatedWithAttributeFeatureAttribute<AdapterFeatureAttribute>();
+        }
+
+
+        /// <summary>
+        /// Infrastructure use only. Registers a known standard adapter feature.
+        /// </summary>
+        /// <param name="type">
+        ///   The feature type.
+        /// </param>
+        /// <remarks>
+        ///   This is a convenience method to allow unit tests to register their own "standard" 
+        ///   feature types.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="type"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="type"/> cannot be registered.
+        /// </exception>
+        internal static void AddStandardFeatureDefinition(Type type) {
+            if (type == null) {
+                throw new ArgumentNullException(nameof(type));
+            }
+            if (!CanRegisterStandardAdapterFeature(type)) {
+                throw new ArgumentOutOfRangeException(nameof(type));
+            }
+            s_standardAdapterFeatureTypes.Add(type);
+        }
 
 
         /// <summary>
@@ -66,7 +125,7 @@ namespace DataCore.Adapter {
         ///   The adapter feature types.
         /// </returns>
         public static Type[] GetStandardAdapterFeatureTypes() {
-            return s_standardAdapterFeatureTypes;
+            return s_standardAdapterFeatureTypes.ToArray();
         }
 
 
