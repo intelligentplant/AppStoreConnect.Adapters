@@ -139,7 +139,7 @@ app.MapDataCoreAdapterHubs((type, builder) => builder.RequireAuthorization());
 app.MapDataCoreGrpcServices((type, builder) => builder.RequireAuthorization());
 ```
 
-Note that for SignalR and gRPC-based APIs it is possible to configure authorization separately on each individual hub or service. The callback passed to `MapDataCoreAdapterHubs` and `MapDataCoreGrpcServices` receives the type of the hub or service that is being configured, and an `IEndpointConventionBuilder` that can is used to configure authorization requirements for that item.
+Note that for SignalR and gRPC-based APIs it is possible to configure authorization separately on each individual hub or service. The callback passed to `MapDataCoreAdapterHubs` and `MapDataCoreGrpcServices` receives the type of the hub or service that is being configured, and an `IEndpointConventionBuilder` that is used to configure authorization requirements for that item.
 
 
 ## Adapter Feature Authorization
