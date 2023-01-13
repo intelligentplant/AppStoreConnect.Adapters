@@ -2,7 +2,9 @@
 
 > Note: this document assumes that you have used the project template for Visual Studio and `dotnet new` to create an adapter host. See [here](../src/DataCore.Adapter.Templates) for more information.
 
-By default, adapter hosts created using the project template for Visual Studio and `dotnet new` do not enforce any kind of authentication or authorization on adapter APIs. In scenarios where the adapter host runs on the same machine as App Store Connect, it may be sufficient to restrict the adapter host to listen on localhost addresses only and let App Store Connect handle authorization to perform actions such as reading and writing tag values. If the adapter host is accessible on non-localhost addresses, it may also be sufficient to use firewall rules or request filtering rules in the host itself to only allow requests from safe-listed IP addresses.
+By default, adapter hosts created using the project template for Visual Studio and `dotnet new` do not enforce any kind of authentication or authorization on adapter APIs. 
+
+In scenarios where the adapter host runs on the same machine as App Store Connect, it may be sufficient to restrict the adapter host to listen on localhost addresses only and let App Store Connect handle authorization to perform actions such as reading and writing tag values. If the adapter host is accessible on non-localhost addresses, it may also be sufficient to use firewall rules or request filtering rules in the host itself to only allow requests from safe-listed IP addresses.
 
 
 # Authentication
