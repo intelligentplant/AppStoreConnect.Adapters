@@ -84,3 +84,5 @@ You should make note of the following security-related items:
 
 - The ASP.NET Core application allows anonyous access by default. When deploying the application, it is recommended that you listen only on `localhost` and/or add authentication to the application.
 - Adapter settings are not encrypted by default. If your adapter requires configuration of sensitive settings such as passwords, you should modify the application to either save the sensitive settings in a separate secure store (such as Azure Key Vault), or implement a mechanism that encrypts these settings prior to updating `adaptersettings.json` and decrypts them when reading the file from disk.
+
+You can find a guide to adding authentication and authorization to your adapter host [here](https://github.com/intelligentplant/AppStoreConnect.Adapters/blob/main/docs/adapter-host-authn-authz.md).
