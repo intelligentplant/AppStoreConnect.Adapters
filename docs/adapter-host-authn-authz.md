@@ -55,11 +55,11 @@ To enable Azure AD bearer token authentication in the adapter host:
 
 3. Add Azure AD authentication at application startup:
 
-```csharp
-builder.Services
-    .AddAuthentication()
-    .AddMicrosoftIdentityWebApi(builder.Configuration, "Authentication:AzureAd");
-```
+    ```csharp
+    builder.Services
+        .AddAuthentication()
+        .AddMicrosoftIdentityWebApi(builder.Configuration, "Authentication:AzureAd");
+    ```
 
 4. Configure Azure AD authentication in App Store Connect, specifying the application ID URI for the adapter host as the resource URI.
 
