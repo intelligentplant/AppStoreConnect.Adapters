@@ -24,7 +24,7 @@ To enable X.509 client certificate authentication (including receiving certifica
 
 ## Windows Authentication Authentication
 
-To enable Windows Authentication. follow Microsoft's documentation [here](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/windowsauth).
+To enable Windows Authentication, follow Microsoft's documentation [here](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/windowsauth).
 
 
 ## Azure AD Bearer Token Authentication
