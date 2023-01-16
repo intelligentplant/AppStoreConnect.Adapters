@@ -123,10 +123,11 @@ Note that these instructions use `dotnet user-secrets` to store the shared secre
 
 # Authorization
 
-Authorization can be applied in two ways:
+Authorization can be applied in three ways:
 
 - At the route level, using standard ASP.NET Core authorization.
 - At the application level, using a custom [FeatureAuthorizationHandler](../src/DataCore.Adapter.AspNetCore.Common/Authorization/FeatureAuthorizationHandler.cs) to authorize access to individual features on adapters.
+- At the adapter level, by examining the `IAdapterCallContext` passed to adapter operations.
 
 
 ## Route Authorization
@@ -182,3 +183,10 @@ builder.Services
     ...
     .AddAdapterFeatureAuthorization<MyFeatureAuthHandler>();
 ```
+
+
+## Adapter Operation Authorization
+
+Add adapter feature methods accept an [IAdapterCallContext](../src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) parameter that encapsulates information about the operation, including the caller (via the `User` property).
+
+You can use this information to apply bespoke authorization in your adapter implementation. You can also use this information to implement logic restricting access to different tags within the adapter based on the identity of the caller.
