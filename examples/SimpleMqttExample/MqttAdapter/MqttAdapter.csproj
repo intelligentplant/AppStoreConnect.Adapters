@@ -7,13 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.HealthChecks" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite" Version="3.0.0-pre.1048" />
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry" Version="3.0.0-pre.1048" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.HealthChecks" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite" Version="3.0.0" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry" Version="3.0.0" />
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
     <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.1.4.563" />
     <PackageReference Include="OpenTelemetry" Version="1.4.0-rc.1" />
