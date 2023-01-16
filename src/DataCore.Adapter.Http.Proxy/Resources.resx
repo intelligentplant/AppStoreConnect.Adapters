@@ -126,6 +126,9 @@
   <data name="Error_AdapterIdIsRequired" xml:space="preserve">
     <value>Adapter ID is required.</value>
   </data>
+  <data name="Error_SignalRSupportCheckFailed" xml:space="preserve">
+    <value>Failed to check if SignalR support is available on the remote host. Assuming that the remote host is available, this can occur if the HTTP proxy has been set to v3.0 or higher but the remote host is running an earlier version of the HTTP API.</value>
+  </data>
   <data name="HealthChecks_RemoteHeathDescription" xml:space="preserve">
     <value>See inner results for remote adapter health.</value>
   </data>
