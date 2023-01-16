@@ -189,4 +189,39 @@ builder.Services
 
 Add adapter feature methods accept an [IAdapterCallContext](../src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) parameter that encapsulates information about the operation, including the caller (via the `User` property).
 
-You can use this information to apply bespoke authorization in your adapter implementation. You can also use this information to implement logic restricting access to different tags within the adapter based on the identity of the caller.
+You can use this information to apply bespoke authorization in your adapter implementation. You can also use this information to implement logic restricting access to different tags within the adapter based on the identity of the caller:
+
+```csharp
+partial class MyAdapter : IReadSnapshotTagValues {
+
+    public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
+        IAdapterCallContext context, 
+        ReadSnapshotTagValuesRequest request, 
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken
+    ) {
+        foreach (var tag in request.Tags) {
+            if (!await CanReadTagAsync(tag, context.User, cancellationToken)) {
+                continue;
+            }
+
+            yield return GetCurrentValue(tagNameOrId);
+        }
+    }
+
+
+    private async Task<bool> CanReadTagAsync( 
+        string tagNameOrId, 
+        ClaimsPrincipal? user,
+        CancellationToken cancellationToken
+    ) {
+        // TODO: implementation
+    }
+
+
+    private TagValueQueryResult GetCurrentValue(string tagNameOrId) {
+        // TODO: implementation
+    }
+
+}
+```
