@@ -195,7 +195,7 @@ builder.Services
 
 ## Adapter Operation Authorization
 
-Add adapter feature methods accept an [IAdapterCallContext](../src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) parameter that encapsulates information about the operation, including the caller (via the `User` property).
+All adapter feature methods accept an [IAdapterCallContext](../src/DataCore.Adapter.Abstractions/IAdapterCallContext.cs) parameter that encapsulates information about the operation, including the caller (via the `User` property).
 
 You can use this information to apply bespoke authorization in your adapter implementation. You can also use this information to implement logic restricting access to different tags within the adapter based on the identity of the caller:
 
