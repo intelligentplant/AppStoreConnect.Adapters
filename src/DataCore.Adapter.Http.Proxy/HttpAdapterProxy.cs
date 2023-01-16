@@ -293,9 +293,22 @@ namespace DataCore.Adapter.Http.Proxy {
 
             RemoteDescriptor = descriptor;
 
+            async Task<bool> IsSignalRSupportedAsync() { 
+                try {
+                    var apis = await client.HostInfo.GetAvailableApisAsync(null, cancellationToken).ConfigureAwait(false);
+                    return apis.Any(x => x.Enabled && "SignalR".Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                }
+                catch (OperationCanceledException) {
+                    throw;
+                }
+                catch (Exception e) {
+                    throw new InvalidOperationException(Resources.Error_SignalRSupportCheckFailed, e);
+                }
+            }
+
             CanUseSignalR = Options.CompatibilityVersion < CompatibilityVersion.Version_3_0
                 ? Options.SignalROptions != null
-                : Options.SignalROptions != null && (await client.HostInfo.GetAvailableApisAsync(null, cancellationToken).ConfigureAwait(false)).Any(x => x.Enabled && "SignalR".Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+                : Options.SignalROptions != null && await IsSignalRSupportedAsync().ConfigureAwait(false);
 
             var v3OrLaterFeatures = new[] { 
                 typeof(Adapter.Extensions.ICustomFunctions)
