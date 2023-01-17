@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -12,6 +13,7 @@ namespace DataCore.Adapter.Proxy {
     /// <summary>
     /// Generates dynamic implementations of unknown extension adapter features.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public static class ExtensionFeatureProxyGenerator {
 
         /// <summary>
@@ -44,7 +46,6 @@ namespace DataCore.Adapter.Proxy {
         /// <summary>
         /// Class initialiser.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Complex initialisation required")]
         static ExtensionFeatureProxyGenerator() {
             var assemblyName = new AssemblyName(typeof(ExtensionFeatureProxyGenerator).Assembly.GetName().Name + ".DynamicExtensions");
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
@@ -119,6 +120,7 @@ namespace DataCore.Adapter.Proxy {
         /// <exception cref="ArgumentException">
         ///   <paramref name="featureUri"/> is not an absolute URI.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static IAdapterExtensionFeature CreateExtensionFeatureProxy<TProxy, TAdapterOptions, TImpl>(
             TProxy proxy,
             Uri featureUri
@@ -143,3 +145,4 @@ namespace DataCore.Adapter.Proxy {
 
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete

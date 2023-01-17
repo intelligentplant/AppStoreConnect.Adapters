@@ -12,6 +12,7 @@
     <IsSignable>false</IsSignable>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
     <IncludeDevelopmentPackages>false</IncludeDevelopmentPackages>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 
 </Project>

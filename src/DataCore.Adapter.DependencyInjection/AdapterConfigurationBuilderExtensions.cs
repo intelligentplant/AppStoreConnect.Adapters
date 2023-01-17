@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using DataCore.Adapter;
 using DataCore.Adapter.DependencyInjection;
@@ -284,13 +285,62 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 
         /// <summary>
-        /// Registers an App Store Connect adapter.
+        /// Registers adapter options for the specified adapter ID.
+        /// </summary>
+        /// <typeparam name="TOptions">
+        ///   The adapter options type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The ID of the adapter that the <typeparamref name="TOptions"/> are being registered 
+        ///   for.
+        /// </param>
+        /// <param name="configure">
+        ///   An optional callback for configuring the <typeparamref name="TOptions"/> (for example, 
+        ///   by binding them to a <c>Microsoft.Extensions.Configuration.IConfiguration</c> instance).
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>
+        /// </exception>
+        /// <remarks>
+        ///   A named options instance using the <paramref name="adapterId"/> will be registered.
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddAdapterOptions<TOptions>(this IAdapterConfigurationBuilder builder, string adapterId, Action<Options.OptionsBuilder<TOptions>>? configure = null) where TOptions : AdapterOptions, new() {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (adapterId == null) {
+                throw new ArgumentNullException(nameof(adapterId));
+            }
+
+            var optionsBuilder = builder.Services.AddOptions<TOptions>(adapterId);
+            configure?.Invoke(optionsBuilder);
+
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Registers a singleton App Store Connect adapter using the specified direct constructor 
+        /// arguments in addition to those provided by the <see cref="IServiceProvider"/>.
         /// </summary>
         /// <typeparam name="T">
         ///   The adapter implementation type.
         /// </typeparam>
         /// <param name="builder">
         ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="additionalConstructorParameters">
+        ///   Direct constructor arguments to use in addition to those supplied by the 
+        ///   <see cref="IServiceProvider"/>.
         /// </param>
         /// <returns>
         ///   The <see cref="IAdapterConfigurationBuilder"/>.
@@ -299,22 +349,82 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
         /// <remarks>
-        ///   Adapters are registered as singleton services.
+        ///
+        /// <para>
+        ///   This overload registers the adapter using an implementation factory that calls 
+        ///   <see cref="ActivatorUtilities.CreateInstance{T}(IServiceProvider, object[])"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   To register an adapter using a custom implementation factory, call 
+        ///   <see cref="AddAdapter{T}(IAdapterConfigurationBuilder, Func{IServiceProvider, T})"/>.
+        /// </para>
+        ///
         /// </remarks>
         public static IAdapterConfigurationBuilder AddAdapter<T>(
-            this IAdapterConfigurationBuilder builder
+            this IAdapterConfigurationBuilder builder,
+            params object[] additionalConstructorParameters
         ) where T : class, IAdapter {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.AddSingleton<IAdapter, T>();
+            builder.Services.AddSingleton<IAdapter, T>(sp => ActivatorUtilities.CreateInstance<T>(sp, additionalConstructorParameters));
+
             return builder;
         }
 
 
         /// <summary>
-        /// Registers an App Store Connect adapter.
+        /// Registers a singleton App Store Connect adapter using the specified direct constructor 
+        /// arguments in addition to those provided by the <see cref="IServiceProvider"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The adapter implementation type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="additionalConstructorParameters">
+        ///   A callback that will return direct constructor arguments to use in addition to those 
+        ///   supplied by the <see cref="IServiceProvider"/>.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///
+        /// <para>
+        ///   This overload registers the adapter using an implementation factory that calls 
+        ///   <see cref="ActivatorUtilities.CreateInstance{T}(IServiceProvider, object[])"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   To register an adapter using a custom implementation factory, call 
+        ///   <see cref="AddAdapter{T}(IAdapterConfigurationBuilder, Func{IServiceProvider, T})"/>.
+        /// </para>
+        ///
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddAdapter<T>(
+            this IAdapterConfigurationBuilder builder,
+            Func<IServiceProvider, object[]> additionalConstructorParameters
+        ) where T : class, IAdapter {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IAdapter, T>(sp => ActivatorUtilities.CreateInstance<T>(sp, additionalConstructorParameters.Invoke(sp)));
+
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Registers a singleton App Store Connect adapter using the specified implementation 
+        /// factory.
         /// </summary>
         /// <typeparam name="T">
         ///   The adapter implementation type.
@@ -334,9 +444,6 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="implementationFactory"/> is <see langword="null"/>.
         /// </exception>
-        /// <remarks>
-        ///   Adapters are registered as singleton services.
-        /// </remarks>
         public static IAdapterConfigurationBuilder AddAdapter<T>(
             this IAdapterConfigurationBuilder builder,
             Func<IServiceProvider, T> implementationFactory

@@ -16,31 +16,17 @@ namespace ExampleHostedAdapter.Pages {
 
         public AdapterState State { get; private set; } 
 
-        public ApiInfo RestApi { get; }
+        public ApiDescriptor[] AvailableApis { get; }
 
-        public ApiInfo SignalRApi { get; }
-
-        public ApiInfo GrpcApi { get; }
-
-        public bool ApiIsEnabled => RestApi.IsEnabled || SignalRApi.IsEnabled || GrpcApi.IsEnabled;
+        public bool ApiIsEnabled => AvailableApis.Any(x => x.Enabled);
 
 
-        public IndexModel(HostInfo hostInfo, IAdapter adapter, EndpointDataSource endpointDataSource, ILogger<IndexModel> logger) {
+        public IndexModel(HostInfo hostInfo, IAdapter adapter, IAvailableApiService availableApiService, ILogger<IndexModel> logger) {
             HostInfo = hostInfo;
             Adapter = adapter;
             _logger = logger;
 
-            if (endpointDataSource.IsMvcAdapterApiRegistered()) {
-                RestApi = new ApiInfo() { IsEnabled = true, Version = typeof(AdapterMvcEndpointDataSourceExtensions).Assembly.GetName()?.Version?.ToString(3) };
-            }
-
-            if (endpointDataSource.IsSignalRAdapterApiRegistered()) {
-                SignalRApi = new ApiInfo() { IsEnabled = true, Version = typeof(AdapterSignalREndpointDataSourceExtensions).Assembly.GetName()?.Version?.ToString(3) };
-            }
-
-            if (endpointDataSource.IsGrpcAdapterApiRegistered()) {
-                GrpcApi = new ApiInfo() { IsEnabled = true, Version = typeof(AdapterGrpcEndpointDataSourceExtensions).Assembly.GetName()?.Version?.ToString(3) };
-            }
+            AvailableApis = availableApiService.GetApiDescriptors().OrderBy(x => x.Name).ToArray();
         }
 
 
@@ -72,15 +58,6 @@ namespace ExampleHostedAdapter.Pages {
         public async Task<IActionResult> OnGetStatusAsync(CancellationToken cancellationToken) {
             await OnGetAsync(cancellationToken);
             return Partial("_AdapterStatusPartial", this);
-        }
-
-
-        public readonly record struct ApiInfo {
-
-            public readonly bool IsEnabled { get; init; }
-
-            public readonly string? Version { get; init; }
-
         }
 
 

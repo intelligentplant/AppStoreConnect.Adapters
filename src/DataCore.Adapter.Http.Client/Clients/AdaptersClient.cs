@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,18 +57,24 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <returns>
         ///   A task that will return information about the available adapters.
         /// </returns>
-        public async Task<IEnumerable<AdapterDescriptor>> FindAdaptersAsync(
+        public async IAsyncEnumerable<AdapterDescriptor> FindAdaptersAsync(
             FindAdaptersRequest request,
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             AdapterHttpClient.ValidateObject(request);
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, UrlPrefix, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<AdapterDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<AdapterDescriptor>(await httpRequest.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 
@@ -100,7 +108,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -137,7 +145,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
             }
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/health-status";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 

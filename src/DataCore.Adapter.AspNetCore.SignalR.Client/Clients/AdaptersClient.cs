@@ -47,18 +47,21 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         /// <returns>
         ///   A channel that will return information about the available adapters.
         /// </returns>
-        public async Task<ChannelReader<AdapterDescriptor>> FindAdaptersAsync(
+        public async IAsyncEnumerable<AdapterDescriptor> FindAdaptersAsync(
             FindAdaptersRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
-            return await connection.StreamAsChannelAsync<AdapterDescriptor>(
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await foreach (var item in connection.StreamAsync<AdapterDescriptor>(
                 "FindAdapters", 
                 request,
                 cancellationToken
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)) {
+                yield return item;
+            }
         }
 
 
@@ -82,7 +85,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<AdapterDescriptorExtended>(
                 "GetAdapter", 
                 adapterId, 
@@ -111,7 +114,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<HealthCheckResult>(
                 "CheckAdapterHealth",
                 adapterId,
@@ -142,7 +145,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
                 throw new ArgumentException(Resources.Error_ParameterIsRequired, nameof(adapterId));
             }
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<HealthCheckResult>(
                 "CreateAdapterHealthChannel",
                 adapterId,

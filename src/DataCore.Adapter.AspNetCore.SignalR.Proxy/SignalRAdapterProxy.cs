@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DataCore.Adapter.AspNetCore.SignalR.Client;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Proxy;
 
 using IntelligentPlant.BackgroundTasks;
+
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 
@@ -97,7 +98,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private readonly ExtensionFeatureFactory<SignalRAdapterProxy>? _extensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// The client used in standard adapter queries.
@@ -108,6 +111,16 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// Additional hub connections created for extension features.
         /// </summary>
         private readonly ConcurrentDictionary<string, Lazy<Task<HubConnection>>> _extensionConnections = new ConcurrentDictionary<string, Lazy<Task<HubConnection>>>();
+
+        /// <summary>
+        /// The last health check result that was received from the remote adapter.
+        /// </summary>
+        private HealthCheckResult? _lastRemoteHealthCheckResult;
+
+        /// <summary>
+        /// Lock for reading/writing <see cref="_lastRemoteHealthCheckResult"/>.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncReaderWriterLock _lastRemoteHealthCheckResultLock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
 
         /// <summary>
@@ -143,6 +156,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             backgroundTaskService, 
             logger
         ) {
+#pragma warning disable CS0618 // Type or member is obsolete
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _connectionFactory = Options?.ConnectionFactory ?? throw new ArgumentException(Resources.Error_ConnectionFactoryIsRequired, nameof(options));
@@ -152,6 +166,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 AddHubEventHandlers(conn);
                 return new AdapterSignalRClient(conn, true, Options!.CompatibilityLevel);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 
@@ -210,6 +225,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             };
             connection.Reconnected += id => {
                 OnHealthStatusChanged();
+                if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
+                    // Adapter supports health check subscriptions.
+                    BackgroundTaskService.QueueBackgroundWorkItem(RunRemoteHealthSubscriptionAsync);
+                }
                 return Task.CompletedTask;
             };
             connection.Reconnecting += err => {
@@ -251,10 +270,12 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             continue;
                         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, SignalRAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -265,7 +286,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
-                BackgroundTaskService.QueueBackgroundWorkItem(RunRemoteHealthSubscription);
+                BackgroundTaskService.QueueBackgroundWorkItem(RunRemoteHealthSubscriptionAsync);
             }
         }
 
@@ -279,8 +300,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <inheritdoc/>
         protected override async Task StopAsync(CancellationToken cancellationToken) {
             if (_client.IsValueCreated) {
-                var connection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                await connection.StopAsync(cancellationToken).ConfigureAwait(false);
+                await _client.Value.StopAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -295,9 +315,22 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A <see cref="Task"/> that will monitor for changes in the remote adapter health.
         /// </returns>
-        private async Task RunRemoteHealthSubscription(CancellationToken cancellationToken) {
-            await foreach (var item in _client.Value.Adapters.CreateAdapterHealthChannelAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false)) {
-                OnHealthStatusChanged();
+        private async Task RunRemoteHealthSubscriptionAsync(CancellationToken cancellationToken) {
+            try {
+                await foreach (var item in _client.Value.Adapters.CreateAdapterHealthChannelAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false)) {
+                    using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                        _lastRemoteHealthCheckResult = CreateRemoteAdapterHealthCheckResult(item);
+                    }
+                    OnHealthStatusChanged();
+                }
+            }
+            catch {
+                if (!cancellationToken.IsCancellationRequested) {
+                    using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                        _lastRemoteHealthCheckResult = null;
+                    }
+                    OnHealthStatusChanged();
+                }
             }
         }
 
@@ -328,14 +361,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     .CheckAdapterHealthAsync(RemoteDescriptor.Id, cancellationToken)
                     .ConfigureAwait(false);
 
-                return new HealthCheckResult(
-                    Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
-                    result.Description,
-                    result.Error,
-                    result.Data,
-                    result.InnerResults
-                );
+                return CreateRemoteAdapterHealthCheckResult(result);
             }
             catch (Exception e) {
                 return HealthCheckResult.Unhealthy(
@@ -346,6 +372,27 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         }
 
 
+        /// <summary>
+        /// Converts a <see cref="HealthCheckResult"/> received from a remote adapter into a local 
+        /// <see cref="HealthCheckResult"/> for the proxy.
+        /// </summary>
+        /// <param name="result">
+        ///   The <see cref="HealthCheckResult"/> received from the remote adapter.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HealthCheckResult"/> for use in the local proxy.
+        /// </returns>
+        private static HealthCheckResult CreateRemoteAdapterHealthCheckResult(HealthCheckResult result) {
+            return new HealthCheckResult(
+                    Resources.HealthCheck_DisplayName_RemoteAdapter,
+                    result.Status,
+                    result.Description,
+                    result.Error,
+                    result.Data,
+                    result.InnerResults
+                );
+        }
+
 
         /// <inheritdoc/>
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
@@ -355,26 +402,30 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
             }
 
             if (_client.IsValueCreated) {
-                var hubConnection = await _client.Value.GetHubConnection(false, cancellationToken).ConfigureAwait(false);
-                var state = hubConnection.State;
+                var state = _client.Value.ConnectionState;
                
                 switch (state) {
                     case HubConnectionState.Connected:
+                        using (await _lastRemoteHealthCheckResultLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            if (_lastRemoteHealthCheckResult != null) {
+                                results.Add(HealthCheckResult.Composite(
+                                    Resources.HealthCheck_DisplayName_Connection,
+                                    new[] { _lastRemoteHealthCheckResult.Value },
+                                    string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString())
+                                ));
+                                break;
+                            }
+                        }
+
                         results.Add(
                             HealthCheckResult.Composite(
                                 Resources.HealthCheck_DisplayName_Connection,
                                 new[] {
                                     await CheckRemoteHealthAsync(cancellationToken).ConfigureAwait(false)
                                 },
-                                string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescription, state.ToString())
+                                string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescriptionNoInnerResults, state.ToString())
                             )
                         );
-                        break;
-                    case HubConnectionState.Disconnected:
-                        results.Add(HealthCheckResult.Unhealthy(
-                            Resources.HealthCheck_DisplayName_Connection,
-                            string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescriptionNoInnerResults, state.ToString())
-                        ));
                         break;
                     default:
                         results.Add(HealthCheckResult.Degraded(
@@ -382,44 +433,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             string.Format(context?.CultureInfo, Resources.HealthCheck_HubConnectionStatusDescriptionNoInnerResults, state.ToString())
                         ));
                         break;
-                }
-            }
-
-            foreach (var item in _extensionConnections) {
-                var healthCheckName = string.Format(context?.CultureInfo, Resources.HeathCheck_DisplayName_ExtensionConnection, item.Key);
-                var format = Resources.HealthCheck_ExtensionHubConnectionStatusDescription;
-
-                if (!item.Value.IsValueCreated || !item.Value.Value.IsCompleted) {
-                    var description = string.Format(
-                        context?.CultureInfo, 
-                        format, 
-                        Resources.HealthCheck_UnknownConnectionState
-                    );
-                    results.Add(HealthCheckResult.Degraded(healthCheckName, description));
-                    continue;
-                }
-
-                try {
-                    var hubConnection = await item.Value.Value.WithCancellation(cancellationToken).ConfigureAwait(false);
-
-                    var state = hubConnection.State;
-                    var description = string.Format(context?.CultureInfo, format, state.ToString());
-
-                    switch (state) {
-                        case HubConnectionState.Connected:
-                            results.Add(HealthCheckResult.Healthy(healthCheckName, description));
-                            break;
-                        case HubConnectionState.Disconnected:
-                            results.Add(HealthCheckResult.Unhealthy(healthCheckName, description));
-                            break;
-                        default:
-                            results.Add(HealthCheckResult.Degraded(healthCheckName, description));
-                            break;
-                    }
-                }
-                catch (Exception e) {
-                    var description = string.Format(context?.CultureInfo, format, Resources.HealthCheck_UnknownConnectionState);
-                    results.Add(HealthCheckResult.Unhealthy(healthCheckName, description, e.Message));
                 }
             }
 

@@ -9,7 +9,8 @@ namespace DataCore.Adapter.Diagnostics {
     public static class Telemetry {
 
         /// <summary>
-        /// The name to use for the <see cref="ActivitySource"/> and <see cref="EventSource"/>.
+        /// The name of the library's <see cref="ActivitySource"/>, <see cref="Meter"/> and 
+        /// <see cref="EventSource"/>.
         /// </summary>
         public const string DiagnosticSourceName = "IntelligentPlant.AppStoreConnect.Adapter";
 
@@ -24,14 +25,14 @@ namespace DataCore.Adapter.Diagnostics {
         public static ActivitySource ActivitySource { get; } = new ActivitySource(DiagnosticSourceName, s_telemetryVersion);
 
         /// <summary>
-        /// The <see cref="System.Diagnostics.Tracing.EventSource"/> for the library.
-        /// </summary>
-        public static AdapterEventSource EventSource { get; } = new AdapterEventSource();
-
-        /// <summary>
         /// The <see cref="System.Diagnostics.Metrics.Meter"/> for the library.
         /// </summary>
         public static Meter Meter { get; } = new Meter(DiagnosticSourceName, s_telemetryVersion);
+
+        /// <summary>
+        /// The <see cref="System.Diagnostics.Tracing.EventSource"/> for the library.
+        /// </summary>
+        public static AdapterEventSource EventSource { get; } = AdapterEventSource.Log;
 
     }
 }

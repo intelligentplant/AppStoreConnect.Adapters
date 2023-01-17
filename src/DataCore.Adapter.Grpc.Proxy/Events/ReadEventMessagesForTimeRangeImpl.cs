@@ -27,8 +27,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<EventsService.EventsServiceClient>();
             var grpcRequest = new GetEventMessagesForTimeRangeRequest() {
                 AdapterId = AdapterId,
@@ -49,9 +47,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.GetEventMessagesForTimeRange(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }

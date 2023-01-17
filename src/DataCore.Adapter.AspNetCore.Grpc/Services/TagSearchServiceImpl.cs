@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Grpc.Core;
+
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 
 namespace DataCore.Adapter.Grpc.Server.Services {
 
@@ -21,6 +23,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// </summary>
         private readonly IAdapterAccessor _adapterAccessor;
 
+        /// <summary>
+        /// The JSON serialization options to use.
+        /// </summary>
+        private readonly JsonSerializerOptions? _jsonOptions;
+
 
         /// <summary>
         /// Creates a new <see cref="TagSearchServiceImpl"/> object.
@@ -28,8 +35,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <param name="adapterAccessor">
         ///   The service for resolving adapter references.
         /// </param>
-        public TagSearchServiceImpl(IAdapterAccessor adapterAccessor) {
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        public TagSearchServiceImpl(IAdapterAccessor adapterAccessor, IOptions<JsonOptions> jsonOptions) {
             _adapterAccessor = adapterAccessor;
+            _jsonOptions = jsonOptions?.Value?.SerializerOptions;
         }
 
 
@@ -47,21 +58,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.GetTagProperties(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcAdapterProperty()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcAdapterProperty()).ConfigureAwait(false);
             }
         }
 
@@ -86,21 +88,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.FindTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
             }
         }
 
@@ -118,23 +111,103 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.GetTags(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagDefinition()).ConfigureAwait(false);
             }
         }
 
+
+        /// <inheritdoc/>
+        public override async Task<GetTagSchemaResponse> GetTagSchema(GetTagSchemaRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Adapter.Tags.GetTagSchemaRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return new GetTagSchemaResponse() {
+                Schema = result.ToProtoValue()
+            };
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task<TagDefinition> CreateTag(CreateTagRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Adapter.Tags.CreateTagRequest() {
+                Properties = new Dictionary<string, string>(request.Properties),
+                Body = request.Body.ToJsonElement() ?? default
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
+            }
+
+            var result = await adapter.Feature.CreateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcTagDefinition();
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task<TagDefinition> UpdateTag(UpdateTagRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Adapter.Tags.UpdateTagRequest() {
+                Properties = new Dictionary<string, string>(request.Properties),
+                Tag = request.Tag,
+                Body = request.Body.ToJsonElement() ?? default
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var schema = await adapter.Feature.GetTagSchemaAsync(adapterCallContext, new Tags.GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(adapterRequest.Body, schema, _jsonOptions, out var validationResults)) {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, JsonSerializer.Serialize(validationResults, _jsonOptions)));
+            }
+
+            var result = await adapter.Feature.UpdateTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcTagDefinition();
+        }
+
+
+
+        /// <inheritdoc/>
+        public override async Task<DeleteTagResponse> DeleteTag(DeleteTagRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new Adapter.Tags.DeleteTagRequest() {
+                Tag = request.Tag,
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+            Util.ValidateObject(adapterRequest);
+
+            var result = await adapter.Feature.DeleteTagAsync(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return new DeleteTagResponse() {
+                Success = result
+            };
+        }
+
     }
+
 }

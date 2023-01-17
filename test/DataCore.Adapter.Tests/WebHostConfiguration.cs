@@ -6,6 +6,8 @@ using GrpcNet = Grpc.Net;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace DataCore.Adapter.Tests {
     internal static class WebHostConfiguration {
@@ -18,7 +20,7 @@ namespace DataCore.Adapter.Tests {
 
         public const string AdapterId = AssemblyInitializer.AdapterId;
 
-        public const string TestTagId = "Sensor_001";
+        public const string TestTagId = AssemblyInitializer.TestTagId;
 
         public const string HttpClientName = "AdapterHttpClient";
 
@@ -42,13 +44,12 @@ namespace DataCore.Adapter.Tests {
                 options.SetMinimumLevel(LogLevel.Trace);
             });
 
-            services.AddHttpClient(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
+            services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName).ConfigureHttpMessageHandlerBuilder(builder => {
                 AllowUntrustedCertificates(builder.PrimaryHandler);
             }).ConfigureHttpClient(client => {
                 client.BaseAddress = new Uri(DefaultUrl + "/");
             });
-            services.AddHttpClient<Http.Client.AdapterHttpClient>(HttpClientName);
-
+            
             services.AddTransient(sp => {
                 return GrpcNet.Client.GrpcChannel.ForAddress(DefaultUrl, new GrpcNet.Client.GrpcChannelOptions() {
                     HttpClient = sp.GetService<IHttpClientFactory>().CreateClient(HttpClientName)

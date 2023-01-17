@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Tags {
 
@@ -35,6 +36,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public DigitalState(string name, int value) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
@@ -83,4 +85,5 @@ namespace DataCore.Adapter.Tags {
         }
 
     }
+
 }

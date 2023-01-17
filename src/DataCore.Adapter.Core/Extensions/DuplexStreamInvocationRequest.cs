@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Extensions {
     /// <summary>
     /// A request to invoke an extension operation on an adapter of type <see cref="ExtensionFeatureOperationType.DuplexStream"/>.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class DuplexStreamInvocationRequest : AdapterRequest {
 
         /// <summary>

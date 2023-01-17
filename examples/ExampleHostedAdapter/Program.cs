@@ -1,5 +1,9 @@
 ﻿using DataCore.Adapter.KeyValueStore.Sqlite;
 
+using ExampleHostedAdapter;
+
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -11,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Our adapter settings are stored in adaptersettings.json.
 builder.Configuration
-    .AddJsonFile(ExampleHostedAdapter.Constants.AdapterSettingsFilePath, false, true);
+    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
 builder.Services
     .AddLocalization();
@@ -19,8 +23,8 @@ builder.Services
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(
-        name: "ExampleHostedAdapter Host",
-        description: "ASP.NET Core adapter host"
+        name: "ASP.NET Core Adapter Host",
+        description: "ASP.NET Core adapter host for My Adapter"
      )
     // Add a SQLite-based key-value store service. This can be used by our adapter to persist data
     // between restarts.
@@ -35,13 +39,20 @@ builder.Services
 
         return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
     })
-    // Bind adapter options against the application configuration.
-    .AddServices(svc => svc.Configure<ExampleHostedAdapter.ExampleHostedAdapterOptions>(
-        ExampleHostedAdapter.Constants.AdapterId,
-        builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
-     ))
-    // Register the adapter.
-    .AddAdapter(sp => ActivatorUtilities.CreateInstance<ExampleHostedAdapter.ExampleHostedAdapter>(sp, ExampleHostedAdapter.Constants.AdapterId));
+    // Register the adapter options
+    .AddAdapterOptions<MyAdapterOptions>(
+        // The adapter will look for an instance of the options with a name that matches its ID.
+        Constants.AdapterId,
+        // Bind the adapter options against the application configuration and ensure that they are
+        // valid at startup.
+        opts => opts
+            .Bind(builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart()
+    )
+    // Register the adapter. We specify the adapter ID as an additional constructor parameter
+    // since this will not be supplied by the service provider.
+    .AddAdapter<MyAdapter>(Constants.AdapterId);
 
 // Register adapter MVC controllers.
 builder.Services
@@ -55,7 +66,8 @@ builder.Services
 
 // Register adapter gRPC services.
 builder.Services
-    .AddGrpc();
+    .AddGrpc()
+    .AddDataCoreAdapterGrpc();
 
 // Register adapter health checks. See https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks
 // for more information about ASP.NET Core health checks.
@@ -63,21 +75,43 @@ builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
-// Register OpenTelemetry trace instrumentation. This can be safely removed if not required.
-builder.Services.AddOpenTelemetryTracing(otel => otel
-    // Specify an OpenTelemetry service instance ID in AddDataCoreAdapterApiService below to
-    // override the use of the DNS host name for the local machine.
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
-    // Records incoming HTTP requests made to the adapter host.
-    .AddAspNetCoreInstrumentation()
-    // Records outgoing HTTP requests made by the adapter host.
-    .AddHttpClientInstrumentation()
-    // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
-    .AddSqlClientInstrumentation()
-    // Records activities created by adapters and adapter hosting packages.
-    .AddDataCoreAdapterInstrumentation()
-    // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
-    .AddJaegerExporter());
+// Resource builder for OpenTelemetry trace/metrics export. We will use the adapter ID as the
+// OpenTelemetry service instance ID for the host.
+var otelResourceBuilder = ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(Constants.AdapterId);
+
+// Register OpenTelemetry services. This can be safely removed if not required.
+builder.Services
+    .AddOpenTelemetry()
+    .WithTracing(otel => otel
+        // Set the resource builder to identify where the traces are coming from.
+        .SetResourceBuilder(otelResourceBuilder)
+        // Records incoming HTTP requests made to the adapter host.
+        .AddAspNetCoreInstrumentation()
+        // Records outgoing HTTP requests made by the adapter host.
+        .AddHttpClientInstrumentation()
+        // Records gRPC client requests made by the adapter host. 
+        .AddGrpcClientInstrumentation()
+        // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
+        .AddSqlClientInstrumentation()
+        // Records activities created by adapters and adapter hosting packages.
+        .AddDataCoreAdapterInstrumentation()
+        // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
+        .AddJaegerExporter())
+    .WithMetrics(otel => otel
+        // Set the resource builder to identify where the metrics are coming from.
+        .SetResourceBuilder(otelResourceBuilder)
+        // Observe instrumentation for the .NET runtime.
+        .AddRuntimeInstrumentation()
+        // Observe ASP.NET Core instrumentation.
+        .AddAspNetCoreInstrumentation()
+        // Observe HTTP client instrumentation.
+        .AddHttpClientInstrumentation()
+        // Observe instrumentation generated by the adapter support libraries.
+        .AddDataCoreAdapterInstrumentation()
+        // Exports metrics in Prometheus format using default settings. Prometheus metrics are
+        // served via the scraping endpoint registered below.
+        .AddPrometheusExporter())
+    .StartWithHost();
 
 // Build the app and the request pipeline.
 var app = builder.Build();
@@ -99,12 +133,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapDataCoreAdapterHubs();
+app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
 app.MapRazorPages();
 
 // Fallback route that redirects to the UI home page
 app.MapFallback("/{*url}", context => {
-    context.Response.Redirect($"/");
+    context.Response.Redirect("/");
     return Task.CompletedTask;
 });
 

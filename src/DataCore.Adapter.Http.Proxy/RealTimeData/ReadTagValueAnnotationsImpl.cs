@@ -24,27 +24,16 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.TagValueAnnotations.ReadAnnotationsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValueAnnotations.ReadAnnotationsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
         /// <inheritdoc/>
         public async Task<TagValueAnnotationExtended?> ReadAnnotation(IAdapterCallContext context, ReadAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-            }
+            return await client.TagValueAnnotations.ReadAnnotationAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false);
         }
     }
 

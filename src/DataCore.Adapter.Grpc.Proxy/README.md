@@ -17,32 +17,20 @@ var options = new GrpcAdapterProxyOptions() {
     RemoteId = "{SOME_ADAPTER_ID}"
 };
 
-// OPTION 1: Use Grpc.Core channel
-var channel = new Grpc.Core.Channel("localhost:5000", Grpc.Core.ChannelCredentials.Insecure);
-var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
-await proxy.StartAsync(cancellationToken);
-
-// OPTION 2: Use Grpc.Net.Client channel (requires .NET Core 3.0 due to lack of native HTTP/2 support in `HttpClient` in earlier versions).
-var channel = Grpc.Net.Client.GrpcChannel.ForAddress("http://localhost:5000");
+var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost:5001");
 var proxy = new GrpcAdapterProxy(channel, Options.Create(options), NullLoggerFactory.Instance);
 await proxy.StartAsync(cancellationToken);
 ```
 
-## A Note on Self-Signed Certificates and Grpc.Core
-
-If you use the `Grpc.Core.Channel` class to connect to a host that is using SSL and a self-signed certificate, you will have to provide the certificate to the `SslCredentials` constructor as a PEM-encoded string, as the certification path will not exist in the SSL roots provided by `Grpc.Core`. The [DataCore.Adapter.Security.CertificateUtilities](/src/DataCore.Adapter/Security/CertificateUtilities.cs) class contains helper methods that can convert an `X509Certificate2` into the required format, as well as load a certificate from a certificate store:
+When running the proxy on .NET Framework, you must also set the HTTP handler for the channel, as per the instructions [here](https://learn.microsoft.com/en-us/aspnet/core/grpc/netstandard#net-framework):
 
 ```csharp
-var certPath = "cert:/CurrentUser/My/{some thumbprint or subject}";
-
-var sslCredentials = CertificateUtilities.TryLoadCertificateFromStore(certPath, out var cert)
-    ? new SslCredentials(CertificateUtilities.PemEncode(cert))
-    : new SslCredentials();
-
-var channel = new Grpc.Core.Channel("localhost:5000", sslCredentials);
+var channel = Grpc.Net.Client.GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions {
+    HttpHandler = new WinHttpHandler()
+});
 ```
 
-A `Grpc.Net.Client` channel will happily connect to a host using a self-signed certificate without any additional configuration required, as long as the certificate is trusted by the client machine.
+> Grpc.Net.Client on .NET Framework does not support duplex streaming calls. Adapter operations that normally use duplex streaming such as tag value subscriptions and writes are translated into unary or server streaming invocations by the proxy.
 
 
 # Using the Proxy
@@ -89,21 +77,3 @@ var options = new GrpcAdapterProxyOptions() {
 ```
 
 Note that per-call authentication requires that SSL/TLS authentication is already in place at the channel level.
-
-
-# Adding Extension Feature Support
-
-You can add support for adapter extension features by providing an `ExtensionFeatureFactory` delegate in the proxy options. This delegate will be invoked for every extension feature that the remote proxy reports that it supports:
-
-```csharp
-var options = new GrpcAdapterProxyOptions() {
-    Id = "some-id",
-    Name = "some-name",
-    RemoteId = "{SOME_ADAPTER_ID}",
-    ExtensionFeatureFactory = (featureName, proxy) => {
-        return GetFeatureImplementation(featureName, proxy);
-    }
-};
-```
-
-The `CreateClient<TClient>` method on the proxy can be used to create a gRPC client that uses the channel configured when the proxy was created.

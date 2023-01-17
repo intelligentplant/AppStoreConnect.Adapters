@@ -160,6 +160,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A custom function with ID &apos;{0}&apos; is already registered..
+        /// </summary>
+        internal static string Error_CustomFunctionIsAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("Error_CustomFunctionIsAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This feature has already been registered..
         /// </summary>
         internal static string Error_FeatureIsAlreadyRegistered {
@@ -192,6 +201,15 @@ namespace DataCore.Adapter {
         internal static string Error_InvalidExtensionFeatureOperationUri {
             get {
                 return ResourceManager.GetString("Error_InvalidExtensionFeatureOperationUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tag configuration is invalid..
+        /// </summary>
+        internal static string Error_InvalidTagConfiguration {
+            get {
+                return ResourceManager.GetString("Error_InvalidTagConfiguration", resourceCulture);
             }
         }
         
@@ -232,11 +250,29 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Caller is not authorised to invoke custom function &apos;{0}&apos;..
+        /// </summary>
+        internal static string Error_NotAuthorisedToInvokeFunction {
+            get {
+                return ResourceManager.GetString("Error_NotAuthorisedToInvokeFunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Too many subscriptions..
         /// </summary>
         internal static string Error_TooManySubscriptions {
             get {
                 return ResourceManager.GetString("Error_TooManySubscriptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom function ID &apos;{0}&apos; could not be resolved..
+        /// </summary>
+        internal static string Error_UnknownCustomFunctionId {
+            get {
+                return ResourceManager.GetString("Error_UnknownCustomFunctionId", resourceCulture);
             }
         }
         

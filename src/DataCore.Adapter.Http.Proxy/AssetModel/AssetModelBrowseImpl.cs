@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
 
@@ -25,15 +26,9 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            await foreach (var item in client.AssetModel.BrowseNodesAsync(AdapterId, request, context.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -44,15 +39,9 @@ namespace DataCore.Adapter.Http.Proxy.AssetModel {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.AssetModel.GetNodesAsync(AdapterId, request, context.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            await foreach (var item in client.AssetModel.GetNodesAsync(AdapterId, request, context.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

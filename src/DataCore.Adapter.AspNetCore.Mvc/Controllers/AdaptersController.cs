@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Diagnostics;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -70,8 +69,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public Task<IActionResult> FindAdapters(string? id = null, string? name = null, string? description = null, [FromQuery] string[]? feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
+        public IActionResult FindAdapters(string? id = null, string? name = null, string? description = null, [FromQuery] string[]? feature = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             var request = new FindAdaptersRequest() { 
                 Id = id,
                 Name = name,
@@ -100,21 +99,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterDescriptor>), 200)]
-        public async Task<IActionResult> FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
+        public IActionResult FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             if (request.PageSize > 100) {
                 // Don't allow arbitrarily large queries!
                 request.PageSize = 100;
             }
+
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
-
-            var result = new List<AdapterDescriptor>(request.PageSize);
-            await foreach (var item in adapters.ConfigureAwait(false)) {
-                result.Add(AdapterDescriptor.FromExisting(item.Descriptor));
-            }
-
-            return Ok(result); // 200
+            return Util.StreamResults(adapters, x => x.Descriptor);
         }
 
 
@@ -175,13 +169,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (Telemetry.ActivitySource.StartCheckHealthActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                try {
-                    return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
+            try {
+                return Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
+            }
+            catch (SecurityException) {
+                return Forbid(); // 403
             }
         }
 

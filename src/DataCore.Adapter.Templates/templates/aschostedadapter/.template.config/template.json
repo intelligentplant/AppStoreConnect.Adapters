@@ -12,7 +12,9 @@
   },
   "sourceName": "ExampleHostedAdapter",
   "preferNameDirectory": true,
-  "guids": [],
+  "guids": [
+    "e445a468-19ee-456c-9aac-e26288475a45"
+  ],
   "symbols": {
     "Framework": {
       "type": "parameter",
@@ -21,6 +23,10 @@
         {
           "choice": "net6.0",
           "description": ".NET 6.0"
+        },
+        {
+          "choice": "net7.0",
+          "description": ".NET 7.0"
         }
       ],
       "defaultValue": "net6.0",

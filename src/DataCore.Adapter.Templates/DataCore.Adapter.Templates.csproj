@@ -120,6 +120,12 @@
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Exporter.Prometheus.AspNetCore&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Exporter.Prometheus.AspNetCore&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       Placeholder="Include=&quot;OpenTelemetry.Extensions.Hosting&quot;"
       Replacement="Include=&quot;OpenTelemetry.Extensions.Hosting&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Extensions_Hosting)&quot;"
     />
@@ -132,8 +138,20 @@
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Instrumentation.GrpcNetClient&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Instrumentation.GrpcNetClient&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
       Placeholder="Include=&quot;OpenTelemetry.Instrumentation.Http&quot;"
       Replacement="Include=&quot;OpenTelemetry.Instrumentation.Http&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_Http)&quot;"
+    />
+    <ReplaceFileText
+      InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      OutputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"
+      Placeholder="Include=&quot;OpenTelemetry.Instrumentation.Runtime&quot;"
+      Replacement="Include=&quot;OpenTelemetry.Instrumentation.Runtime&quot; Version=&quot;$(PkgVersion_OpenTelemetry_Instrumentation_Runtime)&quot;"
     />
     <ReplaceFileText
       InputFilename="templates\aschostedadapter\ExampleHostedAdapter.csproj"

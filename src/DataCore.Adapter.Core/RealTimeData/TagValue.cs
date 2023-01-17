@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
@@ -47,32 +46,12 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="units">
         ///   The value units.
         /// </param>
+        [JsonConstructor]
         public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
             UtcSampleTime = utcSampleTime;
             Value = value;
             Status = status;
             Units = units;
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagValue"/> object.
-        /// </summary>
-        /// <param name="utcSampleTime">
-        ///   The UTC sample time.
-        /// </param>
-        /// <param name="value">
-        ///   The tag value.
-        /// </param>
-        /// <param name="status">
-        ///   The quality status for the value.
-        /// </param>
-        /// <param name="units">
-        ///   The value units.
-        /// </param>
-        [Obsolete("Use constructor directly.", true)]
-        public static TagValue Create(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            return new TagValue(utcSampleTime, value, status, units);
         }
 
 
@@ -114,4 +93,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

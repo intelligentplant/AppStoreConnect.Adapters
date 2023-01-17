@@ -1,24 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net48</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.SignalR</PackageId>
     <Description>ASP.NET Core SignalR hubs for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" />
-    <PackageReference Include="System.Linq.Async" />
-    <ProjectReference Include="..\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="..\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj" />

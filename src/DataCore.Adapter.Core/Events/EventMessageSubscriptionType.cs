@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Events {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Describes the type of an event message push subscription.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EventMessageSubscriptionType {
 
         /// <summary>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net48</TargetFrameworks>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Abstractions</PackageId>
     <Description>Base types for App Store Connect adapters.</Description>
@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="IntelligentPlant.BackgroundTasks" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" />
   </ItemGroup>
   
   <ItemGroup>

@@ -53,7 +53,6 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Static constructor.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Initialisation is non-trivial")]
         static ProxyAdapterFeature() {
             _featureImplementations = new ConcurrentDictionary<Type, Type>();
 

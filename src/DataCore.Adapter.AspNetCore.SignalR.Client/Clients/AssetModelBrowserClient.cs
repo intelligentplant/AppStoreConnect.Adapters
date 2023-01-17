@@ -72,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<AssetModelNode>(
                 "BrowseAssetModelNodes",
                 adapterId,
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<AssetModelNode>(
                 "GetAssetModelNodes",
                 adapterId,
@@ -168,7 +168,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
             }
             AdapterSignalRClient.ValidateObject(request);
 
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             await foreach (var item in connection.StreamAsync<AssetModelNode>(
                 "FindAssetModelNodes",
                 adapterId,

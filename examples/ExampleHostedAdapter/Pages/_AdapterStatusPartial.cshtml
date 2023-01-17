@@ -83,7 +83,12 @@
           </div>
         </div>
         <div class="col">
-          <div class="pb-3"><code>@Model.Adapter.Descriptor.Id</code></div>
+          <div class="pb-3">
+            <code>@Model.Adapter.Descriptor.Id</code>
+            <button type="button" class="btn btn-sm copy-adapter-id" style="padding:0.15rem; border:none;" title="Copy adapter ID to clipboard">
+              <i class="fa-solid fa-copy fa-fw"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -144,7 +149,7 @@
             </div>
             <div class="col">
               <div class="pb-1">
-                @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase).ThenBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
+                @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), ExampleHostedAdapter.FeatureCategoryComparer.Instance).ThenBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
                   <div class="pb-2">
                     <i class="fa-solid @GetFeatureIcon(featureGroup.First()!) fa-fw" title="Adapter features: @featureGroup.Key"></i>
                     <span class="d-lg-none">Features: </span>
@@ -187,14 +192,8 @@
           <div class="col">
             <div class="pb-3">
               @if (Model.ApiIsEnabled) {
-                if (Model.RestApi.IsEnabled) {
-                  <div>REST v@(Model.RestApi.Version)</div>
-                }
-                if (Model.SignalRApi.IsEnabled) {
-                  <div>SignalR v@(Model.SignalRApi.Version)</div>
-                }
-                if (Model.GrpcApi.IsEnabled) {
-                  <div>gRPC v@(Model.GrpcApi.Version)</div>
+                foreach (var api in Model.AvailableApis.Where(x => x.Enabled)) {
+                  <div>@(string.IsNullOrWhiteSpace(api.Version) ? api.Name : $"{api.Name} v{api.Version}")</div>
                 }
               }
               else {

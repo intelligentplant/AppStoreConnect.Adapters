@@ -1,4 +1,4 @@
-﻿# DataCore.Adapter.AspNetCoreHttp.Proxy
+﻿# DataCore.Adapter.Http.Proxy
 
 Proxy adapter that connects to a remote adapter via HTTP.
 
@@ -36,18 +36,14 @@ var readRaw = proxy.Features.Get<IReadRawTagValues>();
 
 var now = DateTime.UtcNow;
 
-var rawChannel = readRaw.ReadRawTagValues(null, new ReadRawTagValuesRequest() {
+await foreach (var item in readRaw.ReadRawTagValues(context, new ReadRawTagValuesRequest() {
     Tags = new[] { "Sensor_001", "Sensor_002" },
     UtcStartTime = now.Subtract(TimeSpan.FromDays(7)),
     UtcEndTime = now,
     SampleCount = 0, // i.e. all raw values inside the time range
     BoundaryType = RawDataBoundaryType.Inside
-}, cancellationToken);
-
-while (await rawChannel.WaitToReadAsync()) {
-    if (rawChannel.TryRead(out var val)) {
-        DoSomethingWithValue(val);
-    }
+}, cancellationToken)) {
+    DoSomethingWithValue(item);
 }
 ```
 
@@ -100,17 +96,29 @@ async Task<IAdapter> CreateProxy(IHttpClientFactory factory) {
 The `ClaimsPrincipal` that is passed to the callback delegate is passed through from the `IAdapterCallContext` that is specified when an adapter feature method is called.
 
 
-# Adding Extension Feature Support
+# Enabling SignalR Functionality
 
-You can add support for adapter extension features by providing an `ExtensionFeatureFactory` delegate in the proxy options. This delegate will be invoked for every extension feature that the remote proxy reports that it supports:
+By default, the HTTP proxy cannot enable any features that use long-running subscriptions (such as snapshot tag value and event message subscriptions). However, if the remote host has the adapter SignalR API enabled, the HTTP proxy can enable these features via SignalR connections.
+
+SignalR functionality is enabled by configuring the `SignalROptions` property on the `HttpAdapterProxyOptions` class:
 
 ```csharp
 var options = new HttpAdapterProxyOptions() {
     Id = "some-id",
     Name = "some-name",
     RemoteId = "{SOME_ADAPTER_ID}",
-    ExtensionFeatureFactory = (featureName, proxy) => {
-        return GetFeatureImplementation(featureName, proxy);
+    SignalROptions = new SignalROptions {
+        TimeToLive = TimeSpan.FromSeconds(30),
+        ConnectionFactory = (Uri url, IAdapterCallContext context) => new HubConnectionBuilder()
+            .WithDataCoreAdapterConnection(url)
+            .WithAutomaticReconnect()
+            .Build()
     }
 };
 ```
+
+The proxy creates a separate connection for each calling identity. By default, a connection is uniquely identified using the `ClaimTypes.NameIdentifier` claim for the calling user, falling back to the `ClaimTypes.Name` claim. You can assign a delegate to the `SignalROptions.ConnectionIdentityFactory` property to customise the identity for a given caller.
+
+The `SignalROptions.TimeToLive` property defines the time that a connection will remain open for when there are no active subscriptions for the connection.
+
+If `HttpAdapterProxyOptions.SignalROptions` is null, SignalR capabilities are disabled. If the `HttpAdapterProxyOptions.CompatibilityVersion` property is set to `Version_3_0` or higher, the proxy will make an HTTP API call to the remote host to confirm if the SignalR API is available before enabling features that require SignalR. For lower compatibility versions, specifying a non-null `HttpAdapterProxyOptions.SignalROptions` value will assume that the SignalR API is available.

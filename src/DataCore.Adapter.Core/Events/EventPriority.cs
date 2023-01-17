@@ -1,8 +1,11 @@
-﻿namespace DataCore.Adapter.Events {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Describes the priority associated with an event message.
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EventPriority {
 
         /// <summary>

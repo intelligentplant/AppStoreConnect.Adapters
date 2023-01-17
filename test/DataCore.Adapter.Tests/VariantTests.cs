@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 using DataCore.Adapter.Common;
 
@@ -21,6 +22,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(typeof(float), typeof(float[]), typeof(float[,]), typeof(float[,,]))]
         [DataRow(typeof(short), typeof(short[]), typeof(short[,]), typeof(short[,,]))]
         [DataRow(typeof(int), typeof(int[]), typeof(int[,]), typeof(int[,,]))]
+        [DataRow(typeof(JsonElement), typeof(JsonElement[]), typeof(JsonElement[,]), typeof(JsonElement[,,]))]
         [DataRow(typeof(long), typeof(long[]), typeof(long[,]), typeof(int[,,]))]
         [DataRow(typeof(sbyte), typeof(sbyte[]), typeof(sbyte[,]), typeof(sbyte[,,]))]
         [DataRow(typeof(string), typeof(string[]), typeof(string[,]), typeof(string[,,]))]
@@ -324,6 +326,46 @@ namespace DataCore.Adapter.Tests {
             long[] value = new long[] { 255, 254 };
             Variant variant = value;
             var actualValue = (long[]) variant;
+            Assert.IsTrue(value.SequenceEqual(actualValue));
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromJsonElement() {
+            JsonElement value = JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value"" }");
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.Json, value, null);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromJsonElementArray() {
+            JsonElement[] value = new JsonElement[] {
+                JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value1"" }"),
+                JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value2"" }")
+            };
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.Json, value, new[] { value.Length });
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToJsonElement() {
+            JsonElement value = JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value"" }");
+            Variant variant = value;
+            var actualValue = (JsonElement) variant;
+            Assert.AreEqual(value, actualValue);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToJsonElementArray() {
+            JsonElement[] value = new JsonElement[] {
+                JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value1"" }"),
+                JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value2"" }")
+            };
+            Variant variant = value;
+            var actualValue = (JsonElement[]) variant;
             Assert.IsTrue(value.SequenceEqual(actualValue));
         }
 
@@ -656,6 +698,14 @@ namespace DataCore.Adapter.Tests {
             object value = DateTime.UtcNow;
             var variant = new Variant(value);
             ValidateVariant(variant, VariantType.DateTime, value, null);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowCreationFromJsonElementAsObject() {
+            object value = JsonSerializer.Deserialize<JsonElement>(@"{ ""prop"": ""value"" }");
+            var variant = new Variant(value);
+            ValidateVariant(variant, VariantType.Json, value, null);
         }
 
 

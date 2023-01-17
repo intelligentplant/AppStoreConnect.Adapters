@@ -1,12 +1,15 @@
 ﻿#if NETCOREAPP
 
 using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 using DataCore.Adapter.AspNetCore.SignalR.Proxy;
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using DataCore.Adapter.Json;
 
 namespace DataCore.Adapter.Tests {
 
@@ -17,7 +20,7 @@ namespace DataCore.Adapter.Tests {
                 RemoteId = remoteAdapterId,
                 ConnectionFactory = key => {
                     var builder = new HubConnectionBuilder()
-                        .WithUrl(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
+                        .WithDataCoreAdapterConnection(WebHostConfiguration.DefaultUrl + SignalRConfigurationExtensions.HubRoute, options => {
                             options.HttpMessageHandlerFactory = handler => {
                                 WebHostConfiguration.AllowUntrustedCertificates(handler);
                                 return handler;
@@ -39,10 +42,8 @@ namespace DataCore.Adapter.Tests {
     public class SignalRProxyJsonTests : SignalRProxyTests {
 
         protected override IHubConnectionBuilder AddProtocol(IHubConnectionBuilder builder) {
-            return builder.AddJsonProtocol(options => {
-                Json.JsonSerializerOptionsExtensions.AddDataCoreAdapterConverters(options.PayloadSerializerOptions.Converters);
-                options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            });
+            // JSON protocol is already registered; no need to do anything.
+            return builder;
         }
 
     }

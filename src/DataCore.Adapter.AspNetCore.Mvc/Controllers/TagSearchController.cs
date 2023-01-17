@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Tags;
 using DataCore.Adapter.Tags;
 
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +17,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/tags")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/tags")] 
+    [Route("api/data-core/v1.0/tags")]
+    [UseAdapterRequestValidation(false)]
     public class TagSearchController : ControllerBase {
 
         /// <summary>
@@ -57,7 +55,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/properties")]
-        [ProducesResponseType(typeof(IEnumerable<AdapterProperty>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<AdapterProperty>), 200)]
         public async Task<IActionResult> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -76,25 +74,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagPropertiesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<AdapterProperty>();
-
-                    await foreach (var item in feature.GetTagProperties(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.GetTagProperties(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -118,7 +100,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/properties")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTagProperties(string adapterId, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await GetTagProperties(adapterId, new GetTagPropertiesRequest() {
                 PageSize = pageSize,
@@ -145,7 +128,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpPost]
         [Route("{adapterId}/find")]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagSearch>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -164,25 +147,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartFindTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagDefinition>();
-
-                    await foreach (var item in feature.FindTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.FindTags(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -216,7 +183,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [HttpGet]
         [Route("{adapterId}/find")]
         [Route("{adapterId}")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
             return await FindTags(adapterId, new FindTagsRequest() {
                 Name = name,
@@ -246,7 +214,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/get-by-id")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagInfo>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -264,25 +232,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartGetTagsActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagDefinition>();
-
-                    await foreach (var item in feature.GetTags(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
-                        result.Add(item);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.GetTags(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -304,11 +256,189 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/get-by-id")]
-        [ProducesResponseType(typeof(IEnumerable<TagDefinition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
+        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTags(string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
             return await GetTags(adapterId, new GetTagsRequest() {
                 Tags = tag
             }, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Gets the configuration schema to use when creating or updating tags.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter to retrieve the tag configuration schema for.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the JSON schema for the adapter's tag configuration 
+        ///   model.
+        /// </returns>
+        [HttpGet]
+        [Route("{adapterId}/schema")]
+        [ProducesResponseType(typeof(System.Text.Json.JsonElement), 200)]
+        public async Task<IActionResult> GetTagSchema(string adapterId, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+            return Ok(schema);
+        }
+
+
+        /// <summary>
+        /// Creates a new tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag creation request.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the created <see cref="TagDefinition"/> object.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/create")]
+        [ProducesResponseType(typeof(TagDefinition), 200)]
+        public async Task<IActionResult> CreateTag(string adapterId, CreateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                problem.Extensions["errors"] = validationResults;
+                return new ObjectResult(problem) { StatusCode = 400 }; // 400
+            }
+
+            return Ok(await feature.CreateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+        }
+
+
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag update request.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain the updated <see cref="TagDefinition"/> object.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/update")]
+        [ProducesResponseType(typeof(TagDefinition), 200)]
+        public async Task<IActionResult> UpdateTag(string adapterId, UpdateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            var schema = await feature.GetTagSchemaAsync(callContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false);
+
+            if (!Json.Schema.JsonSchemaUtility.TryValidate(request.Body, schema, jsonOptions.Value?.JsonSerializerOptions, out var validationResults)) {
+                var problem = ProblemDetailsFactory.CreateProblemDetails(HttpContext, 400, title: SharedResources.Error_InvalidRequestBody);
+                problem.Extensions["errors"] = validationResults;
+                return new ObjectResult(problem) { StatusCode = 400 }; // 400
+            }
+
+            return Ok(await feature.UpdateTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
+        }
+
+
+        /// <summary>
+        /// Deletes an existing tag.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="request">
+        ///   The tag delete request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   Successful responses contain a Boolean value indicating if the tag was deleted.
+        /// </returns>
+        [HttpPost]
+        [Route("{adapterId}/delete")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> DeleteTag(string adapterId, DeleteTagRequest request, CancellationToken cancellationToken) {
+            var callContext = new HttpAdapterCallContext(HttpContext);
+            var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<ITagConfiguration>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (!resolvedFeature.IsAdapterResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            }
+            if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)); // 400
+            }
+            if (!resolvedFeature.IsFeatureResolved) {
+                return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(ITagConfiguration))); // 400
+            }
+            if (!resolvedFeature.IsFeatureAuthorized) {
+                return Forbid(); // 403
+            }
+            var feature = resolvedFeature.Feature;
+
+            return Ok(await feature.DeleteTagAsync(callContext, request, cancellationToken).ConfigureAwait(false));
         }
 
     }

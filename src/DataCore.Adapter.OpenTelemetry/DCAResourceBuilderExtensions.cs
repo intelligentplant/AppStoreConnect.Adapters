@@ -2,8 +2,6 @@
 
 using DataCore.Adapter;
 
-using OpenTelemetry.Resources;
-
 namespace OpenTelemetry.Resources {
 
     /// <summary>

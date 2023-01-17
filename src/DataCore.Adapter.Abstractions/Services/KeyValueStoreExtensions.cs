@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
@@ -116,6 +118,150 @@ namespace DataCore.Adapter.Services {
         /// </remarks>
         public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) {
             return store.GetKeysAsStrings(default);
+        }
+
+
+        /// <summary>
+        /// Serializes the specified value to JSON and writes it to the store.
+        /// </summary>
+        /// <typeparam name="TValue">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="store">
+        ///   The store.
+        /// </param>
+        /// <param name="key">
+        ///   The key to write to.
+        /// </param>
+        /// <param name="value">
+        ///   The value to write.
+        /// </param>
+        /// <param name="options">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform the operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonSerializerOptions? options = null) {
+            if (store == null) {
+                throw new ArgumentNullException(nameof(store));
+            }
+
+            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, options)).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Serializes the specified value to JSON and writes it to the store.
+        /// </summary>
+        /// <typeparam name="TValue">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="store">
+        ///   The store.
+        /// </param>
+        /// <param name="key">
+        ///   The key to write to.
+        /// </param>
+        /// <param name="value">
+        ///   The value to write.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The <see cref="JsonTypeInfo"/> for <typeparamref name="TValue"/>.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will perform the operation.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+        public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonTypeInfo<TValue> jsonTypeInfo) {
+            if (store == null) {
+                throw new ArgumentNullException(nameof(store));
+            }
+            if (jsonTypeInfo == null) {
+                throw new ArgumentNullException(nameof(jsonTypeInfo));
+            }
+
+            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, jsonTypeInfo)).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Reads a JSON byte array from the store and deserializes it to the specified type.
+        /// </summary>
+        /// <typeparam name="TValue">
+        ///   The type to deserialize the JSON bytes to.
+        /// </typeparam>
+        /// <param name="store">
+        ///   The store.
+        /// </param>
+        /// <param name="key">
+        ///   The key to read from.
+        /// </param>
+        /// <param name="options">
+        ///   The <see cref="JsonSerializerOptions"/> to use.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonSerializerOptions? options = null) {
+            if (store == null) {
+                throw new ArgumentNullException(nameof(store));
+            }
+
+            var result = await store.ReadAsync(key).ConfigureAwait(false);
+            return result == null
+                ? default
+                : JsonSerializer.Deserialize<TValue>(result, options);
+        }
+
+
+        /// <summary>
+        /// Reads a JSON byte array from the store and deserializes it to the specified type.
+        /// </summary>
+        /// <typeparam name="TValue">
+        ///   The type to deserialize the JSON bytes to.
+        /// </typeparam>
+        /// <param name="store">
+        ///   The store.
+        /// </param>
+        /// <param name="key">
+        ///   The key to read from.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The <see cref="JsonTypeInfo"/> for <typeparamref name="TValue"/>.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the operation result.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+        public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonTypeInfo<TValue> jsonTypeInfo) {
+            if (store == null) {
+                throw new ArgumentNullException(nameof(store));
+            }
+            if (jsonTypeInfo == null) {
+                throw new ArgumentNullException(nameof(jsonTypeInfo));
+            }
+
+            var result = await store.ReadAsync(key).ConfigureAwait(false);
+            return result == null
+                ? default
+                : JsonSerializer.Deserialize(result, jsonTypeInfo);
         }
 
     }

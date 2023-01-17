@@ -98,11 +98,13 @@ namespace DataCore.Adapter {
             }
             ValidationExtensions.ValidateObject(request);
 
-            await foreach (var item in FindAdapters(context, request, cancellationToken).ConfigureAwait(false)) {
-                if (item == null) {
-                    continue;
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("FindAdapters")) {
+                await foreach (var item in FindAdapters(context, request, cancellationToken).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
                 }
-                yield return item;
             }
         }
 
@@ -121,7 +123,9 @@ namespace DataCore.Adapter {
                 throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(adapterId));
             }
 
-            return await GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            using (Diagnostics.Telemetry.ActivitySource.StartActivity("GetAdapter")) {
+                return await GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            }
         }
 
 

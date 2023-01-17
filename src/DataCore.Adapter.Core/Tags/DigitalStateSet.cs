@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Tags {
 
@@ -46,6 +47,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
+        [JsonConstructor]
         public DigitalStateSet(string id, string name, IEnumerable<DigitalState>? states) {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
@@ -87,4 +89,5 @@ namespace DataCore.Adapter.Tags {
         }
 
     }
+
 }

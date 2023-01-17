@@ -331,8 +331,8 @@ namespace DataCore.Adapter.RealTimeData {
         internal TagValueBuilder WithBucketProperties(TagValueBucket bucket) {
             if (bucket != null) {
                 return WithProperties(
-                    AdapterProperty.Create(CommonTagPropertyNames.BucketStart, bucket.UtcBucketStart),
-                    AdapterProperty.Create(CommonTagPropertyNames.BucketEnd, bucket.UtcBucketEnd)
+                    AdapterProperty.Create(CommonTagValuePropertyNames.BucketStart, bucket.UtcBucketStart),
+                    AdapterProperty.Create(CommonTagValuePropertyNames.BucketEnd, bucket.UtcBucketEnd)
                 );
             }
 

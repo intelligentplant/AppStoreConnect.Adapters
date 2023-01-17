@@ -17,6 +17,10 @@ namespace DataCore.Adapter.Tests {
 
         public const string AdapterId = "sensor-csv";
 
+        public const string TestTagId = "Sensor_001";
+
+        public const string TestAnnotationId = "test_annotation";
+
         public static IServiceProvider ApplicationServices { get; private set; }
 
 #if NETCOREAPP
@@ -95,17 +99,79 @@ namespace DataCore.Adapter.Tests {
                     adapter.AddStandardFeatures(new NullValueWrite());
 
                     // Add configuration change notifier.
+                    var configurationChanges = ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>());
+                    adapter.AddStandardFeatures(configurationChanges);
+
+                    // Add asset model.
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
+                        ActivatorUtilities.CreateInstance<AssetModel.AssetModelManager>(sp, AssetModel.AssetModelManager.CreateConfigurationChangeDelegate(configurationChanges))
+                    );
+
+                    // Add tag annotations.
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<RealTimeData.InMemoryTagValueAnnotationManager>(sp, new RealTimeData.TagValueAnnotationManagerOptions() { 
+                            TagResolver = RealTimeData.InMemoryTagValueAnnotationManager.CreateTagResolverFromAdapter(adapter)
+                        })    
+                    );
+
+                    // Add custom functions.
+                    adapter.AddStandardFeatures(
+                        ActivatorUtilities.CreateInstance<Extensions.CustomFunctions>(sp, adapter.TypeDescriptor.Id, sp.GetService<ILogger<Extensions.CustomFunctions>>())
                     );
 
                     // Add ping-pong extension
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));
 
+                    adapter.Started += OnAdapterStarted;
+
                     return adapter;
                 });
         }
 
+
+        private static async Task OnAdapterStarted(IAdapter adapter) {
+            var assetModelManager = adapter.GetFeature<AssetModel.IAssetModelBrowse>().Unwrap() as AssetModel.AssetModelManager;
+            if (assetModelManager != null) {
+                await assetModelManager.InitAsync().ConfigureAwait(false);
+
+                var root = new AssetModel.AssetModelNodeBuilder()
+                    .WithName("Root")
+                    .WithId("1")
+                    .Build();
+
+                await assetModelManager.AddOrUpdateNodeAsync(root).ConfigureAwait(false);
+
+                var child = new AssetModel.AssetModelNodeBuilder()
+                    .WithName("Child")
+                    .WithId("2")
+                    .WithParent("1")
+                    .Build();
+
+                await assetModelManager.AddOrUpdateNodeAsync(child).ConfigureAwait(false);
+
+                var grandchild = new AssetModel.AssetModelNodeBuilder()
+                    .WithName("Grandchild")
+                    .WithId("3")
+                    .WithParent("2")
+                    .Build();
+
+                await assetModelManager.AddOrUpdateNodeAsync(grandchild).ConfigureAwait(false);
+            }
+
+            var annotationManager = adapter.GetFeature<RealTimeData.IReadTagValueAnnotations>().Unwrap() as RealTimeData.InMemoryTagValueAnnotationManager;
+            if (annotationManager != null) {
+                await annotationManager.CreateOrUpdateAnnotationAsync(
+                    TestTagId, 
+                    new RealTimeData.TagValueAnnotationBuilder()
+                        .WithId(TestAnnotationId)
+                        .WithValue("This is a test")
+                        .WithUtcStartTime(DateTime.UtcNow.AddMinutes(-30))
+                        .WithType(RealTimeData.AnnotationType.Instantaneous)
+                        .Build(), 
+                    default
+                ).ConfigureAwait(false);
+            }
+        }
 
     }
 }

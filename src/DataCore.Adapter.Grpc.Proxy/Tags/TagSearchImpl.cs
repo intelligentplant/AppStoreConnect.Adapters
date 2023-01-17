@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.Tags;
 
@@ -30,8 +27,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new FindTagsRequest() {
                 AdapterId = AdapterId,
@@ -54,9 +49,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Tags.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.FindTags(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.FindTags(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }
@@ -73,17 +67,14 @@ namespace DataCore.Adapter.Grpc.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new GetTagsRequest() {
                 AdapterId = AdapterId
             };
             grpcRequest.Tags.AddRange(request.Tags);
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.GetTags(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.GetTags(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }
@@ -100,8 +91,6 @@ namespace DataCore.Adapter.Grpc.Proxy.Tags.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagSearchService.TagSearchServiceClient>();
             var grpcRequest = new GetTagPropertiesRequest() {
                 AdapterId = AdapterId,
@@ -109,9 +98,8 @@ namespace DataCore.Adapter.Grpc.Proxy.Tags.Features {
                 Page = request.Page
             };
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.GetTagProperties(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.GetTagProperties(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }

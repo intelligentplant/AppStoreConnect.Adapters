@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.Http.Proxy</PackageId>
     <Description>App Store Connect adapter proxy using HTTP.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+    <ProjectReference Include="..\DataCore.Adapter.AspNetCore.SignalR.Client\DataCore.Adapter.AspNetCore.SignalR.Client.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Http.Client\DataCore.Adapter.Http.Client.csproj" />
     <ProjectReference Include="..\DataCore.Adapter.Proxy\DataCore.Adapter.Proxy.csproj" />
   </ItemGroup>

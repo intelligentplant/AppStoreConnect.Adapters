@@ -30,13 +30,9 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                await foreach (var item in client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, ctSource.Token).ConfigureAwait(false)) {
-                    yield return item;
-                }
+            await foreach (var item in client.ConfigurationChanges.CreateConfigurationChangesChannelAsync(AdapterId, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
     }

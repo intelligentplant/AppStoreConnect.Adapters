@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Tests {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -178,6 +178,15 @@ namespace DataCore.Adapter.Tests {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Response body for custom function &apos;{0}&apos; failed validation.
+        /// </summary>
+        internal static string CustomFunctionResponseWasInvalid {
+            get {
+                return ResourceManager.GetString("CustomFunctionResponseWasInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Values for the following expected items were not received: {0}.
         /// </summary>
         internal static string ExpectedItemsWereNotReceived {
@@ -214,6 +223,24 @@ namespace DataCore.Adapter.Tests {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve custom function &apos;{0}&apos;..
+        /// </summary>
+        internal static string GetCustomFunctionDidNotReturnResult {
+            get {
+                return ResourceManager.GetString("GetCustomFunctionDidNotReturnResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected at least one custom function definition to be returned..
+        /// </summary>
+        internal static string GetCustomFunctionsDidNotReturnResults {
+            get {
+                return ResourceManager.GetString("GetCustomFunctionsDidNotReturnResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The status of a health check result returned by the adapter does not match the aggregate status of the child health check results it contains..
         /// </summary>
         internal static string HealthCheckStatusDoesNotMatchAggregatedChildStatus {
@@ -246,6 +273,15 @@ namespace DataCore.Adapter.Tests {
         internal static string InsideBoundedRawQueryReturnedValuesBeforeStartTime {
             get {
                 return ResourceManager.GetString("InsideBoundedRawQueryReturnedValuesBeforeStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom function &apos;{0}&apos; returned null..
+        /// </summary>
+        internal static string InvokeCustomFunctionDidNotReturnResult {
+            get {
+                return ResourceManager.GetString("InvokeCustomFunctionDidNotReturnResult", resourceCulture);
             }
         }
         

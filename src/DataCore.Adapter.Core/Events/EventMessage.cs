@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
@@ -35,6 +36,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="properties">
         ///   Additional event properties.
         /// </param>
+        [JsonConstructor]
         public EventMessage(
             string id, 
             string? topic,

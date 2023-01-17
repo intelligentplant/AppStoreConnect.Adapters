@@ -67,6 +67,59 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
 
+        /// <summary>
+        /// Creates a delegate compatible with <see cref="SnapshotTagValuePushOptions.TagResolver"/> using an 
+        /// <see cref="ITagInfo"/> feature.
+        /// </summary>
+        /// <param name="feature">
+        ///   The <see cref="ITagInfo"/> feature to use.
+        /// </param>
+        /// <returns>
+        ///   A new delegate.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagResolver CreateTagResolverFromFeature(ITagInfo feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+
+            return (context, tags, cancellationToken) => feature.GetTags(context, new GetTagsRequest() {
+                Tags = tags?.ToArray()!
+            }, cancellationToken);
+        }
+
+
+        /// <summary>
+        /// Creates a delegate compatible with <see cref="SnapshotTagValuePushOptions.TagResolver"/> using an 
+        /// <see cref="IAdapter"/> that implements the <see cref="ITagInfo"/> feature.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The <see cref="IAdapter"/> to use to resolve tags.
+        /// </param>
+        /// <returns>
+        ///   A new delegate.
+        /// </returns>
+        /// <remarks>
+        ///   The adapter's <see cref="ITagInfo"/> feature will be resolved every time the resulting 
+        ///   delegate is invoked. If the feature cannot be resolved, the delegate will return an 
+        ///   empty <see cref="IAsyncEnumerable{T}"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        public static TagResolver CreateTagResolverFromAdapter(IAdapter adapter) {
+            if (adapter == null) {
+                throw new ArgumentNullException(nameof(adapter));
+            }
+
+            return (context, tags, cancellationToken) => adapter.TryGetFeature<ITagInfo>(out var feature)
+                ? feature!.GetTags(context, new GetTagsRequest() { Tags = tags?.ToArray()! }, cancellationToken)
+                : Array.Empty<TagIdentifier>().PublishToChannel().ReadAllAsync(cancellationToken);
+        }
+
+
         /// <inheritdoc/>
         public async IAsyncEnumerable<TagValueQueryResult> Subscribe(
             IAdapterCallContext context,
@@ -526,7 +579,7 @@ namespace DataCore.Adapter.RealTimeData {
 
             return Options.OnTagSubscriptionsAdded == null
                 ? Task.CompletedTask
-                : Options.OnTagSubscriptionsAdded.Invoke(tags, cancellationToken);
+                : Options.OnTagSubscriptionsAdded.Invoke(this, tags, cancellationToken);
         }
 
 
@@ -551,7 +604,7 @@ namespace DataCore.Adapter.RealTimeData {
             }
 
             if (Options.OnTagSubscriptionsRemoved != null) {
-                await Options.OnTagSubscriptionsRemoved.Invoke(tags, cancellationToken).ConfigureAwait(false);
+                await Options.OnTagSubscriptionsRemoved.Invoke(this, tags, cancellationToken).ConfigureAwait(false);
             }
         }
 

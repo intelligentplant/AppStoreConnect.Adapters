@@ -1,12 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Security;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Events;
 using DataCore.Adapter.Events;
 
 using IntelligentPlant.BackgroundTasks;
@@ -22,8 +20,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/events")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/events")] 
+    [Route("api/data-core/v1.0/events")]
+    [UseAdapterRequestValidation(false)]
     public class EventsController : ControllerBase {
+
+        /// <summary>
+        /// Holds channels for updating active topic-based event subscriptions.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Guid, Channel<EventMessageSubscriptionUpdate>> s_activeSubscriptions = new ConcurrentDictionary<Guid, Channel<EventMessageSubscriptionUpdate>>();
+
 
         /// <summary>
         /// For accessing the available adapters.
@@ -34,16 +39,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// For registering background tasks.
         /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
-
-        /// <summary>
-        /// The maximum number of event messages that can be returned via an HTTP request.
-        /// </summary>
-        public const int MaxEventMessagesPerReadRequest = 1000;
-
-        /// <summary>
-        /// The maximum number of event messages that can be written in a single HTTP request.
-        /// </summary>
-        public const int MaxEventMessagesPerWriteRequest = 1000;
 
 
         /// <summary>
@@ -78,7 +73,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/by-time-range")]
-        [ProducesResponseType(typeof(IEnumerable<EventMessage>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<EventMessage>), 200)]
         public async Task<IActionResult> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesForTimeRange>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -96,31 +91,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             }
 
             var feature = resolvedFeature.Feature;
-
-            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesForTimeRangeActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<EventMessage>();
-
-                    await foreach (var msg in feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxEventMessagesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(feature.ReadEventMessagesForTimeRange(callContext, request, cancellationToken));
         }
 
 
@@ -142,7 +113,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/by-cursor")]
-        [ProducesResponseType(typeof(IEnumerable<EventMessageWithCursorPosition>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<EventMessageWithCursorPosition>), 200)]
         public async Task<IActionResult> ReadEventMessagesByCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadEventMessagesUsingCursor>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -161,37 +132,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadEventMessagesUsingCursorActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<EventMessageWithCursorPosition>();
-
-                    await foreach (var msg in feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxEventMessagesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadEventMessagesUsingCursor(callContext, request, cancellationToken)
+            );
         }
 
 
         /// <summary>
-        /// Writes event messages to an adapter. Up to <see cref="MaxEventMessagesPerWriteRequest"/> 
-        /// messages can be written in a single request.
+        /// Writes event messages to an adapter.
         /// </summary>
         /// <param name="adapterId">
         ///   The adapter ID to write to.
@@ -206,14 +154,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="WriteEventMessageResult"/> 
         ///   objects (one per sample written).
         /// </returns>
-        /// <remarks>
-        ///   Up to <see cref="MaxEventMessagesPerWriteRequest"/> values can be written to the 
-        ///   adapter in a single request. Subsequent values will be ignored. No corresponding 
-        ///   <see cref="WriteEventMessageResult"/> object will be returned for these items.
-        /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write")]
-        [ProducesResponseType(typeof(IEnumerable<WriteEventMessageResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<WriteEventMessageResult>), 200)]
         public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteEventMessages>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -232,31 +175,11 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteEventMessagesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<WriteEventMessageResult>();
-                    var channel = request.Events.PublishToChannel();
+            var channel = request.Events.PublishToChannel();
 
-                    await foreach (var msg in feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxEventMessagesPerWriteRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxEventMessagesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.WriteEventMessages(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken)
+            );
         }
 
     }

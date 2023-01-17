@@ -62,6 +62,23 @@ namespace DataCore.Adapter.Diagnostics {
         }
 
 
+        /// <summary>
+        /// Notifies the <see cref="ConfigurationChanges"/> instance about a change.
+        /// </summary>
+        /// <param name="change">
+        ///   The change that occurred.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will register the change.
+        /// </returns>
+        public async ValueTask NotifyAsync(ConfigurationChange change, CancellationToken cancellationToken = default) {
+            await ValueReceived(change, cancellationToken).ConfigureAwait(false);
+        }
+
+
         /// <inheritdoc/>
         public async IAsyncEnumerable<ConfigurationChange> Subscribe(
             IAdapterCallContext context, 

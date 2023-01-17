@@ -135,6 +135,12 @@
   <data name="event_AdapterStopped" xml:space="preserve">
     <value>Adapter '{0}' was stopped.</value>
   </data>
+  <data name="event_AdapterStreamItemIn" xml:space="preserve">
+    <value>Operation received a client streaming item on adapter '{0}': {1}</value>
+  </data>
+  <data name="event_AdapterStreamItemOut" xml:space="preserve">
+    <value>Operation emitted a server streaming item on adapter '{0}': {1}</value>
+  </data>
   <data name="event_AdapterUpdated" xml:space="preserve">
     <value>Adapter '{0}' was updated.</value>
   </data>

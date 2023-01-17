@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Tags {
 
@@ -37,6 +38,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public TagIdentifier(string id, string name) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -184,7 +186,7 @@ namespace DataCore.Adapter.Tags {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-#if NETSTANDARD2_0 || NET46
+#if NETSTANDARD2_0 || NETFRAMEWORK
             return _compareIdOnly
                 ? HashGenerator.Combine(obj?.Id?.ToUpperInvariant())
                 : HashGenerator.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
@@ -195,4 +197,5 @@ namespace DataCore.Adapter.Tags {
 #endif
         }
     }
+
 }

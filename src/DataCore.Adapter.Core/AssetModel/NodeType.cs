@@ -1,9 +1,12 @@
-﻿namespace DataCore.Adapter.AssetModel {
+﻿using System.Text.Json.Serialization;
+
+namespace DataCore.Adapter.AssetModel {
 
     /// <summary>
     /// Describes the type of a node in an asset model.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Object is the best description")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum NodeType {
 
         /// <summary>

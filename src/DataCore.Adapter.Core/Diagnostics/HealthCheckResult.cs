@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Diagnostics {
 
     /// <summary>
     /// Represents the result of an adapter health check.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "Use cases do not require equality checks")]
     public struct HealthCheckResult {
 
         /// <summary>
@@ -65,6 +65,7 @@ namespace DataCore.Adapter.Diagnostics {
         ///   The inner results that contributed to the status of this result. Can be 
         ///   <see langword="null"/>.
         /// </param>
+        [JsonConstructor]
         public HealthCheckResult(string? displayName, HealthStatus status, string? description, string? error, IDictionary<string, string>? data, IEnumerable<HealthCheckResult>? innerResults) {
             DisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? string.Empty
@@ -215,4 +216,5 @@ namespace DataCore.Adapter.Diagnostics {
         }
 
     }
+
 }

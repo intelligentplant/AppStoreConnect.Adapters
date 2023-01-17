@@ -5,8 +5,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using Grpc.Core;
@@ -54,6 +52,9 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var updateChannel = Channel.CreateUnbounded<TagValueSubscriptionUpdate>();
 
             try {
+                ResolvedAdapterFeature<ISnapshotTagValuePush> adapter = default;
+                CreateSnapshotTagValueSubscriptionRequest adapterRequest = default!;
+
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
                 while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
@@ -63,8 +64,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     // We received a create request!
 
-                    var adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, requestStream.Current.Create.AdapterId, cancellationToken).ConfigureAwait(false);
-                    var adapterRequest = new CreateSnapshotTagValueSubscriptionRequest() {
+                    adapter = await Util.ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, _adapterAccessor, requestStream.Current.Create.AdapterId, cancellationToken).ConfigureAwait(false);
+                    adapterRequest = new CreateSnapshotTagValueSubscriptionRequest() {
                         Tags = requestStream.Current.Create.Tags.ToArray(),
                         Properties = new Dictionary<string, string>(requestStream.Current.Create.Properties)
                     };
@@ -72,39 +73,33 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
                     // Start a background task to run the subscription.
                     _backgroundTaskService.QueueBackgroundWorkItem(async ct => {
-                        using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                            long outputItems = 0;
-                            try {
-                                await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel.Reader.ReadAllAsync(ct), ct).ConfigureAwait(false)) {
-                                    if (val == null) {
-                                        continue;
-                                    }
-                                    ++outputItems;
-                                    await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
-                                }
+                        while (await requestStream.MoveNext(ct).ConfigureAwait(false)) {
+                            if (requestStream.Current.OperationCase != CreateSnapshotPushChannelRequest.OperationOneofCase.Update) {
+                                continue;
                             }
-                            finally {
-                                activity.SetResponseItemCountTag(outputItems);
-                            }
+
+                            await updateChannel.Writer.WriteAsync(new TagValueSubscriptionUpdate() {
+                                Action = requestStream.Current.Update.Action == SubscriptionUpdateAction.Subscribe
+                                    ? Common.SubscriptionUpdateAction.Subscribe
+                                    : Common.SubscriptionUpdateAction.Unsubscribe,
+                                Tags = requestStream.Current.Update.Tags.ToArray()
+                            }, ct).ConfigureAwait(false);
                         }
                     }, cancellationToken);
 
-                    // Break out of the initial loop; we'll handle subscription updates below!
+                    // Break out of the initial loop; we'll handle running the actual subscription below!
                     break;
                 }
 
-                // Now keep reading subscription changes.
-                while (await requestStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                    if (requestStream.Current.OperationCase != CreateSnapshotPushChannelRequest.OperationOneofCase.Update) {
+                if (adapter.Feature == null) {
+                    return;
+                }
+
+                await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, updateChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                    if (val == null) {
                         continue;
                     }
-
-                    updateChannel.Writer.TryWrite(new TagValueSubscriptionUpdate() {
-                        Action = requestStream.Current.Update.Action == SubscriptionUpdateAction.Subscribe
-                            ? Common.SubscriptionUpdateAction.Subscribe
-                            : Common.SubscriptionUpdateAction.Unsubscribe,
-                        Tags = requestStream.Current.Update.Tags.ToArray()
-                    });
+                    await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
@@ -129,20 +124,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (val == null) {
-                            continue;
-                        }
-                        ++outputItems;
-                        await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
-                    }
+            await foreach (var val in adapter.Feature.Subscribe(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (val == null) {
+                    continue;
                 }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+
+                await responseStream.WriteAsync(val.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPush)).ConfigureAwait(false);
             }
         }
 
@@ -160,21 +147,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadSnapshotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadSnapshotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPoll)).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.SnapshotPoll)).ConfigureAwait(false);
             }
         }
 
@@ -196,21 +174,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadRawTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadRawTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.Raw)).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.Raw)).ConfigureAwait(false);
             }
         }
 
@@ -231,21 +200,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadPlotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadPlotTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.Plot)).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.Plot)).ConfigureAwait(false);
             }
         }
 
@@ -264,21 +224,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.ValuesAtTimes)).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagValueQueryResult(TagValueQueryType.ValuesAtTimes)).ConfigureAwait(false);
             }
         }
 
@@ -295,21 +246,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(adapter.Adapter.Descriptor.Id)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcDataFunctionDescriptor()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcDataFunctionDescriptor()).ConfigureAwait(false);
             }
         }
 
@@ -331,21 +273,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadProcessedTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadProcessedTagValues(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcProcessedTagValueQueryResult(TagValueQueryType.Processed)).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcProcessedTagValueQueryResult(TagValueQueryType.Processed)).ConfigureAwait(false);
             }
         }
 
@@ -359,7 +292,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 ResolvedAdapterFeature<IWriteSnapshotTagValues> adapter = default;
-                WriteTagValuesRequest adapterRequest = null!;
+                RealTimeData.WriteTagValuesRequest adapterRequest = null!;
 
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
@@ -371,7 +304,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                     // We received a create request!
 
                     adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, requestStream.Current.Init.AdapterId, cancellationToken).ConfigureAwait(false);
-                    adapterRequest = new Adapter.RealTimeData.WriteTagValuesRequest() {
+                    adapterRequest = new RealTimeData.WriteTagValuesRequest() {
                         Properties = new Dictionary<string, string>(requestStream.Current.Init.Properties)
                     };
 
@@ -403,20 +336,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }, cancellationToken);
 
                 // Stream results back to caller.
-                using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                    long outputItems = 0;
-                    try {
-                        await foreach (var val in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                            if (val == null) {
-                                continue;
-                            }
-                            ++outputItems;
-                            await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
-                        }
+                await foreach (var val in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                    if (val == null) {
+                        continue;
                     }
-                    finally {
-                        activity.SetResponseItemCountTag(outputItems);
-                    }
+                    await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
@@ -430,6 +354,35 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
 
         /// <inheritdoc/>
+        public override async Task<WriteTagValuesResponse> WriteFixedSnapshotTagValues(WriteTagValuesRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+
+            var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
+            foreach (var item in request.Values) {
+                await valueChannel.Writer.WriteAsync(item.ToAdapterWriteTagValueItem(), cancellationToken).ConfigureAwait(false);
+            }
+
+            var response = new WriteTagValuesResponse();
+
+            await foreach (var val in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                if (val == null) {
+                    continue;
+                }
+                response.Results.Add(val.ToGrpcWriteTagValueResult());
+            }
+
+            return response;
+        }
+
+
+        /// <inheritdoc/>
         public override async Task WriteHistoricalTagValues(IAsyncStreamReader<WriteTagValueRequest> requestStream, IServerStreamWriter<WriteTagValueResult> responseStream, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var cancellationToken = context.CancellationToken;
@@ -438,7 +391,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
 
             try {
                 ResolvedAdapterFeature<IWriteHistoricalTagValues> adapter = default;
-                WriteTagValuesRequest adapterRequest = null!;
+                RealTimeData.WriteTagValuesRequest adapterRequest = null!;
 
                 // Keep reading from the request stream until we get an item that allows us to create 
                 // the subscription.
@@ -482,20 +435,11 @@ namespace DataCore.Adapter.Grpc.Server.Services {
                 }, cancellationToken);
 
                 // Stream results back to caller.
-                using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                    long outputItems = 0;
-                    try {
-                        await foreach (var val in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                            if (val == null) {
-                                continue;
-                            }
-                            ++outputItems;
-                            await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
-                        }
+                await foreach (var val in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                    if (val == null) {
+                        continue;
                     }
-                    finally {
-                        activity.SetResponseItemCountTag(outputItems);
-                    }
+                    await responseStream.WriteAsync(val.ToGrpcWriteTagValueResult()).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
@@ -505,6 +449,35 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             finally {
                 valueChannel.Writer.TryComplete();
             }
+        }
+
+
+        /// <inheritdoc/>
+        public override async Task<WriteTagValuesResponse> WriteFixedHistoricalTagValues(WriteTagValuesRequest request, ServerCallContext context) {
+            var adapterCallContext = new GrpcAdapterCallContext(context);
+            var adapterId = request.AdapterId;
+            var cancellationToken = context.CancellationToken;
+            var adapter = await Util.ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+
+            var adapterRequest = new RealTimeData.WriteTagValuesRequest() {
+                Properties = new Dictionary<string, string>(request.Properties)
+            };
+
+            var valueChannel = Channel.CreateUnbounded<RealTimeData.WriteTagValueItem>();
+            foreach (var item in request.Values) {
+                await valueChannel.Writer.WriteAsync(item.ToAdapterWriteTagValueItem(), cancellationToken).ConfigureAwait(false);
+            }
+
+            var response = new WriteTagValuesResponse();
+
+            await foreach (var val in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, adapterRequest, valueChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
+                if (val == null) {
+                    continue;
+                }
+                response.Results.Add(val.ToGrpcWriteTagValueResult());
+            }
+
+            return response;
         }
 
     }

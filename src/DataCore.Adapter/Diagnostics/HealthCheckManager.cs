@@ -166,7 +166,8 @@ namespace DataCore.Adapter.Diagnostics {
             try {
                 var results = await _adapter.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false);
                 if (results == null || !results.Any()) {
-                    return HealthCheckResult.Healthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Healthy);
+                    _latestHealthCheck = HealthCheckResult.Healthy(Resources.HealthChecks_DisplayName_OverallAdapterHealth, Resources.HealthChecks_CompositeResultDescription_Healthy);
+                    return _latestHealthCheck.Value;
                 }
 
                 var resultsArray = results.ToArray();
@@ -186,10 +187,9 @@ namespace DataCore.Adapter.Diagnostics {
                         break;
                 }
 
-                var overallResult = new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
-                _latestHealthCheck = overallResult;
+                _latestHealthCheck = new HealthCheckResult(Resources.HealthChecks_DisplayName_OverallAdapterHealth, compositeStatus, description, null, null, resultsArray);
 
-                return overallResult;
+                return _latestHealthCheck.Value;
             }
             catch (OperationCanceledException) {
                 throw;

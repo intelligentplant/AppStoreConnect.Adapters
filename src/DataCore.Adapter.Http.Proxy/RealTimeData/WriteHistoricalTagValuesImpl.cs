@@ -31,13 +31,26 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request, channel);
+            if (Proxy.CanUseSignalR) {
+                var client = GetSignalRClient(context);
+                await client.StreamStartedAsync().ConfigureAwait(false);
+                try {
+                    await foreach (var item in client.Client.TagValues.WriteHistoricalTagValuesAsync(AdapterId, request, channel, cancellationToken).ConfigureAwait(false)) {
+                        if (item == null) {
+                            continue;
+                        }
+                        yield return item;
+                    }
+                }
+                finally {
+                    await client.StreamCompletedAsync().ConfigureAwait(false);
+                }
+            }
+            else {
+                var client = GetClient();
 
-            var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
                 const int maxItems = 5000;
-                var items = (await channel.ToEnumerable(maxItems, ctSource.Token).ConfigureAwait(false)).ToArray();
+                var items = (await channel.ToEnumerable(maxItems, cancellationToken).ConfigureAwait(false)).ToArray();
                 if (items.Length >= maxItems) {
                     Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
                 }
@@ -47,10 +60,13 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                     Properties = request.Properties
                 };
 
-                var clientResponse = await client.TagValues.WriteHistoricalValuesAsync(AdapterId, req, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
+                await foreach (var item in client.TagValues.WriteHistoricalValuesAsync(AdapterId, req, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                    if (item == null) {
+                        continue;
+                    }
                     yield return item;
                 }
+
             }
         }
     }

@@ -539,13 +539,17 @@ namespace DataCore.Adapter.WaveGenerator {
 
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<AdapterProperty> GetTagProperties(
+        public async IAsyncEnumerable<AdapterProperty> GetTagProperties(
             IAdapterCallContext context, 
-            GetTagPropertiesRequest request, 
+            GetTagPropertiesRequest request,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-            return s_tagPropertyDefinitions.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request).ToAsyncEnumerable(cancellationToken);
+            await Task.Yield();
+            foreach (var item in s_tagPropertyDefinitions.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).SelectPage(request)) {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return item;
+            }
         }
 
 
@@ -556,11 +560,10 @@ namespace DataCore.Adapter.WaveGenerator {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             foreach (var item in request.Tags) {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!TryGetWaveGeneratorOptions(item, out var tagOptions)) {
                     continue;
                 }
@@ -576,9 +579,7 @@ namespace DataCore.Adapter.WaveGenerator {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
             IEnumerable<KeyValuePair<string, WaveGeneratorOptions>> selectedItems;
 
@@ -598,33 +599,79 @@ namespace DataCore.Adapter.WaveGenerator {
             }
 
             foreach (var item in selectedItems) {
-                 yield return ToTagDefinition(item.Key, item.Value, request.ResultFields);
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return ToTagDefinition(item.Key, item.Value, request.ResultFields);
             }
         }
 
 
         /// <inheritdoc/>
         public async IAsyncEnumerable<TagValueQueryResult> ReadSnapshotTagValues(
-            IAdapterCallContext context, 
-            ReadSnapshotTagValuesRequest request, 
+            IAdapterCallContext context,
+            ReadSnapshotTagValuesRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-            await Task.CompletedTask.ConfigureAwait(false);
-            
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
+            await Task.Yield();
+
+            var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
+            foreach (var tag in request.Tags) {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var sampleTime = RoundDownToNearestSampleTime(DateTime.UtcNow, GetSampleInterval());
-                foreach (var tag in request.Tags) {
-                    ctSource.Token.ThrowIfCancellationRequested();
+                if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
+                    continue;
+                }
 
-                    if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
+                var tagId = tagOptions?.Name ?? tag;
+
+                var val = new TagValueBuilder()
+                    .WithUtcSampleTime(sampleTime)
+                    .WithValue(CalculateValue(sampleTime, tagOptions!))
+                    .Build();
+
+                yield return new TagValueQueryResult(tagId, tagId, val);
+            }
+        }
+
+
+        /// <inheritdoc/>
+        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
+            IAdapterCallContext context,
+            ReadRawTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
+
+            var sampleInterval = GetSampleInterval();
+            var startTime = RoundDownToNearestSampleTime(request.UtcStartTime, sampleInterval);
+            var endTime = RoundUpToNearestSampleTime(request.UtcEndTime, sampleInterval);
+
+            foreach (var tag in request.Tags) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
+                    continue;
+                }
+
+                var tagId = tagOptions?.Name ?? tag;
+                var valuesEmittedForTag = 0;
+
+                for (var sampleTime = startTime; sampleTime <= endTime; sampleTime = sampleTime.Add(sampleInterval)) {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (request.SampleCount > 0 && valuesEmittedForTag >= request.SampleCount) {
+                        // No need to emit any more samples for this tag.
+                        break;
+                    }
+                    if (sampleTime < request.UtcStartTime && request.BoundaryType != RawDataBoundaryType.Outside) {
+                        // This is the sample immediately before the query start time.
                         continue;
                     }
-
-                    var tagId = tagOptions?.Name ?? tag;
+                    if (sampleTime > request.UtcEndTime && request.BoundaryType != RawDataBoundaryType.Outside) {
+                        // This is the sample immediately after the query start time.
+                        continue;
+                    }
 
                     var val = new TagValueBuilder()
                         .WithUtcSampleTime(sampleTime)
@@ -632,62 +679,9 @@ namespace DataCore.Adapter.WaveGenerator {
                         .Build();
 
                     yield return new TagValueQueryResult(tagId, tagId, val);
-                }
-            }
-        }
 
-
-        /// <inheritdoc/>
-        public async IAsyncEnumerable<TagValueQueryResult> ReadRawTagValues(
-            IAdapterCallContext context, 
-            ReadRawTagValuesRequest request, 
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            ValidateInvocation(context, request);
-            await Task.CompletedTask.ConfigureAwait(false);
-
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                var sampleInterval = GetSampleInterval();
-                var startTime = RoundDownToNearestSampleTime(request.UtcStartTime, sampleInterval);
-                var endTime = RoundUpToNearestSampleTime(request.UtcEndTime, sampleInterval);
-
-                foreach (var tag in request.Tags) {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
-                        continue;
-                    }
-
-                    var tagId = tagOptions?.Name ?? tag;
-                    var valuesEmittedForTag = 0;
-
-                    for (var sampleTime = startTime; sampleTime <= endTime; sampleTime = sampleTime.Add(sampleInterval)) {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (request.SampleCount > 0 && valuesEmittedForTag >= request.SampleCount) {
-                            // No need to emit any more samples for this tag.
-                            break;
-                        }
-                        if (sampleTime < request.UtcStartTime && request.BoundaryType != RawDataBoundaryType.Outside) {
-                            // This is the sample immediately before the query start time.
-                            continue;
-                        }
-                        if (sampleTime > request.UtcEndTime && request.BoundaryType != RawDataBoundaryType.Outside) {
-                            // This is the sample immediately after the query start time.
-                            continue;
-                        }
-
-                        var val = new TagValueBuilder()
-                            .WithUtcSampleTime(sampleTime)
-                            .WithValue(CalculateValue(sampleTime, tagOptions!))
-                            .Build();
-
-                        yield return new TagValueQueryResult(tagId, tagId, val);
-
-                        if (request.SampleCount > 0) {
-                            ++valuesEmittedForTag;
-                        }
+                    if (request.SampleCount > 0) {
+                        ++valuesEmittedForTag;
                     }
                 }
             }
@@ -696,32 +690,29 @@ namespace DataCore.Adapter.WaveGenerator {
 
         /// <inheritdoc/>
         public async IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
-            IAdapterCallContext context, 
-            ReadTagValuesAtTimesRequest request, 
+            IAdapterCallContext context,
+            ReadTagValuesAtTimesRequest request,
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            ValidateInvocation(context, request);
-            await Task.CompletedTask.ConfigureAwait(false);
+            await Task.Yield();
 
-            using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-                foreach (var tag in request.Tags) {
-                    ctSource.Token.ThrowIfCancellationRequested();
-                    if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
-                        continue;
-                    }
+            foreach (var tag in request.Tags) {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!TryGetWaveGeneratorOptions(tag, out var tagOptions)) {
+                    continue;
+                }
 
-                    var tagId = tagOptions?.Name ?? tag;
+                var tagId = tagOptions?.Name ?? tag;
 
-                    foreach (var sampleTime in request.UtcSampleTimes) {
-                        ctSource.Token.ThrowIfCancellationRequested();
-                        var val = new TagValueBuilder()
-                            .WithUtcSampleTime(sampleTime)
-                            .WithValue(CalculateValue(sampleTime, tagOptions!))
-                            .Build();
+                foreach (var sampleTime in request.UtcSampleTimes) {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var val = new TagValueBuilder()
+                        .WithUtcSampleTime(sampleTime)
+                        .WithValue(CalculateValue(sampleTime, tagOptions!))
+                        .Build();
 
-                        yield return new TagValueQueryResult(tagId, tagId, val);
-                    }
+                    yield return new TagValueQueryResult(tagId, tagId, val);
                 }
             }
         }

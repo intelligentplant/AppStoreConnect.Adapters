@@ -30,15 +30,9 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValues.GetSupportedDataFunctionsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -49,15 +43,9 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = GetClient();
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var clientResponse = await client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            await foreach (var item in client.TagValues.ReadProcessedTagValuesAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

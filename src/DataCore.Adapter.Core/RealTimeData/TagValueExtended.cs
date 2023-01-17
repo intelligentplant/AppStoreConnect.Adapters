@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -50,6 +52,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="properties">
         ///   Custom properties associated with the value.
         /// </param>
+        [JsonConstructor]
         public TagValueExtended(
             DateTime utcSampleTime, 
             Variant value,
@@ -64,39 +67,6 @@ namespace DataCore.Adapter.RealTimeData {
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
 
-
-        /// <summary>
-        /// Creates a new <see cref="TagValueExtended"/> object.
-        /// </summary>
-        /// <param name="utcSampleTime">
-        ///   The UTC sample time.
-        /// </param>
-        /// <param name="value">
-        ///   The tag value.
-        /// </param>
-        /// <param name="additionalValues">
-        ///   Additional tag values e.g. if <paramref name="value"/> is the value of a digital 
-        ///   state, the name of the state can be specified by passing in an additional value.
-        /// </param>
-        /// <param name="status">
-        ///   The quality status for the value.
-        /// </param>
-        /// <param name="units">
-        ///   The value units.
-        /// </param>
-        /// <param name="notes">
-        ///   Notes associated with the value.
-        /// </param>
-        /// <param name="error">
-        ///   An error message to associate with the value.
-        /// </param>
-        /// <param name="properties">
-        ///   Custom properties associated with the value.
-        /// </param>
-        [Obsolete("Use constructor directly", true)]
-        public static TagValueExtended Create(DateTime utcSampleTime, Variant value, IEnumerable<Variant>? additionalValues, TagValueStatus status, string? units, string? notes, string? error, IEnumerable<AdapterProperty>? properties) {
-            return new TagValueExtended(utcSampleTime, value, status, units, notes, error, properties);
-        }
-
     }
+
 }

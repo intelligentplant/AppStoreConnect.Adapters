@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.Http.Client;
 using DataCore.Adapter.Proxy;
 
@@ -17,14 +18,44 @@ namespace DataCore.Adapter.Http.Proxy {
         public string RemoteId { get; set; } = default!;
 
         /// <summary>
+        /// The default HTTP version to use when making requests.
+        /// </summary>
+        public Version? DefaultRequestVersion { get; set; }
+
+        /// <summary>
         /// The App Store Connect adapter toolkit version to use when querying the remote adapter.
         /// </summary>
         public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
 
         /// <summary>
-        /// The interval to use between re-polling the health status of the remote adapter. 
-        /// Ignored if the remote adapter does not support <see cref="Diagnostics.IHealthCheck"/>.
+        ///The SignalR options for the proxy.
         /// </summary>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   If <see cref="SignalROptions"/> is <see langword="null"/>, SignalR functionality 
+        ///   will be disabled.
+        /// </para>
+        /// 
+        /// <para>
+        ///   When <see cref="CompatibilityVersion"/> is <see cref="CompatibilityVersion.Version_3_0"/> 
+        ///   or higher, SignalR capabilities will only be enabled if the remote host spcifies 
+        ///   that the adapter SignalR API is enabled. If a lower <see cref="CompatibilityVersion"/> 
+        ///   is specified, SignalR capabilities will always be enabled when a <see cref="SignalROptions"/> 
+        ///   is specified.
+        /// </para>
+        /// 
+        /// </remarks>
+        public SignalROptions? SignalROptions { get; set; }
+
+        /// <summary>
+        /// The interval to use between re-polling the health status of the remote adapter. 
+        /// Ignored if the remote adapter does not support <see cref="Adapter.Diagnostics.IHealthCheck"/>.
+        /// </summary>
+        /// <remarks>
+        ///   Specifying a value less than or equal to <see cref="TimeSpan.Zero"/> will result in 
+        ///   periodic health check updates being disabled.
+        /// </remarks>
         public TimeSpan HealthCheckPushInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
@@ -42,6 +73,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// A factory method that the proxy calls to request a concrete implementation of an 
         /// extension feature.
         /// </summary>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeatureFactory<HttpAdapterProxy>? ExtensionFeatureFactory { get; set; }
 
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
 
@@ -49,6 +50,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public TagSummary(string id, string name, string? description, string? units, VariantType dataType) 
             : base(id, name) {
             Description = description ?? string.Empty;
@@ -107,4 +109,5 @@ namespace DataCore.Adapter.Tags {
         }
 
     }
+
 }

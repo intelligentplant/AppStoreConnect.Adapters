@@ -1,13 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.AssetModel;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
 
@@ -35,17 +31,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartBrowseAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++outputItems;
-                        yield return item;
-                    }
-                }
-                finally {
-                    Activity.Current.SetResponseItemCountTag(outputItems);
-                }
+            await foreach (var item in adapter.Feature.BrowseAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -70,18 +57,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-
-            using (Telemetry.ActivitySource.StartGetAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++outputItems;
-                        yield return item;
-                    }
-                }
-                finally {
-                    Activity.Current.SetResponseItemCountTag(outputItems);
-                }
+            await foreach (var item in adapter.Feature.GetAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -106,17 +83,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (Telemetry.ActivitySource.StartFindAssetModelNodesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++outputItems;
-                        yield return item;
-                    }
-                }
-                finally {
-                    Activity.Current.SetResponseItemCountTag(outputItems);
-                }
+            await foreach (var item in adapter.Feature.FindAssetModelNodes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

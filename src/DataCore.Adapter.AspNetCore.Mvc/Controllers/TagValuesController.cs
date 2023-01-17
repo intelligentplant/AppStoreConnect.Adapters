@@ -1,13 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using IntelligentPlant.BackgroundTasks;
@@ -23,8 +21,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
     [Area("app-store-connect")]
     [Route("api/[area]/v2.0/tag-values")]
     // Legacy route for compatibility with v1 of the toolkit
-    [Route("api/data-core/v1.0/tag-values")] 
+    [Route("api/data-core/v1.0/tag-values")]
+    [UseAdapterRequestValidation(false)]
     public class TagValuesController: ControllerBase {
+
+        /// <summary>
+        /// Holds channels for updating active snapshot subscriptions.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Guid, Channel<TagValueSubscriptionUpdate>> s_activeSubscriptions = new ConcurrentDictionary<Guid, Channel<TagValueSubscriptionUpdate>>();
 
         /// <summary>
         /// The service for accessing the running adapters.
@@ -35,16 +39,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// The service for registering background tasks.
         /// </summary>
         private readonly IBackgroundTaskService _backgroundTaskService;
-
-        /// <summary>
-        /// The maximum number of samples that can be requested overall per request.
-        /// </summary>
-        public const int MaxSamplesPerReadRequest = 20000;
-
-        /// <summary>
-        /// The maximum number of samples that can be written per request.
-        /// </summary>
-        public const int MaxSamplesPerWriteRequest = 5000;
 
         /// <summary>
         /// Default query time range to use in a historical query if a start or end time is not 
@@ -91,7 +85,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadSnapshotValues(string adapterId, [FromQuery] string[] tag = null!, CancellationToken cancellationToken = default) {
             return ReadSnapshotValues(adapterId, new ReadSnapshotTagValuesRequest() { 
                 Tags = tag ?? Array.Empty<string>()
@@ -116,7 +111,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -132,33 +127,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+            
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagValueQueryResult>();
-
-                    await foreach (var msg in feature.ReadSnapshotTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadSnapshotTagValues(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -191,7 +165,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/raw")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadRawValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -240,7 +215,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/raw")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadRawValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadRawTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -259,31 +234,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagValueQueryResult>();
-
-                    await foreach (var msg in feature.ReadRawTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadRawTagValues(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -318,7 +271,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpGet]
         [Route("{adapterId}/plot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadPlotValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -369,7 +323,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         [HttpPost]
         [Route("{adapterId}/plot")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadPlotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -388,31 +342,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagValueQueryResult>();
-
-                    await foreach (var msg in feature.ReadPlotTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadPlotTagValues(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -436,7 +368,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpGet]
         [Route("{adapterId}/values-at-times")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadValuesAtTimes(
             string adapterId, 
             [FromQuery] string[] tag = null!,
@@ -467,7 +400,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </returns>
         [HttpPost]
         [Route("{adapterId}/values-at-times")]
-        [ProducesResponseType(typeof(IEnumerable<TagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadTagValuesAtTimes>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -483,33 +416,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<TagValueQueryResult>();
-
-                    await foreach (var msg in feature.ReadTagValuesAtTimes(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadTagValuesAtTimes(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -550,7 +462,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
         [Route("{adapterId}/processed")]
-        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadProcessedValues(
             string adapterId,
             [FromQuery] string[] tag = null!,
@@ -612,7 +525,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
         [Route("{adapterId}/processed")]
-        [ProducesResponseType(typeof(IEnumerable<ProcessedTagValueQueryResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -631,31 +544,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<ProcessedTagValueQueryResult>();
-
-                    await foreach (var msg in feature.ReadProcessedTagValues(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerReadRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.ReadProcessedTagValues(callContext, request, cancellationToken)
+            );
         }
 
 
@@ -680,7 +571,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
         [Route("{adapterId}/supported-aggregations")]
-        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
+        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
         }
@@ -710,7 +602,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
         [Route("{adapterId}/supported-aggregations")]
-        [ProducesResponseType(typeof(IEnumerable<DataFunctionDescriptor>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, GetSupportedDataFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IReadProcessedTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -726,34 +618,17 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(resolvedFeature.Adapter.Descriptor.Id)) {
-                var result = new List<DataFunctionDescriptor>();
-
-                await foreach (var msg in feature.GetSupportedDataFunctions(callContext, request, cancellationToken).ConfigureAwait(false)) {
-                    if (msg == null) {
-                        continue;
-                    }
-
-                    if (result.Count > MaxSamplesPerReadRequest) {
-                        Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerReadRequest));
-                        break;
-                    }
-
-                    result.Add(msg);
-                }
-
-                activity.SetResponseItemCountTag(result.Count);
-
-                return Ok(result); // 200
-            }
+            return Util.StreamResults(
+                feature.GetSupportedDataFunctions(callContext, request, cancellationToken)
+            );
         }
 
 
         /// <summary>
-        /// Writes values to an adapter's snapshot. Up to <see cref="MaxSamplesPerWriteRequest"/> 
-        /// values can be written in a single request.
+        /// Writes values to an adapter's snapshot.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
@@ -768,14 +643,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
         ///   objects (one per sample written).
         /// </returns>
-        /// <remarks>
-        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
-        ///   in a single request. Subsequent values will be ignored. No corresponding 
-        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
-        /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/snapshot")]
-        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteSnapshotTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -791,39 +661,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<WriteTagValueResult>();
-                    var channel = request.Values.PublishToChannel();
+            var channel = request.Values.PublishToChannel();
 
-                    await foreach (var msg in feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerWriteRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
+            return Util.StreamResults(
+                feature.WriteSnapshotTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken)
+            );
         }
 
 
         /// <summary>
-        /// Writes values to an adapter's historical archive. Up to <see cref="MaxSamplesPerWriteRequest"/>
-        /// values can be written in a single request.
+        /// Writes values to an adapter's historical archive.
         /// </summary>
         /// <param name="adapterId">
         ///   The ID of the adapter to write to.
@@ -838,14 +688,9 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="WriteTagValueResult"/> 
         ///   objects (one per sample written).
         /// </returns>
-        /// <remarks>
-        ///   Up to <see cref="MaxSamplesPerWriteRequest"/> values can be written to the adapter 
-        ///   in a single request. Subsequent values will be ignored. No corresponding 
-        ///   <see cref="WriteTagValueResult"/> object will be returned for these items.
-        /// </remarks>
         [HttpPost]
         [Route("{adapterId}/write/history")]
-        [ProducesResponseType(typeof(IEnumerable<WriteTagValueResult>), 200)]
+        [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
             var resolvedFeature = await _adapterAccessor.GetAdapterAndFeature<IWriteHistoricalTagValues>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
@@ -861,34 +706,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
             if (!resolvedFeature.IsFeatureAuthorized) {
                 return Forbid(); // 403
             }
+            
             var feature = resolvedFeature.Feature;
 
-            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(resolvedFeature.Adapter.Descriptor.Id, request)) {
-                try {
-                    var result = new List<WriteTagValueResult>();
-                    var channel = request.Values.PublishToChannel();
+            var channel = request.Values.PublishToChannel();
 
-                    await foreach (var msg in feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false)) {
-                        if (msg == null) {
-                            continue;
-                        }
-
-                        if (result.Count > MaxSamplesPerWriteRequest) {
-                            Util.AddIncompleteResponseHeader(Response, string.Format(callContext.CultureInfo, Resources.Warning_MaxResponseItemsReached, MaxSamplesPerWriteRequest));
-                            break;
-                        }
-
-                        result.Add(msg);
-                    }
-
-                    activity.SetResponseItemCountTag(result.Count);
-                    return Ok(result); // 200
-                }
-                catch (SecurityException) {
-                    return Forbid(); // 403
-                }
-            }
-        }
+            return Util.StreamResults(
+                feature.WriteHistoricalTagValues(callContext, request, channel.ReadAllAsync(cancellationToken), cancellationToken)
+            );
+        } 
 
     }
 }

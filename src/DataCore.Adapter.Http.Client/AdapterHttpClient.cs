@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Security.Claims;
@@ -22,6 +23,15 @@ namespace DataCore.Adapter.Http.Client {
         public HttpClient HttpClient { get; }
 
         /// <summary>
+        /// The default HTTP version to use when making requests.
+        /// </summary>
+        /// <remarks>
+        ///   When <see langword="null"/>, the default value of <see cref="HttpRequestMessage.Version"/> 
+        ///   will be used.
+        /// </remarks>
+        public Version? DefaultRequestVersion { get; set; }
+
+        /// <summary>
         /// JSON serializer options.
         /// </summary>
         internal JsonSerializerOptions JsonSerializerOptions { get; }
@@ -40,6 +50,11 @@ namespace DataCore.Adapter.Http.Client {
         /// The client for querying an adapter's asset model.
         /// </summary>
         public AssetModelBrowserClient AssetModel { get; }
+
+        /// <summary>
+        /// The client for invoking custom adapter functions.
+        /// </summary>
+        public CustomFunctionsClient CustomFunctions { get; }
 
         /// <summary>
         /// The client for reading event messages from and writing event messages to an adapter.
@@ -70,6 +85,7 @@ namespace DataCore.Adapter.Http.Client {
         /// <summary>
         /// The client for invoking extension features on an adapter.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public ExtensionFeaturesClient Extensions { get; }
 
 
@@ -84,14 +100,12 @@ namespace DataCore.Adapter.Http.Client {
         /// </param>
         public AdapterHttpClient(HttpClient httpClient) {
             HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            JsonSerializerOptions = new JsonSerializerOptions() {
-                PropertyNameCaseInsensitive = true
-            };
-            JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            JsonSerializerOptions.Converters.AddDataCoreAdapterConverters();
+            JsonSerializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true }
+                .UseDataCoreAdapterDefaults();
 
             Adapters = new AdaptersClient(this);
             AssetModel = new AssetModelBrowserClient(this);
+            CustomFunctions = new CustomFunctionsClient(this);
             Events = new EventsClient(this);
             Extensions = new ExtensionFeaturesClient(this);
             HostInfo = new HostInfoClient(this);
@@ -183,6 +197,10 @@ namespace DataCore.Adapter.Http.Client {
         /// <param name="url">
         ///   The request URL.
         /// </param>
+        /// <param name="version">
+        ///   The HTTP version to use. When <see langword="null"/> is specified, the default value 
+        ///   of <see cref="HttpRequestMessage.Version"/> is used.
+        /// </param>
         /// <param name="metadata">
         ///   The request metadata.
         /// </param>
@@ -198,12 +216,19 @@ namespace DataCore.Adapter.Http.Client {
         public static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             Uri url, 
+            Version? version,
             RequestMetadata? metadata
         ) {
-            return new HttpRequestMessage(
+            var message = new HttpRequestMessage(
                 method ?? throw new ArgumentNullException(nameof(method)),
                 url ?? throw new ArgumentNullException(nameof(url))
             ).AddRequestMetadata(metadata);
+
+            if (version != null) {
+                message.Version = version;
+            }
+
+            return message;
         }
 
 
@@ -228,14 +253,85 @@ namespace DataCore.Adapter.Http.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="url"/> is <see langword="null"/>.
         /// </exception>
+        public HttpRequestMessage CreateHttpRequestMessage(
+            HttpMethod method,
+            Uri url,
+            RequestMetadata? metadata
+        ) {
+            return CreateHttpRequestMessage(method, url, DefaultRequestVersion, metadata);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
+        /// </summary>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="version">
+        ///   The HTTP version to use. When <see langword="null"/> is specified, the default value 
+        ///   of <see cref="HttpRequestMessage.Version"/> is used.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
         public static HttpRequestMessage CreateHttpRequestMessage(
             HttpMethod method, 
             string url, 
+            Version? version,
             RequestMetadata? metadata
         ) {
             return CreateHttpRequestMessage(
                 method, 
                 new Uri(url ?? throw new ArgumentNullException(nameof(url)), UriKind.RelativeOrAbsolute), 
+                version,
+                metadata
+            );
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="HttpRequestMessage"/> that has the specified metadata attached.
+        /// </summary>
+        /// <param name="method">
+        ///   The request method.
+        /// </param>
+        /// <param name="url">
+        ///   The request URL.
+        /// </param>
+        /// <param name="metadata">
+        ///   The request metadata.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HttpRequestMessage"/> object.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="method"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="url"/> is <see langword="null"/>.
+        /// </exception>
+        public HttpRequestMessage CreateHttpRequestMessage(
+            HttpMethod method,
+            string url,
+            RequestMetadata? metadata
+        ) {
+            return CreateHttpRequestMessage(
+                method,
+                url,
+                DefaultRequestVersion,
                 metadata
             );
         }
@@ -256,6 +352,10 @@ namespace DataCore.Adapter.Http.Client {
         /// <param name="content">
         ///   The content for the request. The content will be serialized to JSON.
         /// </param>
+        /// <param name="version">
+        ///   The HTTP version to use. When <see langword="null"/> is specified, the default value 
+        ///   of <see cref="HttpRequestMessage.Version"/> is used.
+        /// </param>
         /// <param name="metadata">
         ///   The request metadata.
         /// </param>
@@ -275,10 +375,11 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             Uri url, 
             TContent content, 
+            Version? version,
             RequestMetadata? metadata,
             JsonSerializerOptions? options
         ) {
-            var result = CreateHttpRequestMessage(method, url, metadata);
+            var result = CreateHttpRequestMessage(method, url, version, metadata);
             result.Content = System.Net.Http.Json.JsonContent.Create(content, options: options);
 
             return result;
@@ -318,7 +419,7 @@ namespace DataCore.Adapter.Http.Client {
             TContent content,
             RequestMetadata? metadata
         ) {
-            return CreateHttpRequestMessage(method, url, content, metadata, JsonSerializerOptions);
+            return CreateHttpRequestMessage(method, url, content, DefaultRequestVersion, metadata, JsonSerializerOptions);
         }
 
 
@@ -336,6 +437,10 @@ namespace DataCore.Adapter.Http.Client {
         /// </param>
         /// <param name="content">
         ///   The content for the request. The content will be serialized to JSON.
+        /// </param>
+        /// <param name="version">
+        ///   The HTTP version to use. When <see langword="null"/> is specified, the default value 
+        ///   of <see cref="HttpRequestMessage.Version"/> is used.
         /// </param>
         /// <param name="metadata">
         ///   The request metadata.
@@ -356,6 +461,7 @@ namespace DataCore.Adapter.Http.Client {
             HttpMethod method, 
             string url, 
             TContent content, 
+            Version? version,
             RequestMetadata? metadata,
             JsonSerializerOptions? options
         ) {
@@ -363,6 +469,7 @@ namespace DataCore.Adapter.Http.Client {
                 method,
                 new Uri(url ?? throw new ArgumentNullException(nameof(url)), UriKind.RelativeOrAbsolute),
                 content,
+                version,
                 metadata,
                 options
             );
@@ -402,8 +509,9 @@ namespace DataCore.Adapter.Http.Client {
             TContent content,
             RequestMetadata? metadata
         ) {
-            return CreateHttpRequestMessage(method, url, content, metadata, JsonSerializerOptions);
+            return CreateHttpRequestMessage(method, url, content, DefaultRequestVersion, metadata, JsonSerializerOptions);
         }
 
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete

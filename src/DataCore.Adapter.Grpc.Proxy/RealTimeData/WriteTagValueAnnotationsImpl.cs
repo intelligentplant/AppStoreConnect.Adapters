@@ -21,8 +21,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> CreateAnnotation(IAdapterCallContext context, Adapter.RealTimeData.CreateAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new CreateAnnotationRequest() {
                 AdapterId = AdapterId,
@@ -36,8 +34,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+            using (var grpcResponse = client.CreateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken))) {
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.ToAdapterWriteTagValueAnnotationResult();
@@ -47,8 +44,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> UpdateAnnotation(IAdapterCallContext context, Adapter.RealTimeData.UpdateAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new UpdateAnnotationRequest() {
                 AdapterId = AdapterId,
@@ -63,8 +58,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+            using (var grpcResponse = client.UpdateAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken))) {
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.ToAdapterWriteTagValueAnnotationResult();
@@ -74,8 +68,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
 
         /// <inheritdoc />
         public async Task<Adapter.RealTimeData.WriteTagValueAnnotationResult> DeleteAnnotation(IAdapterCallContext context, Adapter.RealTimeData.DeleteAnnotationRequest request, CancellationToken cancellationToken) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValueAnnotationsService.TagValueAnnotationsServiceClient>();
             var grpcRequest = new DeleteAnnotationRequest() {
                 AdapterId = AdapterId,
@@ -89,8 +81,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, ctSource.Token))) {
+            using (var grpcResponse = client.DeleteAnnotationAsync(grpcRequest, GetCallOptions(context, cancellationToken))) {
                 var result = await grpcResponse.ResponseAsync.ConfigureAwait(false);
 
                 return result.ToAdapterWriteTagValueAnnotationResult();

@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.Tracing;
+﻿using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.Diagnostics.Tracing;
 
 namespace DataCore.Adapter.Diagnostics {
 
@@ -10,6 +12,74 @@ namespace DataCore.Adapter.Diagnostics {
         LocalizationResources = "DataCore.Adapter.Diagnostics.AdapterEventSourceResources"
     )]
     public partial class AdapterEventSource : EventSource {
+
+        /// <summary>
+        /// Instrument that records the number of feature operations that have been started.
+        /// </summary>
+        private static readonly Counter<long> s_operationsStartedCounter = Telemetry.Meter.CreateCounter<long>(
+            "operations_started",
+            "{operations}",
+            "Adapter operations that have been started."
+        );
+
+        /// <summary>
+        /// Instrument that records the number of feature operations that have successfully 
+        /// completed.
+        /// </summary>
+        private static readonly Counter<long> s_operationsCompletedCounter = Telemetry.Meter.CreateCounter<long>(
+            "operations_completed",
+            "{operations}",
+            "Adapter operations that have successfully completed."
+        );
+
+        /// <summary>
+        /// Instrument that records the number of feature operations that have faulted.
+        /// </summary>
+        private static readonly Counter<long> s_operationsFaultedCounter = Telemetry.Meter.CreateCounter<long>(
+            "operations_faulted",
+            "{operations}",
+            "Adapter operations that have faulted."
+        );
+
+        /// <summary>
+        /// Instrument that records the time taken to perform an operation.
+        /// </summary>
+        private static readonly Histogram<double> s_operationTime = Telemetry.Meter.CreateHistogram<double>(
+            "operation_time",
+            "s",
+            "Time taken to perform an adapter operation."
+        );
+
+        /// <summary>
+        /// Instrument that records the number of server stream items that have been emitted.
+        /// </summary>
+        private static readonly Counter<long> s_streamItemsOutCounter = Telemetry.Meter.CreateCounter<long>(
+            "stream_items_out",
+            "{items}",
+            "Items emitted by server streaming adapter operations."
+        );
+
+        /// <summary>
+        /// Instrument that records the number of client stream items that have been consumed.
+        /// </summary>
+        private static readonly Counter<long> s_streamItemsInCounter = Telemetry.Meter.CreateCounter<long>(
+            "stream_items_in",
+            "{items}",
+            "Items received by client streaming adapter operations."
+        );
+
+
+        /// <summary>
+        /// Singleton <see cref="AdapterEventSource"/> instance.
+        /// </summary>
+        public static AdapterEventSource Log { get; } = new AdapterEventSource();
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterEventSource"/> instance.
+        /// </summary>
+        internal AdapterEventSource() { }
+
 
         /// <summary>
         /// Writes an event with ID <see cref="EventIds.AdapterStarted"/>.
@@ -71,6 +141,7 @@ namespace DataCore.Adapter.Diagnostics {
         [Event(EventIds.AdapterOperationStarted, Level = EventLevel.Informational, Opcode = EventOpcode.Start)]
         public void AdapterOperationStarted(string adapterId, string operationId) {
             WriteEvent(EventIds.AdapterOperationStarted, adapterId, operationId);
+            s_operationsStartedCounter.Add(1, new KeyValuePair<string, object?>("adapter_id", adapterId), new KeyValuePair<string, object?>("operation", operationId));
         }
 
 
@@ -89,6 +160,12 @@ namespace DataCore.Adapter.Diagnostics {
         [Event(EventIds.AdapterOperationCompleted, Level = EventLevel.Informational, Opcode = EventOpcode.Stop)]
         public void AdapterOperationCompleted(string adapterId, string operationId, double elapsed) {
             WriteEvent(EventIds.AdapterOperationCompleted, adapterId, operationId, elapsed);
+            var tags = new[] {
+                new KeyValuePair<string, object?>("adapter_id", adapterId), 
+                new KeyValuePair<string, object?>("operation", operationId)
+            };
+            s_operationsCompletedCounter.Add(1, tags);
+            s_operationTime.Record(elapsed / 1000, tags);
         }
 
 
@@ -110,6 +187,44 @@ namespace DataCore.Adapter.Diagnostics {
         [Event(EventIds.AdapterOperationFaulted, Level = EventLevel.Error, Opcode = EventOpcode.Stop)]
         public void AdapterOperationFaulted(string adapterId, string operationId, double elapsed, string error) {
             WriteEvent(EventIds.AdapterOperationFaulted, adapterId, operationId, elapsed, error);
+            var tags = new[] {
+                new KeyValuePair<string, object?>("adapter_id", adapterId),
+                new KeyValuePair<string, object?>("operation", operationId)
+            };
+            s_operationsFaultedCounter.Add(1, tags);
+            s_operationTime.Record(elapsed / 1000, tags);
+        }
+
+
+        /// <summary>
+        /// Writes an event with ID <see cref="EventIds.AdapterStreamItemOut"/>.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter that has emitted the item.
+        /// </param>
+        /// <param name="operationId">
+        ///   The identifier for the operation that has emitted the item.
+        /// </param>
+        [Event(EventIds.AdapterStreamItemOut, Level = EventLevel.Informational, Opcode = EventOpcode.Info)]
+        public void AdapterStreamItemOut(string adapterId, string operationId) {
+            WriteEvent(EventIds.AdapterStreamItemOut, adapterId, operationId);
+            s_streamItemsOutCounter.Add(1, new KeyValuePair<string, object?>("adapter_id", adapterId), new KeyValuePair<string, object?>("operation", operationId));
+        }
+
+
+        /// <summary>
+        /// Writes an event with ID <see cref="EventIds.AdapterStreamItemIn"/>.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The ID of the adapter that has emitted the item.
+        /// </param>
+        /// <param name="operationId">
+        ///   The identifier for the operation that has emitted the item.
+        /// </param>
+        [Event(EventIds.AdapterStreamItemIn, Level = EventLevel.Informational, Opcode = EventOpcode.Info)]
+        public void AdapterStreamItemIn(string adapterId, string operationId) {
+            WriteEvent(EventIds.AdapterStreamItemIn, adapterId, operationId);
+            s_streamItemsInCounter.Add(1, new KeyValuePair<string, object?>("adapter_id", adapterId), new KeyValuePair<string, object?>("operation", operationId));
         }
 
 
@@ -152,6 +267,17 @@ namespace DataCore.Adapter.Diagnostics {
             /// An operation on an adapter was completed unsuccessfully.
             /// </summary>
             public const int AdapterOperationFaulted = 7;
+
+            /// <summary>
+            /// An item (tag, asset model node, tag value, event) was emitted from the adapter to an asynchronous 
+            /// stream.
+            /// </summary>
+            public const int AdapterStreamItemOut = 8;
+
+            /// <summary>
+            /// An item (tag value, event) was written to the adapter via an asynchronous stream.
+            /// </summary>
+            public const int AdapterStreamItemIn = 9;
 
         }
 

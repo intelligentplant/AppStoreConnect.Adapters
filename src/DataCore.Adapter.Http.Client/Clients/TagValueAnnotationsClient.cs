@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -79,7 +81,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -115,10 +117,11 @@ namespace DataCore.Adapter.Http.Client.Clients {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="request"/> fails validation.
         /// </exception>
-        public async Task<IEnumerable<TagValueAnnotationQueryResult>> ReadAnnotationsAsync(
+        public async IAsyncEnumerable<TagValueAnnotationQueryResult> ReadAnnotationsAsync(
             string adapterId, 
             ReadAnnotationsRequest request, 
             RequestMetadata? metadata = null,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (string.IsNullOrWhiteSpace(adapterId)) {
@@ -128,11 +131,16 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
-            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
-                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<TagValueAnnotationQueryResult>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+                await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<TagValueAnnotationQueryResult>(await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false), _client.JsonSerializerOptions, cancellationToken)) {
+                    if (item == null) {
+                        continue;
+                    }
+                    yield return item;
+                }
             }
         }
 
@@ -177,7 +185,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/create";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -226,7 +234,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Put, url, request?.Annotation, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -275,7 +283,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/{Uri.EscapeDataString(request.Tag)}/{Uri.EscapeDataString(request.AnnotationId)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Delete, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Delete, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 

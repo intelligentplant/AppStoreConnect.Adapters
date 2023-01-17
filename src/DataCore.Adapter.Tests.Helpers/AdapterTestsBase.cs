@@ -14,6 +14,8 @@ using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
+using Json.Schema;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -451,6 +453,156 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 Assert.AreEqual(0, remainingTypes.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
+            });
+        }
+
+        #endregion
+
+        #region [ ICustom Functions ]
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="GetCustomFunctionsRequestShouldReturnResults"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="GetCustomFunctionsRequest"/> to use.
+        /// </returns>
+        protected virtual GetCustomFunctionsRequest CreateGetCustomFunctionsRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="GetCustomFunctionRequestShouldReturnResult"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="GetCustomFunctionRequest"/> to use.
+        /// </returns>
+        protected virtual GetCustomFunctionRequest CreateGetCustomFunctionRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="CustomFunctionInvocationRequestShouldReturnResult"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="CustomFunctionInvocationRequest"/> to use.
+        /// </returns>
+        protected virtual CustomFunctionInvocationRequest CreateCustomFunctionInvocationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.GetFunctionsAsync"/> returns at least one 
+        /// result.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateGetCustomFunctionsRequest"/>
+        [TestMethod]
+        public Task GetCustomFunctionsRequestShouldReturnResults() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateGetCustomFunctionsRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateGetCustomFunctionsRequest));
+                    return;
+                }
+
+                var funcs = await feature.GetFunctionsAsync(context, request, ct).ConfigureAwait(false);
+                Assert.IsTrue(funcs.Count() > 0, Resources.GetCustomFunctionsDidNotReturnResults);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.GetFunctionAsync"/> returns details for a 
+        /// custom function.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateGetCustomFunctionRequest"/>
+        [TestMethod]
+        public Task GetCustomFunctionRequestShouldReturnResult() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateGetCustomFunctionRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateGetCustomFunctionRequest));
+                    return;
+                }
+
+                var funcDetails = await feature.GetFunctionAsync(context, request, ct).ConfigureAwait(false);
+
+                Assert.IsNotNull(funcDetails, FormatMessage(Resources.GetCustomFunctionDidNotReturnResult, request.Id));
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="ICustomFunctions.InvokeFunctionAsync"/> can successfully 
+        /// invoke a custom function.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateCustomFunctionInvocationRequest"/>
+        [TestMethod]
+        public Task CustomFunctionInvocationRequestShouldReturnResult() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var request = CreateCustomFunctionInvocationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<ICustomFunctions>(nameof(CreateCustomFunctionInvocationRequest));
+                    return;
+                }
+
+                var funcDetails = await feature.GetFunctionAsync(context, new GetCustomFunctionRequest() { 
+                    Id = request.Id
+                }, ct).ConfigureAwait(false);
+
+                Assert.IsNotNull(funcDetails, FormatMessage(Resources.GetCustomFunctionDidNotReturnResult, request.Id));
+
+                var response = await feature.InvokeFunctionAsync(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(response, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
+
+                if (funcDetails!.ResponseSchema == null) {
+                    Assert.IsNull(response.Body, FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                } 
+                else {
+                    Assert.IsNotNull(response.Body, FormatMessage(Resources.InvokeCustomFunctionDidNotReturnResult, request.Id));
+                    Assert.IsTrue(CustomFunctions.TryValidate(response.Body!.Value, funcDetails!.ResponseSchema!.Value, null, out _), FormatMessage(Resources.CustomFunctionResponseWasInvalid, request.Id));
+                }
             });
         }
 
@@ -1524,6 +1676,144 @@ namespace DataCore.Adapter.Tests {
 
         #endregion
 
+        #region [ IWriteTagValueAnnotations ]
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="CreateTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="CreateAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual CreateAnnotationRequest CreateCreateAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="UpdateTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="UpdateAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual UpdateAnnotationRequest CreateUpdateAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Gets the request to use with the <see cref="DeleteTagValueAnnotationShouldSucceed"/> 
+        /// test.
+        /// </summary>
+        /// <param name="context">
+        ///   The test context.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="DeleteAnnotationRequest"/> to use.
+        /// </returns>
+        protected virtual DeleteAnnotationRequest CreateDeleteAnnotationRequest(TestContext context) {
+            return null!;
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.CreateAnnotation"/> successfully 
+        /// creates an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateCreateAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task CreateTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateCreateAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateCreateAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.CreateAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.CreateAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.UpdateAnnotation"/> successfully 
+        /// updates an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateUpdateAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task UpdateTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateUpdateAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateUpdateAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.UpdateAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.UpdateAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
+            });
+        }
+
+
+        /// <summary>
+        /// Verifies that <see cref="IWriteTagValueAnnotations.DeleteAnnotation"/> successfully 
+        /// deletes an annotation.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="Task"/> that will run the test.
+        /// </returns>
+        /// <seealso cref="CreateDeleteAnnotationRequest"/>
+        [TestMethod]
+        public virtual Task DeleteTagValueAnnotationShouldSucceed() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<IWriteTagValueAnnotations>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IWriteTagValueAnnotations>();
+                    return;
+                }
+
+                var request = CreateDeleteAnnotationRequest(TestContext);
+                if (request == null) {
+                    AssertInconclusiveDueToMissingTestInput<IWriteTagValueAnnotations>(nameof(CreateDeleteAnnotationRequest));
+                    return;
+                }
+
+                var result = await feature.DeleteAnnotation(context, request, ct).ConfigureAwait(false);
+                Assert.IsNotNull(result, FormatMessage(Resources.MethodReturnedNullResult, $"{nameof(IWriteTagValueAnnotations)}.{nameof(IWriteTagValueAnnotations.DeleteAnnotation)}"));
+                Assert.AreNotEqual(WriteStatus.Fail, result.Status, Resources.WriteStatusIndicatesFailure);
+            });
+        }
+
+        #endregion
+
         #region [ IWriteSnapshotTagValues ]
 
         /// <summary>
@@ -2202,6 +2492,7 @@ namespace DataCore.Adapter.Tests {
 
         #region [ Extensions ]
 
+#pragma warning disable CS0618 // Type or member is obsolete
         /// <summary>
         /// Ensures that, for every extension feature implemented by the adapter, the feature 
         /// returns a descriptor and a set of available operations.
@@ -2234,6 +2525,7 @@ namespace DataCore.Adapter.Tests {
                 }
             });
         }
+#pragma warning restore CS0618 // Type or member is obsolete
 
         #endregion
 

@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Common;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 namespace DataCore.Adapter.AspNetCore.Hubs {
@@ -21,8 +14,6 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
     public partial class AdapterHub {
 
         #region [ Snapshot Subscription Management ]
-
-#if NET48 == false
 
         /// <summary>
         /// Creates a snapshot tag value subscription.
@@ -54,65 +45,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
-
-#else
-
-        /// <summary>
-        /// Creates a snapshot tag value subscription.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The ID of the adapter to subscribe to.
-        /// </param>
-        /// <param name="request">
-        ///   The subscription request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token for the subscription.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will return the channel reader for the subscription.
-        /// </returns>
-        public async IAsyncEnumerable<TagValueQueryResult> CreateSnapshotTagValueChannel(
-            string adapterId,
-            CreateSnapshotTagValueSubscriptionRequest request,
-            [EnumeratorCancellation]
-            CancellationToken cancellationToken
-        ) {
-            // Resolve the adapter and feature.
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await ResolveAdapterAndFeature<ISnapshotTagValuePush>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            ValidateObject(request);
-
-            using (var activity = Telemetry.ActivitySource.StartSnapshotTagValuePushSubscribeActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
-            }
-        }
-
-#endif
 
         #endregion
 
@@ -144,18 +80,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.ReadSnapshotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -185,18 +111,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadRawTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadRawTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.ReadRawTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.ReadRawTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -226,18 +142,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadPlotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadPlotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.ReadPlotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.ReadPlotTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -267,18 +173,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadTagValuesAtTimes>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadTagValuesAtTimesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.ReadTagValuesAtTimes(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -334,18 +230,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartGetSupportedDataFunctionsActivity(adapter.Adapter.Descriptor.Id)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.GetSupportedDataFunctions(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -375,26 +261,14 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IReadProcessedTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartReadProcessedTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.ReadProcessedTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.ReadProcessedTagValues(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
         #endregion
 
         #region [ Tag Value Write ]
-
-#if NET48 == false
 
         /// <summary>
         /// Writes values to the specified adapter's snapshot.
@@ -426,18 +300,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
 
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -471,113 +335,10 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
-            using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                long itemCount = 0;
-
-                try {
-                    await foreach (var item in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, channel, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
-
-#else
-
-        /// <summary>
-        /// Writes a tag value to the specified adapter's snapshot.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="item">
-        ///   The value to write.
-        /// </param>
-        /// <returns>
-        ///   The write result.
-        /// </returns>
-        public async Task<WriteTagValueResult> WriteSnapshotTagValue(
-            string adapterId, 
-            WriteTagValuesRequest request,
-            WriteTagValueItem item
-        ) {
-            ValidateObject(item);
-            ValidateObject(request);
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
-                var cancellationToken = ctSource.Token;
-                try {
-                    var adapter = await ResolveAdapterAndFeature<IWriteSnapshotTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
-                    inChannel.Writer.TryWrite(item);
-                    inChannel.Writer.TryComplete();
-
-                    using (var activity = Telemetry.ActivitySource.StartWriteSnapshotTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                        var result = await adapter.Feature.WriteSnapshotTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                        return result!;
-                    }
-                }
-                finally {
-                    ctSource.Cancel();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// Writes a tag value to the specified adapter's history archive.
-        /// </summary>
-        /// <param name="adapterId">
-        ///   The adapter ID.
-        /// </param>
-        /// <param name="request">
-        ///   The request.
-        /// </param>
-        /// <param name="item">
-        ///   The value to write.
-        /// </param>
-        /// <returns>
-        ///   The write result.
-        /// </returns>
-        public async Task<WriteTagValueResult> WriteHistoricalTagValue(
-            string adapterId,
-            WriteTagValuesRequest request,
-            WriteTagValueItem item
-        ) {
-            ValidateObject(item);
-            ValidateObject(request);
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
-
-            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(Context.ConnectionAborted)) {
-                var cancellationToken = ctSource.Token;
-                try {
-                    var adapter = await ResolveAdapterAndFeature<IWriteHistoricalTagValues>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
-                    var inChannel = Channel.CreateUnbounded<WriteTagValueItem>();
-                    inChannel.Writer.TryWrite(item);
-                    inChannel.Writer.TryComplete();
-
-                    using (var activity = Telemetry.ActivitySource.StartWriteHistoricalTagValuesActivity(adapter.Adapter.Descriptor.Id, request)) {
-                        var result = await adapter.Feature.WriteHistoricalTagValues(adapterCallContext, request, inChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-                        activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                        return result!;
-                    }
-                }
-                finally {
-                    ctSource.Cancel();
-                }
-            }
-        }
-
-#endif
 
         #endregion
 

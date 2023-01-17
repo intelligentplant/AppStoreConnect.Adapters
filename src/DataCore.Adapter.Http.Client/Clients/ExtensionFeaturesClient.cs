@@ -13,6 +13,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
     /// <summary>
     /// Client for querying adapter extension features.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public class ExtensionFeaturesClient {
 
         /// <summary>
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/descriptor?id={Uri.EscapeDataString(featureUri?.ToString()!)}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -127,7 +128,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations?id={Uri.EscapeDataString(featureUri.ToString())}";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
@@ -176,7 +177,7 @@ namespace DataCore.Adapter.Http.Client.Clients {
 
             var url = UrlPrefix + $"/{Uri.EscapeDataString(adapterId)}/operations/invoke";
 
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata, _client.JsonSerializerOptions))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Post, url, request, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 

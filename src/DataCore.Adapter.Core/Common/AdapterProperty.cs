@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Common {
 
@@ -40,6 +41,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public AdapterProperty(string name, Variant value, string? description = null) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
@@ -114,4 +116,5 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
 }

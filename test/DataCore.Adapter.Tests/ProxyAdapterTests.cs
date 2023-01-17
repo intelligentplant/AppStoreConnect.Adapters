@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Events;
 using DataCore.Adapter.Http.Client;
@@ -27,7 +28,31 @@ namespace DataCore.Adapter.Tests {
 
 
         protected sealed override TProxy CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
-            return CreateProxy(context, WebHostConfiguration.AdapterId, serviceProvider);
+            return CreateProxy(context, AssemblyInitializer.AdapterId, serviceProvider);
+        }
+
+
+        protected override async Task BeforeAdapterTestAsync(TProxy adapter, IAdapterCallContext context, CancellationToken cancellationToken) {
+            await base.BeforeAdapterTestAsync(adapter, context, cancellationToken).ConfigureAwait(false);
+
+            switch (TestContext.TestName) {
+                case nameof(UpdateTagValueAnnotationShouldSucceed):
+                case nameof(DeleteTagValueAnnotationShouldSucceed):
+                    var accessor = AssemblyInitializer.ApplicationServices.GetRequiredService<IAdapterAccessor>();
+                    var remoteAdapter = await accessor.GetAdapter(context, AssemblyInitializer.AdapterId, cancellationToken).ConfigureAwait(false);
+                    var annotationManager = remoteAdapter.GetFeature<IWriteTagValueAnnotations>().Unwrap() as InMemoryTagValueAnnotationManager;
+                    if (annotationManager != null) {
+                        await annotationManager.CreateOrUpdateAnnotationAsync(
+                            AssemblyInitializer.TestTagId, 
+                            new TagValueAnnotationBuilder()
+                                .WithId(TestContext.TestName)
+                                .WithValue(TestContext.TestName)
+                                .Build(), 
+                            cancellationToken
+                        ).ConfigureAwait(false);
+                    }
+                    break;
+            }
         }
 
 
@@ -44,7 +69,7 @@ namespace DataCore.Adapter.Tests {
                 return false;
             }
 
-            var feature = remoteAdapter.GetFeature<IConfigurationChanges>() as ConfigurationChanges;
+            var feature = remoteAdapter.GetFeature<IConfigurationChanges>().Unwrap() as ConfigurationChanges;
             if (feature == null) {
                 return false;
             }
@@ -57,6 +82,23 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        protected override BrowseAssetModelNodesRequest CreateBrowseAssetModelNodesRequest(TestContext context) {
+            return new BrowseAssetModelNodesRequest();
+        }
+
+
+        protected override FindAssetModelNodesRequest CreateFindAssetModelNodesRequest(TestContext context) {
+            return new FindAssetModelNodesRequest() { Name = "*child" };
+        }
+
+
+        protected override GetAssetModelNodesRequest CreateGetAssetModelNodesRequest(TestContext context) {
+            return new GetAssetModelNodesRequest() {
+                Nodes = new[] { "3" }
+            };
+        }
+
+
         protected override FindTagsRequest CreateFindTagsRequest(TestContext context) {
             return new FindTagsRequest() { 
                 Name = "*"
@@ -66,7 +108,7 @@ namespace DataCore.Adapter.Tests {
 
         protected override GetTagsRequest CreateGetTagsRequest(TestContext context) {
             return new GetTagsRequest() {
-                Tags = new[] { WebHostConfiguration.TestTagId }
+                Tags = new[] { AssemblyInitializer.TestTagId }
             };
         }
 
@@ -78,14 +120,14 @@ namespace DataCore.Adapter.Tests {
 
         protected sealed override ReadSnapshotTagValuesRequest CreateReadSnapshotTagValuesRequest(TestContext context) {
             return new ReadSnapshotTagValuesRequest() { 
-                Tags = new[] { WebHostConfiguration.TestTagId }
+                Tags = new[] { AssemblyInitializer.TestTagId }
             };
         }
 
 
         protected override CreateSnapshotTagValueSubscriptionRequest CreateSnapshotTagValueSubscriptionRequest(TestContext context) {
             return new CreateSnapshotTagValueSubscriptionRequest() {
-                Tags = new[] { WebHostConfiguration.TestTagId }
+                Tags = new[] { AssemblyInitializer.TestTagId }
             };
         }
 
@@ -98,7 +140,7 @@ namespace DataCore.Adapter.Tests {
         protected override ReadRawTagValuesRequest CreateReadRawTagValuesRequest(TestContext context) {
             var now = DateTime.UtcNow;
             return new ReadRawTagValuesRequest() { 
-                Tags = new[] { WebHostConfiguration.TestTagId },
+                Tags = new[] { AssemblyInitializer.TestTagId },
                 UtcStartTime = now.AddDays(-1),
                 UtcEndTime = now
             };
@@ -108,7 +150,7 @@ namespace DataCore.Adapter.Tests {
         protected override ReadPlotTagValuesRequest CreateReadPlotTagValuesRequest(TestContext context) {
             var now = DateTime.UtcNow;
             return new ReadPlotTagValuesRequest() {
-                Tags = new[] { WebHostConfiguration.TestTagId },
+                Tags = new[] { AssemblyInitializer.TestTagId },
                 UtcStartTime = now.AddDays(-1),
                 UtcEndTime = now,
                 Intervals = 500
@@ -119,7 +161,7 @@ namespace DataCore.Adapter.Tests {
         protected override ReadProcessedTagValuesRequest CreateReadProcessedTagValuesRequest(TestContext context) {
             var now = DateTime.UtcNow;
             return new ReadProcessedTagValuesRequest() {
-                Tags = new[] { WebHostConfiguration.TestTagId },
+                Tags = new[] { AssemblyInitializer.TestTagId },
                 UtcStartTime = now.AddDays(-1),
                 UtcEndTime = now,
                 SampleInterval = TimeSpan.FromHours(3),
@@ -143,7 +185,7 @@ namespace DataCore.Adapter.Tests {
         protected override ReadTagValuesAtTimesRequest CreateReadTagValuesAtTimesRequest(TestContext context) {
             var now = DateTime.UtcNow;
             return new ReadTagValuesAtTimesRequest() { 
-                Tags = new[] { WebHostConfiguration.TestTagId },
+                Tags = new[] { AssemblyInitializer.TestTagId },
                 UtcSampleTimes = new[] { 
                     now.AddHours(-17),
                     now.AddHours(-12.5),
@@ -178,6 +220,56 @@ namespace DataCore.Adapter.Tests {
                 });
             }
             return values;
+        }
+
+
+        protected override ReadAnnotationsRequest CreateReadAnnotationsRequest(TestContext context) {
+            var now = DateTime.UtcNow;
+
+            return new ReadAnnotationsRequest() {
+                Tags = new[] { AssemblyInitializer.TestTagId },
+                UtcStartTime = now.AddDays(-1),
+                UtcEndTime = now
+            };
+        }
+
+
+        protected override ReadAnnotationRequest CreateReadAnnotationRequest(TestContext context) {
+            return new ReadAnnotationRequest() { 
+                Tag = AssemblyInitializer.TestTagId,
+                AnnotationId = AssemblyInitializer.TestAnnotationId
+            };
+        }
+
+
+        protected override CreateAnnotationRequest CreateCreateAnnotationRequest(TestContext context) {
+            return new CreateAnnotationRequest() {
+                Tag = AssemblyInitializer.TestTagId,
+                Annotation = new TagValueAnnotationBuilder()
+                    .WithId(context.TestName)
+                    .WithValue(context.TestName)
+                    .Build()
+            };
+        }
+
+
+        protected override UpdateAnnotationRequest CreateUpdateAnnotationRequest(TestContext context) {
+            return new UpdateAnnotationRequest() {
+                Tag = AssemblyInitializer.TestTagId,
+                AnnotationId = context.TestName,
+                Annotation = new TagValueAnnotationBuilder()
+                    .WithId(context.TestName)
+                    .WithValue(context.TestName)
+                    .Build()
+            };
+        }
+
+
+        protected override DeleteAnnotationRequest CreateDeleteAnnotationRequest(TestContext context) {
+            return new DeleteAnnotationRequest() {
+                Tag = AssemblyInitializer.TestTagId,
+                AnnotationId = context.TestName
+            };
         }
 
 
@@ -260,12 +352,12 @@ namespace DataCore.Adapter.Tests {
                     .Build()
                 ).ToArray();
 
-                var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequestExtended() {
+                var writeResult = await httpClient.Events.WriteEventMessagesAsync(AssemblyInitializer.AdapterId, new WriteEventMessagesRequestExtended() {
                     Events = messages.Select(msg => new WriteEventMessageItem() {
                         CorrelationId = msg.Id,
                         EventMessage = msg
                     }).ToArray()
-                }).ConfigureAwait(false);
+                }).ToArrayAsync().ConfigureAwait(false);
 
                 Assert.IsNotNull(writeResult);
                 Assert.AreEqual(messages.Length, writeResult.Count());
@@ -293,20 +385,45 @@ namespace DataCore.Adapter.Tests {
 
             var correlationId = Guid.NewGuid().ToString();
 
-            var writeResult = await httpClient.Events.WriteEventMessagesAsync(WebHostConfiguration.AdapterId, new WriteEventMessagesRequestExtended() { 
+            var writeResult = await httpClient.Events.WriteEventMessagesAsync(AssemblyInitializer.AdapterId, new WriteEventMessagesRequestExtended() { 
                 Events = new [] { 
                     new WriteEventMessageItem() {
                         EventMessage = msg,
                         CorrelationId = correlationId
                     }
                 }
-            }).ConfigureAwait(false);
+            }).ToArrayAsync().ConfigureAwait(false);
 
             return true;
         }
 
 
         protected abstract TProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider);
+
+
+        [TestMethod]
+        public Task ProxyShouldReceiveLargeRawDataSet() {
+            return RunAdapterTest(async (proxy, context, ct) => {
+                var feature = proxy.GetFeature<IReadRawTagValues>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<IReadRawTagValues>();
+                    return;
+                }
+
+                var end = DateTime.UtcNow;
+                var start = end.AddYears(-1);
+
+                var request = new ReadRawTagValuesRequest() { 
+                    Tags = new[] { AssemblyInitializer.TestTagId },
+                    SampleCount = 50000,
+                    UtcStartTime = start,
+                    UtcEndTime = end
+                };
+
+                var values = await feature.ReadRawTagValues(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.AreEqual(request.SampleCount, values.Count());
+            });
+        }
 
 
 

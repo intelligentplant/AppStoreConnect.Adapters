@@ -32,7 +32,6 @@ namespace DataCore.Adapter {
         /// </returns>
         private static System.Text.Json.JsonSerializerOptions GetJsonSerializerOptions() {
             var result = new System.Text.Json.JsonSerializerOptions();
-            result.Converters.AddDataCoreAdapterConverters();
             return result;
         }
 
@@ -87,7 +86,7 @@ namespace DataCore.Adapter {
         ///   The <see cref="Array"/> object that was deserialized from the JSON bytes.
         /// </returns>
         private static Array ReadJsonArray<T>(byte[] bytes, IEnumerable<int> dimensions) {
-            return VariantConverter.ReadArray<T>(System.Text.Encoding.UTF8.GetString(bytes), dimensions.ToArray(), GetJsonSerializerOptions());
+            return JsonExtensions.ReadArray<T>(System.Text.Encoding.UTF8.GetString(bytes), dimensions.ToArray(), GetJsonSerializerOptions());
         }
 
 
@@ -101,7 +100,70 @@ namespace DataCore.Adapter {
         ///   The serialized JSON bytes.
         /// </returns>
         private static byte[] WriteJsonArray(Array array) {
-            return VariantConverter.WriteArray(array);
+            return JsonExtensions.WriteArray(array);
+        }
+
+
+        /// <summary>
+        /// Converts the <see cref="Google.Protobuf.WellKnownTypes.Value"/> to a <see cref="System.Text.Json.JsonElement"/>.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
+        /// </param>
+        /// <returns>
+        ///   An equivalent <see cref="System.Text.Json.JsonElement"/>.
+        /// </returns>
+        public static System.Text.Json.JsonElement? ToJsonElement(this Google.Protobuf.WellKnownTypes.Value value) {
+            if (value == null) {
+                return default;
+            }
+
+            switch (value.KindCase) {
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.NumberValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.NumberValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.StringValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.StringValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.BoolValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(System.Text.Json.Nodes.JsonValue.Create(value.BoolValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.StructValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(value.StructValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.ListValue:
+                    return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Google.Protobuf.JsonFormatter.Default.Format(value.ListValue));
+                case Google.Protobuf.WellKnownTypes.Value.KindOneofCase.NullValue:
+                    return null;
+                default:
+                    return default;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the <see cref="System.Text.Json.JsonElement"/> to a <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
+        /// </summary>
+        /// <param name="element">
+        ///   The <see cref="System.Text.Json.JsonElement"/>.
+        /// </param>
+        /// <returns>
+        ///   An equivalent <see cref="Google.Protobuf.WellKnownTypes.Value"/>.
+        /// </returns>
+        public static Google.Protobuf.WellKnownTypes.Value ToProtoValue(this System.Text.Json.JsonElement element) {
+            switch (element.ValueKind) {
+                case System.Text.Json.JsonValueKind.True:
+                case System.Text.Json.JsonValueKind.False:
+                    return Google.Protobuf.WellKnownTypes.Value.ForBool(element.GetBoolean());
+                case System.Text.Json.JsonValueKind.Number:
+                    return Google.Protobuf.WellKnownTypes.Value.ForNumber(element.GetDouble());
+                case System.Text.Json.JsonValueKind.String:
+                    return Google.Protobuf.WellKnownTypes.Value.ForString(element.GetString());
+                case System.Text.Json.JsonValueKind.Object:
+                    return Google.Protobuf.WellKnownTypes.Value.ForStruct(Google.Protobuf.JsonParser.Default.Parse<Google.Protobuf.WellKnownTypes.Struct>(element.ToString()));
+                case System.Text.Json.JsonValueKind.Array:
+                    return Google.Protobuf.WellKnownTypes.Value.ForList(element.EnumerateArray().Select(x => x.ToProtoValue()).ToArray());
+                case System.Text.Json.JsonValueKind.Null:
+                    return Google.Protobuf.WellKnownTypes.Value.ForNull();
+                default:
+                    return new Google.Protobuf.WellKnownTypes.Value();
+            }
         }
 
         #endregion
@@ -176,6 +238,31 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(node));
             }
 
+            if (node.DataReferences.Count > 0) {
+                return new AssetModel.AssetModelNode(
+                    node.Id,
+                    node.Name,
+                    node.NodeType.ToAdapterAssetModelNodeType(),
+                    node.NodeSubType,
+                    node.Description,
+                    string.IsNullOrWhiteSpace(node.Parent)
+                        ? null
+                        : node.Parent,
+                    node.HasChildren,
+                    node.DataReferences.Select(x => new AssetModel.DataReference(
+                        x.AdapterId,
+                        x.TagNameOrId,
+                        string.IsNullOrEmpty(x.Name)
+                            ? null
+                            : x.Name
+                    )),
+                    node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
+                );
+            }
+
+            // If no data references then check the HasDataReference field to allow
+            // backwards-compatibility with pre v3.0.
+
             return new AssetModel.AssetModelNode(
                 node.Id,
                 node.Name,
@@ -188,8 +275,11 @@ namespace DataCore.Adapter {
                 node.HasChildren,
                 node.HasDataReference
                     ? new AssetModel.DataReference(
-                        node.DataReference.AdapterId, 
-                        node.DataReference.TagNameOrId
+                        node.DataReference.AdapterId,
+                        node.DataReference.TagNameOrId,
+                        string.IsNullOrEmpty(node.DataReference.Name)
+                            ? null
+                            : node.DataReference.Name
                     )
                     : null,
                 node.Properties.Select(x => x.ToAdapterProperty()).ToArray()
@@ -219,12 +309,20 @@ namespace DataCore.Adapter {
                 Description = node.Description ?? string.Empty,
                 Parent = node.Parent ?? string.Empty,
                 HasChildren = node.HasChildren,
-                HasDataReference = node.DataReference != null,
-                DataReference = new Grpc.AssetModelDataReference() {
-                    AdapterId = node.DataReference?.AdapterId ?? string.Empty,
-                    TagNameOrId = node.DataReference?.Tag ?? string.Empty
-                }
             };
+
+            if (node.DataReferences != null) {
+                foreach (var item in node.DataReferences) {
+                    if (item == null) {
+                        continue;
+                    }
+                    result.DataReferences.Add(new Grpc.AssetModelDataReference() { 
+                        AdapterId = item.AdapterId ?? string.Empty,
+                        TagNameOrId = item.Tag ?? string.Empty,
+                        Name = item.Name ?? string.Empty
+                    });
+                }
+            }
 
             if (node.Properties != null) {
                 foreach (var item in node.Properties) {
@@ -408,6 +506,11 @@ namespace DataCore.Adapter {
                         ? (object) ReadJsonArray<long>(bytes, variant.ArrayDimensions)
                         : BitConverter.ToInt64(bytes, 0);
                     break;
+                case Grpc.VariantType.Json:
+                    value = isArray
+                        ? (object) ReadJsonArray<System.Text.Json.JsonElement>(bytes, variant.ArrayDimensions)
+                        : ReadJsonValue<System.Text.Json.JsonElement>(bytes);
+                    break;
                 case Grpc.VariantType.Null:
                     value = null!;
                     break;
@@ -514,6 +617,9 @@ namespace DataCore.Adapter {
                         break;
                     case Common.VariantType.Int64:
                         bytes = BitConverter.GetBytes(variant.GetValueOrDefault<long>());
+                        break;
+                    case Common.VariantType.Json:
+                        bytes = WriteJsonValue(variant.GetValueOrDefault<System.Text.Json.JsonElement>());
                         break;
                     case Common.VariantType.Null:
                         bytes = Array.Empty<byte>();
@@ -1072,6 +1178,115 @@ namespace DataCore.Adapter {
 
         #endregion
 
+        #region [ Custom Functions ]
+
+        /// <summary>
+        /// Converts the object to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Grpc.CustomFunctionDescriptor"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Extensions.CustomFunctionDescriptor"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        public static Extensions.CustomFunctionDescriptor ToAdapterCustomFunctionDescriptor(this Grpc.CustomFunctionDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Extensions.CustomFunctionDescriptor(
+                Uri.TryCreate(descriptor.Id, UriKind.Absolute, out var uri)
+                    ? uri
+                    : null!,
+                descriptor.Name,
+                descriptor.Description
+            );
+        }
+
+
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Extensions.CustomFunctionDescriptor"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Grpc.CustomFunctionDescriptor"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        public static Grpc.CustomFunctionDescriptor ToGrpcCustomFunctionDescriptor(this Extensions.CustomFunctionDescriptor descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Grpc.CustomFunctionDescriptor() {
+                Id = descriptor.Id?.ToString() ?? string.Empty,
+                Name = descriptor.Name ?? string.Empty,
+                Description = descriptor.Description ?? string.Empty
+            };
+        }
+
+
+        /// <summary>
+        /// Converts the object to its adapter equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Grpc.CustomFunctionDescriptorExtended"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Extensions.CustomFunctionDescriptorExtended"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        public static Extensions.CustomFunctionDescriptorExtended ToAdapterCustomFunctionDescriptorExtended(this Grpc.CustomFunctionDescriptorExtended descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Extensions.CustomFunctionDescriptorExtended(
+                Uri.TryCreate(descriptor.Function.Id, UriKind.Absolute, out var uri)
+                    ? uri
+                    : null!,
+                descriptor.Function.Name,
+                descriptor.Function.Description,
+                descriptor.RequestSchema.ToJsonElement(),
+                descriptor.ResponseSchema.ToJsonElement()
+            );
+        }
+
+
+        /// <summary>
+        /// Converts the object to its gRPC equivalent.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The <see cref="Extensions.CustomFunctionDescriptorExtended"/>.
+        /// </param>
+        /// <returns>
+        ///   The equivalent <see cref="Grpc.CustomFunctionDescriptorExtended"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        public static Grpc.CustomFunctionDescriptorExtended ToGrpcCustomFunctionDescriptorExtended(this Extensions.CustomFunctionDescriptorExtended descriptor) {
+            if (descriptor == null) {
+                throw new ArgumentNullException(nameof(descriptor));
+            }
+
+            return new Grpc.CustomFunctionDescriptorExtended() {
+                Function = descriptor.ToGrpcCustomFunctionDescriptor(),
+                RequestSchema = descriptor.RequestSchema?.ToProtoValue() ?? Google.Protobuf.WellKnownTypes.Value.ForNull(),
+                ResponseSchema = descriptor.ResponseSchema?.ToProtoValue() ?? Google.Protobuf.WellKnownTypes.Value.ForNull(),
+            };
+        }
+
+        #endregion
+
         #region [ Diagnostics ]
 
         /// <summary>
@@ -1547,6 +1762,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Extensions.ExtensionFeatureOperationDescriptor ToAdapterExtensionOperatorDescriptor(this Grpc.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1574,6 +1790,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Grpc.ExtensionFeatureOperationDescriptor ToGrpcExtensionOperatorDescriptor(this Extensions.ExtensionFeatureOperationDescriptor descriptor) {
             if (descriptor == null) {
                 throw new ArgumentNullException(nameof(descriptor));
@@ -1617,6 +1834,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Extensions.ExtensionFeatureOperationParameterDescriptor ToAdapterExtensionFeatureParameterDescriptor(this Grpc.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Extensions.ExtensionFeatureOperationParameterDescriptor();
@@ -1641,6 +1859,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The converted descriptor.
         /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public static Grpc.ExtensionFeatureOperationParameterDescriptor ToGrpcExtensionFeatureParameterDescriptor(this Extensions.ExtensionFeatureOperationParameterDescriptor descriptor) {
             if (descriptor == null) {
                 return new Grpc.ExtensionFeatureOperationParameterDescriptor() { 

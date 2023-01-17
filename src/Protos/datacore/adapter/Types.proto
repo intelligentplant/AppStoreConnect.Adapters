@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package datacore.adapter;
 
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "DataCore.Adapter.Grpc";
@@ -28,6 +29,7 @@ enum VariantType {
     VARIANT_TYPE_DATETIME = 15;
     VARIANT_TYPE_TIMESPAN = 16;
     VARIANT_TYPE_URL = 17;
+    VARIANT_TYPE_JSON = 18;
 }
 
 
@@ -154,8 +156,11 @@ message AssetModelNode {
     bool has_children = 8;
     AssetModelNodeType node_type = 9;
     string node_sub_type = 10;
+    // Deprecated - use data_references instead
     AssetModelDataReference data_reference = 11;
+    // Deprecated - use data_references instead
     bool has_data_reference = 12;
+    repeated AssetModelDataReference data_references = 13;
 }
 
 
@@ -172,6 +177,7 @@ enum AssetModelNodeType {
 message AssetModelDataReference {
     string adapter_id = 1;
     string tag_name_or_id = 3;
+    string name = 4;
 }
 
 
@@ -418,6 +424,21 @@ message FeatureDescriptor {
 }
 
 
+message CustomFunctionDescriptor {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+
+message CustomFunctionDescriptorExtended {
+    CustomFunctionDescriptor function = 1;
+    google.protobuf.Value request_schema = 2;
+    google.protobuf.Value response_schema = 3;
+}
+
+
+// deprecated
 message ExtensionFeatureOperationDescriptor {
     string operation_id = 1;
     ExtensionFeatureOperationType operation_type = 2;
@@ -428,6 +449,7 @@ message ExtensionFeatureOperationDescriptor {
 }
 
 
+// deprecated
 enum ExtensionFeatureOperationType {
     EXTENSION_FEATURE_OPERATION_TYPE_INVOKE = 0;
     EXTENSION_FEATURE_OPERATION_TYPE_STREAM = 1;
@@ -435,6 +457,7 @@ enum ExtensionFeatureOperationType {
 }
 
 
+// deprecated
 message ExtensionFeatureOperationParameterDescriptor {
     int32 ordinal = 1;
     VariantType variant_type = 2;

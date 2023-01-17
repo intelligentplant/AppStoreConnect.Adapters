@@ -22,6 +22,7 @@ namespace DataCore.Adapter.Extensions {
     /// <see cref="BindStream"/>, and <see cref="BindDuplexStream"/> overloads in your 
     /// class constructor to register available operations.
     /// </summary>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public abstract partial class AdapterExtensionFeature : IAdapterExtensionFeature, IBackgroundTaskServiceProvider {
 #pragma warning restore CS0419 // Ambiguous reference in cref attribute
 

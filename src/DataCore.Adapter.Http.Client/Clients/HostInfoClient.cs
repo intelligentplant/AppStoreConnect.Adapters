@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Claims;
@@ -54,11 +55,37 @@ namespace DataCore.Adapter.Http.Client.Clients {
             RequestMetadata? metadata = null,
             CancellationToken cancellationToken = default
         ) {
-            using (var httpRequest = AdapterHttpClient.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, UrlPrefix, metadata))
             using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
                 await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
 
                 return (await httpResponse.Content.ReadFromJsonAsync<HostInfo>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the APIs that are enabled on the remote host.
+        /// </summary>
+        /// <param name="metadata">
+        ///   The metadata to associate with the outgoing request.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A task that will return information about the available APIs.
+        /// </returns>
+        public async Task<IEnumerable<ApiDescriptor>> GetAvailableApisAsync(
+            RequestMetadata? metadata = null, 
+            CancellationToken cancellationToken = default
+        ) {
+            var url = UrlPrefix + "/available-apis";
+            using (var httpRequest = _client.CreateHttpRequestMessage(HttpMethod.Get, url, metadata))
+            using (var httpResponse = await _client.HttpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false)) {
+                await httpResponse.ThrowOnErrorResponse().ConfigureAwait(false);
+
+                return (await httpResponse.Content.ReadFromJsonAsync<IEnumerable<ApiDescriptor>>(_client.JsonSerializerOptions, cancellationToken).ConfigureAwait(false))!;
             }
         }
 

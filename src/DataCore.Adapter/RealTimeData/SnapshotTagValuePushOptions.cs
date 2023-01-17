@@ -17,24 +17,24 @@ namespace DataCore.Adapter.RealTimeData {
         /// <see cref="TagIdentifier"/>.
         /// </summary>
         /// <remarks>
-        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromAdapter(IAdapter)"/> or 
-        ///   <see cref="SnapshotTagValuePush.CreateTagResolverFromFeature(ITagInfo)"/> can be 
+        ///   <see cref="SnapshotTagValuePushBase.CreateTagResolverFromAdapter(IAdapter)"/> or 
+        ///   <see cref="SnapshotTagValuePushBase.CreateTagResolverFromFeature(ITagInfo)"/> can be 
         ///   used to generate a compatible delegate using an existing adapter or 
         ///   <see cref="ITagInfo"/> implementation.
         /// </remarks>
-        public Func<IAdapterCallContext, IEnumerable<string>, CancellationToken, IAsyncEnumerable<TagIdentifier>>? TagResolver { get; set; }
+        public TagResolver? TagResolver { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from zero 
         /// to one.
         /// </summary>
-        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsAdded { get; set; }
+        public Func<SnapshotTagValuePushBase, IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsAdded { get; set; }
 
         /// <summary>
         /// A delegate that is invoked when the number of subscribers for a tag changes from one 
         /// to zero.
         /// </summary>
-        public Func<IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsRemoved { get; set; }
+        public Func<SnapshotTagValuePushBase, IEnumerable<TagIdentifier>, CancellationToken, Task>? OnTagSubscriptionsRemoved { get; set; }
 
         /// <summary>
         /// A delegate that is invoked to determine if the topic for a subscription matches the 

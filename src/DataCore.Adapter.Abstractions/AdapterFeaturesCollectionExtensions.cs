@@ -214,6 +214,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="uri"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static IAdapterExtensionFeature? GetExtension(this IAdapterFeaturesCollection features, Uri uri) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
@@ -256,6 +257,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static IAdapterExtensionFeature? GetExtension(this IAdapterFeaturesCollection features, string uriString) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
@@ -480,6 +482,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uri"/> is not an absolute URI.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static bool TryGetExtension(
             this IAdapterFeaturesCollection features,
             Uri uri,
@@ -515,6 +518,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentException">
         ///   <paramref name="uriString"/> is not an absolute URI.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         public static bool TryGetExtension(
             this IAdapterFeaturesCollection features,
             string uriString,

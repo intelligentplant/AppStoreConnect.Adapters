@@ -113,7 +113,19 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// A factory delegate for creating extension feature implementations.
         /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
         private readonly ExtensionFeatureFactory<GrpcAdapterProxy>? _extensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        /// <summary>
+        /// The last health check result that was received from the remote adapter.
+        /// </summary>
+        private Diagnostics.HealthCheckResult? _lastRemoteHealthCheckResult;
+
+        /// <summary>
+        /// Lock for reading/writing <see cref="_lastRemoteHealthCheckResult"/>.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncReaderWriterLock _lastRemoteHealthCheckResultLock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
 
         /// <summary>
@@ -163,7 +175,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
             _getCallCredentials = Options?.GetCallCredentials;
+#pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
+#pragma warning restore CS0618 // Type or member is obsolete
             _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
         }
 
@@ -237,10 +251,12 @@ namespace DataCore.Adapter.Grpc.Proxy {
                             continue;
                         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<GrpcAdapterProxy, GrpcAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -343,12 +359,46 @@ namespace DataCore.Adapter.Grpc.Proxy {
             var client = CreateClient<AdaptersService.AdaptersServiceClient>();
             var callOptions = GetCallOptions(new DefaultAdapterCallContext(), cancellationToken);
 
-            var healthCheckStream = client.CreateAdapterHealthPushChannel(new CreateAdapterHealthPushChannelRequest() { 
-                AdapterId = _remoteAdapterId
-            }, callOptions);
+            while (!cancellationToken.IsCancellationRequested) {
+                var raiseStatusChangeOnError = true;
 
-            while (await healthCheckStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
-                OnHealthStatusChanged();
+                try {
+                    var healthCheckStream = client.CreateAdapterHealthPushChannel(new CreateAdapterHealthPushChannelRequest() {
+                        AdapterId = _remoteAdapterId
+                    }, callOptions);
+
+                    raiseStatusChangeOnError = true;
+
+                    while (await healthCheckStream.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
+                        using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            _lastRemoteHealthCheckResult = CreateRemoteAdapterHealthCheckResult(healthCheckStream.ResponseStream.Current.ToAdapterHealthCheckResult());
+                        }
+                        OnHealthStatusChanged();
+                    }
+                }
+                catch (OperationCanceledException) {
+                    if (cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
+                    if (raiseStatusChangeOnError) {
+                        using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            _lastRemoteHealthCheckResult = null;
+                        }
+                        OnHealthStatusChanged();
+                        raiseStatusChangeOnError = false;
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception) {
+                    if (raiseStatusChangeOnError) {
+                        using (await _lastRemoteHealthCheckResultLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
+                            _lastRemoteHealthCheckResult = null;
+                        }
+                        OnHealthStatusChanged();
+                        raiseStatusChangeOnError = false;
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
@@ -390,15 +440,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 );
 
                 var result = (await remoteResponse.ResponseAsync.ConfigureAwait(false)).Result.ToAdapterHealthCheckResult();
-
-                return new Diagnostics.HealthCheckResult(
-                    Resources.HealthCheck_DisplayName_RemoteAdapter,
-                    result.Status,
-                    result.Description,
-                    result.Error,
-                    result.Data,
-                    result.InnerResults
-                );
+                return CreateRemoteAdapterHealthCheckResult(result);
             }
             catch (Exception e) {
                 return Diagnostics.HealthCheckResult.Unhealthy(
@@ -409,6 +451,28 @@ namespace DataCore.Adapter.Grpc.Proxy {
         }
 
 
+        /// <summary>
+        /// Converts a <see cref="HealthCheckResult"/> received from a remote adapter into a local 
+        /// <see cref="HealthCheckResult"/> for the proxy.
+        /// </summary>
+        /// <param name="result">
+        ///   The <see cref="HealthCheckResult"/> received from the remote adapter.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="HealthCheckResult"/> for use in the local proxy.
+        /// </returns>
+        private static Diagnostics.HealthCheckResult CreateRemoteAdapterHealthCheckResult(Diagnostics.HealthCheckResult result) {
+            return new Diagnostics.HealthCheckResult(
+                Resources.HealthCheck_DisplayName_RemoteAdapter,
+                result.Status,
+                result.Description,
+                result.Error,
+                result.Data,
+                result.InnerResults
+            );
+        }
+
+
         /// <inheritdoc/>
         protected override async Task<IEnumerable<Diagnostics.HealthCheckResult>> CheckHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
             var results = new List<Diagnostics.HealthCheckResult>(await base.CheckHealthAsync(context, cancellationToken).ConfigureAwait(false));
@@ -416,8 +480,19 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 return results;
             }
 
-#if NET461 == false
-            // Grpc.Net channel doesn't expose a way of getting the channel state.
+            using (await _lastRemoteHealthCheckResultLock.ReaderLockAsync(cancellationToken).ConfigureAwait(false)) {
+                if (_lastRemoteHealthCheckResult != null) {
+                    results.Add(
+                        Diagnostics.HealthCheckResult.Composite(
+                            Resources.HealthCheck_DisplayName_Connection,
+                            new[] { _lastRemoteHealthCheckResult.Value },
+                            Resources.HealthCheck_GrpcNetClientDescription
+                        )
+                    );
+                    return results;
+                }
+            }
+
             results.Add(
                 Diagnostics.HealthCheckResult.Composite(
                     Resources.HealthCheck_DisplayName_Connection,
@@ -427,39 +502,6 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     Resources.HealthCheck_GrpcNetClientDescription
                 )
             );
-#else
-            var coreChannel = _channel as GrpcCore.Channel;
-            var state = coreChannel!.State;
-
-            switch (state) {
-                case GrpcCore.ChannelState.Ready:
-                case GrpcCore.ChannelState.Idle:
-                    results.Add(
-                        Diagnostics.HealthCheckResult.Composite(
-                            Resources.HealthCheck_DisplayName_Connection,
-                            new [] {
-                                await CheckRemoteHealthAsync(context, cancellationToken).ConfigureAwait(false)
-                            },
-                            // Use coreChannel.State instead of state, since, if the connection
-                            // was idle in the switch statement, it will now be ready.
-                            string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescription, coreChannel.State.ToString())
-                        )    
-                    );
-                    break;
-                case GrpcCore.ChannelState.Shutdown:
-                    results.Add(Diagnostics.HealthCheckResult.Unhealthy(
-                        Resources.HealthCheck_DisplayName_Connection,
-                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                    ));
-                    break;
-                default:
-                    results.Add(Diagnostics.HealthCheckResult.Degraded(
-                        Resources.HealthCheck_DisplayName_Connection,
-                        string.Format(context?.CultureInfo, Resources.HealthCheck_ChannelStateDescriptionNoInnerResults, state.ToString())
-                    ));
-                    break;
-            }
-#endif
 
             return results;
         }

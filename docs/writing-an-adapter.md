@@ -1,21 +1,21 @@
 # Writing an Adapter
 
-> The [Creating an Adapter](/docs/tutorials/creating-an-adapter) tutorial provides a walk-through example of how to write an adapter.
-
-> You can use the `dotnet new` command to create a new adapter using a template (recommended). See [here](/src/DataCore.Adapter.Templates) for more information.
-
-To get started, add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter).
+> We __strongly__ recommend that you create self-hosted adapters using the provided template for Visual Studio and `dotnet new`. See [here](../src/DataCore.Adapter.Templates) for more information.
 
 An adapter is a component that exposes real-time process data and/or alarm & event data to [Intelligent Plant](https://www.intelligentplant.com) App Store Connect. This data can then be used by apps on the [Industrial App Store](https://appstore.intelligentplant.com) such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
 
-All adapters implement the [IAdapter](/src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](/src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](/src/DataCore.Adapter.Abstractions/IAdapterFeature.cs). 
+You can find a tutorial for writing a simple MQTT adapter [here](./tutorials/mqtt-adapter).
 
-Adapter implementations should inherit from the abstract [AdapterBase&lt;TAdapterOptions&gt;](/src/DataCore.Adapter/AdapterBaseT.cs) or [AdapterBase](/src/DataCore.Adapter/AdapterBase.cs) classes. Note that `AdapterBase` is a subclass of `AdapterBase<TAdapterOptions>`.
+All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](/src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
+
+> Note that adapters do not have to directly implement the feature interfaces themselves. Instead, the adapter can delegate the feature implementation to a helper class. This is described in more detail [below](#delegating-feature-implementations-to-external-providers).
+
+Adapter implementations should inherit from the abstract [AdapterCore](../src/DataCore.Adapter.Abstractions/AdapterCore.cs), [AdapterBase&lt;TAdapterOptions&gt;](../src/DataCore.Adapter/AdapterBaseT.cs) or [AdapterBase](../src/DataCore.Adapter/AdapterBase.cs) classes. Inheriting from `AdapterBase<TAdapterOptions>` or `AdapterBase` is recommended.
 
 
 ## Adapter Options
 
-The [AdapterOptions](/src/DataCore.Adapter/AdapterOptions.cs) class is the base class for all adapter configuration options. At its most basic level, it is used to provide the display name and description for an adapter. When writing an adapter, extend the class to provide adapter-specific configuration to your adapter type:
+The [AdapterOptions](../src/DataCore.Adapter/AdapterOptions.cs) class is the base class for all adapter configuration options. At its most basic level, it is used to provide the display name and description for an adapter. When writing an adapter, extend the class to provide adapter-specific configuration to your adapter type:
 
 ```csharp
 public class MyAdapterOptions : AdapterOptions {
@@ -41,70 +41,41 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
 
 Adapter implementers can pick and choose which features they want to provide. For example, the `DataCore.Adapter.RealTimeData` namespace defines interfaces for features related to real-time process data (requesting current tag values, performing various types of historical data queries, and so on). An individual adapter can implement features related to process data, alarm and event sources, and alarm and event sinks, as required.
 
-Every feature defines a URI that uniquely identifies the feature. URIs for well-known features are defined [here](/src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs).
+Every feature defines a URI that uniquely identifies the feature. URIs for well-known features are defined [here](../src/DataCore.Adapter.Abstractions/WellKnownFeatures.cs).
 
 
-## Standard Features
+## Available Features
 
 Adapters can implement any number of the following standard feature interfaces:
 
-- Asset Model:
-    - [IAssetModelBrowse](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs)
-    - [IAssetModelSearch](/src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs)
-- Diagnostics:
-    - [IConfigurationChanges](/src/DataCore.Adapter.Abstractions/Diagostics/IConfigurationChanges.cs)
-    - [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagostics/IHealthCheck.cs)
-- Tags:
-    - [ITagInfo](/src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs)
-    - [ITagSearch](/src/DataCore.Adapter.Abstractions/Tags/ITagSearch.cs)
-- Events:
-    - [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs)
-    - [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs)
-    - [IReadEventMessagesForTimeRange](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesForTimeRange.cs)
-    - [IReadEventMessagesUsingCursor](/src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesUsingCursor.cs)
-    - [IWriteEventMessages](/src/DataCore.Adapter.Abstractions/Events/IWriteEventMessages.cs)
-- Real-Time Data:
-    - [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs)
-    - [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs)
-    - [IReadRawTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadRawTagValues.cs)
-    - [IReadSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs)
-    - [IReadTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValueAnnotations.cs)
-    - [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs)
-    - [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs)
-    - [IWriteHistoricalTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteHistoricalTagValues.cs)
-    - [IWriteSnapshotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteSnapshotTagValues.cs)
-    - [IWriteTagValueAnnotations](/src/DataCore.Adapter.Abstractions/RealTimeData/IWriteTagValueAnnotations.cs)
+| Category | Name | Description |
+| -------- | ---- | ----------- |
+| Asset Model | [IAssetModelBrowse](../src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs) | Asset model browsing |
+| Asset Model | [IAssetModelSearch](../src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs) | Asset model search |
+| Custom Functions | [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) | Vendor- or adapter-specific custom RPC functions |
+| Diagnostics | [IConfigurationChanges](../src/DataCore.Adapter.Abstractions/Diagnostics/IConfigurationChanges.cs) | Notifications about changes to an adapter's available tags, assets, etc. |
+| Diagnostics | [IHealthCheck](../src/DataCore.Adapter.Abstractions/Diagnostics/IHealthCheck.cs) | Reports the health status of the adapter and its external dependencies. |
+| Events | [IEventMessagePush](../src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) | Push subscriptions that notify callers about events in real-time. |
+| Events | [IEventMessagePushWithTopics](../src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) | Push subscriptions that notify callers about events in real-time via topics. |
+| Events | [IReadEventMessagesForTimeRange](../src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesForTimeRange.cs) | Retrieval of historical event messages within a given time range. |
+| Events | [IReadEventMessagesUsingCursor](../src/DataCore.Adapter.Abstractions/Events/IReadEventMessagesUsingCursor.cs) | Retrieval of historical event messages starting from a given cursor position. |
+| Events | [IWriteEventMessages](../src/DataCore.Adapter.Abstractions/Events/IWriteEventMessages.cs) | Ingestion of event messages from an external source. |
+| Real-Time Data | [IReadPlotTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) | Retrieval of a best-fit curve of raw historical tag values for visualization in a chart. |
+| Real-Time Data | [IReadProcessedTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs) | Retrieval of aggregated tag values (such as the average value of a tag over an hourly interval), and for discovering the aggregations that the adapter supports. |
+| Real-Time Data | [IReadRawTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadRawTagValues.cs) | Polling of raw, unprocessed historical tag values. |
+| Real-Time Data | [IReadSnapshotTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) | Polling of the current tag values. |
+| Real-Time Data | [IReadTagValueAnnotations](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValueAnnotations.cs) | Retrieval of annotations associated with tag values (such as when a value exceeded its operating limits). |
+| Real-Time Data | [IReadTagValuesAtTimes](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs) | Retrieval of tag values at specific points in history. |
+| Real-Time Data | [ISnapshotTagValuePush](../src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) | Push subscriptions that notify callers about changes in the current values for subscribed tags. |
+| Real-Time Data | [IWriteHistoricalTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IWriteHistoricalTagValues.cs) | Ingestion of tag values directly into a historical archive. |
+| Real-Time Data | [IWriteSnapshotTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IWriteSnapshotTagValues.cs) | Ingestion of tag values into a snapshot pipeline where data filters can be used to determine when values should be written to a historical archive. |
+| Real-Time Data | [IWriteTagValueAnnotations](../src/DataCore.Adapter.Abstractions/RealTimeData/IWriteTagValueAnnotations.cs) | Management of annotations associated with tag values. |
+| Tags | [ITagConfiguration](../src/DataCore.Adapter.Abstractions/Tags/ITagConfiguration.cs) | Management of tag definitions using adapter-specific schemas. |
+| Tags | [ITagInfo](../src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) | Retrieval of information about tags by ID or name. |
+| Tags | [ITagSearch](../src/DataCore.Adapter.Abstractions/Tags/ITagSearch.cs) | Discovery of tags via search operations. |
 
-Adapters can also implement custom extension features. This is described in more detail below.
+The [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature allows an adapter to define bespoke custom functions that can be invoked via standard API calls. This is described in more detail below.
 
-
-## Helper Methods
-
-`AdapterBase<TAdapterOptions>` defines helper methods that should be used in feature implementations:
-
-- The `ValidateInvocation` ensures that the `IAdapterCallContext` and request object passed into a feature method implementation are non-null and pass validation.
-- The `CreateCancellationTokenSource` method takes a params array of `CancellationToken` instances and returns a `CancellationTokenSource` that will request cancellation when any of the supplied cancellation tokens request cancellation, or the adapter is stopped.
-
-```csharp
-async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
-    IAdapterCallContext context, 
-    ReadSnapshotTagValuesRequest request, 
-    [EnumeratorCancellation]
-    CancellationToken cancellationToken
-) {
-    ValidateInvocation(context, request);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
-            yield return item;
-        }
-    }
-}
-
-private IAsyncEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> tags, CancelationToken cancellationToken) {
-    ...
-}
-```
 
 
 ## Working with IAsyncEnumerable<T>
@@ -122,12 +93,8 @@ async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotT
     [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateInvocation(context, request);
-
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        await foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token).ConfigureAwait(false)) {
-            yield return item;
-        }
+    await foreach (var item in GetSnapshotValues(request.Tags, cancellationToken).ConfigureAwait(false)) {
+        yield return item;
     }
 }
 
@@ -145,14 +112,10 @@ async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotT
     [EnumeratorCancellation]
     CancellationToken cancellationToken
 ) {
-    ValidateInvocation(context, request);
-
     await Task.Yield();
 
-    using (var ctSource = CreateCancellationTokenSource(cancellationToken)) {
-        foreach (var item in GetSnapshotValues(request.Tags, ctSource.Token)) {
-            yield return item;
-        }
+    foreach (var item in GetSnapshotValues(request.Tags, cancellationToken)) {
+        yield return item;
     }
 }
 
@@ -162,18 +125,242 @@ private IEnumerable<TagValueQueryResult> GetSnapshotValues(IEnumerable<string> t
 ```
 
 
+## Feature Wrappers
+
+All features that are registered with an adapter derived from `AdapterCore` are wrapped inside a special wrapper class that performs the following functions:
+
+- Validates the `IAdapterCallContext` parameter and any request or client streaming parameters passed to each feature method.
+- Generates telemetry ([Activity](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.activity), metrics, and [EventSource](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.tracing.eventsource)) for each feature invocation. In the case of server and client streaming methods, metrics and `EventSource` logging is generated for each item emitted or ingested by the method.
+
+If you need to access the underlying feature implementation (for example, if it is an external implementation as described below and you need access to another method on the external implementation) you can use the `Unwrap` extension method on the wrapper to get the original feature implementation:
+
+```csharp
+internal class MyTagSearchFeature : ITagSearch {
+  // ITagSearch code removed for brevity
+  public void DeleteAllTags() {
+    // Implementation removed for brevity
+  }
+}
+
+internal static void DeleteAllTagsForAdapter(IAdapter adapter) {
+    if (!(adapter.GetFeature<ITagSearch>().Unwrap() is MyTagSearchFeature feature) {
+        return;
+    }
+
+    feature.DeleteAllTags();
+}
+```
+
+
 ## Delegating Feature Implementations to External Providers
 
-Feature implementations can be delegated to another class instead of being implemented directly by the adapter class. Examples of external feature provider classes include the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) class, which can be used to add [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter.
+Feature implementations can be delegated to another class instead of being implemented directly by the adapter class. Examples of external feature provider classes include the [SnapshotTagValuePush](../src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) class, which can be used to add [ISnapshotTagValuePush](../src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) functionality to your adapter. Examples of additional external providers can be found in the sections below.
 
-When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterBase<TAdapterOptions>`.
+When using external feature providers, you must register the features manually, by calling the `AddFeature` or `AddFeatures` methods inherited from `AdapterCore`:
 
-Any features that are added to the adapter from an external provider that implement `IDisposable` or `IAsyncDisposable` will be disposed when the adapter is disposed.
+```csharp
+var snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
+    AdapterId = Descriptor.Id,
+    PollingInterval = TimeSpan.FromSeconds(5),
+    TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+}, BackgroundTaskService, Logger);
+
+AddFeatures(snapshotPush);
+```
+
+> Any features that are added to the adapter from an external provider that implement `IDisposable` or `IAsyncDisposable` will be disposed when the adapter is disposed.
+
+
+## Health Checks (IHealthCheck Feature)
+
+`AdapterBase<TAdapterOptions>` adds out-of-the-box support for the [IHealthCheck](../src/DataCore.Adapter.Abstractions/Diagnostics/IHealthCheck.cs) feature. To customise the health checks that are performed, you can override the `CheckHealthAsync` method.
+
+Whenever the health status of your adapter changes (e.g. you become disconnected from an external service that the adapter relies on), you should call the `OnHealthStatusChanged` method from your implementation. This will recompute the overall health status of the adapter and push the update to any subscribers to the `IHealthCheck` feature.
+
+
+## Tag Management (ITagInfo, ITagSearch Features)
+
+*This topic is described in more detail [here](./features/tag-search.md).*
+
+If your adapter will manage its own tag definitions instead of retrieving them from e.g. an external database, you can use the [TagManager](../src/DataCore.Adapter/Tags/TagManager.cs) class to implement the [ITagInfo](../src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) and [ITagSearch](../src/DataCore.Adapter.Abstractions/Tags/ITagInfo.cs) features on your adapter's behalf.
+
+
+## Asset Model Management (IAssetModelBrowse, IAssetModelSearch Features)
+
+If your adapter must manage its own asset model, you can delegate this functionality to the [AssetModelManager](../src/DataCore.Adapter/AssetModel/AssetModelManager.cs) class. `AssetModelManager` implements the [IAssetModelBrowse](../src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelBrowse.cs) and [IAssetModelSearch](../src/DataCore.Adapter.Abstractions/AssetModel/IAssetModelSearch.cs) features on your adapter's behalf.
+
+
+## Configuration Changes (IConfigurationChanges Feature)
+
+The [ConfigurationChanges](../src/DataCore.Adapter/Diagnostics/ConfigurationChanges.cs) class can be used to implement the [IConfigurationChanges](../src/DataCore.Adapter.Abstractions/Diagnostics/IConfigurationChanges.cs) feature on your adapter's behalf.
+
+[TagManager](../src/DataCore.Adapter/Tags/TagManager.cs) and [AssetModelManager](../src/DataCore.Adapter/AssetModel/AssetModelManager.cs) can integrate with `ConfigurationChanges` to send notifications when tags or asset model nodes are created, updated or deleted.
+
+
+## Event Message Subscriptions (IEventMessagePush / IEventMessagePushWithTopics Features)
+
+To add the [IEventMessagePush](../src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) and/or [IEventMessagePushWithTopics](../src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) features to your adapter, you can add or extend the [EventMessagePush](../src/DataCore.Adapter/Events/EventMessagePush.cs) and [EventMessagePushWithTopics](../src/DataCore.Adapter/Events/EventMessagePushWithTopics.cs) classes respectively. To push values to subscribers, call the `ValueReceived` method on the feature.
+
+If your source supports its own subscription mechanism, you can extend the `EventMessagePush` and/or `EventMessagePushWithTopics` classes and override the appropriate extension points. For example, in an OPC UA adapter, you could extend `EventMessagePushWithTopics` to add a new monitored item to an OPC UA subscription when a subscription to a topic was created on your adapter.
+
+
+## Snapshot Tag Value Subscriptions (ISnapshotTagValuePush Feature)
+
+*This topic is described in more detail [here](./features/tag-snapshot-polling-and-subscriptions.md).*
+
+To add the [ISnapshotTagValuePush](../src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](../src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](../src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis. To push values to subscribers, call the `ValueReceived` method on the feature.
+
+If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class and override the appropriate extension points. For example, if you were writing an MQTT adapter that treats individual MQTT channels as tags, you could extend `SnapshotTagValuePush` so that it subscribes to an MQTT channel when a subscriber subscribes to a given tag name.
+
+Note that you can also use the [SnapshotTagValueManager](../src/DataCore.Adapter/RealTimeData/SnapshotTagValueManager.cs) class to implement both [ISnapshotTagValuePush](../src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) _and_ [IReadSnapshotTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadSnapshotTagValues.cs) on your adapter's behalf. This is useful when your source does not support direct polling and you need to cache snapshot values received via push locally in the adapter.
+
+
+## Historical Tag Value Queries 
+
+*This topic is described in more detail [here](./features/tag-history-polling.md).*
+
+If your underlying source does not natively support aggregated, values-at-times, or plot/best-fit tag value queries (implemented via the [IReadProcessedTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs), [IReadTagValuesAtTimes](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs), and [IReadPlotTagValues](../src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) features respectively), you can use the [ReadHistoricalTagValues](../src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class to provide these capabilities, as long as you can provide it with the ability to resolve tag names, and to request raw tag values.
+
+If your source implements some of these capabilities but not others, you can use the classes in the `DataCore.Adapter.RealTimeData.Utilities` namespace to assist with the implementation of the missing functionality if desired.
+
+> Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
+
+
+## Custom Functions (ICustomFunctions Feature)
+
+An adapter can expose non-standard or vendor-specific functionality via custom functions. Custom functions can be discovered and invoked if an adapter implements the [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature.
+
+The simplest way to implement [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) is to create an instance of the [CustomFunctions](../src/DataCore.Adapter/Extensions/CustomFunctions.cs) helper class and have your adapter register the instance as a feature provider:
+
+```csharp
+var customFunctions = new CustomFunctions(TypeDescriptor.Id);
+AddFeatures(customFunctions);
+```
+
+You can then use the `RegisterFunctionAsync` method to register your functions:
+
+```csharp
+private async Task AddFunctionsAsync() {
+    var feature = Features.Get<ICustomFunctions>().Unwrap() as CustomFunctions;
+    if (feature == null) {
+        return;
+    }
+
+    await feature.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
+        "Greet",
+        "Replies to requests with a greeting message.",
+        (context, request, ct) => Task.FromResult(new GreeterResponse() { 
+            Message = $"Hello, {request.Name}!" 
+        });
+    );
+}
+
+public class GreeterRequest {
+
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = default!;
+
+}
+
+public class GreeterResponse {
+
+    public string Message { get; set; } = default!;
+
+}
+```
+
+Each registered function has a unique URI identifier. The URI does not have to support dereferencing (i.e. it does not have to be a URL that can be accessed via an HTTP request). 
+
+In the example above, the URI will be derived from the base URI specified when creating the `CustomFunctions` instance (the URI type identifier for the adapter in the above example), and the name of the function. 
+
+Each custom function definition also contains JSON schemas describing valid request and response messages. In the example above, the schemas are automatically generated from the `GreeterRequest` and `GreeterResponse` types. 
+
+Assuming that the type ID of the adapter is `https://my-company.com/app-store-connect/adapters/my-adapter`, the JSON-encoded function description for the `Greet` function would be as follows:
+
+```json
+{
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "name": "Greet",
+    "description": "Replies to requests with a greeting message.",
+    "requestSchema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "maxLength": 100
+            }
+        },
+        "required": [
+            "name"
+        ]
+    },
+    "responseSchema": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string"
+            }
+        }
+    }
+}
+```
+
+The request schema is automatically applied to incoming invocation requests received via the [REST API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages.
+
+Example invocations via REST interface:
+
+```
+POST /api/app-store-connect/v2.0/custom-functions/my-adapter
+Content-Type: application/json
+
+{
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "body": {
+        "name": "John Smith"
+    }
+}
+
+---
+
+200/OK
+Content-Type: application/json
+
+{
+    "body": {
+        "message": "Hello, John Smith!"
+    }
+}
+```
+
+```
+POST /api/app-store-connect/v2.0/custom-functions/my-adapter
+Content-Type: application/json
+
+{
+    "id": "https://my-company.com/app-store-connect/adapters/my-adapter/custom-functions/greet",
+    "body": {
+        "name": null
+    }
+}
+
+---
+
+400/Bad Request
+Content-Type: application/json
+
+{
+    "valid": false,
+    "keywordLocation": "#/properties/name/type",
+    "instanceLocation": "#/name",
+    "error": "Value is \"null\" but should be \"string\""
+}
+```
 
 
 ## Disabling Automatic Feature Registration
 
-To disable automatic registration of features implemented directly on the adapter class, you can annotate your class with an [AutomaticFeatureRegistrationAttribute](/src/DataCore.Adapter/AutomaticFeatureRegistrationAttribute.cs):
+To disable automatic registration of features implemented directly on the adapter class, you can annotate your class with an [AutomaticFeatureRegistrationAttribute](../src/DataCore.Adapter/AutomaticFeatureRegistrationAttribute.cs):
 
 ```csharp
 [AutomaticFeatureRegistration(false)]
@@ -205,266 +392,36 @@ In general, is is not desirable to disable automatic feature registration. Howev
 - You are writing a proxy for an adapter hosted in an external system, and you want to add features to your adapter at runtime that match the features implemented by the remote adapter.
 
 
-## Health Checks (IHealthCheck Feature)
-
-`AdapterBase<TAdapterOptions>` adds out-of-the-box support for the [IHealthCheck](/src/DataCore.Adapter.Abstractions/Diagnostics/IHealthCheck.cs) feature. To customise the health checks that are performed, you can override the `CheckHealthAsync` method.
-
-Whenever the health status of your adapter changes (e.g. you become disconnected from an external service that the adapter relies on), you should call the `OnHealthStatusChanged` method from your implementation. This will recompute the overall health status of the adapter and push the update to any subscribers to the `IHealthCheck` feature.
-
-
-## Event Message Subscriptions (IEventMessagePush / IEventMessagePushWithTopics Features)
-
-To add the [IEventMessagePush](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePush.cs) and/or [IEventMessagePushWithTopics](/src/DataCore.Adapter.Abstractions/Events/IEventMessagePushWithTopics.cs) features to your adapter, you can add or extend the [EventMessagePush](/src/DataCore.Adapter/Events/EventMessagePush.cs) and [EventMessagePushWithTopics](/src/DataCore.Adapter/Events/EventMessagePushWithTopics.cs) classes respectively. To push values to subscribers, call the `ValueReceived` method on the feature.
-
-If your source supports its own subscription mechanism, you can extend the `EventMessagePush` and/or `EventMessagePushWithTopics` classes and override the appropriate extension points. For example, in an OPC UA adapter, you could extend `EventMessagePushWithTopics` to add a new monitored item to an OPC UA subscription when a subscription to a topic was created on your adapter.
-
-
-## Snapshot Tag Value Subscriptions (ISnapshotTagValuePush Feature)
-
-To add the [ISnapshotTagValuePush](/src/DataCore.Adapter.Abstractions/RealTimeData/ISnapshotTagValuePush.cs) feature to your adapter, you can use the [SnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/SnapshotTagValuePush.cs) or [PollingSnapshotTagValuePush](/src/DataCore.Adapter/RealTimeData/PollingSnapshotTagValuePush.cs) classes. The latter can be used when the underlying source does not support a subscription mechanism of its own, and allows subscribers to your adapter to receive real-time value changes at an update rate of your choosing, by polling the underlying source for values on a periodic basis. To push values to subscribers, call the `ValueReceived` method on the feature.
-
-If your source supports its own subscription mechanism, you can extend the `SnapshotTagValuePush` class and override the appropriate extension points. For example, if you were writing an MQTT adapter that treats individual MQTT channels as tags, you could extend `SnapshotTagValuePush` so that it subscribes to an MQTT channel when a subscriber subscribes to a given tag name.
-
-
-## Historical Tag Value Queries 
-
-If your underlying source does not support aggregated, values-at-times, or plot/best-fit tag value queries (implemented via the [IReadProcessedTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadProcessedTagValues.cs), [IReadTagValuesAtTimes](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadTagValuesAtTimes.cs), and [IReadPlotTagValues](/src/DataCore.Adapter.Abstractions/RealTimeData/IReadPlotTagValues.cs) respectively), you can use the [ReadHistoricalTagValues](/src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) class to provide these capabilities, as long as you can provide it with the ability to resolve tag names, and to request raw tag values.
-
-If your source implements some of these capabilities but not others, you can use the classes in the `DataCore.Adapter.RealTimeData.Utilities` namespace to assist with the implementation of the missing functionality if desired.
-
-> Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
-
-
-## Extension Features
-
-**WARNING: EXTENSION FEATURE IMPLEMENTATION WILL FEATURE MULTIPLE BREAKING CHANGES IN v3.0**
-
-> The [Writing an Extension Feature](/docs/tutorials/writing-an-extension-feature) tutorial provides a walk-through example of how to write an extension feature for an adapter.
-
-In addition to standard features, implementers can define their own extension features.
-
-Extension features must inherit from [IAdapterExtensionFeature](/src/DataCore.Adapter.Abstractions/Extensions/IAdapterExtensionFeature.cs), and must be annotated with an [ExtensionFeatureAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureAttribute.cs), which identifies the URI for the extension, as well as additional properties such as the display name and description.
-
-The `IAdapterExtensionFeature` interface defines methods for retrieving a descriptor for the extension, and a list of available operations. Extension operations are called via the `Invoke`, `Stream`, or `DuplexStream` methods defined on `IAdapterExtensionFeature`. 
-
-The [AdapterExtensionFeature](/src/DataCore.Adapter/Extensions/AdapterExtensionFeature.cs) class is a base class for simplifying the implementation of extension features, which provides a number of `BindInvoke`, `BindStream`, and `BindDuplexStream` methods to automatically generate operation descriptors for the extension feature, and to automatically invoke the bound method when a call is made to the extension's `Invoke`, `Stream`, or `DuplexStream` methods.
-
-For example, the full implementation of a "ping pong" extension, that responds to `PingMessage` objects it receives with an equivalent `PongMessage` might look like this:
-
-```csharp
-[ExtensionFeature(
-    // Relative feature URI; will be made absolute relative to WellKnownFeatures.Extensions.ExtensionFeatureBasePath
-    "example/ping-pong/", 
-    Name = "Ping Pong",
-    Description = "Responds to every ping message with a pong message"
-)]
-public class PingPongExtension : AdapterExtensionFeature {
-
-    public PingPongExtension(
-        IBackgroundTaskService backgroundTaskService, 
-        IEnumerable<IObjectEncoder> encoders
-    ) : base(backgroundTaskService, encoders) {
-        BindInvoke<PingPongExtension, PingMessage, PongMessage>(PingInvoke);
-        BindStream<PingPongExtension, PingMessage, PongMessage>(PingStream);
-        BindDuplexStream<PingPongExtension, PingMessage, PongMessage>(PingDuplexStream);
-    }
-
-
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingInvokeDescriptor))]
-    public PongMessage PingInvoke(PingMessage ping) {
-        if (ping == null) {
-            throw new ArgumentNullException(nameof(ping));
-        }
-
-        return new PongMessage() {
-            CorrelationId = ping.CorrelationId
-        };
-    }
-
-
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingStreamDescriptor))]
-    public async IAsyncEnumerable<PongMessage> PingStream(
-        PingMessage ping,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken
-    ) {
-        if (ping == null) {
-            throw new ArgumentNullException(nameof(ping));
-        }
-
-        while (!cancellationToken.IsCancellationRequested) {
-            try {
-                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                yield return PingInvoke(ping);
-            }
-            catch (OperationCanceledException) { }
-        }
-    }
-
-
-    [ExtensionFeatureOperation(typeof(PingPongExtension), nameof(GetPingDuplexStreamDescriptor))]
-    public async IAsyncEnumerable<PongMessage> PingDuplexStream(
-        IAsyncEnumerable<PingMessage> channel,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken
-    ) {
-        if (channel == null) {
-            throw new ArgumentNullException(nameof(channel));
-        }
-
-        await foreach(var ping in channel.WithCancellation(cancellationToken).ConfigureAwait(false)) {
-            if (ping == null) {
-                continue;
-            }
-            yield return PingInvoke(ping);
-        }
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingInvokeDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message that matches the correlation ID of the specified ping message",
-            Inputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new [] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingStreamDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message every second that matches the correlation ID of the specified ping message",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
-
-
-    internal static ExtensionFeatureOperationDescriptorPartial GetPingDuplexStreamDescriptor() {
-        return new ExtensionFeatureOperationDescriptorPartial() {
-            Name = "Ping",
-            Description = "Returns a pong message every time a ping message is received",
-            Inputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PingMessage>(),
-                    Description = "The ping message"
-                }
-            },
-            Outputs = new[] {
-                new ExtensionFeatureOperationParameterDescriptor() {
-                    VariantType = VariantType.ExtensionObject,
-                    TypeId = TypeLibrary.GetTypeId<PongMessage>(),
-                    Description = "The resulting pong message"
-                }
-            }
-        };
-    }
-
-}
-
-
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "ping-message"
-)]
-public class PingMessage {
-    public Guid CorrelationId { get; set; } = Guid.NewGuid();
-}
-
-
-[ExtensionFeatureDataType(
-    // The extension feature that this data type belongs to.
-    typeof(PingPongExtension), 
-    // Type identifier. Will be made absolute relative to the /types path under the feature URI.
-    "pong-message"
-)]
-public class PongMessage {
-    public Guid CorrelationId { get; set; } = Guid.NewGuid();
-}
-```
-
-The `[ExtensionFeature]` annotation defines a URI for the extension. This can be specified as a relative URI path (in which case it will be made absolute using `WellKnownFeatures.Extensions.ExtensionFeatureBasePath` as the base) or as an absolute URI (in which case it must be a child path of `WellKnownFeatures.Extensions.ExtensionFeatureBasePath`). The URI for the feature always ends with a forwards slash; one will be added if not specified in the URI passed to the `[ExtensionFeature]`. This information is used to create a descriptor for the feature. An example (JSON-encoded) descriptor for the ping-pong extension defined above would look like this:
-
-```json
-{
-  "uri": "asc:extensions/example/ping-pong/",
-  "displayName": "Ping Pong",
-  "description": "Responds to every ping message with a pong message"
-}
-```
-
-When writing an extension feature, methods can be annotated with an [ExtensionFeatureOperationAttribute](/src/DataCore.Adapter.Abstractions/Extensions/ExtensionFeatureOperationAttribute.cs). When one of the `BindXXX` methods is used to bind the method to an `Invoke`, `Stream`, or `DuplexStream` operation, this attribute is used to generate a descriptor for the operation. 
-
-For example, the `PingInvoke` method above is annotated with an `[ExtensionFeatureOperation]` attribute that uses the static `GetPingInvokeDescriptor` method to retrieve metadata about the operation. An example (JSON-encoded) descriptor for the operation generated by the `AdapterExtensionFeature` base class would look like this:
-
-```json
-{
-    "operationId": "asc:extensions/example/ping-pong/invoke/Ping/",
-    "operationType": "Invoke",
-    "name": "Ping",
-    "description": "Returns a pong message that matches the correlation ID of the specified ping message",
-    "inputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/ping-message/",
-            "description": "The ping message"
-        }
-    ],
-    "outputs": [
-        {
-            "ordinal": 0,
-            "variantType": "ExtensionObject",
-            "arrayRank": 0,
-            "typeId": "asc:extensions/example/ping-pong/types/pong-message/",
-            "description": "The resulting pong message"
-        }
-    ]
-}
-```
-
-
 # Persisting State
 
-The [IKeyValueStore](/src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) service can be injected into an adapter constructor to provide a service for storing arbitrary key-value pairs that can be persisted and restored when an adapter or host application is restarted. 
-> The default [in-memory implementation](/src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use the [Microsoft FASTER-based implementation](/src/DataCore.Adapter.KeyValueStore.FASTER) or write your own implementation.
+The [IKeyValueStore](../src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) service can be injected into an adapter constructor to provide a service for storing arbitrary key-value pairs that can be persisted and restored when an adapter or host application is restarted. 
+> The default [in-memory implementation](../src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use one of the implementations listed below or write your own implementation.
+
+The following `IKeyValueStore` implementations support persistence:
+
+- [File System](../src/DataCore.Adapter.KeyValueStore.FileSystem)
+- [SQLite](../src/DataCore.Adapter.KeyValueStore.Sqlite)
+- [Microsoft FASTER](../src/DataCore.Adapter.KeyValueStore.FASTER)
+
+`IKeyValueStore` expects values to be specified as `byte[]`. Extension methods exist to automatically serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) e.g.
+
+```csharp
+await kvStore.WriteJsonAsync("UtcLastUpdated", DateTime.UtcNow).ConfigureAwait(false);
+```
 
 
 # Telemetry
 
-Telemetry is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). The [Web API](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc), [gRPC](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc), and [SignalR](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR) hosting packages automatically create activities when invoking operations on your adapter. You can use `ActivitySource` property in the static [Telemetry](/src/DataCore.Adapter/Diagnostics/Telemetry.cs) class to provide adapter-specific telemetry inside your feature implementations (for example, while executing a database query):
+## Traces
+
+Tracing is provided using the [ActivitySource](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activitysource) class (via the [System.Diagnostics.DiagnosticSource](https://www.nuget.org/packages/System.Diagnostics.DiagnosticSource) NuGet package). 
+
+Activities are automatically created when invoking features that have been registered with an adapter derived from `AdapterCore` (including both `AdapterBase<TAdapterOptions>` and `AdapterBase`).
+
+You can use `ActivitySource` property in the static [Telemetry](../src/DataCore.Adapter.Abstractions/Diagnostics/Telemetry.cs) class to provide adapter-specific trace activities inside your feature implementations (for example, while executing a database query):
 
 ```csharp
-private async IAsyncEnumerable<EventMessage> ReadEventMessages(
+private async IAsyncEnumerable<EventMessage> ReadEventMessagesAsync(
     SqlCommand command, 
     [EnumeratorCancellation]
     CancellationToken cancellationToken
@@ -487,9 +444,23 @@ private async IAsyncEnumerable<EventMessage> ReadEventMessages(
 ```
 
 
+## Metrics
+
+You can use `Meter` property in the static [Telemetry](../src/DataCore.Adapter.Abstractions/Diagnostics/Telemetry.cs) class to add custom metric instrumentation to your adapter.
+
+Instrumentation is automatically generated for the following metrics on all features registered with an adapter derived from `AdapterCore`:
+
+- Operations started
+- Operations completed
+- Operations faulted
+- Operation duration
+- Server stream items emitted
+- Client stream items consumed
+
+
 # Providing Adapter Options From Configuration
 
-`AdapterBase<TAdapterOptions>` and `AdapterBase` both define constructors that allow the options for the adapter to be supplied via an `IOptions<T>` or `IOptionsMonitor<T>` instance supplied by the configuration system of an ASP.NET Core application, or an application using the .NET Core Generic Host. If you implement an appropriate constructor in your adapter implementation, you can receive pass options into your adapter at startup using this mechanism. For example:
+`AdapterBase<TAdapterOptions>` defines constructors that allow the options for the adapter to be supplied via an `IOptions<T>` or `IOptionsMonitor<T>` instance supplied by your application's dependency injection system. For example:
 
 ```json
 // appsettings.json
@@ -517,87 +488,32 @@ private async IAsyncEnumerable<EventMessage> ReadEventMessages(
 ```
 
 ```csharp
-public class Startup {
+[assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
-    public IConfiguration Configuration { get; }
+var builder = WebApplication.CreateBuilder(args);
 
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
+builder.Services
+    .AddDataCoreAdapterAspNetCoreServices()
+    .AddHostInfo(
+       name: "My Host",
+       description: "A brief description of the hosting application"
+     )
+    // Bind adapter options against the application configuration.
+    .AddServices(svc => svc.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
+        "my-csv",
+        builder.Configuration.GetSection("CsvAdapter:my-csv")
+     ))
+    // Register the adapter.
+    .AddAdapter(sp => ActivatorUtilities.CreateInstance<DataCore.Adapter.Csv.CsvAdapter>(
+      sp, 
+      "my-csv",
+      sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
+    ));
 
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:my-csv"));
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptions<T> to supply options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID 
-                sp.GetRequiredService<IOptions<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
+// Remaining code removed for brevity.
 ```
 
-Note that, when using `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
-
-```csharp
-public class Startup {
-
-    public IConfiguration Configuration { get; }
-
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
-
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind named CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
-            "my-csv", // Key for this set of options
-            Configuration.GetSection("CsvAdapter:my-csv")
-        );
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptionsMonitor<T> to supply named options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID; also used as the named options key   
-                sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
-```
-
-Passing options to your adapter using an `IOptionsMonitor<T>` also allows you to reconfigure your adapter at runtime when the configuration options change in the ASP.NET Core or generic host application. You can react to configuration changes by overriding the `OnOptionsChange` method in your adapter implementation.
+Passing options to your adapter using an `IOptionsMonitor<T>` also allows you to reconfigure your adapter at runtime when the configuration options change in the host application. You can react to configuration changes by overriding the `OnOptionsChange` method in your adapter implementation.
 
 
 # Structuring Adapter Code
@@ -632,7 +548,7 @@ partial class MyAdapter : IReadSnapshotTagValues {
 
 # Testing
 
-A [helper package](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers) is available to assist with basic testing of adapters using MSTest. To write tests for your adapter, extend the [AdapterTestsBase&lt;TAdapter&gt;](/src/DataCore.Adapter.Tests.Helpers/AdapterTestsBase.cs) base class, annotate your new class with a `[TestClass]` attribute, implement the abstract `CreateServiceScope` and `CreateAdapter` methods, and then override the various `CreateXXXRequest` methods to supply settings for the features that your adapter implements:
+A [helper package](https://www.nuget.org/packages/IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers) is available to assist with basic testing of adapters using MSTest. To write tests for your adapter, extend the [AdapterTestsBase&lt;TAdapter&gt;](../src/DataCore.Adapter.Tests.Helpers/AdapterTestsBase.cs) base class, annotate your new class with a `[TestClass]` attribute, implement the abstract `CreateServiceScope` and `CreateAdapter` methods, and then override the various `CreateXXXRequest` methods to supply settings for the features that your adapter implements:
 
 ```csharp
 // AssemblyInitializer.cs

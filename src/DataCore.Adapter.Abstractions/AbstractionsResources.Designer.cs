@@ -412,6 +412,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows invocation of vendor-specific custom functions..
+        /// </summary>
+        public static string Description_CustomFunctions {
+            get {
+                return ResourceManager.GetString("Description_CustomFunctions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows subscribers to receive event messages from an adapter in real-time..
         /// </summary>
         public static string Description_EventMessagePush {
@@ -520,6 +529,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows tag definitions to be created, updated and deleted..
+        /// </summary>
+        public static string Description_TagConfiguration {
+            get {
+                return ResourceManager.GetString("Description_TagConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allows retrieval of an adapter&apos;s tag definitions using the tag&apos;s ID or name..
         /// </summary>
         public static string Description_TagInfo {
@@ -597,6 +615,15 @@ namespace DataCore.Adapter {
         public static string DisplayName_ConfigurationChanges {
             get {
                 return ResourceManager.GetString("DisplayName_ConfigurationChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom Functions.
+        /// </summary>
+        public static string DisplayName_CustomFunctions {
+            get {
+                return ResourceManager.GetString("DisplayName_CustomFunctions", resourceCulture);
             }
         }
         
@@ -709,6 +736,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tag Configuration.
+        /// </summary>
+        public static string DisplayName_TagConfiguration {
+            get {
+                return ResourceManager.GetString("DisplayName_TagConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tag Information.
         /// </summary>
         public static string DisplayName_TagInfo {
@@ -763,6 +799,24 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The adapter has not been started..
+        /// </summary>
+        public static string Error_AdapterIsNotStarted {
+            get {
+                return ResourceManager.GetString("Error_AdapterIsNotStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This feature has already been registered..
+        /// </summary>
+        public static string Error_FeatureIsAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("Error_FeatureIsAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Zero byte keys are not allowed..
         /// </summary>
         public static string Error_KeyValueStore_InvalidKey {
@@ -781,11 +835,38 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Object does not implement feature &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_NotAFeatureImplementation {
+            get {
+                return ResourceManager.GetString("Error_NotAFeatureImplementation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid adapter feature type. Standard features must be interfaces that extend &apos;{1}&apos; and are annotated with &apos;{2}&apos;. Non-standard features must be interfaces or classes that extend &apos;{3}&apos; and are annotated with &apos;{4}&apos;..
+        /// </summary>
+        public static string Error_NotAnAdapterFeature {
+            get {
+                return ResourceManager.GetString("Error_NotAnAdapterFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This operation is not supported for a relative URI..
         /// </summary>
         public static string Error_RelativeUrisAreNotSupported {
             get {
                 return ResourceManager.GetString("Error_RelativeUrisAreNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve custom function with ID &apos;{0}&apos;..
+        /// </summary>
+        public static string Error_UnableToResolveCustomFunction {
+            get {
+                return ResourceManager.GetString("Error_UnableToResolveCustomFunction", resourceCulture);
             }
         }
         
@@ -813,6 +894,87 @@ namespace DataCore.Adapter {
         public static string LocalizableString_LocalizationFailed {
             get {
                 return ResourceManager.GetString("LocalizableString_LocalizationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adapter &apos;{AdapterId}&apos; is disabled..
+        /// </summary>
+        public static string Log_AdapterIsDisabled {
+            get {
+                return ResourceManager.GetString("Log_AdapterIsDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while starting adapter &apos;{adapterId}&apos;..
+        /// </summary>
+        public static string Log_AdapterStartupError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStartupError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while stopping adapter &apos;{adapterId}&apos;..
+        /// </summary>
+        public static string Log_AdapterStopError {
+            get {
+                return ResourceManager.GetString("Log_AdapterStopError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error while disposing of feature &apos;{feature}&apos;..
+        /// </summary>
+        public static string Log_ErrorWhileDisposingOfFeature {
+            get {
+                return ResourceManager.GetString("Log_ErrorWhileDisposingOfFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Started adapter &apos;{adapterId}&apos;..
+        /// </summary>
+        public static string Log_StartedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting adapter &apos;{adapterId}&apos;..
+        /// </summary>
+        public static string Log_StartingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StartingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopped adapter &apos;{adapterId}&apos;..
+        /// </summary>
+        public static string Log_StoppedAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppedAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping adapter &apos;{adapterId}&apos; (disposing: false)..
+        /// </summary>
+        public static string Log_StoppingAdapter {
+            get {
+                return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create wrapper for feature type &apos;{feature}&apos;. Automatic validation and telemetry for this feature will not be available..
+        /// </summary>
+        public static string Log_UnableToCreateFeatureWrapper {
+            get {
+                return ResourceManager.GetString("Log_UnableToCreateFeatureWrapper", resourceCulture);
             }
         }
     }

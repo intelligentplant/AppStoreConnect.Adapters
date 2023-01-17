@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Tags;
 
@@ -7,6 +9,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a value returned by a tag value query for processed data.
     /// </summary>
+    [DebuggerDisplay("Tag = {TagName}, Function = {DataFunction}, Value = {Value}")]
     public class ProcessedTagValueQueryResult : TagValueQueryResult {
 
         /// <summary>
@@ -40,6 +43,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public ProcessedTagValueQueryResult(
             string tagId,
             string tagName,
@@ -102,4 +106,5 @@ namespace DataCore.Adapter.RealTimeData {
         }
 
     }
+
 }

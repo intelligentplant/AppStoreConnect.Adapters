@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -32,6 +32,7 @@ namespace DataCore.Adapter.Events {
         ///   Additional properties related to the write.
         /// </param>,
         /// 
+        [JsonConstructor]
         public WriteEventMessageResult(
             string? correlationId,
             WriteStatus status, 
@@ -62,4 +63,5 @@ namespace DataCore.Adapter.Events {
         }
 
     }
+
 }

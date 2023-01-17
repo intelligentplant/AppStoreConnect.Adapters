@@ -8,6 +8,7 @@ namespace DataCore.Adapter.Extensions {
     /// provide additional metadata describing the feature.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     public sealed class ExtensionFeatureAttribute : AdapterFeatureAttribute {
 
         /// <summary>

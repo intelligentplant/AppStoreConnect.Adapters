@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -30,14 +28,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                var clientResponse = await client.TagSearch.FindTagsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.FindTagsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -49,14 +42,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                var clientResponse = await client.TagSearch.GetTagsAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.GetTagsAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -69,13 +57,9 @@ namespace DataCore.Adapter.Http.Proxy.Tags {
             CancellationToken cancellationToken
         ) {
             Proxy.ValidateInvocation(context, request);
-
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken)) {
-                var client = GetClient();
-                var clientResponse = await client.TagSearch.GetTagPropertiesAsync(AdapterId, request, context?.ToRequestMetadata(), ctSource.Token).ConfigureAwait(false);
-                foreach (var item in clientResponse) {
-                    yield return item;
-                }
+            var client = GetClient();
+            await foreach (var item in client.TagSearch.GetTagPropertiesAsync(AdapterId, request, context?.ToRequestMetadata(), cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 

@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.Diagnostics;
 using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
@@ -45,6 +42,11 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         protected IBackgroundTaskService BackgroundTaskService { get; }
 
+        /// <summary>
+        /// JSON serialization options.
+        /// </summary>
+        private readonly System.Text.Json.JsonSerializerOptions? _jsonOptions;
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterHub"/> object.
@@ -58,14 +60,19 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="taskScheduler">
         ///   The background task scheduler to use.
         /// </param>
+        /// <param name="jsonOptions">
+        ///   The configured JSON options.
+        /// </param>
         public AdapterHub(
             HostInfo hostInfo, 
             IAdapterAccessor adapterAccessor,
-            IBackgroundTaskService taskScheduler
+            IBackgroundTaskService taskScheduler,
+            Microsoft.Extensions.Options.IOptions<JsonHubProtocolOptions> jsonOptions
         ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
+            _jsonOptions = jsonOptions?.Value?.PayloadSerializerOptions;
         }
 
 
@@ -134,9 +141,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
-            using (Telemetry.ActivitySource.StartCheckHealthActivity(adapter.Adapter.Descriptor.Id)) {
-                return await adapter.Feature.CheckHealthAsync(adapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
-            }
+            return await adapter.Feature.CheckHealthAsync(adapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
         }
 
 
@@ -157,17 +162,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
-            long itemCount = 0;
-            using (var activity = Telemetry.ActivitySource.StartHealthCheckSubscribeActivity(adapter.Adapter.Descriptor.Id)) {
-                try {
-                    await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
-                        ++itemCount;
-                        yield return item;
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(itemCount);
-                }
+            await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
+                yield return item;
             }
         }
 
@@ -250,6 +246,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <exception cref="SecurityException">
         ///   The caller is not authorized to access the adapter feature.
         /// </exception>
+        [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
         private async Task<ResolvedAdapterFeature<IAdapterExtensionFeature>> ResolveAdapterAndExtensionFeature(IAdapterCallContext adapterCallContext, string adapterId, Uri featureUri, CancellationToken cancellationToken) {
             var resolvedFeature = await AdapterAccessor.GetAdapterAndFeature<IAdapterExtensionFeature>(adapterCallContext, adapterId, featureUri, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -76,10 +77,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // the FeatureAuthorizationHandler class and call AddAdapterFeatureAuthorization
             // above to register your handler.
 
-            services.AddGrpc();
+            services
+                .AddGrpc()
+                .AddDataCoreAdapterGrpc();
 
-            services.AddMvc()
+            services
+                .AddMvc()
                 .AddJsonOptions(options => {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                     options.JsonSerializerOptions.WriteIndented = true;
                 })
                 .AddDataCoreAdapterMvc();
@@ -93,14 +98,14 @@ namespace DataCore.Adapter.AspNetCoreExample {
                 .AddAdapterHealthChecks();
 
             // Add OpenTelemetry tracing
-            services.AddOpenTelemetryTracing(builder => {
-                builder
+            services
+                .AddOpenTelemetry()
+                .WithTracing(builder => builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
-                    .AddJaegerExporter();
-                    //.AddConsoleExporter();
-            });
+                    .AddJaegerExporter())
+                .StartWithHost();
 
             services.AddOpenApiDocument(options => {
                 options.DocumentName = "v2.0";

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
+using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
@@ -108,6 +110,56 @@ namespace DataCore.Adapter.Tests {
                 SubscriptionType = EventMessageSubscriptionType.Active,
                 Topics = new[] { context.TestName }
             };
+        }
+
+        #endregion
+
+        #region [ Custom Functions ]
+
+        protected override GetCustomFunctionsRequest CreateGetCustomFunctionsRequest(TestContext context) {
+            return new GetCustomFunctionsRequest();
+        }
+
+
+        protected override GetCustomFunctionRequest CreateGetCustomFunctionRequest(TestContext context) {
+            return new GetCustomFunctionRequest() {
+                Id = new Uri("./ping", UriKind.Relative)
+            };
+        }
+
+
+        protected override CustomFunctionInvocationRequest CreateCustomFunctionInvocationRequest(TestContext context) {
+            return CustomFunctionInvocationRequest.Create(new Uri("./ping", UriKind.Relative), new PingMessage() {
+                CorrelationId = Guid.NewGuid(),
+                UtcClientTime = DateTime.UtcNow
+            });
+        }
+
+
+        [TestMethod]
+        public Task ShouldInvokePingCustomFunction() {
+            return RunAdapterTest(async (adapter, context, ct) => {
+                var feature = adapter.Features.Get<ICustomFunctions>();
+                if (feature == null) {
+                    AssertFeatureNotImplemented<ICustomFunctions>();
+                    return;
+                }
+
+                var funcs = await feature.GetFunctionsAsync(context, new GetCustomFunctionsRequest() {
+                    Id = "*/ping"
+                }, ct).ConfigureAwait(false);
+
+                var func = funcs.FirstOrDefault();
+                Assert.IsNotNull(func);
+
+                var ping = new PingMessage() {
+                    CorrelationId = Guid.NewGuid(),
+                    UtcClientTime = DateTime.UtcNow
+                };
+                var pong = await feature.InvokeFunctionAsync<PingMessage, PongMessage>(context, func.Id, ping, cancellationToken: ct).ConfigureAwait(false);
+
+                Assert.AreEqual(ping.CorrelationId, pong.CorrelationId);
+            });
         }
 
         #endregion

@@ -28,10 +28,11 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         /// <returns>
         ///   An <see cref="IAsyncEnumerable{T}"/> that will return the values for the requested tags. 
-        ///   The adapter can decide if it will interpolate a tag value using the closest raw 
-        ///   samples to a requested time stamp, or if it will repeat the previous raw value 
-        ///   before the time stamp.
         /// </returns>
+        /// <remarks>
+        ///   The adapter should return the raw samples at or immediately before each requested 
+        ///   timestamp. It should not interpolate values.
+        /// </remarks>
         IAsyncEnumerable<TagValueQueryResult> ReadTagValuesAtTimes(
             IAdapterCallContext context, 
             ReadTagValuesAtTimesRequest request, 

@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore.Grpc;
-using DataCore.Adapter.Diagnostics;
-using DataCore.Adapter.Diagnostics.RealTimeData;
 using DataCore.Adapter.RealTimeData;
 
 using Grpc.Core;
@@ -50,21 +48,12 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadAnnotationsActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                long outputItems = 0;
-                try {
-                    await foreach (var item in adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
-                        if (item == null) {
-                            continue;
-                        }
+            await foreach (var item in adapter.Feature.ReadAnnotations(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false)) {
+                if (item == null) {
+                    continue;
+                }
 
-                        ++outputItems;
-                        await responseStream.WriteAsync(item.ToGrpcTagValueAnnotationQueryResult()).ConfigureAwait(false);
-                    }
-                }
-                finally {
-                    activity.SetResponseItemCountTag(outputItems);
-                }
+                await responseStream.WriteAsync(item.ToGrpcTagValueAnnotationQueryResult()).ConfigureAwait(false);
             }
         }
 
@@ -83,11 +72,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartReadAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var result = await adapter.Feature.ReadAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                activity.SetResponseItemCountTag(result == null ? 0 : 1);
-                return result!.ToGrpcTagValueAnnotation();
-            }
+            var result = await adapter.Feature.ReadAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result!.ToGrpcTagValueAnnotation();
         }
 
 
@@ -105,10 +91,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartCreateAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var result = await adapter.Feature.CreateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
-            }
+            var result = await adapter.Feature.CreateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
         }
 
 
@@ -127,10 +111,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartUpdateAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var result = await adapter.Feature.UpdateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
-            }
+            var result = await adapter.Feature.UpdateAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
         }
 
 
@@ -148,10 +130,8 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             };
             Util.ValidateObject(adapterRequest);
 
-            using (var activity = Telemetry.ActivitySource.StartDeleteAnnotationActivity(adapter.Adapter.Descriptor.Id, adapterRequest)) {
-                var result = await adapter.Feature.DeleteAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
-                return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
-            }
+            var result = await adapter.Feature.DeleteAnnotation(adapterCallContext, adapterRequest, cancellationToken).ConfigureAwait(false);
+            return result.ToGrpcWriteTagValueAnnotationResult(adapter.Adapter.Descriptor.Id);
         }
 
     }

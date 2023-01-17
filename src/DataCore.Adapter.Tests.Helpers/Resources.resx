@@ -170,6 +170,10 @@
     <value>Items in the {0} collection should not be null.</value>
     <comment>{0} - collection that contained a null item</comment>
   </data>
+  <data name="CustomFunctionResponseWasInvalid" xml:space="preserve">
+    <value>Response body for custom function '{0}' failed validation</value>
+    <comment>{0} - function ID</comment>
+  </data>
   <data name="ExpectedItemsWereNotReceived" xml:space="preserve">
     <value>Values for the following expected items were not received: {0}</value>
     <comment>{0} - expected items</comment>
@@ -187,6 +191,13 @@
     <value>Feature not implemented: {0}</value>
     <comment>{0} - feature name</comment>
   </data>
+  <data name="GetCustomFunctionDidNotReturnResult" xml:space="preserve">
+    <value>Unable to resolve custom function '{0}'.</value>
+    <comment>{0} - function ID</comment>
+  </data>
+  <data name="GetCustomFunctionsDidNotReturnResults" xml:space="preserve">
+    <value>Expected at least one custom function definition to be returned.</value>
+  </data>
   <data name="HealthCheckStatusDoesNotMatchAggregatedChildStatus" xml:space="preserve">
     <value>The status of a health check result returned by the adapter does not match the aggregate status of the child health check results it contains.</value>
   </data>
@@ -200,6 +211,10 @@
   <data name="InsideBoundedRawQueryReturnedValuesBeforeStartTime" xml:space="preserve">
     <value>At least one tag value was before the request start time. This is not allowed when the boundary type for the query is {0}.</value>
     <comment>{0} - boundary type</comment>
+  </data>
+  <data name="InvokeCustomFunctionDidNotReturnResult" xml:space="preserve">
+    <value>Custom function '{0}' returned null.</value>
+    <comment>{0} - function ID</comment>
   </data>
   <data name="ItemCountIsGreaterThanPageSize" xml:space="preserve">
     <value>The page size for the request was {0}, but {1} items were returned.</value>

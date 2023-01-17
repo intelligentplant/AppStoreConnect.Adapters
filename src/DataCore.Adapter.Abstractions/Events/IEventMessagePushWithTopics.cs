@@ -26,19 +26,20 @@ namespace DataCore.Adapter.Events {
         ///   active subscription should be created. Some adapters will only emit event messages 
         ///   when they have at least one active subscriber.
         /// </param>
-        /// <param name="channel">
-        ///   A channel that will add topics to or remove topics from the subscription.
+        /// <param name="subscriptionUpdates">
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will add topics to or remove topics from 
+        ///   the subscription.
         /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the subscription.
         /// </param>
         /// <returns>
-        ///   A channel reader that will emit event messages as they occur.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will emit event messages as they occur.
         /// </returns>
         IAsyncEnumerable<EventMessage> Subscribe(
             IAdapterCallContext context,
             CreateEventMessageTopicSubscriptionRequest request,
-            IAsyncEnumerable<EventMessageSubscriptionUpdate> channel,
+            IAsyncEnumerable<EventMessageSubscriptionUpdate> subscriptionUpdates,
             CancellationToken cancellationToken
         );
 

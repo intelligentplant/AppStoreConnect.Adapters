@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Common {
 
@@ -45,6 +46,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
+        [JsonConstructor]
         public AdapterDescriptor(string id, string name, string? description) {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
@@ -136,4 +138,5 @@ namespace DataCore.Adapter.Common {
         }
 
     }
+
 }

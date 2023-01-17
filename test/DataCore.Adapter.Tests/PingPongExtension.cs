@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -24,6 +25,7 @@ namespace DataCore.Adapter.Tests {
     ///   * The class also implements the <see cref="IHelloWorld"/> extension defined in a separate interface.
     /// 
     /// </remarks>
+    [Obsolete(ExtensionFeatureConstants.ObsoleteMessage, ExtensionFeatureConstants.ObsoleteError)]
     [ExtensionFeature(
         FeatureUri,
         Name = "Ping Pong",
@@ -224,8 +226,10 @@ namespace DataCore.Adapter.Tests {
     [ExtensionFeatureDataType(typeof(PingPongExtension), "ping-message")]
     internal class PingMessage {
 
+        [Required]
         public Guid CorrelationId { get; set; }
 
+        [Required]
         public DateTime UtcClientTime { get; set; }
 
     }
@@ -234,8 +238,10 @@ namespace DataCore.Adapter.Tests {
     [ExtensionFeatureDataType(typeof(PingPongExtension), "pong-message")]
     internal class PongMessage {
 
+        [Required]
         public Guid CorrelationId { get; set; }
 
+        [Required]
         public DateTime UtcServerTime { get; set; }
 
     }

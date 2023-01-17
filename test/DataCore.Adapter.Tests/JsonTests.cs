@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+
 using DataCore.Adapter.AssetModel;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
@@ -19,16 +20,28 @@ namespace DataCore.Adapter.Tests {
 
         private static JsonSerializerOptions GetOptions() {
             var result = new JsonSerializerOptions();
-            result.Converters.AddDataCoreAdapterConverters();
+            result.UseDataCoreAdapterDefaults();
 
             return result;
+        }
+
+
+        private void VariantRoundTripTestCompare<T>(object expected, object actual, JsonSerializerOptions options, string message = null) {
+            if (typeof(T) == typeof(JsonElement) || (typeof(T).IsArray && typeof(T).GetElementType() == typeof(JsonElement))) {
+                // For JsonElement, compare the raw JSON
+                Assert.AreEqual(JsonSerializer.Serialize(expected, typeof(JsonElement), options), JsonSerializer.Serialize(actual, typeof(JsonElement), options), message);
+            }
+            else {
+                // For everything else, compare the variant values.
+                Assert.AreEqual(expected, actual, message);
+            }
         }
 
 
         private void VariantRoundTripTest<T>(T value, JsonSerializerOptions options) {
             var variant = Variant.FromValue(value);
             var json = JsonSerializer.Serialize(variant, options);
-
+            
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
             Assert.AreEqual(variant.Type, deserialized.Type);
 
@@ -37,10 +50,23 @@ namespace DataCore.Adapter.Tests {
                 : deserialized.Value;
 
             if (variant.IsArray()) {
-                Assert.IsTrue(((Array) variant.Value).Cast<object>().SequenceEqual(((Array) actualVal).Cast<object>()));
+                var expectedItemsArr = (Array) variant.Value;
+                var actualItemsArr = (Array) actualVal;
+
+                Assert.AreEqual(expectedItemsArr.Rank, actualItemsArr.Rank);
+                for (var i = 0; i < expectedItemsArr.Rank; i++) {
+                    Assert.AreEqual(expectedItemsArr.GetLength(i), actualItemsArr.GetLength(i), $"Dimension {i} lengths are different");
+                }
+
+                var expectedItems = expectedItemsArr.Cast<object>().ToArray();
+                var actualItems = actualItemsArr.Cast<object>().ToArray();
+                Assert.AreEqual(expectedItems.Length, actualItems.Length);
+                for (var i = 0; i < expectedItems.Length; i++) {
+                    VariantRoundTripTestCompare<T>(expectedItems[i], actualItems[i], options, $"Items at position {i} are different. Expected value has type {expectedItems[i]?.GetType()?.Name ?? "<Unknown>"}, actual value has type {actualItems[i]?.GetType()?.Name ?? "<Unknown>"}");
+                }
             }
             else {
-                Assert.AreEqual(variant.Value, actualVal);
+                VariantRoundTripTestCompare<T>(variant.Value, actualVal, options);
             }
         }
 
@@ -86,6 +112,9 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(double.MinValue)]
         [DataRow(double.MaxValue)]
+        [DataRow(double.NaN)]
+        [DataRow(double.PositiveInfinity)]
+        [DataRow(double.NegativeInfinity)]
         [DataRow(double.MinValue, double.MaxValue)]
         public void Variant_DoubleShouldRoundTrip(params double[] values) {
             var options = GetOptions();
@@ -101,6 +130,9 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(float.MinValue)]
         [DataRow(float.MaxValue)]
+        [DataRow(float.NaN)]
+        [DataRow(float.PositiveInfinity)]
+        [DataRow(float.NegativeInfinity)]
         [DataRow(float.MinValue, float.MaxValue)]
         public void Variant_FloatShouldRoundTrip(params float[] values) {
             var options = GetOptions();
@@ -154,6 +186,27 @@ namespace DataCore.Adapter.Tests {
             }
             else {
                 VariantRoundTripTest(values, options);
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(@"{ ""prop1"": ""val1"", ""prop2"": 100, ""prop3"": true, ""prop4"": { ""subprop1"": ""subval1"" } }")]
+        [DataRow("true")]
+        [DataRow("100")]
+        [DataRow(@"""test""")]
+        [DataRow(@"[1, 2, 3]")]
+        [DataRow("1", "2", "3")]
+        public void Variant_JsonShouldRoundTrip(params string[] values) {
+            var options = GetOptions();
+            JsonElement ToJsonElement(string json) => JsonSerializer.Deserialize<JsonElement>(json, options);
+
+            
+            if (values.Length == 1) {
+                VariantRoundTripTest(ToJsonElement(values[0]), options);
+            }
+            else {
+                VariantRoundTripTest(values.Select(ToJsonElement).ToArray(), options);
             }
         }
 
@@ -391,6 +444,7 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void AssetModelNode_ShouldRoundTrip() {
             var options = GetOptions();
+
             var expected = new AssetModelNode(
                 "Id",
                 "Name",
@@ -399,7 +453,10 @@ namespace DataCore.Adapter.Tests {
                 "Description",
                 "Parent",
                 true,
-                new DataReference("AdapterId1", "Id1"),
+                new[] {
+                    new DataReference("AdapterId1", "Id1"),
+                    new DataReference("AdapterId1", "Id2", "Named Ref")
+                },
                 new [] {
                     AdapterProperty.Create("Prop1", 100),
                     AdapterProperty.Create("Prop2", "Value")
@@ -416,10 +473,17 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Parent, actual.Parent);
             Assert.AreEqual(expected.HasChildren, actual.HasChildren);
-            Assert.IsNotNull(actual.DataReference);
-            Assert.AreEqual(expected.DataReference.AdapterId, actual.DataReference.AdapterId);
-            Assert.IsNotNull(actual.DataReference.Tag);
-            Assert.AreEqual(expected.DataReference.Tag, actual.DataReference.Tag);
+
+            Assert.IsNotNull(actual.DataReferences);
+            Assert.AreEqual(expected.DataReferences.Count(), actual.DataReferences.Count());
+            for (var i = 0; i < expected.DataReferences.Count(); i++) {
+                var expectedValue = expected.DataReferences.ElementAt(i);
+                var actualValue = actual.DataReferences.ElementAt(i);
+
+                Assert.AreEqual(expectedValue.AdapterId, actualValue.AdapterId);
+                Assert.AreEqual(expectedValue.Tag, actualValue.Tag);
+                Assert.AreEqual(expectedValue.Name, actualValue.Name);
+            }
 
             Assert.AreEqual(expected.Properties.Count(), actual.Properties.Count());
             for (var i = 0; i < expected.Properties.Count(); i++) {
@@ -429,6 +493,44 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Name, actualValue.Name);
                 Assert.AreEqual(expectedValue.Value, actualValue.Value);
             }
+        }
+
+
+        [TestMethod]
+        public void V2AssetModelNodeJson_ShouldDeserialize() {
+            var options = GetOptions();
+
+            var json = @"{
+    ""Id"": ""Id"",
+    ""Name"": ""Name"",
+    ""NodeType"": ""Variable"",
+    ""NodeSubType"": null,
+    ""Description"": ""Description"",
+    ""Parent"": ""Parent"",
+    ""HasChildren"": true,
+    ""DataReference"": {
+        ""AdapterId"": ""AdapterId1"",
+        ""Tag"": ""Id1""
+    },
+    ""Properties"": []
+}";
+
+            var actual = JsonSerializer.Deserialize<AssetModelNode>(json, options);
+
+            Assert.AreEqual("Id", actual.Id);
+            Assert.AreEqual("Name", actual.Name);
+            Assert.AreEqual(NodeType.Variable, actual.NodeType);
+            Assert.AreEqual(null, actual.NodeSubType);
+            Assert.AreEqual("Description", actual.Description);
+            Assert.AreEqual("Parent", actual.Parent);
+            Assert.AreEqual(true, actual.HasChildren);
+
+            Assert.IsNotNull(actual.DataReference);
+            Assert.AreEqual("AdapterId1", actual.DataReference.AdapterId);
+            Assert.AreEqual("Id1", actual.DataReference.Tag);
+            Assert.AreEqual(null, actual.DataReference.Name);
+
+            Assert.AreEqual(0, actual.Properties.Count());
         }
 
 

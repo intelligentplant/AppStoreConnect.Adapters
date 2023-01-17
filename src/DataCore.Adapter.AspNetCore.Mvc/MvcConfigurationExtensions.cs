@@ -1,10 +1,6 @@
-﻿#if NET48
-using DataCore.Adapter.NewtonsoftJson;
-#else
-using DataCore.Adapter.Json;
-#endif
+﻿using System;
 
-using System;
+using DataCore.Adapter.Json;
 
 namespace Microsoft.Extensions.DependencyInjection {
 
@@ -17,10 +13,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// Adds the adapter API controllers to the MVC registration.
         /// </summary>
         /// <param name="builder">
-        ///   The MVC builder.
+        ///   The <see cref="IMvcBuilder"/>.
         /// </param>
         /// <returns>
-        ///   The MVC builder.
+        ///   The <see cref="IMvcBuilder"/>.
         /// </returns>
         public static IMvcBuilder AddDataCoreAdapterMvc(this IMvcBuilder builder) {
             if (builder == null) {
@@ -28,11 +24,10 @@ namespace Microsoft.Extensions.DependencyInjection {
             }
 
             builder.AddApplicationPart(typeof(MvcConfigurationExtensions).Assembly);
-#if NET48
-            builder.AddJsonOptions(options => options.SerializerSettings.AddDataCoreAdapterConverters());
-#else
-            builder.AddJsonOptions(options => options.JsonSerializerOptions.AddDataCoreAdapterConverters());
-#endif
+            builder.Services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Mvc.Internal.ApiDescriptorProvider>();
+            builder.AddJsonOptions(options => {
+                options.JsonSerializerOptions.UseDataCoreAdapterDefaults();
+            });
 
             return builder;
         }

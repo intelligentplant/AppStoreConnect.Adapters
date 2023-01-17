@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json.Serialization;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Tags {
@@ -70,6 +71,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public TagDefinition(
             string id, 
             string name, 
@@ -87,49 +89,6 @@ namespace DataCore.Adapter.Tags {
             SupportedFeatures = supportedFeatures?.Where(x => x != null)?.ToArray() ?? Array.Empty<Uri>();
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
             Labels = labels?.ToArray() ?? Array.Empty<string>();
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="TagDefinition"/> object.
-        /// </summary>
-        /// <param name="id">
-        ///   The tag ID.
-        /// </param>
-        /// <param name="name">
-        ///   The tag name.
-        /// </param>
-        /// <param name="description">
-        ///   The tag description.
-        /// </param>
-        /// <param name="units">
-        ///   The tag units.
-        /// </param>
-        /// <param name="dataType">
-        ///   The data type for the tag.
-        /// </param>
-        /// <param name="states">
-        ///   The discrete states for the tag. Ignored if <paramref name="dataType"/> is not 
-        ///   <see cref="VariantType.Int32"/>.
-        /// </param>
-        /// <param name="supportedFeatures">
-        ///   The adapter features that can be used to read data from or write data to this tag.
-        /// </param>
-        /// <param name="properties">
-        ///   Additional tag properties.
-        /// </param>
-        /// <param name="labels">
-        ///   Labels associated with the tag.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="id"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        [Obsolete("This method will be removed in a future version. Use the constructor directly or use TagDefinitionBuilder in DataCore.Adapter.dll.", false)]
-        public static TagDefinition Create(string id, string name, string? description, string? units, VariantType dataType, IEnumerable<DigitalState>? states, IEnumerable<Uri>? supportedFeatures, IEnumerable<AdapterProperty>? properties, IEnumerable<string>? labels) {
-            return new TagDefinition(id, name, description, units, dataType, states, supportedFeatures, properties, labels);
         }
 
 
@@ -164,4 +123,5 @@ namespace DataCore.Adapter.Tags {
         }
 
     }
+
 }

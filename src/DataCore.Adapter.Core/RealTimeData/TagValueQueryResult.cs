@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Tags;
 
@@ -8,6 +10,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Describes a value returned by a tag value query.
     /// </summary>
+    [DebuggerDisplay("Tag = {TagName}, Value = {Value}")]
     public class TagValueQueryResult : TagDataContainer {
 
         /// <summary>
@@ -38,6 +41,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="value"/> is <see langword="null"/>.
         /// </exception>
+        [JsonConstructor]
         public TagValueQueryResult(string tagId, string tagName, TagValueExtended value)
             : base(tagId, tagName) {
             Value = value ?? throw new ArgumentNullException(nameof(value));

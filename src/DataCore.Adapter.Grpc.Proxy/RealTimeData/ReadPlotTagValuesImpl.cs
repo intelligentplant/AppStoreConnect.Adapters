@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using DataCore.Adapter.RealTimeData;
 
@@ -30,8 +27,6 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            Proxy.ValidateInvocation(context, request);
-
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadPlotTagValuesRequest() {
                 AdapterId = AdapterId,
@@ -46,9 +41,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 }
             }
 
-            using (var ctSource = Proxy.CreateCancellationTokenSource(cancellationToken))
-            using (var grpcResponse = client.ReadPlotTagValues(grpcRequest, GetCallOptions(context, ctSource.Token))) {
-                while (await grpcResponse.ResponseStream.MoveNext(ctSource.Token).ConfigureAwait(false)) {
+            using (var grpcResponse = client.ReadPlotTagValues(grpcRequest, GetCallOptions(context, cancellationToken))) {
+                while (await grpcResponse.ResponseStream.MoveNext(cancellationToken).ConfigureAwait(false)) {
                     if (grpcResponse.ResponseStream.Current == null) {
                         continue;
                     }

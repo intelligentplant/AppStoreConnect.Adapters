@@ -41,7 +41,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client.Clients {
         ///   A task that will return information about the remote host.
         /// </returns>
         public async Task<HostInfo> GetHostInfoAsync(CancellationToken cancellationToken = default) {
-            var connection = await _client.GetHubConnection(true, cancellationToken).ConfigureAwait(false);
+            var connection = await _client.GetHubConnectionAsync(cancellationToken).ConfigureAwait(false);
             return await connection.InvokeAsync<HostInfo>(
                 "GetHostInfo",
                 cancellationToken

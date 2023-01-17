@@ -1,6 +1,0 @@
-<Project>
-  <ItemGroup Condition=" '$(AdapterPackageVersion)' == '' ">
-    <PackageReference Remove="IntelligentPlant.AppStoreConnect.Adapter" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" /> 
-  </ItemGroup>
-</Project>

@@ -73,8 +73,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Http.Proxy", "src\DataCore.Adapter.Http.Proxy\DataCore.Adapter.Http.Proxy.csproj", "{D9C535E9-CE37-49CB-A04F-008AA2480DC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Json", "src\DataCore.Adapter.Json\DataCore.Adapter.Json.csproj", "{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.HealthChecks", "src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj", "{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6BE3C37-D187-4541-AD20-65AFBDCFA7A9}"
@@ -99,30 +97,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.OpenTeleme
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}"
 	ProjectSection(SolutionItems) = preProject
+		docs\adapter-host-authn-authz.md = docs\adapter-host-authn-authz.md
 		docs\writing-an-adapter.md = docs\writing-an-adapter.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tutorials", "tutorials", "{8ED7CFDF-3C22-4980-AC18-940049B0ED10}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "creating-an-adapter", "creating-an-adapter", "{876B0BB0-CDD0-420D-87AE-D9390623C467}"
-	ProjectSection(SolutionItems) = preProject
-		docs\tutorials\creating-an-adapter\00-Introduction.md = docs\tutorials\creating-an-adapter\00-Introduction.md
-		docs\tutorials\creating-an-adapter\01-Getting_Started.md = docs\tutorials\creating-an-adapter\01-Getting_Started.md
-		docs\tutorials\creating-an-adapter\02-Reading_Current_Values.md = docs\tutorials\creating-an-adapter\02-Reading_Current_Values.md
-		docs\tutorials\creating-an-adapter\03-Tag_Searches.md = docs\tutorials\creating-an-adapter\03-Tag_Searches.md
-		docs\tutorials\creating-an-adapter\04-Current_Value_Subscriptions.md = docs\tutorials\creating-an-adapter\04-Current_Value_Subscriptions.md
-		docs\tutorials\creating-an-adapter\05-Historical_Value_Queries.md = docs\tutorials\creating-an-adapter\05-Historical_Value_Queries.md
-		docs\tutorials\creating-an-adapter\06-Adapter_Configuration_Options.md = docs\tutorials\creating-an-adapter\06-Adapter_Configuration_Options.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "writing-an-extension-feature", "writing-an-extension-feature", "{A250C7A8-DD5B-4947-A21C-A73C21424FFF}"
-	ProjectSection(SolutionItems) = preProject
-		docs\tutorials\writing-an-extension-feature\00-Introduction.md = docs\tutorials\writing-an-extension-feature\00-Introduction.md
-		docs\tutorials\writing-an-extension-feature\01-Getting_Started.md = docs\tutorials\writing-an-extension-feature\01-Getting_Started.md
-		docs\tutorials\writing-an-extension-feature\02-Extension_Methods.md = docs\tutorials\writing-an-extension-feature\02-Extension_Methods.md
-		docs\tutorials\writing-an-extension-feature\03-Streaming_Methods.md = docs\tutorials\writing-an-extension-feature\03-Streaming_Methods.md
-		docs\tutorials\writing-an-extension-feature\04-Duplex_Streaming_Methods.md = docs\tutorials\writing-an-extension-feature\04-Duplex_Streaming_Methods.md
-		docs\tutorials\writing-an-extension-feature\05-Implementing_Multiple_Extensions.md = docs\tutorials\writing-an-extension-feature\05-Implementing_Multiple_Extensions.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{7701E410-A9F0-4F50-80E4-51576DABB306}"
@@ -138,6 +114,13 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.KeyValueStore.FileSystem", "src\DataCore.Adapter.KeyValueStore.FileSystem\DataCore.Adapter.KeyValueStore.FileSystem.csproj", "{8C225A69-794C-4451-B5CE-91EAD5269C87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApiExample", "examples\MinimalApiExample\MinimalApiExample.csproj", "{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{4AA5F467-4724-42CC-B7B8-DC8D4C7CE7FE}"
+	ProjectSection(SolutionItems) = preProject
+		docs\features\tag-history-polling.md = docs\features\tag-history-polling.md
+		docs\features\tag-search.md = docs\features\tag-search.md
+		docs\features\tag-snapshot-polling-and-subscriptions.md = docs\features\tag-snapshot-polling-and-subscriptions.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -213,10 +196,6 @@ Global
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -295,7 +274,6 @@ Global
 		{EA46F702-8AEA-4EAC-A81C-B924D877DE26} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{75A1E0D5-E3DB-4C05-B656-6DC5C6A5B94A} = {041CEC9C-1271-4A4E-BEF6-6279A8B0FC97}
 		{D9C535E9-CE37-49CB-A04F-008AA2480DC4} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
-		{719428F2-A1D5-44F5-A5FE-CED0B885F5DE} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{B77BC359-4E76-4B87-BA4A-F5A4E3391AE7} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 		{3B99AA8E-5B75-4188-BC84-5BFBA5265A00} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{5CD15B99-02B0-4BBD-9033-5DF46520F77D} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
@@ -304,9 +282,6 @@ Global
 		{29A232DC-A233-4C0E-98A5-6C5C0AE0265F} = {4FA056CC-58A0-4CFE-9134-F645B6B7E0D7}
 		{29D5D4BA-6C91-4D84-B567-6E7C49200DD5} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{A955719A-1C0A-4CE4-80C4-C09CD404380F} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
-		{8ED7CFDF-3C22-4980-AC18-940049B0ED10} = {C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}
-		{876B0BB0-CDD0-420D-87AE-D9390623C467} = {8ED7CFDF-3C22-4980-AC18-940049B0ED10}
-		{A250C7A8-DD5B-4947-A21C-A73C21424FFF} = {8ED7CFDF-3C22-4980-AC18-940049B0ED10}
 		{7701E410-A9F0-4F50-80E4-51576DABB306} = {004EC5B0-7D4E-4382-A139-A9BD049D99C4}
 		{B5692AC0-AA11-4062-8F65-8A120C8846FA} = {7701E410-A9F0-4F50-80E4-51576DABB306}
 		{CA874402-DD93-40C0-893A-BC8D1D961A43} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
@@ -314,6 +289,7 @@ Global
 		{22DD3CC9-034B-4C43-A143-6240E8E833CC} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{8C225A69-794C-4451-B5CE-91EAD5269C87} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
+		{4AA5F467-4724-42CC-B7B8-DC8D4C7CE7FE} = {C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}
