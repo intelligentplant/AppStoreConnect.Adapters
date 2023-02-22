@@ -9,39 +9,37 @@ using Microsoft.AspNetCore.Localization;
 namespace DataCore.Adapter.AspNetCore {
 
     /// <summary>
-    /// <see cref="IAdapterCallContext"/> implementation that uses an <see cref="Microsoft.AspNetCore.Http.HttpContext"/> to 
+    /// <see cref="IAdapterCallContext"/> implementation that uses an <see cref="HttpContext"/> to 
     /// provide context settings.
     /// </summary>
-    public class HttpAdapterCallContext : IAdapterCallContext {
+    public class HttpAdapterCallContext : IAdapterCallContext<HttpContext> {
 
-        /// <summary>
-        /// The <see cref="Microsoft.AspNetCore.Http.HttpContext"/> associated with the <see cref="HttpAdapterCallContext"/>.
-        /// </summary>
-        public HttpContext HttpContext { get; }
+        /// <inheritdoc/>
+        public HttpContext Provider { get; }
 
         /// <inheritdoc/>
         public ClaimsPrincipal? User {
-            get { return HttpContext.User; }
+            get { return Provider.User; }
         }
 
         /// <inheritdoc/>
         public string ConnectionId {
-            get { return HttpContext.Connection.Id; }
+            get { return Provider.Connection.Id; }
         }
 
         /// <inheritdoc/>
         public string CorrelationId {
-            get { return HttpContext.TraceIdentifier; }
+            get { return Provider.TraceIdentifier; }
         }
 
         /// <inheritdoc/>
         public CultureInfo CultureInfo {
-            get { return HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture ?? CultureInfo.CurrentCulture; }
+            get { return Provider.Features.Get<IRequestCultureFeature>()?.RequestCulture?.Culture ?? CultureInfo.CurrentCulture; }
         }
 
         /// <inheritdoc/>
         public IDictionary<object, object?> Items {
-            get { return HttpContext.Items; }
+            get { return Provider.Items; }
         }
 
 
@@ -55,7 +53,7 @@ namespace DataCore.Adapter.AspNetCore {
         ///   <paramref name="httpContext"/> is <see langword="null"/>
         /// </exception>
         public HttpAdapterCallContext(HttpContext httpContext) {
-            HttpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
+            Provider = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
         }
 
     }
