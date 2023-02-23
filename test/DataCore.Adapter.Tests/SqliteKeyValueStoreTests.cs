@@ -25,9 +25,14 @@ namespace DataCore.Adapter.Tests {
 
         [ClassCleanup]
         public static void ClassCleanup() {
-            if (s_baseDirectory != null) {
+            try {
                 s_baseDirectory.Refresh();
-                s_baseDirectory.Delete(true);
+                if (s_baseDirectory.Exists) {
+                    s_baseDirectory.Delete(true);
+                }
+            }
+            catch {
+                // Suppress
             }
         }
 
