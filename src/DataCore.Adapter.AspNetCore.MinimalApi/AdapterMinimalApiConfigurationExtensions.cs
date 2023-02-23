@@ -1,4 +1,6 @@
-﻿using DataCore.Adapter.Json;
+﻿using DataCore.Adapter.AspNetCore;
+using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Json;
 
 using Microsoft.AspNetCore.Http.Json;
 
@@ -19,10 +21,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The <see cref="IServiceCollection"/>.
         /// </returns>
         public static IServiceCollection AddDataCoreAdapterApiServices(this IServiceCollection services) {
+            services.AddApiVersioning();
+            services.AddTransient<IApiDescriptorProvider, ApiDescriptorProvider>();
+
             services.Configure<JsonOptions>(options => options.SerializerOptions.UseDataCoreAdapterDefaults());
-
-            services.AddTransient<DataCore.Adapter.AspNetCore.IApiDescriptorProvider, DataCore.Adapter.AspNetCore.Internal.ApiDescriptorProvider>();
-
             return services;
         }
 

@@ -127,7 +127,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// The adapter HTTP client for the proxy.
         /// </summary>
-        public AdapterHttpClient Client { get; }
+        private readonly AdapterHttpClient _client;
 
         /// <summary>
         /// The last health check result that was received from the remote adapter.
@@ -178,9 +178,9 @@ namespace DataCore.Adapter.Http.Proxy {
             logger
         ) {
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
-            Client = client ?? throw new ArgumentNullException(nameof(client));
-            Client.DefaultRequestVersion = Options.DefaultRequestVersion;
-            Client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+            _client.DefaultRequestVersion = Options.DefaultRequestVersion;
+            _client.CompatibilityVersion = options?.CompatibilityVersion ?? CompatibilityVersion.Latest;
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
 #pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
@@ -196,7 +196,7 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   An <see cref="AdapterHttpClient"/> instance.
         /// </returns>
         public AdapterHttpClient GetClient() {
-            return Client;
+            return _client;
         }
 
 
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Http.Proxy {
             return _signalRClients.GetOrAdd(key, k => {
                 var client = new SignalRClientWrapper(
                     k,
-                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(Client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context)),
+                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context)),
                     Options.SignalROptions.TimeToLive <= TimeSpan.Zero
                         ? TimeSpan.FromSeconds(30)
                         : Options.SignalROptions.TimeToLive
