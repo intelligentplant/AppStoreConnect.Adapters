@@ -8,7 +8,8 @@ namespace DataCore.Adapter.AspNetCore.Routing {
             builder
                 .ProducesValidationProblem(StatusCodes.Status400BadRequest)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
-                .ProducesProblem(StatusCodes.Status403Forbidden);
+                .ProducesProblem(StatusCodes.Status403Forbidden)
+                .ProducesProblem(StatusCodes.Status404NotFound);
 
             return builder;
         }

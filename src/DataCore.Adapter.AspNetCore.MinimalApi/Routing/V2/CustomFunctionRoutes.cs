@@ -12,11 +12,25 @@ using Microsoft.Extensions.Options;
 namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class CustomFunctionRoutes : IRouteProvider {
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", GetCustomFunctionsGetAsync);
-            builder.MapPost("/{adapterId}", GetCustomFunctionsPostAsync);
-            builder.MapGet("/{adapterId}/details", GetCustomFunctionGetAsync);
-            builder.MapPost("/{adapterId}/details", GetCustomFunctionPostAsync);
-            builder.MapPost("/{adapterId}/invoke", InvokeCustomFunctionAsync);
+            builder.MapGet("/{adapterId}", GetCustomFunctionsGetAsync)
+                .Produces<IEnumerable<CustomFunctionDescriptor>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}", GetCustomFunctionsPostAsync)
+                .Produces<IEnumerable<CustomFunctionDescriptor>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/details", GetCustomFunctionGetAsync)
+                .Produces<CustomFunctionDescriptorExtended>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/details", GetCustomFunctionPostAsync)
+                .Produces<CustomFunctionDescriptorExtended>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/invoke", InvokeCustomFunctionAsync)
+                .Produces<CustomFunctionInvocationResponse>()
+                .ProducesDefaultErrors();
         }
 
 

@@ -9,11 +9,25 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class TagAnnotationRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapPost("/{adapterId}", ReadAnnotationsAsync);
-            builder.MapGet("/{adapterId}/{tagId}/{annotationId}", ReadAnnotationAsync);
-            builder.MapPost("/{adapterId}/{tagId}/create", CreateAnnotationAsync);
-            builder.MapPut("/{adapterId}/{tagId}/{annotationId}", UpdateAnnotationAsync);
-            builder.MapDelete("/{adapterId}/{tagId}/{annotationId}", DeleteAnnotationAsync);
+            builder.MapPost("/{adapterId}", ReadAnnotationsAsync)
+                .Produces<IAsyncEnumerable<TagValueAnnotationQueryResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/{tagId}/{annotationId}", ReadAnnotationAsync)
+                .Produces<TagValueAnnotationExtended>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/{tagId}/create", CreateAnnotationAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
+
+            builder.MapPut("/{adapterId}/{tagId}/{annotationId}", UpdateAnnotationAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
+
+            builder.MapDelete("/{adapterId}/{tagId}/{annotationId}", DeleteAnnotationAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
         }
 
 

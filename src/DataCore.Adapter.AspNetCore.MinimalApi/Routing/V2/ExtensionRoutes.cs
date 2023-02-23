@@ -11,10 +11,21 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class ExtensionRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", GetAvailableExtensionsAsync);
-            builder.MapGet("/{adapterId}/descriptor", GetDescriptorAsync);
-            builder.MapGet("/{adapterId}/operations", GetAvailableOperationsAsync);
-            builder.MapPost("/{adapterId}/operations/invoke", InvokeOperationAsync);
+            builder.MapGet("/{adapterId}", GetAvailableExtensionsAsync)
+                .Produces<IEnumerable<string>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/descriptor", GetDescriptorAsync)
+                .Produces<Common.FeatureDescriptor>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/operations", GetAvailableOperationsAsync)
+                .Produces<IEnumerable<ExtensionFeatureOperationDescriptor>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/operations/invoke", InvokeOperationAsync)
+                .Produces<InvocationResponse>()
+                .ProducesDefaultErrors();
         }
 
 

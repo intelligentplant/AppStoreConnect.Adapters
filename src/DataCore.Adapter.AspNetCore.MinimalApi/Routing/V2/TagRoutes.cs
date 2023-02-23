@@ -10,18 +10,53 @@ using Microsoft.Extensions.Options;
 namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class TagRoutes : IRouteProvider {
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", FindTagsGetAsync);
-            builder.MapPost("/{adapterId}", FindTagsPostAsync);
-            builder.MapGet("/{adapterId}/find", FindTagsGetAsync);
-            builder.MapPost("/{adapterId}/find", FindTagsPostAsync);
-            builder.MapGet("/{adapterId}/properties", GetTagPropertiesGetAsync);
-            builder.MapPost("/{adapterId}/properties", GetTagPropertiesPostAsync);
-            builder.MapGet("/{adapterId}/get-by-id", GetTagsGetAsync);
-            builder.MapPost("/{adapterId}/get-by-id", GetTagsPostAsync);
-            builder.MapGet("/{adapterId}/schema", GetTagSchemaAsync);
-            builder.MapPost("/{adapterId}/create", CreateTagAsync);
-            builder.MapPost("/{adapterId}/update", UpdateTagAsync);
-            builder.MapPost("/{adapterId}/delete", DeleteTagAsync);
+            builder.MapGet("/{adapterId}", FindTagsGetAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}", FindTagsPostAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/find", FindTagsGetAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/find", FindTagsPostAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/properties", GetTagPropertiesGetAsync)
+                .Produces<IAsyncEnumerable<Common.AdapterProperty>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/properties", GetTagPropertiesPostAsync)
+                .Produces<IAsyncEnumerable<Common.AdapterProperty>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/get-by-id", GetTagsGetAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/get-by-id", GetTagsPostAsync)
+                .Produces<IAsyncEnumerable<TagDefinition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/schema", GetTagSchemaAsync)
+                .Produces<System.Text.Json.JsonElement>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/create", CreateTagAsync)
+                .Produces<TagDefinition>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/update", UpdateTagAsync)
+                .Produces<TagDefinition>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/delete", DeleteTagAsync)
+                .Produces<bool>()
+                .ProducesDefaultErrors();
         }
 
 

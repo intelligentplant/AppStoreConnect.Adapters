@@ -1,5 +1,6 @@
 ﻿using System.Security;
 
+using DataCore.Adapter.AspNetCore.Internal;
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
 
@@ -13,10 +14,21 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class AdapterRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/", FindAdaptersGetAsync);
-            builder.MapPost("/", FindAdaptersPostAsync);
-            builder.MapGet("/{adapterId}", GetAdapterAsync);
-            builder.MapGet("/{adapterId}/health-status", CheckAdapterHealthAsync);
+            builder.MapGet("/", FindAdaptersGetAsync)
+                .Produces<IAsyncEnumerable<AdapterDescriptor>>()
+                .ProducesValidationProblem();
+
+            builder.MapPost("/", FindAdaptersPostAsync)
+                .Produces<IAsyncEnumerable<AdapterDescriptor>>()
+                .ProducesValidationProblem();
+
+            builder.MapGet("/{adapterId}", GetAdapterAsync)
+                .Produces<AdapterDescriptorExtended>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("/{adapterId}/health-status", CheckAdapterHealthAsync)
+                .Produces<HealthCheckResult>()
+                .ProducesDefaultErrors();
         }
 
 
@@ -71,13 +83,12 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             string adapterId,
             CancellationToken cancellationToken = default
         ) {
-            var callContext = new HttpAdapterCallContext(context);
-            var adapter = await adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
-                return Results.NotFound();
+            var resolverResult = await Utils.ResolveAdapterAsync<IHealthCheck>(context, adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            if (resolverResult.Error != null) {
+                return resolverResult.Error;
             }
 
-            return Results.Ok(adapter.CreateExtendedAdapterDescriptor());
+            return Results.Ok(resolverResult.Adapter.CreateExtendedAdapterDescriptor());
         }
 
 
@@ -87,25 +98,12 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             string adapterId,
             CancellationToken cancellationToken = default
         ) {
-            var callContext = new HttpAdapterCallContext(context);
-            var resolvedFeature = await adapterAccessor.GetAdapterAndFeature<IHealthCheck>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (!resolvedFeature.IsAdapterResolved) {
-                return Results.BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
+            var resolverResult = await Utils.ResolveAdapterAsync<IHealthCheck>(context, adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            if (resolverResult.Error != null) {
+                return resolverResult.Error;
             }
-            if (!resolvedFeature.IsFeatureResolved) {
-                return Results.BadRequest(string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, nameof(IHealthCheck))); // 400
-            }
-            if (!resolvedFeature.IsFeatureAuthorized) {
-                return Results.Forbid(); // 403
-            }
-            var feature = resolvedFeature.Feature;
 
-            try {
-                return Results.Ok(await feature.CheckHealthAsync(callContext, cancellationToken).ConfigureAwait(false)); // 200
-            }
-            catch (SecurityException) {
-                return Results.Forbid(); // 403
-            }
+            return Results.Ok(await resolverResult.Feature.CheckHealthAsync(resolverResult.CallContext, cancellationToken).ConfigureAwait(false));
         }
 
     }

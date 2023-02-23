@@ -22,26 +22,61 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
 
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("{adapterId}/snapshot", ReadSnapshotTagValuesGetAsync);
-            builder.MapPost("{adapterId}/snapshot", ReadSnapshotTagValuesPostAsync);
+            builder.MapGet("{adapterId}/snapshot", ReadSnapshotTagValuesGetAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/raw", ReadRawTagValuesGetAsync);
-            builder.MapPost("{adapterId}/raw", ReadRawTagValuesPostAsync);
+            builder.MapPost("{adapterId}/snapshot", ReadSnapshotTagValuesPostAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/plot", ReadPlotTagValuesGetAsync);
-            builder.MapPost("{adapterId}/plot", ReadPlotTagValuesPostAsync);
+            builder.MapGet("{adapterId}/raw", ReadRawTagValuesGetAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/values-at-times", ReadTagValuesAtTimesGetAsync);
-            builder.MapPost("{adapterId}/values-at-times", ReadTagValuesAtTimesPostAsync);
+            builder.MapPost("{adapterId}/raw", ReadRawTagValuesPostAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/supported-aggregations", GetSupportedAggregationsGetAsync);
-            builder.MapPost("{adapterId}/supported-aggregations", GetSupportedAggregationsPostAsync);
+            builder.MapGet("{adapterId}/plot", ReadPlotTagValuesGetAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/processed", ReadProcessedTagValuesGetAsync);
-            builder.MapPost("{adapterId}/processed", ReadProcessedTagValuesPostAsync);
+            builder.MapPost("{adapterId}/plot", ReadPlotTagValuesPostAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/write/snapshot", WriteSnapshotTagValuesAsync);
-            builder.MapPost("{adapterId}/write/history", WriteHistoricalTagValuesAsync);
+            builder.MapGet("{adapterId}/values-at-times", ReadTagValuesAtTimesGetAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("{adapterId}/values-at-times", ReadTagValuesAtTimesPostAsync)
+                .Produces<IAsyncEnumerable<TagValueQueryResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("{adapterId}/supported-aggregations", GetSupportedAggregationsGetAsync)
+                .Produces<IAsyncEnumerable<DataFunctionDescriptor>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("{adapterId}/supported-aggregations", GetSupportedAggregationsPostAsync)
+                .Produces<IAsyncEnumerable<DataFunctionDescriptor>>()
+                .ProducesDefaultErrors();
+
+            builder.MapGet("{adapterId}/processed", ReadProcessedTagValuesGetAsync)
+                .Produces<IAsyncEnumerable<ProcessedTagValueQueryResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("{adapterId}/processed", ReadProcessedTagValuesPostAsync)
+                .Produces<IAsyncEnumerable<ProcessedTagValueQueryResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("{adapterId}/write/snapshot", WriteSnapshotTagValuesAsync)
+                .Produces<IAsyncEnumerable<WriteTagValueResult>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("{adapterId}/write/history", WriteHistoricalTagValuesAsync)
+                .Produces<IAsyncEnumerable<WriteTagValueResult>>()
+                .ProducesDefaultErrors();
         }
 
 

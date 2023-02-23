@@ -75,16 +75,16 @@ namespace DataCore.Adapter.AspNetCore.Internal {
 
             var resolvedFeature = await accessor.GetAdapterAndFeature<TFeature>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
             }
             if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)));
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 403)); // 403
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status403Forbidden));
             }
 
             return new ResolvedAdapter<TFeature>() {
@@ -107,16 +107,16 @@ namespace DataCore.Adapter.AspNetCore.Internal {
 
             var resolvedFeature = await accessor.GetAdapterAndFeature<TFeature>(callContext, adapterId, featureId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
             }
             if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)));
             }
             if (!resolvedFeature.IsFeatureResolved) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 400, detail: string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name))); // 400
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: string.Format(callContext.CultureInfo, Resources.Error_UnsupportedInterface, typeof(TFeature).Name)));
             }
             if (!resolvedFeature.IsFeatureAuthorized) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: 403)); // 403
+                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status403Forbidden));
             }
 
             return new ResolvedAdapter<TFeature>() {

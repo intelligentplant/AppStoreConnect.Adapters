@@ -6,10 +6,16 @@ using Microsoft.AspNetCore.Routing;
 
 namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class HostInfoRoutes : IRouteProvider {
+
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/", GetHostInfo);
-            builder.MapGet("/adapter-features", GetStandardFeatureDescriptors);
-            builder.MapGet("/available-apis", GetAvailableApis);
+            builder.MapGet("/", GetHostInfo)
+                .Produces<HostInfo>();
+
+            builder.MapGet("/adapter-features", GetStandardFeatureDescriptors)
+                .Produces<IEnumerable<FeatureDescriptor>>();
+
+            builder.MapGet("/available-apis", GetAvailableApis)
+                .Produces<IEnumerable<ApiDescriptor>>();
         }
 
 

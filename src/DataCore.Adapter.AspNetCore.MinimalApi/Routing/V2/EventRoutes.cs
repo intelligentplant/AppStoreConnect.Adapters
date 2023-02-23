@@ -9,9 +9,17 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class EventRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapPost("/{adapterId}/by-time-range", ReadEventMessagesForTimeRangeAsync);
-            builder.MapPost("/{adapterId}/by-cursor", ReadEventMessagesUsingCursorAsync);
-            builder.MapPost("/{adapterId}/write", WriteEventMessagesAsync);
+            builder.MapPost("/{adapterId}/by-time-range", ReadEventMessagesForTimeRangeAsync)
+                .Produces<IAsyncEnumerable<EventMessage>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/by-cursor", ReadEventMessagesUsingCursorAsync)
+                .Produces<IAsyncEnumerable<EventMessageWithCursorPosition>>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost("/{adapterId}/write", WriteEventMessagesAsync)
+                .Produces<IAsyncEnumerable<WriteEventMessageResult>>()
+                .ProducesDefaultErrors();
         }
 
 
