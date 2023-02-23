@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.Mvc</PackageId>
-    <Description>ASP.NET Core types for hosting App Store Connect adapters.</Description>
+    <Description>ASP.NET Core types for hosting App Store Connect adapter MVC controllers.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
   </PropertyGroup>
