@@ -110,8 +110,7 @@ builder.Services
         .AddDataCoreAdapterInstrumentation()
         // Exports metrics in Prometheus format using default settings. Prometheus metrics are
         // served via the scraping endpoint registered below.
-        .AddPrometheusExporter())
-    .StartWithHost();
+        .AddPrometheusExporter());
 
 // Build the app and the request pipeline.
 var app = builder.Build();
