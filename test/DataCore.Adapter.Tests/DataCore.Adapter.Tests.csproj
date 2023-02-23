@@ -66,6 +66,11 @@
     </Otherwise>
   </Choose>
 
+  <!-- Minimal API project is only supported on >= net7.0 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Include="..\..\examples\data\DummySensorData.csv" Link="DummySensorData.csv" />
   </ItemGroup>
