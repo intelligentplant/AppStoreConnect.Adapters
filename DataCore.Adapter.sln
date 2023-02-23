@@ -122,6 +122,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{4A
 		docs\features\tag-snapshot-polling-and-subscriptions.md = docs\features\tag-snapshot-polling-and-subscriptions.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.MinimalApi", "src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj", "{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -248,6 +250,10 @@ Global
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -290,6 +296,7 @@ Global
 		{8C225A69-794C-4451-B5CE-91EAD5269C87} = {B158078F-D217-46FE-A9B8-7BD1B99922BA}
 		{144B4A51-9F3E-45BD-B0A3-0732A946D2F4} = {92FD0A48-0AE7-44A6-86BC-C4E47E014C17}
 		{4AA5F467-4724-42CC-B7B8-DC8D4C7CE7FE} = {C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}
+		{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478} = {68BD9B3D-78AB-4399-ACC9-CBD11CAB523F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {323415F4-D394-4EAA-B259-7C6834BFD819}

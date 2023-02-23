@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Http.Proxy {
 #pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
-        /// The client used in standard adapter queries.
+        /// The adapter HTTP client for the proxy.
         /// </summary>
         private readonly AdapterHttpClient _client;
 

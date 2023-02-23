@@ -1,7 +1,6 @@
 ﻿#if NETCOREAPP
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
@@ -14,8 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
 
-    [TestClass]
-    public class HttpProxyTests : ProxyAdapterTests<HttpAdapterProxy> {
+    public abstract class HttpProxyTests : ProxyAdapterTests<HttpAdapterProxy> {
 
         protected override IEnumerable<string> UnsupportedStandardFeatures {
             get {

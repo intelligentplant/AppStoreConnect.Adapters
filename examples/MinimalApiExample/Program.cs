@@ -1,6 +1,7 @@
 ﻿using DataCore.Adapter.WaveGenerator;
 
-using OpenTelemetry;
+using Microsoft.AspNetCore.Http.Json;
+
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -11,7 +12,8 @@ const string AdapterId = "$default";
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddLocalization();
+    .AddLocalization()
+    .AddProblemDetails();
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
@@ -24,10 +26,13 @@ builder.Services
      ))
     .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGeneratorAdapter>(sp, AdapterId));
 
+#if DEBUG
+// Pretty-print JSON responses
+builder.Services.Configure<JsonOptions>(options => options.SerializerOptions.WriteIndented = true);
+#endif
+
 builder.Services
-    .AddMvc()
-    .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true)
-    .AddDataCoreAdapterMvc();
+    .AddDataCoreAdapterApiServices();
 
 builder.Services
     .AddSignalR()
@@ -47,11 +52,12 @@ builder.Services
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
-        .AddJaegerExporter()
-        .AddConsoleExporter())
-    .StartWithHost();
-
+        .AddJaegerExporter());
+    
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();
@@ -65,7 +71,7 @@ else {
 app.UseHttpsRedirection();
 app.UseRequestLocalization();
 
-app.MapControllers();
+app.MapDataCoreAdapterApiRoutes();
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");

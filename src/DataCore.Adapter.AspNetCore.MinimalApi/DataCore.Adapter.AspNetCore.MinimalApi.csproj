@@ -1,13 +1,24 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>net7.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
-    <PackageId>$(PackagePrefix).Adapter.AspNetCore.HealthChecks</PackageId>
-    <Description>ASP.NET Core health checks for App Store Connect adapters.</Description>
+    <PackageId>$(PackagePrefix).Adapter.AspNetCore.MinimalApi</PackageId>
+    <Description>ASP.NET Core types for hosting App Store Connect adapter APIs.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Http" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="MiniValidation" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.AspNetCore.Common\DataCore.Adapter.AspNetCore.Common.csproj" />
