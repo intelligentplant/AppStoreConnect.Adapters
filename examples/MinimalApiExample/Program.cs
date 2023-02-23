@@ -2,7 +2,6 @@
 
 using Microsoft.AspNetCore.Http.Json;
 
-using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
