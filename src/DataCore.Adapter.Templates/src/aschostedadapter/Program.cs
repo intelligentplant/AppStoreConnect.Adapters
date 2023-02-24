@@ -19,6 +19,12 @@ builder.Configuration
 builder.Services
     .AddLocalization();
 
+#if (UseMinimalApi)
+// Allows failed requests to generate RFC 7807 responses.
+builder.Services
+    .AddProblemDetails();
+#endif
+
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
     .AddHostInfo(
@@ -53,10 +59,16 @@ builder.Services
     // since this will not be supplied by the service provider.
     .AddAdapter<MyAdapter>(Constants.AdapterId);
 
+#if (UseMinimalApi)
+// Register supporting services for Minimal API routes.
+builder.Services
+    .AddDataCoreAdapterApiServices();
+#else
 // Register adapter MVC controllers.
 builder.Services
     .AddMvc()
     .AddDataCoreAdapterMvc();
+#endif
 
 // Register adapter SignalR hub.
 builder.Services
@@ -114,6 +126,11 @@ builder.Services
 // Build the app and the request pipeline.
 var app = builder.Build();
 
+#if (UseMinimalApi)
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+#endif
+
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();
 }
@@ -129,7 +146,11 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
+#if (UseMinimalApi)
+app.MapDataCoreAdapterApiRoutes();
+#else
 app.MapControllers();
+#endif
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
