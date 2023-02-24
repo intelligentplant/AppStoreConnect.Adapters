@@ -26,10 +26,10 @@ builder.Services
      ))
     .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGeneratorAdapter>(sp, AdapterId));
 
-#if DEBUG
-// Pretty-print JSON responses
-builder.Services.Configure<JsonOptions>(options => options.SerializerOptions.WriteIndented = true);
-#endif
+// Pretty-print JSON responses when running in development mode.
+if (builder.Environment.IsDevelopment()) {
+    builder.Services.Configure<JsonOptions>(options => options.SerializerOptions.WriteIndented = true);
+}
 
 builder.Services
     .AddDataCoreAdapterApiServices();
