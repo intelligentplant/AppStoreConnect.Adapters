@@ -78,13 +78,15 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-network-wired fa-fw" title="Host Instance ID"></i>
-            Host Instance ID
+            <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Host Instance ID" data-bs-content="The instance ID of the adapter host. This is used to uniquely identify this adapter host in distributed tracing systems.">
+              <i class="fa-solid fa-network-wired fa-fw"></i>
+              Host Instance ID
+            </span>
           </div>
         </div>
         <div class="col">
           <div class="pb-3">
-            <code>@Model.GetHostId()</code>
+            @Model.GetHostId()
           </div>
         </div>
       </div>
@@ -92,8 +94,10 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-fingerprint fa-fw" title="Adapter ID"></i>
-            Adapter ID
+            <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Adapter ID" data-bs-content="The identifier for the adapter. Use this value when configuring the App Store Connect connection to your adapter.">
+              <i class="fa-solid fa-fingerprint fa-fw"></i>
+              Adapter ID
+            </span>
           </div>
         </div>
         <div class="col">
@@ -109,8 +113,10 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-id-badge fa-fw" title="Adapter name"></i>
-            Name
+            <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Name" data-bs-content="The display name for the adapter.">
+              <i class="fa-solid fa-id-badge fa-fw"></i>
+              Name
+            </span>
           </div>
         </div>
         <div class="col">
@@ -121,8 +127,10 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-circle-info fa-fw" title="Adapter description"></i>
-            Description
+            <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Description" data-bs-content="The adapter description.">
+              <i class="fa-solid fa-circle-info fa-fw"></i>
+              Description
+            </span>
           </div>
         </div>
         <div class="col">
@@ -133,8 +141,10 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-code fa-fw" title="Adapter driver"></i>
-            Driver
+            <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Driver" data-bs-content="Information about the adapter driver and vendor.">
+              <i class="fa-solid fa-code fa-fw"></i>
+              Driver
+            </span>
           </div>
         </div>
         <div class="col">
@@ -157,8 +167,10 @@
           <div class="row">
             <div class="col-12 col-lg-2 d-none d-lg-block">
               <div class="pb-1">
-                <i class="fa-solid fa-microchip fa-fw" title="Adapter features"></i>
-                Features
+                <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Features" data-bs-content="The features that the adapter supports.">
+                  <i class="fa-solid fa-microchip fa-fw"></i>
+                  Features
+                </span>
               </div>
             </div>
             <div class="col">
@@ -199,15 +211,17 @@
         <div class="row">
           <div class="col-12 col-lg-2">
             <div class="pb-1">
-              <i class="fa-solid fa-circle-nodes fa-fw" title="APIs"></i>
-              Enabled APIs
+              <span data-bs-toggle="popover" data-bs-trigger="hover focus" title="Enabled APIs" data-bs-content="The APIs that can be used to query the adapter.">
+                <i class="fa-solid fa-circle-nodes fa-fw"></i>
+                Enabled APIs
+              </span>
             </div>
           </div>
           <div class="col">
             <div class="pb-3">
               @if (Model.ApiIsEnabled) {
                 foreach (var api in Model.AvailableApis.Where(x => x.Enabled)) {
-                  <div>@(string.IsNullOrWhiteSpace(api.Version) ? api.Name : $"{api.Name} v{api.Version}")</div>
+                  <div>@api.Name</div>
                 }
               }
               else {
