@@ -221,7 +221,12 @@
             <div class="pb-3">
               @if (Model.ApiIsEnabled) {
                 foreach (var api in Model.AvailableApis.Where(x => x.Enabled)) {
-                  <div>@api.Name</div>
+                  if (string.IsNullOrWhiteSpace(api.Provider)){
+                    <div>@api.Name</div>
+                  }
+                  else {
+                    <div>@api.Name <span class="small text-muted">(provider: @(string.IsNullOrWhiteSpace(api.Version) ? api.Provider : $"{api.Provider} v{api.Version}"))</span></div>
+                  }
                 }
               }
               else {

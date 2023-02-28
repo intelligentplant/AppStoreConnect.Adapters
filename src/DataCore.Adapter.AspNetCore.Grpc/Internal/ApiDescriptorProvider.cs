@@ -28,7 +28,8 @@ namespace DataCore.Adapter.AspNetCore.Grpc.Internal {
 
         /// <inheritdoc/>
         public ApiDescriptor GetApiDescriptor() {
-            return new ApiDescriptor("gRPC", GetType().Assembly.GetName()?.Version?.ToString(3), _endpointDataSource.IsGrpcAdapterApiRegistered());
+            var asmName = GetType().Assembly.GetName();
+            return new ApiDescriptor("gRPC", asmName.Name, asmName.Version!.ToString(3), _endpointDataSource.IsGrpcAdapterApiRegistered());
         }
 
     }

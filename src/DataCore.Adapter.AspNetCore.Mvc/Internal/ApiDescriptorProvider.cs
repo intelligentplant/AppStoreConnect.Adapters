@@ -28,7 +28,8 @@ namespace DataCore.Adapter.AspNetCore.Mvc.Internal {
 
         /// <inheritdoc/>
         public ApiDescriptor GetApiDescriptor() {
-            return new ApiDescriptor("REST", GetType().Assembly.GetName()?.Version?.ToString(3), _endpointDataSource.IsMvcAdapterApiRegistered());
+            var asmName = GetType().Assembly.GetName();
+            return new ApiDescriptor("REST", asmName.Name, asmName.Version!.ToString(3), _endpointDataSource.IsMvcAdapterApiRegistered());
         }
 
     }
