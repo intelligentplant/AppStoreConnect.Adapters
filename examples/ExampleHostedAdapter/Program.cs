@@ -19,7 +19,7 @@ builder.Configuration
 // Host instance ID.
 var instanceId = builder.Configuration.GetValue<string>("AppStoreConnect:Adapter:Host:InstanceId");
 if (string.IsNullOrWhiteSpace(instanceId)) {
-    instanceId = System.Net.Dns.GetHostName();
+    instanceId = Guid.NewGuid().ToString();
 }
 
 builder.Services
