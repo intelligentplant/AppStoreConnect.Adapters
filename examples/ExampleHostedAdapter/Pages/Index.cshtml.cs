@@ -61,6 +61,16 @@ namespace ExampleHostedAdapter.Pages {
         }
 
 
+        public string GetHostId() {
+            var prop = HostInfo.Properties.FindProperty("InstanceId");
+            if (prop == null) {
+                return "<unspecified>";
+            }
+
+            return prop.Value.GetValueOrDefault("<unspecified>")!;
+        }
+
+
         public enum AdapterState {
             Unknown,
             Disabled,

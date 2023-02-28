@@ -28,6 +28,10 @@ The Razor Pages for the application define a basic user interface. The `Settings
 
 Your adapter host is an ASP.NET Core application. Microsoft's documentation about deploying and hosting ASP.NET Core applications is available [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy).
 
+The `appsettings.json` file also specifies an instance ID for the host application (`e445a468-19ee-456c-9aac-e26288475a45`). This is used as the OpenTelemetry service instance ID when exporting traces to distributed tracing systems such as [Jaeger](https://jaegertracing.io).
+
+This ID should be unique for each deployment of your adapter host!
+
 
 # Unit Tests
 
@@ -50,7 +54,7 @@ You can connect to the adapter host using REST API calls, SignalR, or gRPC.
 To connect a local App Store Connect instance to your adapter using the REST API, configure a new `App Store Connect Adapter (HTTP Proxy)` data source in the App Store Connect UI, using the following settings:
 
 - `Address`: https://localhost:44300/
-- `Adapter ID`: e445a468-19ee-456c-9aac-e26288475a45
+- `Adapter ID`: $default
 - `Use SignaR`: true
 
 Setting the `Use SignalR` property to true allows the App Store Connect proxy to use SignalR connections for long-running subscriptions.
@@ -63,7 +67,7 @@ Note that you must disable SSL certificate verification during local development
 To connect a local App Store Connect instance to your adapter using an ASP.NET Core SignalR proxy, configure a new `App Store Connect Adapter (SignalR Proxy)` data source in the App Store Connect UI, using the following settings:
 
 - `Address`: https://localhost:44300/
-- `Adapter ID`: e445a468-19ee-456c-9aac-e26288475a45
+- `Adapter ID`: $default
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
 
@@ -73,7 +77,7 @@ Note that you must disable SSL certificate verification during local development
 To connect a local App Store Connect instance to your adapter using a gRPC proxy, configure a new `App Store Connect Adapter (gRPC Proxy)` data source in the App Store Connect UI, using the following settings:
 
 - `Address`: https://localhost:44300/
-- `Adapter ID`: e445a468-19ee-456c-9aac-e26288475a45
+- `Adapter ID`: $default
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
 

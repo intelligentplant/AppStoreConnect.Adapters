@@ -155,7 +155,8 @@ namespace Microsoft.Extensions.DependencyInjection {
                 name, 
                 description,
                 version ?? Assembly.GetEntryAssembly()?.GetInformationalVersion(),
-                vendor ?? sp.GetService<VendorInfo>() ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo()
+                vendor ?? sp.GetService<VendorInfo>() ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo(),
+                props
             ));
             return builder;
         }

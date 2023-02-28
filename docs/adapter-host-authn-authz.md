@@ -143,8 +143,16 @@ Authorization can be applied in three ways:
 To apply authorization at the API-level, you must add authorization requirements to adapter API endpoints when starting your web application. For example, to require an authenticated user for all adapter API endpoints:
 
 ```csharp
+// MVC controllers
 app.MapControllers().RequireAuthorization();
+
+// Minimal API routes (ASP.NET Core >= 7.0 only)
+app.MapDataCoreAdapterApiRoutes().RequireAuthorization();
+
+// SignalR hubs
 app.MapDataCoreAdapterHubs((type, builder) => builder.RequireAuthorization());
+
+// gRPC services
 app.MapDataCoreGrpcServices((type, builder) => builder.RequireAuthorization());
 ```
 
