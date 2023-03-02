@@ -22,7 +22,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         public const string DefaultHubRoute = "/signalr/app-store-connect/v2.0";
 
         /// <summary>
-        /// Indicates if either <see cref="Dispose"/> or <see cref="DisposeAsync"/> have been 
+        /// Indicates if either <see cref="Dispose()"/> or <see cref="DisposeAsync"/> have been 
         /// called (regardless of whether or not the methods have finished executing).
         /// </summary>
         private bool _disposeCalled;
@@ -274,7 +274,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// </param>
         /// <returns>
         ///   A <see cref="Task"/> that will re-open the connection if it was not closed due to an 
-        ///   explicit call to <see cref="StopAsync"/>, <see cref="Dispose"/> or <see cref="DisposeAsync"/>.
+        ///   explicit call to <see cref="StopAsync"/>, <see cref="Dispose()"/> or <see cref="DisposeAsync"/>.
         /// </returns>
         private async Task OnClosedAsync(Exception? error) {
             if (_disposeCalled || _stopCalled) {
