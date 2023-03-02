@@ -1115,6 +1115,7 @@ namespace DataCore.Adapter {
                 }
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (descriptor.Extensions != null) {
                 foreach (var item in descriptor.Extensions) {
                     if (item == null) {
@@ -1123,6 +1124,7 @@ namespace DataCore.Adapter {
                     result.Extensions.Add(item);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (descriptor.Properties != null) {
                 foreach (var item in descriptor.Properties) {

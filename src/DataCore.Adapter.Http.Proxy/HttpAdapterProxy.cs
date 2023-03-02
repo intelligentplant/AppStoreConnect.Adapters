@@ -347,6 +347,7 @@ namespace DataCore.Adapter.Http.Proxy {
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (var extensionFeature in descriptor.Extensions) {
                 try {
                     var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
@@ -356,12 +357,10 @@ namespace DataCore.Adapter.Http.Proxy {
                             continue;
                         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<HttpAdapterProxy, HttpAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
-#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -369,6 +368,7 @@ namespace DataCore.Adapter.Http.Proxy {
                     Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 if (CanUseSignalR) {
