@@ -53,9 +53,9 @@ You can connect to the adapter host using REST API calls, SignalR, or gRPC.
 
 To connect a local App Store Connect instance to your adapter using the REST API, configure a new `App Store Connect Adapter (HTTP Proxy)` data source in the App Store Connect UI, using the following settings:
 
-- `Address`: https://localhost:44300/
-- `Adapter ID`: $default
-- `Use SignaR`: true
+- Address: `https://localhost:44300/`
+- Adapter ID: `$default`
+- Use SignalR: `true`
 
 Setting the `Use SignalR` property to true allows the App Store Connect proxy to use SignalR connections for long-running subscriptions.
 
@@ -66,18 +66,20 @@ Note that you must disable SSL certificate verification during local development
 
 To connect a local App Store Connect instance to your adapter using an ASP.NET Core SignalR proxy, configure a new `App Store Connect Adapter (SignalR Proxy)` data source in the App Store Connect UI, using the following settings:
 
-- `Address`: https://localhost:44300/
-- `Adapter ID`: $default
+- Address: `https://localhost:44300/`
+- Adapter ID: `$default`
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
 
 
 ## gRPC
 
+> App Store Connect must be running on Windows 11/Windows Server 2022 or later to be able to connect using gRPC.
+
 To connect a local App Store Connect instance to your adapter using a gRPC proxy, configure a new `App Store Connect Adapter (gRPC Proxy)` data source in the App Store Connect UI, using the following settings:
 
-- `Address`: https://localhost:44300/
-- `Adapter ID`: $default
+- Address: `https://localhost:44300/`
+- Adapter ID: `$default`
 
 Note that you must disable SSL certificate verification during local development unless you have installed the ASP.NET Core development certificate to a certificate store that can be accessed by the App Store Connect service identity.
 

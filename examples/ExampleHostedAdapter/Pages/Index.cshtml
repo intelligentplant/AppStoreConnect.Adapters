@@ -37,6 +37,11 @@
 
         const setLastUpdatedTime = () => $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
 
+        const onStatusUpdated = () => {
+            enableTooltips();
+            setLastUpdatedTime();
+        };
+
         const updateStatus = async () => {
             if (updateInProgress) {
                 return;
@@ -46,16 +51,14 @@
             try {
                 const response = await $.get('@Url.Page("Index", "Status")');
                 $('#adapter-status').html(response);
-                enableTooltips();
-                setLastUpdatedTime();
+                onStatusUpdated();
             }
             finally {
                 updateInProgress = false;
             }
         };
 
-        enableTooltips();
-        setLastUpdatedTime();
+        onStatusUpdated();
 
         setInterval(async () => {
             await updateStatus();
