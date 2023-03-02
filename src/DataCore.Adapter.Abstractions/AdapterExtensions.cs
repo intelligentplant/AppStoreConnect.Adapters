@@ -674,7 +674,9 @@ namespace DataCore.Adapter {
 
             var uriString = uri.ToString();
 
+#pragma warning disable CS0618 // Type or member is obsolete
             return descriptor.Features.Any(f => string.Equals(f, uriString, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, uriString, StringComparison.Ordinal));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 
@@ -719,7 +721,9 @@ namespace DataCore.Adapter {
                 return false;
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             return descriptor.Features.Any(f => string.Equals(f, uriString, StringComparison.Ordinal)) || descriptor.Extensions.Any(f => string.Equals(f, uriString, StringComparison.Ordinal));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 

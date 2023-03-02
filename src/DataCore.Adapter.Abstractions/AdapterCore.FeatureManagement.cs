@@ -439,7 +439,7 @@ namespace DataCore.Adapter {
 
                 var unwrapped = item.Unwrap();
                 
-                if (ReferenceEquals(unwrapped, this)) {
+                if (unwrapped == null || ReferenceEquals(unwrapped, this)) {
                     continue;
                 }
 
@@ -493,7 +493,7 @@ namespace DataCore.Adapter {
                 
                 var unwrapped = item.Unwrap();
 
-                if (ReferenceEquals(unwrapped, this)) {
+                if (unwrapped == null || ReferenceEquals(unwrapped, this)) {
                     continue;
                 }
 

@@ -98,6 +98,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C48E4C85-6A13-46D5-9DA2-4AAC739D12FF}"
 	ProjectSection(SolutionItems) = preProject
 		docs\adapter-host-authn-authz.md = docs\adapter-host-authn-authz.md
+		docs\adapter-host-logging.md = docs\adapter-host-logging.md
 		docs\writing-an-adapter.md = docs\writing-an-adapter.md
 	EndProjectSection
 EndProject
@@ -122,7 +123,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{4A
 		docs\features\tag-snapshot-polling-and-subscriptions.md = docs\features\tag-snapshot-polling-and-subscriptions.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.AspNetCore.MinimalApi", "src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj", "{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.MinimalApi", "src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj", "{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

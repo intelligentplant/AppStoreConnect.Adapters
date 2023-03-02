@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Tests {
         /// </returns>
         protected virtual IAdapterCallContext CreateCallContext(TestContext context) {
             var identity = new ClaimsIdentity(GetType().FullName, ClaimTypes.Name, ClaimTypes.Role);
-            identity.AddClaim(new Claim(ClaimTypes.Name, context!.TestName));
+            identity.AddClaim(new Claim(ClaimTypes.Name, context.TestName!));
 
             var principal = new ClaimsPrincipal(identity);
 
@@ -198,7 +198,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Inconclusive(FormatMessage(Resources.MissingTestInput, typeof(TFeature).Name, methodName, TestContext.TestName));
+            Assert.Inconclusive(FormatMessage(Resources.MissingTestInput, typeof(TFeature).Name, methodName, TestContext.TestName!));
         }
 
 

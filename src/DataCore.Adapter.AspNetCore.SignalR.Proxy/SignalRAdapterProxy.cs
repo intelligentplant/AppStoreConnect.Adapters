@@ -257,6 +257,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (var extensionFeature in descriptor.Extensions) {
                 if (string.IsNullOrWhiteSpace(extensionFeature)) {
                     continue;
@@ -270,12 +271,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             continue;
                         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, SignalRAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
-#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -283,6 +282,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.
