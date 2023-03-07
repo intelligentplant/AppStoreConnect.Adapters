@@ -1,0 +1,54 @@
+﻿#nullable enable
+DataCore.Adapter.WaveGenerator.Resources
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.FindTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.FindTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.GetTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.ReadRawTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.ReadSnapshotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.ReadTagValuesAtTimes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter!>? logger = null) -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter!>? logger = null) -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.EnableAdHocGenerators.get -> bool
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.EnableAdHocGenerators.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.SampleInterval.get -> System.TimeSpan
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.SampleInterval.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.Tags.get -> System.Collections.Generic.IDictionary<string!, string!>?
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.Tags.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions.WaveGeneratorAdapterOptions() -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Amplitude.get -> double
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Amplitude.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Offset.get -> double
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Offset.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Period.get -> double
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Period.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Phase.get -> double
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Phase.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Type.get -> DataCore.Adapter.WaveGenerator.WaveType
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.Type.set -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.WaveGeneratorOptions() -> void
+DataCore.Adapter.WaveGenerator.WaveType
+DataCore.Adapter.WaveGenerator.WaveType.Sawtooth = 1 -> DataCore.Adapter.WaveGenerator.WaveType
+DataCore.Adapter.WaveGenerator.WaveType.Sinusoid = 0 -> DataCore.Adapter.WaveGenerator.WaveType
+DataCore.Adapter.WaveGenerator.WaveType.Square = 2 -> DataCore.Adapter.WaveGenerator.WaveType
+DataCore.Adapter.WaveGenerator.WaveType.Triangle = 3 -> DataCore.Adapter.WaveGenerator.WaveType
+override DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override DataCore.Adapter.WaveGenerator.WaveGeneratorOptions.ToString() -> string!
+static DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.TryParseWaveGeneratorOptions(string! s, out DataCore.Adapter.WaveGenerator.WaveGeneratorOptions? options) -> bool
+~static DataCore.Adapter.WaveGenerator.Resources.AdapterMetadata_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.AdapterMetadata_DisplayName.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.Culture.get -> System.Globalization.CultureInfo
+~static DataCore.Adapter.WaveGenerator.Resources.Culture.set -> void
+~static DataCore.Adapter.WaveGenerator.Resources.ResourceManager.get -> System.Resources.ResourceManager
+~static DataCore.Adapter.WaveGenerator.Resources.SawtoothWave_TagDescription.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.SinusoidWave_TagDescription.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.SquareWave_TagDescription.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TagProperty_Amplitude_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TagProperty_Offset_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TagProperty_Period_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TagProperty_Phase_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TagProperty_Type_Description.get -> string
+~static DataCore.Adapter.WaveGenerator.Resources.TriangleWave_TagDescription.get -> string

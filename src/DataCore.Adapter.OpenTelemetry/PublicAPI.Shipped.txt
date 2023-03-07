@@ -1,0 +1,8 @@
+﻿#nullable enable
+const OpenTelemetry.Resources.DCAResourceBuilderExtensions.AdapterApiServiceName = "Adapter API" -> string!
+OpenTelemetry.Resources.DCAMeterProviderBuilderExtensions
+OpenTelemetry.Resources.DCAResourceBuilderExtensions
+OpenTelemetry.Trace.DCATracerProviderBuilderExtensions
+static OpenTelemetry.Resources.DCAMeterProviderBuilderExtensions.AddDataCoreAdapterInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder! builder) -> OpenTelemetry.Metrics.MeterProviderBuilder!
+static OpenTelemetry.Resources.DCAResourceBuilderExtensions.AddDataCoreAdapterApiService(this OpenTelemetry.Resources.ResourceBuilder! builder, string? serviceInstanceId = null) -> OpenTelemetry.Resources.ResourceBuilder!
+static OpenTelemetry.Trace.DCATracerProviderBuilderExtensions.AddDataCoreAdapterInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder! builder) -> OpenTelemetry.Trace.TracerProviderBuilder!

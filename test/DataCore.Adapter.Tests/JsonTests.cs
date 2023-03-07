@@ -1429,11 +1429,7 @@ namespace DataCore.Adapter.Tests {
 
 
             public override int GetHashCode() {
-#if NET48
-                return HashGenerator.Combine(TestName, UtcTimestamp);
-#else
                 return HashCode.Combine(TestName, UtcTimestamp);
-#endif
             }
 
 

@@ -1,0 +1,35 @@
+﻿#nullable enable
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.Dispose() -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DisposeAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterKeyValueStore(DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore!>? logger = null) -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.TakeFullCheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CheckpointInterval.get -> System.TimeSpan?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CheckpointInterval.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CheckpointManagerFactory.get -> System.Func<FASTER.core.ICheckpointManager!>?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CheckpointManagerFactory.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CompactionInterval.get -> System.TimeSpan?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CompactionInterval.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CompactionThresholdBytes.get -> long
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CompactionThresholdBytes.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.FasterKeyValueStoreOptions() -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IndexBucketCount.get -> long
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IndexBucketCount.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.LogDeviceFactory.get -> System.Func<FASTER.core.IDevice!>?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.LogDeviceFactory.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.MemorySizeBits.get -> int
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.MemorySizeBits.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.PageSizeBits.get -> int
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.PageSizeBits.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.ReadOnly.get -> bool
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.ReadOnly.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.SegmentSizeBits.get -> int
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.SegmentSizeBits.set -> void
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+static DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.CreateLocalStorageCheckpointManager(string! path, bool removeOutdated = true) -> FASTER.core.ICheckpointManager!
+virtual DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.Dispose(bool disposing) -> void
+virtual DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask

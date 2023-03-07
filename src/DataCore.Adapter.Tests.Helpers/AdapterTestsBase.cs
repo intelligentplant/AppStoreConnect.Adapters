@@ -14,8 +14,6 @@ using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
-using Json.Schema;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
