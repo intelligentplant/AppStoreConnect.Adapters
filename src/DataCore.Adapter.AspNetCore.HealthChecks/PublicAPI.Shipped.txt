@@ -1,0 +1,7 @@
+﻿#nullable enable
+const Microsoft.Extensions.DependencyInjection.AdapterHealthCheckBuilderExtensions.AdapterHealthCheckName = "adapter_health_check" -> string!
+DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks.AdapterHealthCheck
+DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks.AdapterHealthCheck.AdapterHealthCheck(DataCore.Adapter.IAdapterAccessor! adapterAccessor) -> void
+DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks.AdapterHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult>!
+Microsoft.Extensions.DependencyInjection.AdapterHealthCheckBuilderExtensions
+static Microsoft.Extensions.DependencyInjection.AdapterHealthCheckBuilderExtensions.AddAdapterHealthChecks(this Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder! builder) -> Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder!

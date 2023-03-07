@@ -1,0 +1,35 @@
+﻿#nullable enable
+DataCore.Adapter.AspNetCore.AdapterLifetime
+DataCore.Adapter.AspNetCore.AdapterLifetime.AdapterLifetime(System.Func<DataCore.Adapter.IAdapter!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? started = null, System.Func<DataCore.Adapter.IAdapter!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? stopped = null) -> void
+DataCore.Adapter.AspNetCore.AdapterLifetime.StartedAsync(DataCore.Adapter.IAdapter! adapter, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.AspNetCore.AdapterLifetime.StoppedAsync(DataCore.Adapter.IAdapter! adapter, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.AspNetCore.Authorization.FeatureAuthorizationHandler
+DataCore.Adapter.AspNetCore.Authorization.FeatureAuthorizationHandler.FeatureAuthorizationHandler() -> void
+DataCore.Adapter.AspNetCore.Authorization.FeatureAuthorizationRequirement
+DataCore.Adapter.AspNetCore.Authorization.FeatureAuthorizationRequirement.FeatureUri.get -> System.Uri?
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.ConnectionId.get -> string!
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.CorrelationId.get -> string!
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.CultureInfo.get -> System.Globalization.CultureInfo!
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.HttpAdapterCallContext(Microsoft.AspNetCore.Http.HttpContext! httpContext) -> void
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.Items.get -> System.Collections.Generic.IDictionary<object!, object?>!
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.Provider.get -> Microsoft.AspNetCore.Http.HttpContext!
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.User.get -> System.Security.Claims.ClaimsPrincipal?
+DataCore.Adapter.AspNetCore.IAdapterLifetime
+DataCore.Adapter.AspNetCore.IAdapterLifetime.StartedAsync(DataCore.Adapter.IAdapter! adapter, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.AspNetCore.IAdapterLifetime.StoppedAsync(DataCore.Adapter.IAdapter! adapter, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.AspNetCore.IApiDescriptorProvider
+DataCore.Adapter.AspNetCore.IApiDescriptorProvider.GetApiDescriptor() -> DataCore.Adapter.Common.ApiDescriptor
+DataCore.Adapter.AspNetCore.IAvailableApiService
+DataCore.Adapter.AspNetCore.IAvailableApiService.GetApiDescriptors() -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.ApiDescriptor>!
+DataCore.Adapter.AspNetCoreAdapterAccessor
+DataCore.Adapter.AspNetCoreAdapterAccessor.AspNetCoreAdapterAccessor(DataCore.Adapter.IAdapterAuthorizationService! authorizationService, System.Collections.Generic.IEnumerable<DataCore.Adapter.IAdapter!>? adapters) -> void
+Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions
+override DataCore.Adapter.AspNetCoreAdapterAccessor.FindAdapters(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Common.FindAdaptersRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.IAdapter!>!
+override DataCore.Adapter.AspNetCoreAdapterAccessor.GetAdapter(DataCore.Adapter.IAdapterCallContext! context, string! adapterId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.IAdapter?>!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddAdapterFeatureAuthorization<T>(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddAutomaticInitialization(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddDataCoreAdapterAspNetCoreServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddDefaultAspNetCoreServices(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddHostInfo(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, DataCore.Adapter.Common.HostInfo! hostInfo) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddHostInfo(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, string! name, string? description = null, string? version = null, DataCore.Adapter.Common.VendorInfo? vendor = null, bool includeOperatingSystemDetails = true, bool includeContainerDetails = true, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties = null) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!

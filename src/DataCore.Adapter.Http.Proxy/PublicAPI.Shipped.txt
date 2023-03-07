@@ -1,0 +1,67 @@
+﻿#nullable enable
+DataCore.Adapter.Http.Proxy.AdapterCallContextExtensions
+DataCore.Adapter.Http.Proxy.ConnectionFactory
+DataCore.Adapter.Http.Proxy.ConnectionIdentityFactory
+DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl
+DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl.AdapterExtensionFeatureImpl(DataCore.Adapter.Http.Proxy.HttpAdapterProxy! proxy) -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.GetClient() -> DataCore.Adapter.Http.Client.AdapterHttpClient!
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.HttpAdapterProxy(string! id, DataCore.Adapter.Http.Client.AdapterHttpClient! client, DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? taskScheduler, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Http.Proxy.HttpAdapterProxy!>? logger) -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.RemoteDescriptor.get -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.HostInfo!
+DataCore.Adapter.Http.Proxy.HttpAdapterProxy.TryGetSignalRClient(DataCore.Adapter.IAdapterCallContext! context, out DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient? client) -> bool
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.CompatibilityVersion.get -> DataCore.Adapter.Http.Client.CompatibilityVersion
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.CompatibilityVersion.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.DefaultRequestVersion.get -> System.Version?
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.DefaultRequestVersion.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.ExtensionFeatureFactory.get -> DataCore.Adapter.Proxy.ExtensionFeatureFactory<DataCore.Adapter.Http.Proxy.HttpAdapterProxy!>?
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.ExtensionFeatureFactory.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.HealthCheckPushInterval.get -> System.TimeSpan
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.HealthCheckPushInterval.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.HttpAdapterProxyOptions() -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.RemoteId.get -> string!
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.RemoteId.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.SignalROptions.get -> DataCore.Adapter.Http.Proxy.SignalROptions?
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.SignalROptions.set -> void
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.TagValuePushInterval.get -> System.TimeSpan
+DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions.TagValuePushInterval.set -> void
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.AdapterId.get -> string!
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.GetClient() -> DataCore.Adapter.Http.Client.AdapterHttpClient!
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.Proxy.get -> DataCore.Adapter.Http.Proxy.HttpAdapterProxy!
+DataCore.Adapter.Http.Proxy.ProxyAdapterFeature.ProxyAdapterFeature(DataCore.Adapter.Http.Proxy.HttpAdapterProxy! proxy) -> void
+DataCore.Adapter.Http.Proxy.Resources
+DataCore.Adapter.Http.Proxy.SignalROptions
+DataCore.Adapter.Http.Proxy.SignalROptions.ConnectionFactory.get -> DataCore.Adapter.Http.Proxy.ConnectionFactory!
+DataCore.Adapter.Http.Proxy.SignalROptions.ConnectionFactory.set -> void
+DataCore.Adapter.Http.Proxy.SignalROptions.ConnectionIdentityFactory.get -> DataCore.Adapter.Http.Proxy.ConnectionIdentityFactory?
+DataCore.Adapter.Http.Proxy.SignalROptions.ConnectionIdentityFactory.set -> void
+DataCore.Adapter.Http.Proxy.SignalROptions.SignalROptions() -> void
+DataCore.Adapter.Http.Proxy.SignalROptions.TimeToLive.get -> System.TimeSpan
+DataCore.Adapter.Http.Proxy.SignalROptions.TimeToLive.set -> void
+override DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl.GetDescriptorFromRemoteAdapter(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.FeatureDescriptor?>!
+override DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl.GetOperationsFromRemoteAdapter(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor!>!>!
+override DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl.InvokeInternal(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.InvocationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Extensions.InvocationResponse!>!
+override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.CheckHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>!>!
+override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.Dispose(bool disposing) -> void
+override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static DataCore.Adapter.Http.Proxy.AdapterCallContextExtensions.ToRequestMetadata(this DataCore.Adapter.IAdapterCallContext? context) -> DataCore.Adapter.Http.Client.RequestMetadata!
+~static DataCore.Adapter.Http.Proxy.Resources.AdapterMetadata_Description.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.AdapterMetadata_DisplayName.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.Culture.get -> System.Globalization.CultureInfo
+~static DataCore.Adapter.Http.Proxy.Resources.Culture.set -> void
+~static DataCore.Adapter.Http.Proxy.Resources.Error_AdapterIdIsRequired.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.Error_SignalRSupportCheckFailed.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.HealthChecks_RemoteHeathDescription.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.HealthCheck_DisplayName_Connection.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.HealthCheck_DisplayName_RemoteAdapter.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.HealthCheck_RemoteAdapterHealthNotSupported.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.Log_ExtensionFeatureRegistrationError.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.Log_NoExtensionImplementationAvailable.get -> string
+~static DataCore.Adapter.Http.Proxy.Resources.ResourceManager.get -> System.Resources.ResourceManager

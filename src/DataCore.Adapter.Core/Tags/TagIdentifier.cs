@@ -186,15 +186,9 @@ namespace DataCore.Adapter.Tags {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-#if NETSTANDARD2_0 || NETFRAMEWORK
-            return _compareIdOnly
-                ? HashGenerator.Combine(obj?.Id?.ToUpperInvariant())
-                : HashGenerator.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
-#else
             return _compareIdOnly
                 ? HashCode.Combine(obj?.Id?.ToUpperInvariant())
                 : HashCode.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
-#endif
         }
     }
 

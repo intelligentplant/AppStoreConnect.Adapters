@@ -1,0 +1,97 @@
+﻿#nullable enable
+abstract DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateAdapter(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context, System.IServiceProvider? serviceProvider) -> TAdapter!
+abstract DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateServiceScope(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> Microsoft.Extensions.DependencyInjection.IServiceScope?
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterBackgroundTaskServiceShouldNotBeNull() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterDescriptorShouldNotBeNull() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterFeaturesShouldNotBeNull() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterPropertiesShouldNotBeNull() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterShouldAllowDisposeAsyncToBeCalledMultipleTimes() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterShouldAllowDisposeToBeCalledMultipleTimes() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterTestsBase() -> void
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AdapterTypeDescriptorShouldNotBeNull() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AssertFeatureNotImplemented(string! feature) -> void
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AssertFeatureNotImplemented<TFeature>() -> void
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CustomFunctionInvocationRequestShouldReturnResult() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ExtensionFeaturesShouldReturnDescriptors() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetCustomFunctionRequestShouldReturnResult() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetCustomFunctionsRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.RunAdapterTest(System.Func<TAdapter!, DataCore.Adapter.IAdapterCallContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! callback, bool startAdapter = true) -> System.Threading.Tasks.Task!
+DataCore.Adapter.Tests.TestsBase
+DataCore.Adapter.Tests.TestsBase.Cancel() -> void
+DataCore.Adapter.Tests.TestsBase.CancelAfter(System.TimeSpan delay) -> void
+DataCore.Adapter.Tests.TestsBase.CancellationToken.get -> System.Threading.CancellationToken
+DataCore.Adapter.Tests.TestsBase.FormatMessage(string! format, params object![]! args) -> string!
+DataCore.Adapter.Tests.TestsBase.TestContext.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext!
+DataCore.Adapter.Tests.TestsBase.TestContext.set -> void
+DataCore.Adapter.Tests.TestsBase.TestsBase() -> void
+Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddDefaultAdapterUnitTestServices(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.AfterAdapterTestAsync(TAdapter! adapter, DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.BeforeAdapterTestAsync(TAdapter! adapter, DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.BrowseAssetModelNodesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CheckHealthRequestShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ConfigurationChangesSubscriptionShouldReceiveValues() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateBrowseAssetModelNodesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateCallContext(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.IAdapterCallContext!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateConfigurationChangesSubscriptionRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateCreateAnnotationRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.CreateAnnotationRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateCustomFunctionInvocationRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Extensions.CustomFunctionInvocationRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateDeleteAnnotationRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.DeleteAnnotationRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateEventMessageSubscriptionRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateEventMessageTopicSubscriptionRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateFindAssetModelNodesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.AssetModel.FindAssetModelNodesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateFindTagsRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Tags.FindTagsRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateGetAssetModelNodesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.AssetModel.GetAssetModelNodesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateGetCustomFunctionRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Extensions.GetCustomFunctionRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateGetCustomFunctionsRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Extensions.GetCustomFunctionsRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateGetTagPropertiesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Tags.GetTagPropertiesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateGetTagsRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Tags.GetTagsRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadAnnotationRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadAnnotationRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadAnnotationsRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadAnnotationsRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadEventMessagesForTimeRangeRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadEventMessagesUsingCursorRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadPlotTagValuesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadProcessedTagValuesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadRawTagValuesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadSnapshotTagValuesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateReadTagValuesAtTimesRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateSnapshotTagValueSubscriptionRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateTagValueAnnotationShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateUpdateAnnotationRequest(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> DataCore.Adapter.RealTimeData.UpdateAnnotationRequest!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateWriteEventMessageItems(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Events.WriteEventMessageItem!>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateWriteHistoricalTagValueItems(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueItem!>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.CreateWriteSnapshotTagValueItems(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context) -> System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueItem!>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.DeleteTagValueAnnotationShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EmitTestConfigurationChanges(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context, TAdapter! adapter, System.Collections.Generic.IEnumerable<string!>! itemTypes, DataCore.Adapter.Diagnostics.ConfigurationChangeType changeType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EmitTestEvent(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context, TAdapter! adapter, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EmitTestSnapshotValue(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! context, TAdapter! adapter, System.Collections.Generic.IEnumerable<string!>! tags, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EventMessagePushShouldReceiveValues() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EventMessageTopicPushShouldReceiveInitialMessages() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.EventMessageTopicPushShouldReceiveMessagesAfterSubscriptionChange() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.FindAssetModelNodesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.FindTagsRequestShouldReturnBasicInformationOnly() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.FindTagsRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.FindTagsRequestShouldReturnResultsWithCorrectSupportedFeatures() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetAssetModelNodesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetSupportedDataFunctionsRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetTagPropertiesRequestShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.GetTagsRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.HealthCheckSubscriptionShouldReceiveInitialValue() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadEventMessagesForTimeRangeRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadEventMessagesUsingCursorRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadPlotTagValuesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadProcessedTagValuesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadRawTagValuesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadSnapshotTagValuesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadTagValueAnnotationRequestShouldReturnResult() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadTagValueAnnotationsRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.ReadTagValuesAtTimesRequestShouldReturnResults() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.SnapshotTagValueSubscriptionShouldAllowSubscriptionChanges() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.SnapshotTagValueSubscriptionShouldReceiveInitialValues() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.UpdateTagValueAnnotationShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.WriteEventMessagesShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.WriteHistoricalTagValuesShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.AdapterTestsBase<TAdapter>.WriteSnapshotTagValuesShouldSucceed() -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Tests.TestsBase.Cleanup() -> void
+virtual DataCore.Adapter.Tests.TestsBase.Initialize() -> void

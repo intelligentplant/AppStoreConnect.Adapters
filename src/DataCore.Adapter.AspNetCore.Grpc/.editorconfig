@@ -1,0 +1,4 @@
+
+# Microsoft.CodeAnalysis.PublicApiAnalyzers generates RS0041 warnings for generated gRPC code files 
+[obj/**/*.cs]
+dotnet_diagnostic.RS0041.severity = none
