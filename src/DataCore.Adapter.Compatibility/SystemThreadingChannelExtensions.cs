@@ -1,6 +1,4 @@
-﻿#if NETSTANDARD2_1 == false
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace System.Threading.Channels {
@@ -37,5 +35,3 @@ namespace System.Threading.Channels {
 
     }
 }
-
-#endif

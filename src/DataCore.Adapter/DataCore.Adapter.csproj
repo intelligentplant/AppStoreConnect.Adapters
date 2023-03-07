@@ -19,6 +19,10 @@
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
+    <ProjectReference Include="..\DataCore.Adapter.Compatibility\DataCore.Adapter.Compatibility.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Update="AdapterOptionsResources.Designer.cs">
       <DesignTime>True</DesignTime>
