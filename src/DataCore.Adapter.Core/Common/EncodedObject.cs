@@ -79,11 +79,7 @@ namespace DataCore.Adapter.Common {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0 || NET48
-            return HashGenerator.Combine(TypeId, Encoding, EncodedBody);
-#else
             return HashCode.Combine(TypeId, Encoding, EncodedBody);
-#endif
         }
 
 
