@@ -43,3 +43,21 @@ To customise the API route registrations such as applying an authorization polic
 app.MapDataCoreAdapterApiRoutes()
     .RequireAuthorization();
 ```
+
+
+# Migrating from MVC Controllers
+
+To migrate from hosting the HTTP API via [MVC controllers](../DataCore.Adapter.AspNetCore.Mvc) to Minimal API routes, remove the adapter MVC controllers from the MVC registration:
+
+```csharp
+// Before:
+services.AddMvc()
+    .AddDataCoreAdapterMvc();
+
+// After:
+services.AddMvc();
+```
+
+> If you do not require MVC elsewhere in your application, you can remove all MVC-related services and routes.
+
+Once you have removed the MVC registration, follow the [instructions above](#usage) to register the Minimal API services and routes.
