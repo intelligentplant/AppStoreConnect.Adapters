@@ -1,1 +1,2 @@
 ﻿#nullable enable
+static DataCore.Adapter.Security.CertificateUtilities.TryLoadCertificateFromStore(string! path, bool requirePrivateKey, bool allowInvalid, out System.Security.Cryptography.X509Certificates.X509Certificate2? certificate) -> bool
