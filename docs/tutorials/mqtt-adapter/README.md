@@ -399,8 +399,8 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
 }
 
 <form id="settings-form" asp-page="Settings" method="post" class="g-3">
-  <div class="card">
-    <div class="card-header">
+  <div class="card border-success">
+    <div class="card-header border-success text-body-emphasis">
       <i class="fa-solid fa-puzzle-piece fa-fw"></i>
       Adapter Settings
     </div>
@@ -409,7 +409,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
 
     @if (!string.IsNullOrWhiteSpace(Model.Adapter.TypeDescriptor.HelpUrl)) {
       <div class="card-body pb-0">
-        <p class="small text-muted">
+        <p class="small text-body-secondary">
           Click
           <a href="@Model.Adapter.TypeDescriptor.HelpUrl" target="_blank" title="View help documentation for this adapter type">here</a>
           to view help documentation for this adapter type.
@@ -422,7 +422,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Name" class="form-label"></label>
         <input asp-for="Options!.Name" asp-placeholder-for="Options!.Name" class="form-control" />
         <span asp-validation-for="Options!.Name" class="small text-danger"></span>
-        <p asp-description-for="Options!.Name" class="small text-muted"></p>
+        <p asp-description-for="Options!.Name" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -431,7 +431,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Description" class="form-label"></label>
         <textarea asp-for="Options!.Description" asp-placeholder-for="Options!.Description" class="form-control"></textarea>
         <span asp-validation-for="Options!.Description" class="small text-danger"></span>
-        <p asp-description-for="Options!.Description" class="small text-muted"></p>
+        <p asp-description-for="Options!.Description" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -441,7 +441,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
           <input asp-for="Options!.IsEnabled" class="form-check-input" />
           <label asp-for="Options!.IsEnabled" class="form-check-label"></label>
         </div>
-        <p asp-description-for="Options!.IsEnabled" class="small text-muted"></p>
+        <p asp-description-for="Options!.IsEnabled" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -450,7 +450,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Hostname" class="form-label"></label>
         <input asp-for="Options!.Hostname" asp-placeholder-for="Options!.Hostname" class="form-control" />
         <span asp-validation-for="Options!.Hostname" class="small text-danger"></span>
-        <p asp-description-for="Options!.Hostname" class="small text-muted"></p>
+        <p asp-description-for="Options!.Hostname" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -459,7 +459,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Port" class="form-label"></label>
         <input asp-for="Options!.Port" asp-placeholder-for="Options!.Port" class="form-control" />
         <span asp-validation-for="Options!.Port" class="small text-danger"></span>
-        <p asp-description-for="Options!.Port" class="small text-muted"></p>
+        <p asp-description-for="Options!.Port" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -468,13 +468,13 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Topics" class="form-label"></label>
         <input asp-for="Options!.Topics" asp-placeholder-for="Options!.Topics" class="form-control" />
         <span asp-validation-for="Options!.Topics" class="small text-danger"></span>
-        <p asp-description-for="Options!.Topics" class="small text-muted"></p>
+        <p asp-description-for="Options!.Topics" class="small text-body-secondary"></p>
       </div>
     </div>
 
     <!-- Add additional controls for other adapter options fields as required. -->
 
-    <div class="card-footer">
+    <div class="card-footer border-success">
       <button type="submit" class="btn btn-sm btn-outline-success" title="Save adapter settings">
         <i class="fa-solid fa-check fa-fw"></i>
         Save Changes
