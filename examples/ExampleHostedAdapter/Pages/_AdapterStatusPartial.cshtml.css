@@ -1,3 +1,7 @@
 ﻿.adapter-status-heading, .copy-adapter-id {
     color: var(--bs-emphasis-color);
 }
+
+.feature-card {
+    background-color: var(--bs-secondary-bg);
+}
