@@ -47,15 +47,6 @@
                 themeIcon.classList.add('fa-sun');
                 break;
         }
-
-        if (document.documentElement.getAttribute('data-bs-theme') === 'dark') {
-            themeToggleButton.classList.remove('btn-light');
-            themeToggleButton.classList.add('btn-dark');
-        }
-        else {
-            themeToggleButton.classList.remove('btn-dark');
-            themeToggleButton.classList.add('btn-light');
-        }
     }
 
     setTheme(getPreferredTheme())
