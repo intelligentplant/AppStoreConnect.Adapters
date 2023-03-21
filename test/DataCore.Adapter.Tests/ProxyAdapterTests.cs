@@ -27,6 +27,17 @@ namespace DataCore.Adapter.Tests {
         protected virtual IEnumerable<string> UnsupportedStandardFeatures => Array.Empty<string>();
 
 
+        public override void Initialize() {
+            if (string.Equals(TestContext.TestName, nameof(ProxyShouldReceiveLargeRawDataSet), StringComparison.Ordinal)) {
+                // Allow large raw data query to take longer than normal tests.
+                CancelAfter(TimeSpan.FromMinutes(5));
+            }
+            else {
+                base.Initialize();
+            }
+        }
+
+
         protected sealed override TProxy CreateAdapter(TestContext context, IServiceProvider serviceProvider) {
             return CreateProxy(context, AssemblyInitializer.AdapterId, serviceProvider);
         }
