@@ -54,7 +54,7 @@
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
     <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="$(PkgVersion_Microsoft_Web_LibraryManager_Build)" />
-    <PackageVersion Include="MiniValidation" Version="0.7.2" />
+    <PackageVersion Include="MiniValidation" Version="0.7.4" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.0.2" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.0.2" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.2" />

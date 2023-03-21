@@ -78,8 +78,8 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             Uri id,
             CancellationToken cancellationToken = default
         ) {
-            return await GetCustomFunctionPostAsync(context, adapterAccessor, adapterId, new CompatibilityGetCustomFunctionRequest() { 
-                Id = id.ToString()
+            return await GetCustomFunctionPostAsync(context, adapterAccessor, adapterId, new GetCustomFunctionRequest() { 
+                Id = id
             }, cancellationToken).ConfigureAwait(false);
         }
 
@@ -88,7 +88,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             HttpContext context,
             IAdapterAccessor adapterAccessor,
             string adapterId,
-            CompatibilityGetCustomFunctionRequest request,
+            GetCustomFunctionRequest request,
             CancellationToken cancellationToken = default
         ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<ICustomFunctions>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
@@ -96,9 +96,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 return resolverResult.Error;
             }
 
-            var requestActual = request.ToAdapterRequest();
-
-            return Results.Ok(await resolverResult.Feature.GetFunctionAsync(resolverResult.CallContext, requestActual, cancellationToken).ConfigureAwait(false));
+            return Results.Ok(await resolverResult.Feature.GetFunctionAsync(resolverResult.CallContext, request, cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -107,7 +105,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             IAdapterAccessor adapterAccessor,
             IOptions<JsonOptions> jsonOptions,
             string adapterId,
-            CompatibilityCustomFunctionInvocationRequest request,
+            CustomFunctionInvocationRequest request,
             CancellationToken cancellationToken = default
         ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<ICustomFunctions>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
@@ -115,94 +113,21 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 return resolverResult.Error;
             }
 
-            var requestActual = request.ToAdapterRequest();
-
             var function = await resolverResult.Feature.GetFunctionAsync(resolverResult.CallContext, new GetCustomFunctionRequest() {
-                Id = requestActual.Id
+                Id = request.Id
             }, cancellationToken).ConfigureAwait(false);
 
             if (function == null) {
                 return Results.Problem(statusCode: 400, detail: string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_UnableToResolveCustomFunction, request.Id));
             }
 
-            if (!requestActual.TryValidateBody(function, jsonOptions.Value?.SerializerOptions, out var validationResults)) {
+            if (!request.TryValidateBody(function, jsonOptions.Value?.SerializerOptions, out var validationResults)) {
                 return Results.Problem(statusCode: 400, detail: SharedResources.Error_InvalidRequestBody, extensions: new Dictionary<string, object?>() {
                     ["errors"] = validationResults
                 });
             }
 
-            return Results.Ok(await resolverResult.Feature.InvokeFunctionAsync(resolverResult.CallContext, requestActual, cancellationToken).ConfigureAwait(false));
-        }
-
-
-        /// <summary>
-        /// Compatibility model to work around https://github.com/DamianEdwards/MiniValidation/issues/44
-        /// </summary>
-        internal class CompatibilityGetCustomFunctionRequest : Common.AdapterRequest {
-
-            [System.ComponentModel.DataAnnotations.Required]
-            public string Id { get; set; } = default!;
-
-            private Uri? _uri;
-
-
-            protected override IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> Validate(System.ComponentModel.DataAnnotations.ValidationContext validationContext) {
-                foreach (var item in base.Validate(validationContext)) {
-                    yield return item;
-                }
-
-                if (Id != null) {
-                    if (!Uri.TryCreate(Id, UriKind.RelativeOrAbsolute, out _uri)) {
-                        yield return new System.ComponentModel.DataAnnotations.ValidationResult(SharedResources.Error_InvalidUri, new[] { nameof(Id) });
-                    }
-                }
-            }
-
-
-            public GetCustomFunctionRequest ToAdapterRequest() {
-                return new GetCustomFunctionRequest() {
-                    Id = _uri ??= new Uri(Id, UriKind.RelativeOrAbsolute),
-                    Properties = Properties
-                };
-            }
-
-        }
-
-
-        /// <summary>
-        /// Compatibility model to work around https://github.com/DamianEdwards/MiniValidation/issues/44
-        /// </summary>
-        internal class CompatibilityCustomFunctionInvocationRequest : Common.AdapterRequest {
-
-            [System.ComponentModel.DataAnnotations.Required]
-            public string Id { get; set; } = default!;
-
-            private Uri? _uri;
-
-            public System.Text.Json.JsonElement? Body { get; set; }
-
-
-            protected override IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult> Validate(System.ComponentModel.DataAnnotations.ValidationContext validationContext) {
-                foreach (var item in base.Validate(validationContext)) {
-                    yield return item;
-                }
-
-                if (Id != null) {
-                    if (!Uri.TryCreate(Id, UriKind.RelativeOrAbsolute, out _uri)) {
-                        yield return new System.ComponentModel.DataAnnotations.ValidationResult(SharedResources.Error_InvalidUri, new[] { nameof(Id) });
-                    }
-                }
-            }
-
-
-            public CustomFunctionInvocationRequest ToAdapterRequest() {
-                return new CustomFunctionInvocationRequest() {
-                    Id = _uri ??= new Uri(Id, UriKind.RelativeOrAbsolute),
-                    Body = Body,
-                    Properties = Properties
-                };
-            }
-
+            return Results.Ok(await resolverResult.Feature.InvokeFunctionAsync(resolverResult.CallContext, request, cancellationToken).ConfigureAwait(false));
         }
 
     }
