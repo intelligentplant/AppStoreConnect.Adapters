@@ -22,22 +22,23 @@
     <None Include="src\**\*" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Include files from the ExampleHostedAdapter project. -->
-    <HostedAdapterTemplateFiles Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\.*;..\..\examples\ExampleHostedAdapter\ExampleHostedAdapter.csproj;..\..\examples\ExampleHostedAdapter\Program.cs;..\..\examples\ExampleHostedAdapter\Directory.Build.props;..\..\examples\ExampleHostedAdapter\README.md;..\..\examples\ExampleHostedAdapter\wwwroot\lib\**;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
-  </ItemGroup>
-
   <Target Name="CopyAscHostedAdapterTemplateFiles" BeforeTargets="Build">
-    <!-- Remove the Properties and wwwroot folders from the template's content folder. -->
-    <RemoveDir Directories="templates\aschostedadapter\Properties;templates\aschostedadapter\wwwroot" />
-    <!-- Remove other files from the template's content folder. -->
-    <Delete Files="templates\aschostedadapter\*" />
-    <!-- Copy all HostedAdapterTemplateFiles items to the template's content folder. -->
-    <Copy SkipUnchangedFiles="false" SourceFiles="@(HostedAdapterTemplateFiles)" DestinationFiles="@(HostedAdapterTemplateFiles->'templates\aschostedadapter\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <!-- Copy the files from the src folder in this project. -->
-    <Copy SkipUnchangedFiles="false" SourceFiles="src\aschostedadapter\ExampleHostedAdapter.csproj" DestinationFiles="templates\aschostedadapter\ExampleHostedAdapter.csproj" />
-    <Copy SkipUnchangedFiles="false" SourceFiles="src\aschostedadapter\Program.cs" DestinationFiles="templates\aschostedadapter\Program.cs" />
-    <Copy SkipUnchangedFiles="false" SourceFiles="src\aschostedadapter\README.md" DestinationFiles="templates\aschostedadapter\README.md" />
+    <ItemGroup>
+      <!-- Delete all files from the template's content folder except for the template 
+           configuration. -->
+      <_FilesToDelete Include="templates\aschostedadapter\**" Exclude="templates\aschostedadapter\.template.config\**" />
+      <!-- Copy files from the ExampleHostedAdapter project. -->
+      <_FilesToCopy Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\.gitignore;..\..\examples\ExampleHostedAdapter\README.md;..\..\examples\ExampleHostedAdapter\wwwroot\lib\**;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
+      <!-- Copy files from the src folder in this project. Note that some of these files 
+           overwrite equivalent files included from the ExampleHostedAdapter project. -->
+      <_FilesToCopy Include=".\src\aschostedadapter\**" />
+    </ItemGroup>
+    
+    <!-- Delete existing files from the template's content folder. -->
+    <Delete Files="@(_FilesToDelete)" />
+    
+    <!-- Copy files to the template's content folder. -->
+    <Copy SkipUnchangedFiles="false" SourceFiles="@(_FilesToCopy)" DestinationFiles="@(_FilesToCopy->'templates\aschostedadapter\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
   
   <Target Name="ReplacePackageVersions" BeforeTargets="Build" AfterTargets="CopyAscHostedAdapterTemplateFiles">
