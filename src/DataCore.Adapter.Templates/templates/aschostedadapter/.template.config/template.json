@@ -36,9 +36,13 @@
       "defaultValue": "net6.0",
       "replaces": "net6.0"
     },
-    "UseMinimalApi": {
+    "IsNet7OrLater": {
       "type": "computed",
       "value": "(Framework != \"net6.0\")"
+    },
+    "UseMinimalApi": {
+      "type": "computed",
+      "value": "(IsNet7OrLater)"
     },
     "AdapterOptionsName": {
       "type": "derived",
