@@ -128,7 +128,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "features", "features", "{4A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.AspNetCore.MinimalApi", "src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj", "{7DAD7F07-BE1A-4A33-A9BF-90FFE15D3478}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataCore.Adapter.Compatibility", "src\DataCore.Adapter.Compatibility\DataCore.Adapter.Compatibility.csproj", "{9B6385F3-BDAE-4E8D-8096-7007C67CCE84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataCore.Adapter.Compatibility", "src\DataCore.Adapter.Compatibility\DataCore.Adapter.Compatibility.csproj", "{9B6385F3-BDAE-4E8D-8096-7007C67CCE84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
