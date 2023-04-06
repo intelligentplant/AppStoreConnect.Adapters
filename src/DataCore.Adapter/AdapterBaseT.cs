@@ -420,7 +420,7 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         protected sealed override async Task StartAsyncCore(CancellationToken cancellationToken) {
-            await _healthCheckManager.Init(cancellationToken).ConfigureAwait(false);
+            await _healthCheckManager.InitAsync(cancellationToken).ConfigureAwait(false);
             await StartAsync(cancellationToken).ConfigureAwait(false);
         }
 
