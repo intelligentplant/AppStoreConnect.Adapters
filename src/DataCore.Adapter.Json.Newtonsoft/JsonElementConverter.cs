@@ -10,9 +10,37 @@ namespace DataCore.Adapter.NewtonsoftJson {
     /// </summary>
     public class JsonElementConverter : JsonConverter<System.Text.Json.JsonElement> {
 
+        /// <summary>
+        /// System.Text.Json serializer options.
+        /// </summary>
+        private System.Text.Json.JsonSerializerOptions? _stjOptions;
+
+
+        /// <summary>
+        /// Creates a new <see cref="JsonElementConverter"/> instance.
+        /// </summary>
+        public JsonElementConverter(): this(null) { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="JsonElementConverter"/> instance using the specified 
+        /// <see cref="System.Text.Json.JsonSerializerOptions"/>.
+        /// </summary>
+        /// <param name="options">
+        ///   The <see cref="System.Text.Json.JsonSerializerOptions"/> to use.
+        /// </param>
+        public JsonElementConverter(System.Text.Json.JsonSerializerOptions? options) {
+            _stjOptions = options;
+        }
+
+
         /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, System.Text.Json.JsonElement value, JsonSerializer serializer) {
-            writer.WriteRawValue(value.ToString());
+            if (value.ValueKind == System.Text.Json.JsonValueKind.Undefined) {
+                writer.WriteNull();
+                return;
+            }
+            writer.WriteRawValue(System.Text.Json.JsonSerializer.Serialize(value, _stjOptions));
         }
 
 
@@ -21,7 +49,7 @@ namespace DataCore.Adapter.NewtonsoftJson {
             var token = serializer.Deserialize<JToken>(reader);
             return token == null 
                 ? default 
-                : System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(token.ToString());
+                : System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(token.ToString(), _stjOptions);
         }
 
     }
