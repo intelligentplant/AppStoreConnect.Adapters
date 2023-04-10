@@ -1,1 +1,2 @@
 ﻿#nullable enable
+DataCore.Adapter.NewtonsoftJson.JsonElementConverter.JsonElementConverter(System.Text.Json.JsonSerializerOptions? options) -> void
