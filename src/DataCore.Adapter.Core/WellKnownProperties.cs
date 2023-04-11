@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DataCore.Adapter {
 
@@ -25,6 +23,16 @@ namespace DataCore.Adapter {
             ///   the digital state.
             /// </remarks>
             public const string DisplayValue = "Display-Value";
+
+            /// <summary>
+            /// Specifies if a tag value represents a stepped value transition (such as a discrete 
+            /// value change on a digital tag or an analogue process limit). 
+            /// </summary>
+            /// <remarks>
+            ///   This property can be used to provide a hint to an application about how a tag 
+            ///   value should be visualized.
+            /// </remarks>
+            public const string Stepped = "Stepped";
 
         }
 
