@@ -1,1 +1,4 @@
 ﻿#nullable enable
+const DataCore.Adapter.WellKnownProperties.TagValue.Stepped = "Stepped" -> string!
+static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.RealTimeData.TagValueExtensions.IsFloatingPointNumericType(this DataCore.Adapter.RealTimeData.TagValue! value) -> bool
