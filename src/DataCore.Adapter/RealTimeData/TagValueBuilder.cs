@@ -172,7 +172,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithValue(Variant value, string? displayValue = null) {
             _value = value;
-            var existingDisplayValue = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
+            var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
             if (displayValue != null) {
                 return WithProperty(WellKnownProperties.TagValue.DisplayValue, displayValue);
             }
@@ -265,6 +265,36 @@ namespace DataCore.Adapter.RealTimeData {
                 _status = TagValueStatus.Bad;
             }
             return this;
+        }
+
+
+        /// <summary>
+        /// Specifies if a tag value represents a stepped value transition (such as a discrete 
+        /// value change on a digital tag or an analogue process limit). 
+        /// </summary>
+        /// <param name="stepped">
+        ///   <see langword="true"/> if the tag value represents a stepped value transition, or 
+        ///   <see langword="false"/> otherwise.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="TagValueBuilder"/>.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   Calling <see cref="WithSteppedTransition"/> sets the <see cref="WellKnownProperties.TagValue.Stepped"/> 
+        ///   property on the tag value.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Consuming applications can use this property as a hint regarding how the time series 
+        ///   data should be visualized.
+        /// </para>
+        /// 
+        /// </remarks>
+        public TagValueBuilder WithSteppedTransition(bool stepped) {
+            var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.Stepped, StringComparison.OrdinalIgnoreCase));
+            return WithProperty(WellKnownProperties.TagValue.Stepped, stepped);
         }
 
 
