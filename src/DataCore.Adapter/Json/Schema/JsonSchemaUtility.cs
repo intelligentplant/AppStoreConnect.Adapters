@@ -1,11 +1,9 @@
-﻿
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading;
-
-using DataCore.Adapter.Extensions;
 
 using JsonSchema = Json.Schema;
 using Json.Schema.Generation;
+using Json.Schema;
 
 namespace DataCore.Adapter.Json.Schema {
 
@@ -95,7 +93,7 @@ namespace DataCore.Adapter.Json.Schema {
         /// </remarks>
         public static JsonElement CreateJsonSchema<T>(JsonSerializerOptions? options = null) {
             RegisterExtensions();
-            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() {
+            var builder = new JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() {
                 PropertyNamingMethod = name => options?.PropertyNamingPolicy?.ConvertName(name) ?? name
             });
 
@@ -124,9 +122,10 @@ namespace DataCore.Adapter.Json.Schema {
         /// </returns>
         public static bool TryValidate(JsonElement data, JsonElement schema, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) {
             var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema, jsonOptions));
-            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data, jsonOptions), new JsonSchema.ValidationOptions() {
-                OutputFormat = JsonSchema.OutputFormat.Detailed
+            var result = jsonSchema.Evaluate(data, new EvaluationOptions() { 
+                OutputFormat = OutputFormat.Hierarchical
             });
+
             validationResults = JsonSerializer.SerializeToElement(result, jsonOptions);
             return result.IsValid;
         }
