@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace DataCore.Adapter.Common {
 
@@ -98,9 +97,7 @@ namespace DataCore.Adapter.Common {
         /// All other types are considered to be non-numeric.
         /// 
         /// </remarks>
-        public static bool IsNumericType(this Variant variant) {
-            return variant.Type.IsNumericType();
-        }
+        public static bool IsNumericType(this Variant variant) => variant.Type.IsNumericType();
 
 
         /// <summary>
@@ -169,6 +166,68 @@ namespace DataCore.Adapter.Common {
                 case VariantType.UInt16:
                 case VariantType.UInt32:
                 case VariantType.UInt64:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Tests if the type of the variant is a floating-point numeric type.
+        /// </summary>
+        /// <param name="variant">
+        ///   The variant.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant's <see cref="Variant.Type"/> indicates that 
+        ///   its value is a floating-point value, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// The following types are treated as floating-point:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static bool IsFloatingPointNumericType(this Variant variant) => variant.Type.IsFloatingPointNumericType();
+
+
+        /// <summary>
+        /// Tests if the variant type is a floating-point numeric type.
+        /// </summary>
+        /// <param name="variantType">
+        ///   The variant type.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the variant's <see cref="Variant.Type"/> indicates that 
+        ///   its value is a floating-point value, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// The following types are treated as floating-point:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static bool IsFloatingPointNumericType(this VariantType variantType) {
+            switch (variantType) {
+                case VariantType.Double:
+                case VariantType.Float:
                     return true;
                 default:
                     return false;
