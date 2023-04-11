@@ -3,3 +3,4 @@ const DataCore.Adapter.WellKnownProperties.TagValue.Stepped = "Stepped" -> strin
 static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.Variant variant) -> bool
 static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.VariantType variantType) -> bool
 static DataCore.Adapter.RealTimeData.TagValueExtensions.IsFloatingPointNumericType(this DataCore.Adapter.RealTimeData.TagValue! value) -> bool
+static DataCore.Adapter.RealTimeData.TagValueExtensions.TryGetSteppedFlag(this DataCore.Adapter.RealTimeData.TagValueExtended! value, out bool stepped) -> bool

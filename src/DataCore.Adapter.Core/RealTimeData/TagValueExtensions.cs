@@ -183,5 +183,37 @@ namespace DataCore.Adapter.RealTimeData {
             return displayValue != null;
         }
 
+
+        /// <summary>
+        /// Tests if the <see cref="TagValueExtended"/> specifies a value for the <see cref="WellKnownProperties.TagValue.Stepped"/> 
+        /// property and returns the value of the property if it is defined.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="stepped"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        ///   Note that this method only detects if a <see cref="TagValueExtended"/> explicitly 
+        ///   provides a display hint that it represents a stepped transition. Consuming applications 
+        ///   should assume that default visualization behaviour applies unless a hint is specified 
+        ///   on the sample. For example, samples from analogue tags should generally be visualized 
+        ///   using linear interpolation if the samples do not explicitly specify if they use stepped
+        ///   transitions or not.
+        /// </remarks>
+        public static bool TryGetSteppedFlag(this TagValueExtended value, out bool stepped) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            var prop = value.Properties.FirstOrDefault(x => x.Name.Equals(WellKnownProperties.TagValue.Stepped, StringComparison.OrdinalIgnoreCase));
+            if (prop == null) {
+                stepped = false;
+                return false;
+            }
+
+            stepped = prop.Value.GetValueOrDefault<bool>();
+            return true;
+        }
+
     }
 }
