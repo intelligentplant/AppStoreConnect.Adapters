@@ -6,6 +6,7 @@ using DataCore.Adapter.Extensions;
 
 using JsonSchema = Json.Schema;
 using Json.Schema.Generation;
+using Json.Schema;
 
 namespace DataCore.Adapter.Json.Schema {
 
@@ -124,9 +125,10 @@ namespace DataCore.Adapter.Json.Schema {
         /// </returns>
         public static bool TryValidate(JsonElement data, JsonElement schema, JsonSerializerOptions? jsonOptions, out JsonElement validationResults) {
             var jsonSchema = JsonSchema.JsonSchema.FromText(JsonSerializer.Serialize(schema, jsonOptions));
-            var result = jsonSchema.Validate(JsonSerializer.SerializeToNode(data, jsonOptions), new JsonSchema.ValidationOptions() {
-                OutputFormat = JsonSchema.OutputFormat.Detailed
+            var result = jsonSchema.Evaluate(data, new EvaluationOptions() { 
+                OutputFormat = OutputFormat.Hierarchical
             });
+
             validationResults = JsonSerializer.SerializeToElement(result, jsonOptions);
             return result.IsValid;
         }
