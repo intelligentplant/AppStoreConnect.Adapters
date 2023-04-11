@@ -1,2 +1,5 @@
 ﻿#nullable enable
 DataCore.Adapter.NewtonsoftJson.JsonElementConverter.JsonElementConverter(System.Text.Json.JsonSerializerOptions? options) -> void
+DataCore.Adapter.NewtonsoftJson.NullableJsonElementConverter.NullableJsonElementConverter(System.Text.Json.JsonSerializerOptions? options) -> void
+static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this Newtonsoft.Json.JsonSerializerSettings! settings, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
+static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this System.Collections.Generic.ICollection<Newtonsoft.Json.JsonConverter!>! converters, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
