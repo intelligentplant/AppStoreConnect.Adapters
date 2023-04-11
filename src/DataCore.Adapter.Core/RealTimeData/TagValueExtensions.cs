@@ -74,6 +74,40 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Tests if the <see cref="TagValue.Value"/> of a <see cref="TagValue"/> has a floating-point 
+        /// numeric type.
+        /// </summary>
+        /// <param name="value">
+        ///   The <see cref="TagValue"/>.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the <see cref="TagValue.Value"/> has a floating-point numeric 
+        ///   type, or <see langword="false"/> otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// The following types are treated as floating-point:
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description><see cref="VariantType.Double"/></description>
+        ///   </item>
+        ///   <item>
+        ///     <description><see cref="VariantType.Float"/></description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static bool IsFloatingPointNumericType(this TagValue value) {
+            if (value == null) {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            return value.Value.IsFloatingPointNumericType();
+        }
+
+
+        /// <summary>
         /// Gets the first value in the <see cref="TagValue"/> that can be cast to the specified 
         /// type, or returns a default value.
         /// </summary>
