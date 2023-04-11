@@ -1,8 +1,5 @@
-﻿
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading;
-
-using DataCore.Adapter.Extensions;
 
 using JsonSchema = Json.Schema;
 using Json.Schema.Generation;
@@ -96,7 +93,7 @@ namespace DataCore.Adapter.Json.Schema {
         /// </remarks>
         public static JsonElement CreateJsonSchema<T>(JsonSerializerOptions? options = null) {
             RegisterExtensions();
-            var builder = new JsonSchema.JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() {
+            var builder = new JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() {
                 PropertyNamingMethod = name => options?.PropertyNamingPolicy?.ConvertName(name) ?? name
             });
 
