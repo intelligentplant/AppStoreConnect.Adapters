@@ -164,7 +164,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             if (resolverResult.Error != null) {
                 return resolverResult.Error;
             }
-            return Results.Ok(resolverResult.Feature.GetTagSchemaAsync(resolverResult.CallContext, new GetTagSchemaRequest(), cancellationToken));
+            return Results.Ok(await resolverResult.Feature.GetTagSchemaAsync(resolverResult.CallContext, new GetTagSchemaRequest(), cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -189,7 +189,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 });
             }
 
-            return Results.Ok(resolverResult.Feature.CreateTagAsync(resolverResult.CallContext, request, cancellationToken));
+            return Results.Ok(await resolverResult.Feature.CreateTagAsync(resolverResult.CallContext, request, cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -214,7 +214,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 });
             }
 
-            return Results.Ok(resolverResult.Feature.UpdateTagAsync(resolverResult.CallContext, request, cancellationToken));
+            return Results.Ok(await resolverResult.Feature.UpdateTagAsync(resolverResult.CallContext, request, cancellationToken).ConfigureAwait(false));
         }
 
 
@@ -230,7 +230,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 return resolverResult.Error;
             }
 
-            return Results.Ok(resolverResult.Feature.DeleteTagAsync(resolverResult.CallContext, request, cancellationToken));
+            return Results.Ok(await resolverResult.Feature.DeleteTagAsync(resolverResult.CallContext, request, cancellationToken).ConfigureAwait(false));
         }
 
     }
