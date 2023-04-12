@@ -75,10 +75,28 @@ namespace DataCore.Adapter.Json.Schema {
 
         public void AddConstraints(SchemaGenerationContextBase context, Attribute attribute) {
             if (attribute is System.ComponentModel.DataAnnotations.RangeAttribute rangeAttr) {
-                context.Intents.Add(new RangeIntent(
-                    rangeAttr.Minimum == null ? null : Convert.ToDecimal(rangeAttr.Minimum),
-                    rangeAttr.Maximum == null ? null : Convert.ToDecimal(rangeAttr.Maximum)
-                ));
+                decimal? min = null;
+                decimal? max = null;
+
+                if (rangeAttr.Minimum is double dmin) {
+                    min = dmin <= decimal.ToDouble(decimal.MinValue)
+                        ? null
+                        : (decimal) dmin;
+                }
+                else if (rangeAttr.Minimum != null) {
+                    min = Convert.ToDecimal(rangeAttr.Minimum);
+                }
+
+                if (rangeAttr.Maximum is double dmax) {
+                    max = dmax >= decimal.ToDouble(decimal.MaxValue)
+                        ? null
+                        : (decimal) dmax;
+                }
+                else if (rangeAttr.Maximum != null) {
+                    max = Convert.ToDecimal(rangeAttr.Maximum);
+                }
+
+                context.Intents.Add(new RangeIntent(min, max));
             }
         }
 
