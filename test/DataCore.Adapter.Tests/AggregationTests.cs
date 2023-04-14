@@ -97,18 +97,78 @@ namespace DataCore.Adapter.Tests {
 
 
         public static double CalculateExpectedPercentGoodValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var valueBefore = values.Last(x => x.UtcSampleTime <= bucketStart);
+            
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd);
-            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Good)) / bucketValues.Count() * 100;
+
+            var timeInState = TimeSpan.Zero;
+            var previousSampleTime = bucketStart;
+            var previousStatus = valueBefore.Status;
+
+            foreach (var item in bucketValues) {
+                try { 
+                    if (previousStatus != TagValueStatus.Good) {
+                        continue;
+                    }
+
+                    var diff = item.UtcSampleTime - previousSampleTime;
+                    if (diff <= TimeSpan.Zero) {
+                        continue;
+                    }
+
+                    timeInState = timeInState.Add(diff);
+                }
+                finally {
+                    previousSampleTime = item.UtcSampleTime;
+                    previousStatus = item.Status;
+                }
+            }
+
+            if (previousSampleTime < bucketEnd && previousStatus == TagValueStatus.Good) {
+                timeInState = timeInState.Add(bucketEnd - previousSampleTime);
+            }
+
+            return timeInState.TotalMilliseconds / (bucketEnd - bucketStart).TotalMilliseconds * 100;
         }
 
 
         public static double CalculateExpectedPercentBadValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var valueBefore = values.Last(x => x.UtcSampleTime <= bucketStart);
+
             var bucketValues = values
                 .Where(x => x.UtcSampleTime >= bucketStart)
                 .Where(x => x.UtcSampleTime < bucketEnd);
-            return ((double) bucketValues.Count(x => x.Status == TagValueStatus.Bad)) / bucketValues.Count() * 100;
+
+            var timeInState = TimeSpan.Zero;
+            var previousSampleTime = bucketStart;
+            var previousStatus = valueBefore.Status;
+
+            foreach (var item in bucketValues) {
+                try {
+                    if (previousStatus != TagValueStatus.Bad) {
+                        continue;
+                    }
+
+                    var diff = item.UtcSampleTime - previousSampleTime;
+                    if (diff <= TimeSpan.Zero) {
+                        continue;
+                    }
+
+                    timeInState = timeInState.Add(diff);
+                }
+                finally {
+                    previousSampleTime = item.UtcSampleTime;
+                    previousStatus = item.Status;
+                }
+            }
+
+            if (previousSampleTime < bucketEnd && previousStatus == TagValueStatus.Bad) {
+                timeInState = timeInState.Add(bucketEnd - previousSampleTime);
+            }
+
+            return timeInState.TotalMilliseconds / (bucketEnd - bucketStart).TotalMilliseconds * 100;
         }
 
 
