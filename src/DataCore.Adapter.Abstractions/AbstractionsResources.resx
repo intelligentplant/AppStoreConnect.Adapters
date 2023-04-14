@@ -172,13 +172,13 @@
     <value>Minimum</value>
   </data>
   <data name="DataFunction_PercentBad_Description" xml:space="preserve">
-    <value>At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status.</value>
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a bad-quality status.</value>
   </data>
   <data name="DataFunction_PercentBad_Name" xml:space="preserve">
     <value>Percent Bad</value>
   </data>
   <data name="DataFunction_PercentGood_Description" xml:space="preserve">
-    <value>At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status.</value>
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a good-quality status.</value>
   </data>
   <data name="DataFunction_PercentGood_Name" xml:space="preserve">
     <value>Percent Good</value>

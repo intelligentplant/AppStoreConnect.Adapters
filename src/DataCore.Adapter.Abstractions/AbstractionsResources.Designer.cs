@@ -223,7 +223,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status..
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of time in the interval that the tag value had a bad-quality status..
         /// </summary>
         public static string DataFunction_PercentBad_Description {
             get {
@@ -241,7 +241,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status..
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of time in the interval that the tag value had a good-quality status..
         /// </summary>
         public static string DataFunction_PercentGood_Description {
             get {

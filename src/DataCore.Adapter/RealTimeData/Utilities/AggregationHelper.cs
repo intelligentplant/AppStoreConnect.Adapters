@@ -452,8 +452,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ PercentGood ]
 
         /// <summary>
-        /// Returns a value describing the percentage of raw samples in the provided bucket that 
-        /// have good quality.
+        /// Returns a value describing the percentage of time in the bucket that the tag value had 
+        /// good quality.
         /// </summary>
         /// <param name="tag">
         ///   The tag definition.
@@ -466,10 +466,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculatePercentGood(TagSummary tag, TagValueBucket bucket) {
             if (bucket.RawSampleCount == 0) {
+                double val = 0;
+
+                if (bucket.StartBoundary.ClosestValue != null) {
+                    // We have a sample before the bucket start boundary. If the sample has good
+                    // quality, we will return a value specifying that the current bucket is 100%
+                    // good; otherwise, the value for the current bucket is 0% good.
+
+                    val = bucket.StartBoundary.ClosestValue.Status == TagValueStatus.Good
+                        ? 100
+                        : 0;
+                }
+
                 return new[] {
                     new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
-                        .WithValue(0d)
+                        .WithValue(val)
                         .WithUnits("%")
                         .WithStatus(TagValueStatus.Uncertain)
                         .WithBucketProperties(bucket)
@@ -478,12 +490,39 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 };
             }
 
-            var percentGoodCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Good);
+            var timeInState = TimeSpan.Zero;
+            var previousSampleTime = bucket.UtcBucketStart;
+            var previousStatus = bucket.StartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
+
+            foreach (var sample in bucket.RawSamples) {
+                try {
+                    if (previousStatus != TagValueStatus.Good) {
+                        continue;
+                    }
+
+                    var diff = sample.UtcSampleTime - previousSampleTime;
+                    if (diff <= TimeSpan.Zero) {
+                        continue;
+                    }
+
+                    timeInState = timeInState.Add(diff);
+                }
+                finally {
+                    previousSampleTime = sample.UtcSampleTime;
+                    previousStatus = sample.Status;
+                }
+            }
+
+            if (previousSampleTime < bucket.UtcBucketEnd && previousStatus == TagValueStatus.Good) {
+                timeInState = timeInState.Add(bucket.UtcBucketEnd - previousSampleTime);
+            }
+
+            var percentTimeInState = timeInState.TotalMilliseconds / (bucket.UtcBucketEnd - bucket.UtcBucketStart).TotalMilliseconds * 100;
 
             return new[] {
                 new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
-                    .WithValue((double) percentGoodCount / bucket.RawSampleCount * 100)
+                    .WithValue(percentTimeInState)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
@@ -497,8 +536,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         #region [ PercentBad ]
 
         /// <summary>
-        /// Returns a value describing the percentage of raw samples in the provided bucket that 
-        /// have bad quality.
+        /// Returns a value describing the percentage of time in the bucket that the tag value had 
+        /// bad quality.
         /// </summary>
         /// <param name="tag">
         ///   The tag definition.
@@ -511,10 +550,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculatePercentBad(TagSummary tag, TagValueBucket bucket) {
             if (bucket.RawSampleCount == 0) {
+                double val = 0;
+
+                if (bucket.StartBoundary.ClosestValue != null) {
+                    // We have a sample before the bucket start boundary. If the sample has bad
+                    // quality, we will return a value specifying that the current bucket is 100%
+                    // bad; otherwise, the value for the current bucket is 0% bad.
+
+                    val = bucket.StartBoundary.ClosestValue.Status == TagValueStatus.Bad
+                        ? 100
+                        : 0;
+                }
+
                 return new[] {
                     new TagValueBuilder()
                         .WithUtcSampleTime(bucket.UtcBucketStart)
-                        .WithValue(0d)
+                        .WithValue(val)
                         .WithUnits("%")
                         .WithStatus(TagValueStatus.Uncertain)
                         .WithBucketProperties(bucket)
@@ -523,12 +574,39 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 };
             }
 
-            var percentBadCount = bucket.RawSamples.Count(x => x.Status == TagValueStatus.Bad);
+            var timeInState = TimeSpan.Zero;
+            var previousSampleTime = bucket.UtcBucketStart;
+            var previousStatus = bucket.StartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
+
+            foreach (var sample in bucket.RawSamples) {
+                try {
+                    if (previousStatus != TagValueStatus.Bad) {
+                        continue;
+                    }
+
+                    var diff = sample.UtcSampleTime - previousSampleTime;
+                    if (diff <= TimeSpan.Zero) {
+                        continue;
+                    }
+
+                    timeInState = timeInState.Add(diff);
+                }
+                finally {
+                    previousSampleTime = sample.UtcSampleTime;
+                    previousStatus = sample.Status;
+                }
+            }
+
+            if (previousSampleTime < bucket.UtcBucketEnd && previousStatus == TagValueStatus.Bad) {
+                timeInState = timeInState.Add(bucket.UtcBucketEnd - previousSampleTime);
+            }
+
+            var percentTimeInState = timeInState.TotalMilliseconds / (bucket.UtcBucketEnd - bucket.UtcBucketStart).TotalMilliseconds * 100;
 
             return new[] {
                 new TagValueBuilder()
                     .WithUtcSampleTime(bucket.UtcBucketStart)
-                    .WithValue((double) percentBadCount / bucket.RawSampleCount * 100)
+                    .WithValue(percentTimeInState)
                     .WithUnits("%")
                     .WithStatus(TagValueStatus.Good)
                     .WithBucketProperties(bucket)
