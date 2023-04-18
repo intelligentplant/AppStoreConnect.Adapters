@@ -56,15 +56,16 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static readonly Dictionary<string, AggregateCalculator> s_defaultAggregatorMap = new Dictionary<string, AggregateCalculator>(StringComparer.OrdinalIgnoreCase) {
             { DefaultDataFunctions.Average.Id, CalculateAverage },
             { DefaultDataFunctions.Count.Id, CalculateCount },
+            { DefaultDataFunctions.Delta.Id, CalculateDelta },
             { DefaultDataFunctions.Interpolate.Id, CalculateInterpolated },
             { DefaultDataFunctions.Maximum.Id, CalculateMaximum },
             { DefaultDataFunctions.Minimum.Id, CalculateMinimum },
             { DefaultDataFunctions.PercentBad.Id, CalculatePercentBad },
             { DefaultDataFunctions.PercentGood.Id, CalculatePercentGood },
             { DefaultDataFunctions.Range.Id, CalculateRange },
-            { DefaultDataFunctions.Delta.Id, CalculateDelta },
-            { DefaultDataFunctions.Variance.Id, CalculateVariance },
-            { DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation }
+            { DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation },
+            { DefaultDataFunctions.TimeAverage.Id, CalculateTimeAverage },
+            { DefaultDataFunctions.Variance.Id, CalculateVariance }
         };
 
         /// <summary>
@@ -102,19 +103,38 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The calculated tag value.
         /// </returns>
         private static IEnumerable<TagValueExtended> CalculateInterpolated(TagSummary tag, TagValueBucket bucket) {
-            // We calculate at the bucket start time. Our complete input data set consists of the 
-            // start boundary values followed by the raw samples in the bucket.
+            if (bucket.UtcBucketEnd < bucket.UtcQueryStart) {
+                // Entire bucket is before the query start time and can be skipped.
+                yield break;
+            }
+
+            // Our data set for interpolation consists of all of the raw samples inside the bucket
+            // plus the samples before the start boundary and after the end boundary.
             var combinedInputValues = bucket
-                .StartBoundary
-                .GetBoundarySamples()
+                .BeforeStartBoundary.GetBoundarySamples()
                 .Concat(bucket.RawSamples)
+                .Concat(bucket.AfterEndBoundary.GetBoundarySamples())
                 .ToArray();
 
-            var result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
-                tag,
-                bucket.UtcBucketStart,
-                combinedInputValues
-            );
+            TagValueExtended? result;
+
+            if (bucket.UtcQueryStart >= bucket.UtcBucketStart && bucket.UtcQueryStart < bucket.UtcBucketEnd) {
+                // Query start time lies inside this bucket; interpolate a value at the query
+                // start time.
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcQueryStart,
+                    combinedInputValues
+                );
+            }
+            else {
+                // Interpolate a value at the bucket start time.
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcBucketStart,
+                    combinedInputValues
+                );
+            }
 
             if (result == null) {
                 result = CreateErrorTagValue(
@@ -126,6 +146,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             yield return result;
 
+            // If query end time lies inside the bucket time range, we also interpolate a value at
+            // the query end time.
             if (bucket.UtcBucketEnd >= bucket.UtcQueryEnd) {
                 result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
                     tag,
@@ -202,6 +224,125 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(CreateXPoweredByProperty())
                     .Build()
+            };
+        }
+
+        #endregion
+
+        #region [ TimeAverage ]
+
+        /// <summary>
+        /// Calculates the time-weighted average value of the specified raw samples.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="bucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculateTimeAverage(TagSummary tag, TagValueBucket bucket) {
+            var goodQualitySamples = bucket
+                .RawSamples
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => !double.IsNaN(x.GetValueOrDefault(double.NaN)))
+                .ToArray();
+
+            if (goodQualitySamples.Length == 0) {
+                return new[] {
+                    CreateErrorTagValue(bucket, bucket.UtcBucketStart, Resources.TagValue_ProcessedValue_NoGoodData)
+                };
+            }
+
+            var status = bucket.RawSamples.Any(x => x.Status != TagValueStatus.Good || double.IsNaN(x.GetValueOrDefault(double.NaN)))
+                ? TagValueStatus.Uncertain
+                : TagValueStatus.Good;
+
+            var isIncompleteInterval = false;
+
+            var firstSample = goodQualitySamples[0];
+
+            var total = 0d;
+            var calculationInterval = bucket.UtcBucketEnd - bucket.UtcBucketStart;
+
+            var previousValue = firstSample.UtcSampleTime == bucket.UtcBucketStart
+                ? firstSample
+                : bucket.BeforeStartBoundary.BestQualityValue != null
+                    ? InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcBucketStart, new[] { bucket.BeforeStartBoundary.BestQualityValue, firstSample })
+                    : null;
+
+            if (previousValue == null || double.IsNaN(previousValue.GetValueOrDefault(double.NaN))) {
+                isIncompleteInterval = true;
+            }
+
+            foreach (var item in goodQualitySamples) {
+                try { 
+                    if (previousValue == null) {
+                        // We don't have a start boundary value, so the average value can only be
+                        // calculated over the portion of the time bucket where we have values. We
+                        // will already be setting a property on the final value that specifies
+                        // that it is a partial result if we get to here.
+                        calculationInterval = calculationInterval.Subtract(item.UtcSampleTime - bucket.UtcBucketStart);
+                        continue;
+                    }
+
+                    var diff = item.UtcSampleTime - previousValue.UtcSampleTime;
+                    if (diff <= TimeSpan.Zero) {
+                        continue;
+                    }
+
+                    total += (previousValue.GetValueOrDefault<double>() + item.GetValueOrDefault<double>()) / 2 * diff.TotalMilliseconds;
+                }
+                finally {
+                    if (previousValue == null || item.UtcSampleTime > previousValue.UtcSampleTime) {
+                        previousValue = item;
+                    }
+                }
+            }
+
+            if (previousValue != null && previousValue.UtcSampleTime < bucket.UtcBucketEnd) {
+                // Last sample in the bucket was before the bucket end time, so we need to
+                // interpolate an end boundary value and include the area under the
+                // line from the last raw sample to the boundary in our total.
+
+                var endBoundarySample = bucket.AfterEndBoundary.BestQualityValue != null && bucket.AfterEndBoundary.BestQualityValue.Status == TagValueStatus.Good
+                    ? InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcBucketEnd, new[] { previousValue, bucket.AfterEndBoundary.BestQualityValue })
+                    : null;
+
+                if (endBoundarySample == null || endBoundarySample.Status != TagValueStatus.Good || double.IsNaN(endBoundarySample.GetValueOrDefault(double.NaN))) {
+                    // We can't calculate an end boundary sample, or the end boundary is NaN or has
+                    // non-good status. We will reduce the calculation period for the average so
+                    // that it excludes the bucket time after the last raw sample in the bucket
+                    // and set a flag that indicates that this is a partial result.
+                    calculationInterval = calculationInterval.Subtract(bucket.UtcBucketEnd - previousValue.UtcSampleTime);
+                    isIncompleteInterval = true;
+                }
+                else {
+                    var diff = endBoundarySample.UtcSampleTime - previousValue.UtcSampleTime;
+                    total += (previousValue.Value.GetValueOrDefault<double>() + endBoundarySample.Value.GetValueOrDefault<double>()) / 2 * diff.TotalMilliseconds;
+                }
+            }
+
+            var tavg = calculationInterval <= TimeSpan.Zero 
+                ? double.NaN 
+                : total / calculationInterval.TotalMilliseconds;
+
+            var builder = new TagValueBuilder()
+                .WithUtcSampleTime(bucket.UtcBucketStart)
+                .WithValue(tavg)
+                .WithStatus(isIncompleteInterval || double.IsNaN(tavg) ? TagValueStatus.Uncertain : status)
+                .WithUnits(tag.Units)
+                .WithBucketProperties(bucket)
+                .WithProperties(CreateXPoweredByProperty());
+
+            if (isIncompleteInterval) {
+                builder.WithProperties(CreatePartialProperty());
+            }
+
+            return new[] {
+                builder.Build()
             };
         }
 
@@ -468,12 +609,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (bucket.RawSampleCount == 0) {
                 double val = 0;
 
-                if (bucket.StartBoundary.ClosestValue != null) {
+                if (bucket.BeforeStartBoundary.ClosestValue != null) {
                     // We have a sample before the bucket start boundary. If the sample has good
                     // quality, we will return a value specifying that the current bucket is 100%
                     // good; otherwise, the value for the current bucket is 0% good.
 
-                    val = bucket.StartBoundary.ClosestValue.Status == TagValueStatus.Good
+                    val = bucket.BeforeStartBoundary.ClosestValue.Status == TagValueStatus.Good
                         ? 100
                         : 0;
                 }
@@ -492,7 +633,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var timeInState = TimeSpan.Zero;
             var previousSampleTime = bucket.UtcBucketStart;
-            var previousStatus = bucket.StartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
+            var previousStatus = bucket.BeforeStartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
 
             foreach (var sample in bucket.RawSamples) {
                 try {
@@ -552,12 +693,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (bucket.RawSampleCount == 0) {
                 double val = 0;
 
-                if (bucket.StartBoundary.ClosestValue != null) {
+                if (bucket.BeforeStartBoundary.ClosestValue != null) {
                     // We have a sample before the bucket start boundary. If the sample has bad
                     // quality, we will return a value specifying that the current bucket is 100%
                     // bad; otherwise, the value for the current bucket is 0% bad.
 
-                    val = bucket.StartBoundary.ClosestValue.Status == TagValueStatus.Bad
+                    val = bucket.BeforeStartBoundary.ClosestValue.Status == TagValueStatus.Bad
                         ? 100
                         : 0;
                 }
@@ -576,7 +717,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             var timeInState = TimeSpan.Zero;
             var previousSampleTime = bucket.UtcBucketStart;
-            var previousStatus = bucket.StartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
+            var previousStatus = bucket.BeforeStartBoundary.ClosestValue?.Status ?? TagValueStatus.Uncertain;
 
             foreach (var sample in bucket.RawSamples) {
                 try {
@@ -1191,14 +1332,25 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             CancellationToken cancellationToken
         ) {
             var bucket = new TagValueBucket(utcStartTime, utcStartTime.Add(sampleInterval), utcStartTime, utcEndTime);
-            
+
             await foreach (var val in rawData.WithCancellation(cancellationToken).ConfigureAwait(false)) {
                 if (val == null) {
                     continue;
                 }
 
+                // Add the sample to the bucket. If the sample is < bucket start time or >= bucket
+                // end time it will update a pre-/post-bucket boundary region instead of being
+                // added to the samples in the bucket itself.
+                bucket.AddRawSample(val.Value);
+
                 if (val.Value.UtcSampleTime < bucket.UtcBucketStart) {
-                    bucket.UpdateStartBoundaryValue(val.Value);
+                    if (val.Value.UtcSampleTime > utcEndTime) {
+                        // Sample is before the bucket start time and is also greater than the end
+                        // time for the query: break from the foreach loop.
+                        break;
+                    }
+
+                    // Sample is before the bucket start time: move to the next sample.
                     continue;
                 }
 
@@ -1207,35 +1359,19 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     // bucket.
 
                     do {
-                        // Emit values from the current bucket and create a new bucket.
+                        // We have a completed bucket; calculate and emit the values for the
+                        // bucket.
                         foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
                             yield return calcVal;
                         }
 
-                        var previousBucket = bucket;
+                        // Create a new bucket.
+                        var oldBucket = bucket;
                         bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
 
-                        // Add the end boundary value(s) from the previous bucket as the start 
-                        // boundary value(s) on the new one.
-                        if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
-                            if (previousBucket.EndBoundary.BestQualityValue != null) {
-                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                            }
-                        }
-                        else {
-                            if (previousBucket.EndBoundary.BestQualityValue != null) {
-                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                            }
-                            if (previousBucket.EndBoundary.ClosestValue != null) {
-                                bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
-                            }
-                        }
-                    } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd);
-                }
-
-                // Add the sample to the bucket.
-                if (val.Value.UtcSampleTime <= utcEndTime) {
-                    bucket.AddRawSample(val.Value);
+                        // Copy pre-/post-end boundary values from the old bucket to the new bucket.
+                        bucket.AddBoundarySamples(oldBucket);
+                    } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd && bucket.UtcBucketEnd <= utcEndTime);
                 }
             }
 
@@ -1252,7 +1388,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // values for the remaining buckets.
 
                 while (bucket.UtcBucketEnd < utcEndTime) {
-                    var previousBucket = bucket;
+                    var oldBucket = bucket;
                     bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(sampleInterval), utcStartTime, utcEndTime);
                     if (bucket.UtcBucketEnd > utcEndTime) {
                         // New bucket would end after the query end time, so we don't need to 
@@ -1260,21 +1396,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         break;
                     }
 
-                    // Add the end boundary value(s) from the previous bucket as the start 
-                    // boundary value(s) on the new one.
-                    if (previousBucket.EndBoundary.BoundaryStatus == TagValueStatus.Good) {
-                        if (previousBucket.EndBoundary.BestQualityValue != null) {
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                        }
-                    }
-                    else {
-                        if (previousBucket.EndBoundary.BestQualityValue != null) {
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.BestQualityValue);
-                        }
-                        if (previousBucket.EndBoundary.ClosestValue != null) {
-                            bucket.UpdateStartBoundaryValue(previousBucket.EndBoundary.ClosestValue);
-                        }
-                    }
+                    // Copy pre-/post-end boundary values from the old bucket to the new bucket.
+                    bucket.AddBoundarySamples(oldBucket);
 
                     foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, funcs, utcStartTime, utcEndTime)) {
                         yield return calcVal;
@@ -1336,6 +1459,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </returns>
         internal static AdapterProperty CreateXPoweredByProperty() {
             return AdapterProperty.Create(CommonTagValuePropertyNames.XPoweredBy, s_xPoweredByPropertyValue.Value);
+        }
+
+
+        /// <summary>
+        /// Creates a property that indicates that a value was calculated using a partial or 
+        /// incomplete data set.
+        /// </summary>
+        /// <returns>
+        ///   A new <see cref="AdapterProperty"/> object.
+        /// </returns>
+        private static AdapterProperty CreatePartialProperty() {
+            return AdapterProperty.Create(CommonTagValuePropertyNames.Partial, true);
         }
 
 
