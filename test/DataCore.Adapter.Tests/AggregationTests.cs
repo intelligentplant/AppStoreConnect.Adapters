@@ -25,6 +25,57 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        public static double CalculateExpectedTimeAvgValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
+            var bucketValues = values
+                .Where(x => x.UtcSampleTime >= bucketStart)
+                .Where(x => x.UtcSampleTime < bucketEnd)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => !double.IsNaN(x.GetValueOrDefault(double.NaN)))
+                .ToArray();
+
+            if (bucketValues.Length == 0) {
+                return double.NaN;
+            }
+
+            var valueBefore = values.LastOrDefault(x => x.UtcSampleTime <= bucketStart);
+            var valueAfter = values.FirstOrDefault(x => x.UtcSampleTime >= bucketEnd);
+
+            var startBoundaryValue = InterpolationHelper.GetInterpolatedValueAtSampleTime(new TagSummary(nameof(CalculateExpectedTimeAvgValue), nameof(CalculateExpectedTimeAvgValue), null, null, VariantType.Double), bucketStart, new[] { valueBefore, bucketValues.First() });
+            var endBoundaryValue = InterpolationHelper.GetInterpolatedValueAtSampleTime(new TagSummary(nameof(CalculateExpectedTimeAvgValue), nameof(CalculateExpectedTimeAvgValue), null, null, VariantType.Double), bucketEnd, new[] { bucketValues.Last(), valueAfter });
+
+            var total = 0d;
+            var calculationInterval = bucketEnd - bucketStart;
+            var previousValue = startBoundaryValue;
+
+            foreach (var item in bucketValues) {
+                try { 
+                    if (previousValue == null) {
+                        calculationInterval = calculationInterval.Subtract(item.UtcSampleTime - bucketStart);
+                        continue;
+                    }
+
+                    var area = (previousValue.GetValueOrDefault<double>() + item.GetValueOrDefault<double>()) / 2 * (item.UtcSampleTime - previousValue.UtcSampleTime).TotalMilliseconds;
+                    total += area;
+                }
+                finally {
+                    previousValue = item;
+                }
+            }
+
+            if (previousValue != null && previousValue.UtcSampleTime < bucketEnd) {
+                if (endBoundaryValue != null) {
+                    var area = (previousValue.GetValueOrDefault<double>() + endBoundaryValue.GetValueOrDefault<double>()) / 2 * (endBoundaryValue.UtcSampleTime - previousValue.UtcSampleTime).TotalMilliseconds;
+                    total += area;
+                }
+                else {
+                    calculationInterval = calculationInterval.Subtract(bucketEnd -  previousValue.UtcSampleTime);
+                }
+            }
+
+            return total / calculationInterval.TotalMilliseconds;
+        }
+
+
         public static double CalculateExpectedMinValue(IEnumerable<TagValueExtended> values, DateTime bucketStart, DateTime bucketEnd) {
             return values
                 .Where(x => x.UtcSampleTime >= bucketStart)
@@ -211,12 +262,14 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdTimeAverage, nameof(CalculateExpectedTimeAvgValue), null, TagValueStatus.Uncertain)] // Uncertain quality because the data set does not have an end boundary value
         [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, nameof(CalculateExpectedVarianceValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
         public async Task DefaultDataFunctionShouldCalculateValue(
             string functionId, 
             string expectedValueCalculator,
-            string expectedTimestampCalculator
+            string expectedTimestampCalculator,
+            TagValueStatus expectedQuality = TagValueStatus.Good
         ) {
             var aggregationHelper = new AggregationHelper();
 
@@ -264,7 +317,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.AreEqual(expectedQuality, val.Value.Status);
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
@@ -279,12 +332,14 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdTimeAverage, nameof(CalculateExpectedTimeAvgValue), null, TagValueStatus.Uncertain)] // Uncertain quality because the data set does not have an end boundary value
         [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, nameof(CalculateExpectedVarianceValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
         public async Task DefaultDataFunctionShouldCalculateValueWhenRequestedUsingName(
             string functionId,
             string expectedValueCalculator,
-            string expectedTimestampCalculator
+            string expectedTimestampCalculator,
+            TagValueStatus expectedQuality = TagValueStatus.Good
         ) {
             var aggregationHelper = new AggregationHelper();
             var func = aggregationHelper.GetSupportedDataFunctions().FirstOrDefault(x => x.IsMatch(functionId));
@@ -334,7 +389,7 @@ namespace DataCore.Adapter.Tests {
 
             Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
             Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
-            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+            Assert.AreEqual(expectedQuality, val.Value.Status);
 
             Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
         }
@@ -346,6 +401,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, nameof(CalculateExpectedRangeValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, nameof(CalculateExpectedDeltaValue), null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdTimeAverage, nameof(CalculateExpectedTimeAvgValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, nameof(CalculateExpectedVarianceValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, nameof(CalculateExpectedStandardDeviationValue), null)]
         public async Task DefaultDataFunctionShouldFilterNonGoodInputValuesAndReturnUncertainStatus(
@@ -410,6 +466,7 @@ namespace DataCore.Adapter.Tests {
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdRange, null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdDelta, null)]
+        [DataRow(DefaultDataFunctions.Constants.FunctionIdTimeAverage, null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdVariance, null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdStandardDeviation, null)]
         public async Task DefaultDataFunctionShouldReturnErrorValueWhenNoGoodInputValuesAreProvided(
@@ -1048,6 +1105,112 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public async Task TimeAverageShouldCalculatePartialValue() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.TimeAverage.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(DefaultDataFunctions.TimeAverage.Id, val.DataFunction);
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = CalculateExpectedTimeAvgValue(rawValues, start, end);
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Uncertain, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.Partial) && p.Value.GetValueOrDefault<bool>()));
+        }
+
+
+        [TestMethod]
+        public async Task TimeAverageShouldNotCalculatePartialValue() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-75)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-59)).WithValue(100).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-2)).WithValue(0).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(4)).WithValue(0).Build(),
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.TimeAverage.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            Assert.AreEqual(1, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(DefaultDataFunctions.TimeAverage.Id, val.DataFunction);
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+
+            var expectedValue = CalculateExpectedTimeAvgValue(rawValues, start, end);
+            var expectedSampleTime = start;
+
+            Assert.AreEqual(expectedValue, val.Value.GetValueOrDefault<double>());
+            Assert.AreEqual(expectedSampleTime, val.Value.UtcSampleTime);
+            Assert.AreEqual(TagValueStatus.Good, val.Value.Status);
+
+            Assert.IsTrue(val.Value.Properties.Any(p => p.Name.Equals(CommonTagValuePropertyNames.XPoweredBy)));
+            var partialProp = val.Value.Properties.FirstOrDefault(p => p.Name.Equals(CommonTagValuePropertyNames.Partial));
+            Assert.IsTrue(partialProp == null || !partialProp.Value.GetValueOrDefault(true));
+        }
+
+
+        [TestMethod]
         public void CustomDataFunctionShouldBeRegistered() {
             var aggregationHelper = new AggregationHelper();
 
@@ -1492,7 +1655,9 @@ namespace DataCore.Adapter.Tests {
                 plotValues.Add(val);
             }
 
-            Assert.AreEqual(11, plotValues.Count);
+            // We expect 12 samples in total: the 11 samples marked above, plus an additional sample
+            // interpolated exactly on the end boundary for the query.
+            Assert.AreEqual(12, plotValues.Count);
         }
 
 
@@ -1537,7 +1702,9 @@ namespace DataCore.Adapter.Tests {
                 plotValues.Add(val);
             }
             
-            Assert.AreEqual(8, plotValues.Count);
+            // We expect 9 samples in total: the 8 samples marked above, plus an additional sample
+            // interpolated exactly on the end boundary for the query.
+            Assert.AreEqual(9, plotValues.Count);
         }
 
     }
