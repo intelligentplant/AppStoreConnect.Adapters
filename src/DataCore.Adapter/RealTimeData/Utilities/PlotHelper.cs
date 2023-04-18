@@ -384,11 +384,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the computed values.
         /// </returns>
         private static async IAsyncEnumerable<TagValueQueryResult> GetPlotValuesInternal(
-            TagSummary tag, 
-            DateTime utcStartTime, 
-            DateTime utcEndTime, 
-            TimeSpan bucketSize, 
-            IAsyncEnumerable<TagValueQueryResult> rawData, 
+            TagSummary tag,
+            DateTime utcStartTime,
+            DateTime utcEndTime,
+            TimeSpan bucketSize,
+            IAsyncEnumerable<TagValueQueryResult> rawData,
             PlotValueSelector? valueSelector,
             [EnumeratorCancellation] CancellationToken cancellationToken
         ) {
@@ -399,42 +399,67 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     continue;
                 }
 
-                if (val.Value.UtcSampleTime < utcStartTime) {
-                    continue;
-                }
+                // Add the sample to the bucket. If the sample is < bucket start time or >= bucket
+                // end time it will update a pre-/post-bucket boundary region instead of being
+                // added to the samples in the bucket itself.
+                bucket.AddRawSample(val.Value);
 
-                if (val.Value.UtcSampleTime > utcEndTime) {
+                if (val.Value.UtcSampleTime < bucket.UtcBucketStart) {
+                    if (val.Value.UtcSampleTime > utcEndTime) {
+                        // Sample is before the bucket start time and is also greater than the end
+                        // time for the query: break from the foreach loop.
+                        break;
+                    }
+
+                    // Sample is before the bucket start time: move to the next sample.
                     continue;
                 }
 
                 if (val.Value.UtcSampleTime >= bucket.UtcBucketEnd) {
-                    if (bucket.RawSampleCount > 0) {
-                        foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
-                            yield return calculatedValue;
-                        }
-                    }
+                    // The sample we have just received is later than the end time for the current 
+                    // bucket.
 
                     do {
-                        // Start boundary value for the next bucket is the last raw sample in the
-                        // current bucket, or the start boundary value for the current bucket if
-                        // the current bucket is empty.
-                        var startBoundaryValue = bucket.RawSampleCount > 0 
-                            ? bucket.RawSamples.Last() 
-                            : bucket.StartBoundary.ClosestValue;
-
-                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(bucketSize), utcStartTime, utcEndTime);
-                        if (startBoundaryValue != null) {
-                            bucket.UpdateStartBoundaryValue(startBoundaryValue);
+                        // We have a completed bucket; calculate and emit the values for the
+                        // bucket.
+                        foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
+                            yield return calcVal;
                         }
-                    } while (bucket.UtcBucketEnd < val.Value.UtcSampleTime);
+
+                        // Create a new current bucket.
+                        var oldBucket = bucket;
+                        bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(bucketSize), utcStartTime, utcEndTime);
+
+                        // Copy pre-/post-end boundary values from the old bucket to the new bucket.
+                        bucket.AddBoundarySamples(oldBucket);
+                    } while (val.Value.UtcSampleTime >= bucket.UtcBucketEnd && bucket.UtcBucketEnd <= utcEndTime);
                 }
 
-                bucket.AddRawSample(val.Value);
+
             }
 
-            if (bucket.RawSampleCount > 0) { 
-                foreach (var calculatedValue in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
-                    yield return calculatedValue;
+            foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
+                yield return calcVal;
+            }
+
+            if (bucket.UtcBucketEnd >= utcEndTime) {
+                // We have emitted data for the full query duration.
+                yield break;
+            }
+
+            // The raw data ended before the end time for the query. We will keep moving forward 
+            // according to our sample interval, and allow our plot selector the chance to calculate 
+            // values for the remaining buckets.
+
+            while (bucket.UtcBucketEnd < utcEndTime) {
+                var oldBucket = bucket;
+                bucket = new TagValueBucket(bucket.UtcBucketEnd, bucket.UtcBucketEnd.Add(bucketSize), utcStartTime, utcEndTime);
+
+                // Copy pre-/post-end boundary values from the old bucket to the new bucket.
+                bucket.AddBoundarySamples(oldBucket);
+
+                foreach (var calcVal in CalculateAndEmitBucketSamples(tag, bucket, valueSelector)) {
+                    yield return calcVal;
                 }
             }
         }
@@ -464,11 +489,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             TagValueBucket bucket, 
             PlotValueSelector? valueSelector
         ) {
-            var significantValues = valueSelector == null
-                ? DefaultPlotValueSelector(tag, bucket)
-                : valueSelector.Invoke(tag, bucket);
-
-            foreach (var value in significantValues) {
+            TagValueQueryResult CreateSample(PlotValue value) {
                 var builder = new TagValueBuilder(value.Sample)
                     .WithBucketProperties(bucket);
 
@@ -478,11 +499,96 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                 builder.WithProperties(AggregationHelper.CreateXPoweredByProperty());
 
-                yield return TagValueQueryResult.Create(
-                    tag.Id, 
-                    tag.Name, 
+                return TagValueQueryResult.Create(
+                    tag.Id,
+                    tag.Name,
                     builder.Build()
                 );
+            }
+
+            TagValueQueryResult? CalculateStartBoundarySample() {
+                TagValueExtended? startVal = null;
+
+                if (bucket.BeforeStartBoundary.BestQualityValue != null && bucket.AfterStartBoundary.BestQualityValue != null) {
+                    // We have samples before and after the start time boundary.
+                    startVal = InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcQueryStart, new[] { bucket.BeforeStartBoundary.BestQualityValue, bucket.AfterStartBoundary.BestQualityValue });
+
+                }
+                else if (bucket.RawSampleCount >= 2) {
+                    // We have at least 2 samples in the bucket; we can extrapolate a sample from
+                    // these.
+                    startVal = InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcQueryStart, bucket.RawSamples);
+                }
+
+                if (startVal != null) {
+                    return CreateSample(new PlotValue(startVal, "start-boundary"));
+                }
+
+                return null;
+            }
+
+            TagValueQueryResult? CalculateEndBoundarySample() {
+                TagValueExtended? endVal = null;
+
+                if (bucket.BeforeEndBoundary.BestQualityValue != null && bucket.AfterEndBoundary.BestQualityValue != null) {
+                    // We have samples before and after the end time boundary.
+                    endVal = InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcQueryEnd, new[] { bucket.BeforeEndBoundary.BestQualityValue, bucket.AfterEndBoundary.BestQualityValue });
+
+                }
+                else if (bucket.RawSampleCount >= 2) {
+                    // We have at least 2 samples in the bucket; we can extrapolate a sample from
+                    // these.
+                    endVal = InterpolationHelper.GetInterpolatedValueAtSampleTime(tag, bucket.UtcQueryEnd, bucket.RawSamples);
+                }
+
+                if (endVal != null) {
+                    return CreateSample(new PlotValue(endVal, "end-boundary"));
+                }
+
+                return null;
+            }
+
+            var significantValues = valueSelector == null
+                ? DefaultPlotValueSelector(tag, bucket)
+                : valueSelector.Invoke(tag, bucket);
+
+            var startBoundaryValueRequired = bucket.UtcBucketStart == bucket.UtcQueryStart;
+            var endBoundaryValueRequired = bucket.UtcBucketEnd >= bucket.UtcQueryEnd;
+
+            foreach (var value in significantValues) {
+                if (startBoundaryValueRequired) {
+                    startBoundaryValueRequired = false;
+
+                    if (value.Sample.UtcSampleTime > bucket.UtcQueryStart) {
+                        // The first sample selected is later than the query start time, so we
+                        // will return an interpolated boundary sample if we can.
+
+                        var startVal = CalculateStartBoundarySample();
+                        if (startVal != null) {
+                            yield return startVal;
+                        }
+                    }
+                }
+                if (endBoundaryValueRequired && value.Sample.UtcSampleTime == bucket.UtcQueryEnd) {
+                    // We've selected a sample exactly at the query end time, so we don't need to
+                    // interpolated a final sample.
+                    endBoundaryValueRequired = false;
+                }
+                yield return CreateSample(value);
+            }
+
+            if (startBoundaryValueRequired) {
+                var startVal = CalculateStartBoundarySample();
+                if (startVal != null) {
+                    yield return startVal;
+                }
+            }
+
+            if (endBoundaryValueRequired) {
+                var endVal = CalculateEndBoundarySample();
+                if (endVal != null) {
+                    yield return endVal;
+                }
             }
         }
 
@@ -505,7 +611,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <para>
         ///   For numeric tags (i.e. tags where <see cref="VariantExtensions.IsNumericType(VariantType)"/> 
         ///   is <see langword="true"/> for <see cref="TagSummary.DataType"/> on <paramref name="tag"/>),
-        ///   the following values are selected from the bucket:
+        ///   up to 6 values are selected from the bucket:
         /// </para>
         /// 
         /// <list type="bullet">
@@ -518,7 +624,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </list>
         /// 
         /// <para>
-        ///   For non-numeric tags, the following values are selected from the bucket:
+        ///   For non-numeric tags, up to 6 values are selected from the bucket using the 
+        ///   following conditions:
         /// </para>
         /// 
         /// <list type="bullet">
@@ -528,11 +635,36 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   <item>The sample immediately before any sample that represents a change in value or quality</item>
         /// </list>
         /// 
+        /// <para>
+        ///   Note that if a non-numeric sample is changing value or quality multiple times in a 
+        ///   bucket, the <see cref="DefaultPlotValueSelector"/> method may not return all of these 
+        ///   changes due to the limit on the maximum number of samples that can be selected from 
+        ///   a single bucket.
+        /// </para>
+        /// 
         /// </remarks>
         /// <seealso cref="PlotValueSelector"/>
         public static IEnumerable<PlotValue> DefaultPlotValueSelector(TagSummary tag, TagValueBucket bucket) {
-            if (bucket == null || bucket.RawSampleCount < 1) {
+            if (bucket == null || bucket.RawSampleCount == 0) {
                 return Array.Empty<PlotValue>();
+            }
+
+            // The raw samples that can be selected.
+            IEnumerable<TagValueExtended> samples;
+            // The latest allowed timestamp that can be selected from the bucket.
+            DateTime latestAllowedSampleTime;
+
+            if (bucket.UtcBucketStart >= bucket.UtcQueryStart && bucket.UtcBucketEnd <= bucket.UtcQueryEnd) {
+                samples = bucket.RawSamples;
+                latestAllowedSampleTime = bucket.UtcBucketEnd;
+            }
+            else {
+                var arr = bucket.RawSamples.Where(x => x.UtcSampleTime >= bucket.UtcQueryStart && x.UtcSampleTime <= bucket.UtcBucketEnd).ToArray();
+                if (arr.Length == 0) {
+                    return Array.Empty<PlotValue>();
+                }
+                samples = arr;
+                latestAllowedSampleTime = bucket.UtcQueryEnd;
             }
 
             if (tag.DataType.IsNumericType()) {
@@ -541,15 +673,15 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 var selectedValues = new ConcurrentDictionary<TagValueExtended, List<string>>();
 
                 // First value
-                selectedValues.GetOrAdd(bucket.RawSamples.First(), _ => new List<string>()).Add("first");
+                selectedValues.GetOrAdd(samples.First(), _ => new List<string>()).Add("first");
 
                 // Last value
-                selectedValues.GetOrAdd(bucket.RawSamples.Last(), _ => new List<string>()).Add("last");
+                selectedValues.GetOrAdd(samples.Last(), _ => new List<string>()).Add("last");
 
                 // For the midpoint value we need to find the sample with the timestamp that is
                 // closest to the midpoint of the bucket.
-                var midpointTime = bucket.UtcBucketStart.AddSeconds((bucket.UtcBucketEnd - bucket.UtcBucketStart).TotalSeconds / 2);
-                var midpointDiffs = bucket.RawSamples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
+                var midpointTime = bucket.UtcBucketStart.AddSeconds((latestAllowedSampleTime - bucket.UtcBucketStart).TotalSeconds / 2);
+                var midpointDiffs = samples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
                     Sample = x,
                     MidpointDiff = Math.Abs((midpointTime - x.UtcSampleTime).TotalSeconds)
                 }).ToArray();
@@ -563,7 +695,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 // the samples. We will do this by converting the numeric value of each sample to
                 // double. If the sample doesn't have a numeric value (e.g. it is text when it is
                 // expected to be int) we will treat it as if it was double.NaN.
-                var numericValues = bucket.RawSamples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
+                var numericValues = samples.Where(x => x.Status == TagValueStatus.Good).Select(x => new {
                     Sample = x,
                     NumericValue = x.GetValueOrDefault(double.NaN)
                 }).ToArray();
@@ -577,7 +709,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 }
 
                 // First non-good value.
-                var exceptionValue = bucket.RawSamples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
+                var exceptionValue = samples.FirstOrDefault(x => x.Status != TagValueStatus.Good);
                 if (exceptionValue != null) {
                     selectedValues.GetOrAdd(exceptionValue, _ = new List<string>()).Add("non-good");
                 }
@@ -585,23 +717,31 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return selectedValues.OrderBy(x => x.Key.UtcSampleTime).Select(x => new PlotValue(x.Key, x.Value));
             }
             else {
-                // The tag is not numeric, so we have to add each text value change or quality status 
-                // change in the bucket.
-                var currentState = bucket.StartBoundary.ClosestValue?.GetValueOrDefault<string>();
-                var currentQuality = bucket.StartBoundary.ClosestValue?.Status;
+                // The tag is not numeric, so we have to add text value change or quality status
+                // changes in the bucket. We will return a maximum of 6 samples so that we return
+                // only a representative number of samples.
+                const int MaxNonNumericSamples = 6;
+
+                var currentState = bucket.BeforeStartBoundary.ClosestValue?.GetValueOrDefault<string>();
+                var currentQuality = bucket.BeforeStartBoundary.ClosestValue?.Status;
                 TagValueExtended? previousValue = null;
 
-                var changes = bucket.RawSamples.Aggregate(new HashSet<TagValueExtended>(), (list, item) => {
+                var changesInitial = new HashSet<TagValueExtended>() { 
+                    samples.First()
+                };
+
+                var changes = samples.Aggregate(changesInitial, (list, item) => {
                     var val = item.GetValueOrDefault<string>();
                     if (currentState == null ||
                         !string.Equals(currentState, val, StringComparison.Ordinal) ||
                         currentQuality != item.Status) {
 
-                        if (previousValue != null) {
+                        if (list.Count < MaxNonNumericSamples && previousValue != null) {
                             list.Add(previousValue);
                         }
-
-                        list.Add(item);
+                        if (list.Count < MaxNonNumericSamples) {
+                            list.Add(item);
+                        }
                         currentState = val;
                         currentQuality = item.Status;
                     }
@@ -610,9 +750,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     return list;
                 });
 
-                // Add first and last values.
-                changes.Add(bucket.RawSamples.First());
-                changes.Add(bucket.RawSamples.Last());
+                if (changes.Count < MaxNonNumericSamples) {
+                    changes.Add(samples.Last());
+                }
 
                 return changes.OrderBy(x => x.UtcSampleTime).Select(x => new PlotValue(x));
             }
