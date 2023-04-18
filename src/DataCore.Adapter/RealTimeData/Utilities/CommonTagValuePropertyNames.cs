@@ -2,7 +2,7 @@
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
     /// <summary>
-    /// Defines common tag property names.
+    /// Defines common tag value property names.
     /// </summary>
     public static class CommonTagValuePropertyNames {
 
@@ -51,6 +51,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// Specifies the sigma value used when calculating the bounds for standard deviation calculations.
         /// </summary>
         public const string Sigma = "Sigma";
+
+        /// <summary>
+        /// Specifies that a tag value was computed from a partial data set.
+        /// </summary>
+        public const string Partial = "Partial";
 
     }
 }
