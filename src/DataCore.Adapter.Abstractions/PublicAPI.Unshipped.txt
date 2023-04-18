@@ -1,1 +1,6 @@
 ﻿#nullable enable
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdTimeAverage = "TIMEAVERAGE" -> string!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.TimeAverage.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped.get -> string
+~static DataCore.Adapter.AbstractionsResources.DataFunction_TimeAvg_Description.get -> string
+~static DataCore.Adapter.AbstractionsResources.DataFunction_TimeAvg_Name.get -> string

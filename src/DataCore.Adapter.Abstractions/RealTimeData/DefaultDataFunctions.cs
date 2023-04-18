@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -11,7 +12,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Constants associated with <see cref="DefaultDataFunctions"/>.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Organisation of static class")]
         public static class Constants {
 
             /// <summary>
@@ -58,6 +58,11 @@ namespace DataCore.Adapter.RealTimeData {
             /// Percent bad function ID.
             /// </summary>
             public const string FunctionIdPercentBad = "PERCENTBAD";
+
+            /// <summary>
+            /// Time-weighted average function ID.
+            /// </summary>
+            public const string FunctionIdTimeAverage = "TIMEAVERAGE";
 
             /// <summary>
             /// Variance function ID.
@@ -226,25 +231,6 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Variance of good-quality samples in a time period.
-        /// </summary>
-        public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
-            Constants.FunctionIdVariance,
-            AbstractionsResources.DataFunction_Variance_Name,
-            AbstractionsResources.DataFunction_Variance_Description,
-            DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
-        );
-
-
-        /// <summary>
         /// Standard deviation of good-quality samples in a time period.
         /// </summary>
         public static DataFunctionDescriptor StandardDeviation { get; } = DataFunctionDescriptor.Create(
@@ -264,11 +250,50 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Time-weighted average value over a time period.
+        /// </summary>
+        public static DataFunctionDescriptor TimeAverage { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdTimeAverage,
+            AbstractionsResources.DataFunction_TimeAvg_Name,
+            AbstractionsResources.DataFunction_TimeAvg_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Custom,
+            new[] {
+                AdapterProperty.Create(
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                )
+            }
+        );
+
+
+        /// <summary>
+        /// Variance of good-quality samples in a time period.
+        /// </summary>
+        public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdVariance,
+            AbstractionsResources.DataFunction_Variance_Name,
+            AbstractionsResources.DataFunction_Variance_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Custom,
+            new[] {
+                AdapterProperty.Create(
+                    AbstractionsResources.DataFunction_Property_StatusCalculation,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
+                )
+            }
+        );
+
+
+        /// <summary>
         /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
             Interpolate,
             Average,
+            TimeAverage,
             Minimum,
             Maximum,
             Count,

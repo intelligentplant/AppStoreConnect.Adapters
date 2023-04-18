@@ -277,6 +277,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality or NaN values were present in the calculation interval, or if the value was calculated from a partial data set. Otherwise, the quality is &quot;Good&quot;..
+        /// </summary>
+        public static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality values were skipped, or &quot;Good&quot; otherwise..
         /// </summary>
         public static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped {
@@ -363,6 +372,24 @@ namespace DataCore.Adapter {
         public static string DataFunction_StandardDeviation_Name {
             get {
                 return ResourceManager.GetString("DataFunction_StandardDeviation_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time-weighted average value calculated over sample interval..
+        /// </summary>
+        public static string DataFunction_TimeAvg_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_TimeAvg_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time Average.
+        /// </summary>
+        public static string DataFunction_TimeAvg_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_TimeAvg_Name", resourceCulture);
             }
         }
         
