@@ -1,3 +1,18 @@
 ﻿#nullable enable
+const DataCore.Adapter.RealTimeData.Utilities.CommonTagValuePropertyNames.Partial = "Partial" -> string!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithSteppedTransition(bool stepped) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
+DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo
+DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo.BestQualityValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
+DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo.BoundaryStatus.get -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo.ClosestValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
+DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo.PostBoundaryInfo() -> void
+DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo
+DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo.BestQualityValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
+DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo.BoundaryStatus.get -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo.ClosestValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
+DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo.PreBoundaryInfo() -> void
+DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.AfterEndBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo!
+DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.AfterStartBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo!
+DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.BeforeEndBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo!
+DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.BeforeStartBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.PreBoundaryInfo!
 static DataCore.Adapter.Security.CertificateUtilities.TryLoadCertificateFromStore(string! path, bool requirePrivateKey, bool allowInvalid, out System.Security.Cryptography.X509Certificates.X509Certificate2? certificate) -> bool
