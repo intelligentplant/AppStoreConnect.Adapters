@@ -3,19 +3,30 @@
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
     /// <summary>
-    /// Describes the values immediately before the start boundary or end boundary for a 
-    /// <see cref="TagValueBucket"/>.
+    /// Describes the values immediately after the end boundary for a <see cref="TagValueBucket"/>.
     /// </summary>
-    public class BoundaryInfo {
+    public class PostBoundaryInfo {
 
         ///<summary>
-        /// The best-quality value before the boundary.
+        /// The best-quality value after the boundary.
         /// </summary>
+        /// <remarks>
+        ///   The <see cref="BestQualityValue"/> and <see cref="ClosestValue"/> properties will be 
+        ///   different if a sample with a lower quality than <see cref="BestQualityValue"/> 
+        ///   exists between boundary timestamp and <see cref="BestQualityValue"/>.
+        /// </remarks>
+        /// <seealso cref="ClosestValue"/>
         public TagValueExtended? BestQualityValue { get; private set; }
 
         /// <summary>
-        /// The closest value before the boundary.
+        /// The value immediately after the boundary, regardless of quality.
         /// </summary>
+        /// <remarks>
+        ///   The <see cref="BestQualityValue"/> and <see cref="ClosestValue"/> properties will be 
+        ///   different if a sample with a lower quality than <see cref="BestQualityValue"/> 
+        ///   exists between boundary timestamp and <see cref="BestQualityValue"/>.
+        /// </remarks>
+        /// <seealso cref="BestQualityValue"/>
         public TagValueExtended? ClosestValue { get; private set; }
 
         /// <summary>
@@ -46,8 +57,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 return;
             }
 
-            if (value.UtcSampleTime <= BestQualityValue.UtcSampleTime) {
-                // Older than current boundary value; we can dismiss it.
+            if (value.UtcSampleTime >= BestQualityValue.UtcSampleTime) {
+                // Newer than current boundary value; we can dismiss it.
                 return;
             }
 
@@ -65,10 +76,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Gets a collection of values that form the boundary. Up to two samples will be emitted.
+        /// Gets a collection of values that form the post-boundary region. Up to two samples will 
+        /// be emitted.
         /// </summary>
         /// <returns>
-        ///   The boundary values. Possible outputs are zero values, one value (if the 
+        ///   The post-boundary values. Possible outputs are zero values, one value (if the 
         ///   <see cref="BestQualityValue"/> is also the <see cref="ClosestValue"/>), or two 
         ///   values (if the <see cref="BestQualityValue"/> and <see cref="ClosestValue"/> are 
         ///   different).
