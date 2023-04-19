@@ -574,6 +574,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     // interpolated a final sample.
                     endBoundaryValueRequired = false;
                 }
+
                 yield return CreateSample(value);
             }
 
@@ -659,7 +660,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 latestAllowedSampleTime = bucket.UtcBucketEnd;
             }
             else {
-                var arr = bucket.RawSamples.Where(x => x.UtcSampleTime >= bucket.UtcQueryStart && x.UtcSampleTime <= bucket.UtcBucketEnd).ToArray();
+                var arr = bucket.RawSamples.Where(x => x.UtcSampleTime >= bucket.UtcQueryStart && x.UtcSampleTime <= bucket.UtcQueryEnd).ToArray();
                 if (arr.Length == 0) {
                     return Array.Empty<PlotValue>();
                 }
