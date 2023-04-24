@@ -49,10 +49,10 @@ namespace DataCore.Adapter.Common {
         [JsonConstructor]
         public AdapterDescriptor(string id, string name, string? description) {
             Id = string.IsNullOrWhiteSpace(id)
-                ? throw new ArgumentException(SharedResources.Error_IdIsRequired, nameof(id))
+                ? throw new ArgumentOutOfRangeException(nameof(id), SharedResources.Error_IdIsRequired)
                 : id;
             Name = string.IsNullOrWhiteSpace(name)
-                ? throw new ArgumentException(SharedResources.Error_NameIsRequired, nameof(name))
+                ? throw new ArgumentOutOfRangeException(nameof(name), SharedResources.Error_NameIsRequired)
                 : name;
             Description = description;
         }
