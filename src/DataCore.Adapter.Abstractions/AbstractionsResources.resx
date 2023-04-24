@@ -389,10 +389,6 @@
 {4} - AdapterExtensionFeatureAttributeName
 </comment>
   </data>
-  <data name="Error_NotAValidFeatureUri" xml:space="preserve">
-    <value>'{0}' is not a valid adapter feature URI.</value>
-    <comment>{0} - invalid feature URI</comment>
-  </data>
   <data name="Error_RelativeUrisAreNotSupported" xml:space="preserve">
     <value>This operation is not supported for a relative URI.</value>
   </data>

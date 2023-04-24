@@ -853,15 +853,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid adapter feature URI..
-        /// </summary>
-        public static string Error_NotAValidFeatureUri {
-            get {
-                return ResourceManager.GetString("Error_NotAValidFeatureUri", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to This operation is not supported for a relative URI..
         /// </summary>
         public static string Error_RelativeUrisAreNotSupported {
