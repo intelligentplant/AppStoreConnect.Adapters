@@ -609,25 +609,19 @@ namespace DataCore.Adapter {
 
             var standardFeatures = adapter
                 .Features
-                    ?.Keys
-                    ?.Where(x => x.IsStandardFeatureUri())
-                .ToArray() ?? Array.Empty<Uri>();
-
-            var extensionFeatures = adapter
-                .Features
-                    ?.Keys
-                    ?.Except(standardFeatures)
+                .Keys
+                .Where(x => x.IsStandardFeatureUri())
                 .ToArray();
 
-            return AdapterDescriptorExtended.Create(
-                adapter.Descriptor.Id,
-                adapter.Descriptor.Name,
-                adapter.Descriptor.Description,
-                standardFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
-                extensionFeatures.Where(x => x != null).Select(x => x.ToString()).OrderBy(x => x).ToArray(),
-                adapter.Properties,
-                adapter.TypeDescriptor
-            );
+#pragma warning disable CS0618 // Type or member is obsolete
+            var builder = new AdapterDescriptorBuilder(adapter.Descriptor)
+                .WithTypeDescriptor(adapter.TypeDescriptor)
+                .WithFeatures(standardFeatures)
+                .WithExtensionFeatures(adapter.Features.Keys.Except(standardFeatures))
+                .WithProperties(adapter.Properties);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            return builder.Build();
         }
 
 
