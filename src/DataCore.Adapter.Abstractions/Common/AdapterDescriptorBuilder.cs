@@ -211,9 +211,10 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent standard adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         public AdapterDescriptorBuilder WithFeatures(params Uri[] features) => WithFeatures((IEnumerable<Uri>) features);
 
 
@@ -229,9 +230,10 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent standard adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         public AdapterDescriptorBuilder WithFeatures(IEnumerable<Uri> features) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
@@ -239,7 +241,7 @@ namespace DataCore.Adapter.Common {
 
             foreach (var feature in features) {
                 if (feature == null || !feature.IsStandardFeatureUri()) {
-                    throw new ArgumentOutOfRangeException(nameof(features), string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_NotAValidFeatureUri, feature));
+                    continue;
                 }
 
                 _adapterFeatures.Add(feature.ToString());
@@ -261,6 +263,10 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="features"/> contains one or more entries that are not valid feature URIs.
         /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent standard adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         public AdapterDescriptorBuilder WithFeatures(params string[] features) => WithFeatures((IEnumerable<string>) features);
 
 
@@ -276,22 +282,41 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent standard adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         public AdapterDescriptorBuilder WithFeatures(IEnumerable<string> features) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
 
             foreach (var item in features) {
-                if (!Uri.TryCreate(item, UriKind.Absolute, out var feature) || !feature.IsStandardFeatureUri()) {
-                    throw new ArgumentOutOfRangeException(nameof(features), string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_NotAValidFeatureUri, item));
+                if (item == null || !Uri.TryCreate(item, UriKind.Absolute, out var feature) || !feature.IsStandardFeatureUri()) {
+                    continue;
                 }
 
                 _adapterFeatures.Add(feature.ToString());
             }
 
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds the specified feature to the descriptor.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type. Types that do not represent standard adapter features will be 
+        ///   ignored.
+        /// </typeparam>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        public AdapterDescriptorBuilder WithFeature<TFeature>() where TFeature : IAdapterFeature {
+            if (typeof(TFeature).IsStandardAdapterFeature()) {
+                _adapterFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            }
             return this;
         }
 
@@ -318,9 +343,10 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid extension feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public AdapterDescriptorBuilder WithExtensionFeatures(params Uri[] features) => WithExtensionFeatures((IEnumerable<Uri>) features);
 
@@ -337,9 +363,10 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid extension feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public AdapterDescriptorBuilder WithExtensionFeatures(IEnumerable<Uri> features) {
             if (features == null) {
@@ -348,10 +375,10 @@ namespace DataCore.Adapter.Common {
 
             foreach (var feature in features) {
                 if (feature == null || !feature.IsExtensionFeatureUri()) {
-                    throw new ArgumentOutOfRangeException(nameof(features), string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_NotAValidFeatureUri, feature));
+                    continue;
                 }
 
-                _adapterFeatures.Add(feature.ToString());
+                _adapterExtensionFeatures.Add(feature.ToString());
             }
 
             return this;
@@ -367,9 +394,10 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid extension feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public AdapterDescriptorBuilder WithExtensionFeatures(params string[] features) => WithExtensionFeatures((IEnumerable<string>) features);
 
@@ -386,9 +414,10 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///   <paramref name="features"/> contains one or more entries that are not valid extension feature URIs.
-        /// </exception>
+        /// <remarks>
+        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
+        ///   IDs will be ignored.
+        /// </remarks>
         [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public AdapterDescriptorBuilder WithExtensionFeatures(IEnumerable<string> features) {
             if (features == null) {
@@ -397,12 +426,31 @@ namespace DataCore.Adapter.Common {
 
             foreach (var item in features) {
                 if (!Uri.TryCreate(item, UriKind.Absolute, out var feature) || !feature.IsExtensionFeatureUri()) {
-                    throw new ArgumentOutOfRangeException(nameof(features), string.Format(CultureInfo.CurrentCulture, AbstractionsResources.Error_NotAValidFeatureUri, item));
+                    continue;
                 }
 
-                _adapterFeatures.Add(feature.ToString());
+                _adapterExtensionFeatures.Add(feature.ToString());
             }
 
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds the specified feature to the descriptor.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type. Types that do not represent extension adapter features will be 
+        ///   ignored.
+        /// </typeparam>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
+        public AdapterDescriptorBuilder WithExtensionFeature<TFeature>() where TFeature : Extensions.IAdapterExtensionFeature {
+            if (typeof(TFeature).IsExtensionAdapterFeature()) {
+                _adapterExtensionFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            }
             return this;
         }
 
