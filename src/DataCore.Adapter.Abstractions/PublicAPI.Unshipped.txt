@@ -8,10 +8,12 @@ DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearExtensionFeatures() -> Dat
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearProperties() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(System.Collections.Generic.IEnumerable<string!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(System.Collections.Generic.IEnumerable<System.Uri!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<string!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
@@ -32,4 +34,3 @@ DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithId(System.Uri! id) -> D
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithName(string? name) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
-~static DataCore.Adapter.AbstractionsResources.Error_NotAValidFeatureUri.get -> string
