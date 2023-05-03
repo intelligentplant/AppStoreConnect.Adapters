@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace DataCore.Adapter.Common {
@@ -465,6 +464,24 @@ namespace DataCore.Adapter.Common {
             _properties.Clear();
             return this;
         }
+
+
+        /// <summary>
+        /// Adds the specified custom adapter property.
+        /// </summary>
+        /// <param name="name">
+        ///   The property name.
+        /// </param>
+        /// <param name="value">
+        ///   The property value.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// </exception>
+        public AdapterDescriptorBuilder WithProperty(string name, Variant value) => WithProperties(new AdapterProperty(name, value));
 
 
         /// <summary>

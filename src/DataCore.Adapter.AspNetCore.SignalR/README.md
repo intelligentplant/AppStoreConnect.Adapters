@@ -10,18 +10,14 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNe
 
 # Registering Adapters and Adapter Services
 
-Adapter services must be added to the application in the `Startup.cs` file's `ConfigureServices` method. For example:
+Adapter services must be added to the application's service collection at startup. For example:
 
 ```csharp
-services
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
-    .AddHostInfo(HostInfo.Create(
-        "My Host",
-        "A brief description of the hosting application",
-        "0.9.0-alpha", // SemVer v2
-        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-        AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-    ))
+    .AddHostInfo("My Host", "A brief description of the hosting application")
     .AddAdapter<MyAdapter>()
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
@@ -34,7 +30,7 @@ In most cases, adapters can be registered using the `AddAdapter` extension metho
 To register additional services (such as required `System.Text.Json` converters), add the following to your SignalR registration:
 
 ```csharp
-services.AddSignalR().AddDataCoreAdapterSignalR();
+builder.Services.AddSignalR().AddDataCoreAdapterSignalR();
 ```
 
 

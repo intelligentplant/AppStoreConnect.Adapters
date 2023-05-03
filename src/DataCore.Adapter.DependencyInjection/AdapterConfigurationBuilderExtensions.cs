@@ -285,7 +285,54 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 
         /// <summary>
-        /// Registers adapter options for the specified adapter ID.
+        /// Registers adapter options of type <typeparamref name="TOptions"/> that use <see cref="Options.Options.DefaultName"/> 
+        /// as their name.
+        /// </summary>
+        /// <typeparam name="TOptions">
+        ///   The adapter options type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="configure">
+        ///   An optional callback for configuring the <typeparamref name="TOptions"/> (for example, 
+        ///   by binding them to a <c>Microsoft.Extensions.Configuration.IConfiguration</c> instance).
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   An <strong>unnamed</strong> options instance will be registered. To register a named 
+        ///   options instance (for example, if your adapter constructor accepts an <see cref="Options.IOptionsMonitor{TOptions}"/> 
+        ///   parameter), use <see cref="AddAdapterOptions{TOptions}(IAdapterConfigurationBuilder, string, Action{Options.OptionsBuilder{TOptions}}?)"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   More information about the options pattern in .NET is available <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/options#options-interfaces">here</a>.
+        /// </para>
+        /// 
+        /// </remarks>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        public static IAdapterConfigurationBuilder AddAdapterOptions<TOptions>(this IAdapterConfigurationBuilder builder, Action<Options.OptionsBuilder<TOptions>>? configure = null) where TOptions : AdapterOptions, new() {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            var optionsBuilder = builder.Services.AddOptions<TOptions>();
+            configure?.Invoke(optionsBuilder);
+
+            return builder;
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+        /// <summary>
+        /// Registers adapter options of type <typeparamref name="TOptions"/> that use the specified <paramref name="adapterId"/> 
+        /// as their name.
         /// </summary>
         /// <typeparam name="TOptions">
         ///   The adapter options type.
@@ -311,7 +358,18 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   <paramref name="adapterId"/> is <see langword="null"/>
         /// </exception>
         /// <remarks>
-        ///   A named options instance using the <paramref name="adapterId"/> will be registered.
+        /// 
+        /// <para>
+        ///   A <strong>named</strong> options instance will be registered using the supplied <paramref name="adapterId"/>. 
+        ///   To register an unnamed options instance (for example, if your adapter constructor 
+        ///   accepts an <see cref="Options.IOptions{TOptions}"/> parameter), use 
+        ///   <see cref="AddAdapterOptions{TOptions}(IAdapterConfigurationBuilder, Action{Options.OptionsBuilder{TOptions}}?)"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   More information about the options pattern in .NET is available <a href="https://learn.microsoft.com/en-us/dotnet/core/extensions/options#options-interfaces">here</a>.
+        /// </para>
+        /// 
         /// </remarks>
         public static IAdapterConfigurationBuilder AddAdapterOptions<TOptions>(this IAdapterConfigurationBuilder builder, string adapterId, Action<Options.OptionsBuilder<TOptions>>? configure = null) where TOptions : AdapterOptions, new() {
             if (builder == null) {

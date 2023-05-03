@@ -1,1 +1,4 @@
 ﻿#nullable enable
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddHostInfo(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, System.Action<DataCore.Adapter.Common.HostInfoBuilder!>! configure) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddHostInfo(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, System.Action<System.IServiceProvider!, DataCore.Adapter.Common.HostInfoBuilder!>! configure) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
+static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.WithInstanceId(this DataCore.Adapter.Common.HostInfoBuilder! builder, string! instanceId) -> DataCore.Adapter.Common.HostInfoBuilder!
