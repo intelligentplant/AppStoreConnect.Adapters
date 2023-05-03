@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 
 using DataCore.Adapter;
@@ -38,7 +39,8 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(services));
             }
 
-            return services.AddDataCoreAdapterServices().AddDefaultAspNetCoreServices();
+            return services.AddDataCoreAdapterServices()
+                .AddDefaultAspNetCoreServices();
         }
 
 
@@ -57,6 +59,9 @@ namespace Microsoft.Extensions.DependencyInjection {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="hostInfo"/> is <see langword="null"/>.
+        /// </exception>
         public static IAdapterConfigurationBuilder AddHostInfo(
             this IAdapterConfigurationBuilder builder, 
             HostInfo hostInfo
@@ -64,8 +69,11 @@ namespace Microsoft.Extensions.DependencyInjection {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
+            if (hostInfo == null) {
+                throw new ArgumentNullException(nameof(hostInfo));
+            }
 
-            builder.Services.AddSingleton(hostInfo ?? HostInfo.Unspecified);
+            builder.Services.AddSingleton(hostInfo);
             return builder;
         }
 
@@ -83,7 +91,10 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The description for the hosting application.
         /// </param>
         /// <param name="version">
-        ///   The version of the hosting application.
+        ///   The version of the hosting application. If the version is <see langword="null"/> or 
+        ///   cannot be parsed using strict SemVer v2.0 convensions, the version will be set by 
+        ///   calling <see cref="DataCore.Adapter.AssemblyExtensions.GetInformationalVersion"/> on 
+        ///   the assembly returned by <see cref="Assembly.GetEntryAssembly"/>.
         /// </param>
         /// <param name="vendor">
         ///   The vendor information for the hosting application. If <see langword="null"/>, the 
@@ -131,38 +142,263 @@ namespace Microsoft.Extensions.DependencyInjection {
 
             var props = new List<AdapterProperty>();
 
-            if (includeOperatingSystemDetails) {
-                props.Add(AdapterProperty.Create(
-                    Resources.HostProperty_OperatingSystem_Name,
-                    System.Runtime.InteropServices.RuntimeInformation.OSDescription,
-                    Resources.HostProperty_OperatingSystem_Description
-                ));
-            } 
-
-            if (includeContainerDetails) {
-                props.Add(AdapterProperty.Create(
-                    Resources.HostProperty_IsRunningInContainer_Name,
-                    Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), null),
-                    Resources.HostProperty_IsRunningInContainer_Description
-                ));
-            }
-
             if (properties != null) {
-                props.AddRange(properties);
+                props.AddRange(properties.Where(x => x != null));
             }
 
-            builder.Services.AddSingleton(sp => HostInfo.Create(
-                name, 
-                description,
-                version ?? Assembly.GetEntryAssembly()?.GetInformationalVersion(),
-                vendor ?? sp.GetService<VendorInfo>() ?? Assembly.GetEntryAssembly()?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo(),
-                props
-            ));
+            return builder.AddHostInfo((sp, hostInfoBuilder) => {
+                hostInfoBuilder
+                    .WithName(name)
+                    .WithDescription(description);
+
+                if (!includeOperatingSystemDetails || !includeContainerDetails) {
+                    hostInfoBuilder.ClearProperties();
+                    if (includeOperatingSystemDetails) {
+                        AddOperatingSystemHostInfoProperty(hostInfoBuilder);
+                    }
+                    if (includeContainerDetails) {
+                        AddContainerHostInfoProperty(hostInfoBuilder);
+                    }
+                }
+
+                if (props.Count > 0) {
+                    hostInfoBuilder.WithProperties(props);
+                }
+
+                if (version != null) {
+                    hostInfoBuilder.WithVersion(version);
+                }
+
+                if (vendor != null) {
+                    hostInfoBuilder.WithVendor(vendor);
+                }
+            });
+        }
+
+
+        /// <summary>
+        /// Adds information about the hosting application to the <see cref="IAdapterConfigurationBuilder"/>.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="configure">
+        ///   A delegate that is used to configure the <see cref="HostInfoBuilder"/> that builds 
+        ///   the final <see cref="HostInfo"/> service.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The <see cref="HostInfoBuilder"/> passed to the <paramref name="configure"/> 
+        ///   delegate is pre-configured using the following default values:
+        /// </para>
+        /// 
+        /// <list type="table">
+        ///   <item>
+        ///     <term>Name</term>
+        ///     <description>
+        ///       The default host application name is set using the <see cref="AssemblyName.FullName"/> 
+        ///       for the assembly returned by <see cref="Assembly.GetEntryAssembly"/>.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>Version Number</term>
+        ///     <description>
+        ///       The default version number is obtained by calling <see cref="DataCore.Adapter.AssemblyExtensions.GetInformationalVersion"/> is 
+        ///       on the assembly returned by <see cref="Assembly.GetEntryAssembly"/>.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>Vendor Information</term>
+        ///     <description>
+        ///       The default vendor information is set using the <see cref="VendorInfo"/> service 
+        ///       defined in the service provider. If the <see cref="VendorInfo"/> service cannot 
+        ///       be resolved and the assembly returned by <see cref="Assembly.GetEntryAssembly"/> 
+        ///       has a <see cref="VendorInfoAttribute"/> annotation, the details from the 
+        ///       <see cref="VendorInfoAttribute"/> will be used.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddHostInfo(this IAdapterConfigurationBuilder builder, Action<HostInfoBuilder> configure) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (configure == null) {
+                throw new ArgumentNullException(nameof(configure));
+            }
+            return builder.AddHostInfo((sp, hostInfoBuilder) => configure.Invoke(hostInfoBuilder));
+        }
+
+
+        /// <summary>
+        /// Adds information about the hosting application to the <see cref="IAdapterConfigurationBuilder"/>.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </param>
+        /// <param name="configure">
+        ///   A delegate that is used to configure the <see cref="HostInfoBuilder"/> that builds 
+        ///   the final <see cref="HostInfo"/> service.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IAdapterConfigurationBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="configure"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The <see cref="HostInfoBuilder"/> passed to the <paramref name="configure"/> 
+        ///   delegate is pre-configured using the following default values:
+        /// </para>
+        /// 
+        /// <list type="table">
+        ///   <item>
+        ///     <term>Name</term>
+        ///     <description>
+        ///       The default host application name is set using the <see cref="AssemblyName.FullName"/> 
+        ///       for the assembly returned by <see cref="Assembly.GetEntryAssembly"/>.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>Version Number</term>
+        ///     <description>
+        ///       The default version number is obtained by calling <see cref="DataCore.Adapter.AssemblyExtensions.GetInformationalVersion"/> is 
+        ///       on the assembly returned by <see cref="Assembly.GetEntryAssembly"/>.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <term>Vendor Information</term>
+        ///     <description>
+        ///       The default vendor information is set using the <see cref="VendorInfo"/> service 
+        ///       defined in the service provider. If the <see cref="VendorInfo"/> service cannot 
+        ///       be resolved and the assembly returned by <see cref="Assembly.GetEntryAssembly"/> 
+        ///       has a <see cref="VendorInfoAttribute"/> annotation, the details from the 
+        ///       <see cref="VendorInfoAttribute"/> will be used.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public static IAdapterConfigurationBuilder AddHostInfo(this IAdapterConfigurationBuilder builder, Action<IServiceProvider, HostInfoBuilder> configure) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(builder));
+            }
+            if (configure == null) {
+                throw new ArgumentNullException(nameof(configure));
+            }
+
+            builder.Services.AddSingleton(sp => {
+                var entryAssembly = Assembly.GetEntryAssembly();
+
+                var hostInfoBuilder = new HostInfoBuilder()
+                    .WithName(entryAssembly?.GetName()?.FullName)
+                    .WithVersion(entryAssembly?.GetInformationalVersion())
+                    .WithVendor(sp.GetService<VendorInfo>() ?? entryAssembly?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo());
+                
+                AddOperatingSystemHostInfoProperty(hostInfoBuilder);
+                AddContainerHostInfoProperty(hostInfoBuilder);
+
+                configure.Invoke(sp, hostInfoBuilder);
+                return hostInfoBuilder.Build();
+            });
+
             return builder;
         }
 
 
-        
+        /// <summary>
+        /// Adds a host property that specifies the instance ID used by the host in distributed 
+        /// telemetry systems.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="HostInfoBuilder"/>.
+        /// </param>
+        /// <param name="instanceId"></param>
+        /// <returns>
+        ///   The <see cref="HostInfoBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="instanceId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public static HostInfoBuilder WithInstanceId(this HostInfoBuilder builder, string instanceId) {
+            if (builder == null) {
+                throw new ArgumentNullException(nameof(instanceId));
+            }
+            if (string.IsNullOrWhiteSpace(instanceId)) {
+                throw new ArgumentOutOfRangeException(nameof(instanceId), Resources.Error_InstanceIdIsRequired);
+            }
+
+            AddInstanceIdProperty(builder, instanceId);
+
+            return builder;
+        }
+
+
+        /// <summary>
+        /// Adds a property that specifies the OS of the host.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="HostInfoBuilder"/>.
+        /// </param>
+        private static void AddOperatingSystemHostInfoProperty(HostInfoBuilder builder) {
+            builder.WithProperties(new AdapterProperty(
+                "OperatingSystem",
+                System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+                Resources.HostProperty_OperatingSystem_Description
+            ));
+        }
+
+
+        /// <summary>
+        /// Adds a property that specifies if the host is running inside a container.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="HostInfoBuilder"/>.
+        /// </param>
+        private static void AddContainerHostInfoProperty(HostInfoBuilder builder) {
+            builder.WithProperties(new AdapterProperty(
+                "Container",
+                Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), null),
+                Resources.HostProperty_IsRunningInContainer_Description
+            ));
+        }
+
+
+        /// <summary>
+        /// Adds a property that specifies the telemetry instance ID for the host.
+        /// </summary>
+        /// <param name="builder">
+        ///   The <see cref="HostInfoBuilder"/>.
+        /// </param>
+        /// <param name="instanceId">
+        ///   The telemetry instance ID.
+        /// </param>
+        private static void AddInstanceIdProperty(HostInfoBuilder builder, string instanceId) {
+            builder.WithProperties(new AdapterProperty(
+                "InstanceId",
+                instanceId,
+                Resources.HostProperty_InstanceId_Description
+            ));
+        }
 
 
         /// <summary>

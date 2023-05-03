@@ -10,9 +10,9 @@ Add a NuGet package reference to [IntelligentPlant.AppStoreConnect.Adapter.AspNe
 
 # Writing an Adapter Accessor
 
-An [IAdapterAccessor](/src/DataCore.Adapter.Abstractions/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.
+An [IAdapterAccessor](../DataCore.Adapter.Abstractions/IAdapterAccessor.cs) service is required so that your adapter(s) can be resolved at runtime. If the adapters that your application hosts are registered with the service collection at startup time, you can use the [AspNetCoreAdapterAccessor](./AspNetCoreAdapterAccessor.cs) class. This implementation is used by default if no custom adapter accessor is supplied.
 
-You can supply your own implementation by inheriting from the [AdapterAccessor](./DataCore.Adapter/AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
+You can supply your own implementation by inheriting from the [AdapterAccessor](../DataCore.Adapter/AdapterAccessor.cs) class. Inheriting from this class will ensure that an adapter is only visible to a calling user if they are authorized to access the adapter. See the [authorization](#writing-an-authorization-handler) section for information about authorizing access to adapters and adapter features.
 
 To register your adapter accessor, call the `AddAdapterAccessor<TAdapterAccessor>()` extension method when [registering adapter services](#registering-adapter-services). Note that the adapter accessor is always registered as a *singleton* service.
 
@@ -54,18 +54,14 @@ To register your authorization handler, call `AddAdapterFeatureAuthorization<THa
 
 # Registering Adapter Services
 
-Adapter services must be added to the application in the `Startup.cs` file's `ConfigureServices` method. For example:
+Adapter services must be added to the application's service collection at startup. For example:
 
 ```csharp
-services
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
-    .AddHostInfo(HostInfo.Create(
-        "My Host",
-        "A brief description of the hosting application",
-        "0.9.0-alpha", // SemVer v2
-        VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-        AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-    ))
+    .AddHostInfo("My Host", "A brief description of the hosting application")
     .AddAdapter<MyAdapter>()
     .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
@@ -86,94 +82,25 @@ If your adapter constructor accepts an `IOptions<T>` or `IOptionsMonitor<T>` par
       "Protocols": "Http1AndHttp2"
     }
   },
-  "CsvAdapter": {
-    "my-csv": {
+  "MyAdapter": {
+    "adapter-01": {
       "Name": "Sample Data",
-      "Description": "CSV adapter with dummy data",
-      "IsDataLoopingAllowed": true,
-      "CsvFile": "SampleData.csv"
+      "Description": "Provides a sample data set",
+      "Enabled": true
     }
   }
 }
 ```
 
 ```csharp
-public class Startup {
+var builder = WebApplication.CreateBuilder(args);
 
-    public IConfiguration Configuration { get; }
-
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
-
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(Configuration.GetSection("CsvAdapter:my-csv"));
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptions<T> to supply options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID 
-                sp.GetRequiredService<IOptions<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
+builder.Services
+    .AddDataCoreAdapterAspNetCoreServices()
+    .AddHostInfo("My Host", "A brief description of the hosting application")
+    .AddAdapterOptions<MyAdapterOptions>("adapter-01", options => options.Bind(builder.Configuration.GetSection("MyAdapter:adapter-01")))
+    .AddAdapter<MyAdapter>("adapter-01")
+    .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
 ```
 
-Note that, when using `IOptionsMonitor<T>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-001`, you must also register named options with the configuration system with a name of `adapter-001`:
-
-```csharp
-public class Startup {
-
-    public IConfiguration Configuration { get; }
-
-    public Startup(IConfiguration configuration) {
-        Configuration = configuration;
-    }
-
-    public void ConfigureServices(IServiceCollection services) {
-        // Other configuration removed for brevity.
-
-        // Bind named CSV adapter options against the application configuration.
-        services.Configure<DataCore.Adapter.Csv.CsvAdapterOptions>(
-            "my-csv", // Key for this set of options
-            Configuration.GetSection("CsvAdapter:my-csv")
-        );
-
-        services
-            .AddDataCoreAdapterAspNetCoreServices()
-            .AddHostInfo(HostInfo.Create(
-                "My Host",
-                "A brief description of the hosting application",
-                "0.9.0-alpha", // SemVer v2
-                VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
-                AdapterProperty.Create("Project URL", "https://github.com/intelligentplant/AppStoreConnect.Adapters")
-            ))
-            // Create adapter using an IOptionsMonitor<T> to supply named options.
-            .AddAdapter<DataCore.Adapter.Csv.CsvAdapter>(sp => ActivatorUtilities.CreateInstance<Csv.CsvAdapter>(
-                sp, 
-                "my-csv", // Adapter ID; also used as the named options key   
-                sp.GetRequiredService<IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions>>()
-            ))
-            .AddAdapterFeatureAuthorization<MyAdapterFeatureAuthHandler>();
-    }
-
-    // Remaining code removed for brevity.
-
-}
-```
+Note that, when using `IOptionsMonitor<T>` with an adapter derived from `AdapterBase<TOptions>`, the adapter will always try and retrieve named options that match the ID of the adapter. That is, if you register an adapter with an ID of `adapter-01`, you must also register named adapter options with the configuration system with a name of `adapter-01` as shown above.
