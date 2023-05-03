@@ -17,22 +17,18 @@ builder.Services
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
+    .AddDataCoreAdapterApiServices()
     .AddHostInfo(
         name: "ASP.NET Core Minimal API Example",
         description: "Example ASP.NET Core adapter host using minimal API syntax"
      )
-    .AddServices(svc => svc.Configure<WaveGeneratorAdapterOptions>(
-        builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
-     ))
-    .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGeneratorAdapter>(sp, AdapterId));
+    .AddAdapterOptions<WaveGeneratorAdapterOptions>(options => options.Bind(builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")))
+    .AddAdapter<WaveGeneratorAdapter>(AdapterId);
 
 // Pretty-print JSON responses when running in development mode.
 if (builder.Environment.IsDevelopment()) {
     builder.Services.Configure<JsonOptions>(options => options.SerializerOptions.WriteIndented = true);
 }
-
-builder.Services
-    .AddDataCoreAdapterApiServices();
 
 builder.Services
     .AddSignalR()
