@@ -1,1 +1,2 @@
 ﻿#nullable enable
+static Microsoft.Extensions.DependencyInjection.AdapterMinimalApiConfigurationExtensions.AddDataCoreAdapterApiServices(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!
