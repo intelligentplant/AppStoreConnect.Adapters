@@ -1,1 +1,2 @@
 ﻿#nullable enable
+DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.AdapterSignalRClient(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, bool disposeConnection, DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel compatibilityLevel = DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel.AspNetCore3) -> void
