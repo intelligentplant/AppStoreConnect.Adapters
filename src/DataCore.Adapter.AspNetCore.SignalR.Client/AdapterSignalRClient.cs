@@ -178,7 +178,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="hubConnection"/> is <see langword="null"/>.
         /// </exception>
-        public AdapterSignalRClient(HubConnection hubConnection, bool disposeConnection, CompatibilityLevel compatibilityLevel) {
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        public AdapterSignalRClient(HubConnection hubConnection, bool disposeConnection, CompatibilityLevel compatibilityLevel = CompatibilityLevel.Latest) {
             _hubConnection = hubConnection ?? throw new ArgumentNullException(nameof(hubConnection));
             _disposeConnection = disposeConnection;
             CompatibilityLevel = compatibilityLevel;
@@ -196,6 +197,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Client {
 
             Closed += OnClosedAsync;
         }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
 
         /// <summary>
