@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Http.Proxy {
             return _signalRClients.GetOrAdd(key, k => {
                 var client = new SignalRClientWrapper(
                     k,
-                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context)),
+                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context), true),
                     Options.SignalROptions.TimeToLive <= TimeSpan.Zero
                         ? TimeSpan.FromSeconds(30)
                         : Options.SignalROptions.TimeToLive
