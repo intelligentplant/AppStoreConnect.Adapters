@@ -2,7 +2,6 @@
 const DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute = "/signalr/app-store-connect/v2.0" -> string!
 DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient
 DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.Adapters.get -> DataCore.Adapter.AspNetCore.SignalR.Client.Clients.AdaptersClient!
-DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.AdapterSignalRClient(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, bool disposeConnection, DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel compatibilityLevel) -> void
 DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.AdapterSignalRClient(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel compatibilityLevel = DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel.AspNetCore3) -> void
 DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.AssetModel.get -> DataCore.Adapter.AspNetCore.SignalR.Client.Clients.AssetModelBrowserClient!
 DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient.Closed -> System.Func<System.Exception!, System.Threading.Tasks.Task!>!
