@@ -6,7 +6,7 @@ An adapter is a component that exposes real-time process data and/or alarm & eve
 
 You can find a tutorial for writing a simple MQTT adapter [here](./tutorials/mqtt-adapter).
 
-All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](/src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
+All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](../src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
 
 > Note that adapters do not have to directly implement the feature interfaces themselves. Instead, the adapter can delegate the feature implementation to a helper class. This is described in more detail [below](#delegating-feature-implementations-to-external-providers).
 
