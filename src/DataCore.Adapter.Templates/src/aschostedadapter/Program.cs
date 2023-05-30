@@ -15,6 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Our adapter settings are stored in adaptersettings.json.
 builder.Configuration.AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
+// Parent PID. If specified, we will gracefully shut down if the parent process exits.
+var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
+if (pid > 0) {
+    builder.Services.AddDependentProcessWatcher(pid);
+}
+
 // Host instance ID.
 var instanceId = builder.Configuration.GetValue<string>("AppStoreConnect:Adapter:Host:InstanceId");
 if (string.IsNullOrWhiteSpace(instanceId)) {

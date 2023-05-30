@@ -11,6 +11,12 @@ const string AdapterId = "$default";
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Parent PID. If specified, we will gracefully shut down if the parent process exits.
+var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
+if (pid > 0) {
+    builder.Services.AddDependentProcessWatcher(pid);
+}
+
 builder.Services
     .AddLocalization()
     .AddProblemDetails();

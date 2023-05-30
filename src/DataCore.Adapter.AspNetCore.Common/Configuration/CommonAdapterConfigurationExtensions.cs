@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 
 using DataCore.Adapter;
@@ -63,7 +62,7 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   <paramref name="hostInfo"/> is <see langword="null"/>.
         /// </exception>
         public static IAdapterConfigurationBuilder AddHostInfo(
-            this IAdapterConfigurationBuilder builder, 
+            this IAdapterConfigurationBuilder builder,
             HostInfo hostInfo
         ) {
             if (builder == null) {
@@ -310,7 +309,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                     .WithName(entryAssembly?.GetName()?.FullName)
                     .WithVersion(entryAssembly?.GetInformationalVersion())
                     .WithVendor(sp.GetService<VendorInfo>() ?? entryAssembly?.GetCustomAttribute<VendorInfoAttribute>()?.CreateVendorInfo());
-                
+
                 AddOperatingSystemHostInfoProperty(hostInfoBuilder);
                 AddContainerHostInfoProperty(hostInfoBuilder);
 
@@ -505,6 +504,70 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.TryAddTransient<IAvailableApiService, DefaultAvailableApiService>();
             builder.AddAutomaticInitialization();
             return builder;
+        }
+
+
+        /// <summary>
+        /// Registers an <see cref="IHostedService"/> that will request a graceful application 
+        /// shutdown when any of the specified processes exit.
+        /// </summary>
+        /// <param name="services">
+        ///   The <see cref="IServiceCollection"/>.
+        /// </param>
+        /// <param name="pid">
+        ///   The PID of the first process to watch.
+        /// </param>
+        /// <param name="additionalPids">
+        ///   The PID of any additional processes to watch.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IServiceCollection"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="services"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   This method is intended to allow adapter host applications that are started by an 
+        ///   external application such as App Store Connect to exit if the external application 
+        ///   exits without stopping the adapter host.
+        /// </remarks>
+        public static IServiceCollection AddDependentProcessWatcher(this IServiceCollection services, int pid, params int[] additionalPids) => AddDependentProcessWatcher(services, new[] { pid }.Concat(additionalPids));
+
+
+        /// <summary>
+        /// Registers an <see cref="IHostedService"/> that will request a graceful application 
+        /// shutdown when any of the specified processes exit.
+        /// </summary>
+        /// <param name="services">
+        ///   The <see cref="IServiceCollection"/>.
+        /// </param>
+        /// <param name="pids">
+        ///   The PIDs of the processes to watch.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="IServiceCollection"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="services"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="pids"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   This method is intended to allow adapter host applications that are started by an 
+        ///   external application such as App Store Connect to exit if the external application 
+        ///   exits without stopping the adapter host.
+        /// </remarks>
+        public static IServiceCollection AddDependentProcessWatcher(this IServiceCollection services, IEnumerable<int> pids) {
+            if (services == null) {
+                throw new ArgumentNullException(nameof(services));
+            }
+            if (pids == null) {
+                throw new ArgumentNullException(nameof(pids));
+            }
+
+            services.AddHostedService(sp => ActivatorUtilities.CreateInstance<DependentProcessWatcher>(sp, pids));
+            return services;
         }
 
     }
