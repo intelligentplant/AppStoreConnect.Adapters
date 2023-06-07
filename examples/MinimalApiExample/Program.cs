@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Http.Json;
 
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -48,13 +49,22 @@ builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
+var otelResourceBuilder = ResourceBuilder.CreateDefault()
+    .AddDataCoreAdapterApiService();
+
 builder.Services
     .AddOpenTelemetry()
     .WithTracing(otel => otel
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
+        .SetResourceBuilder(otelResourceBuilder)
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
-        .AddJaegerExporter());
+        .AddJaegerExporter())
+    .WithMetrics(otel => otel
+        .SetResourceBuilder(otelResourceBuilder)
+        .AddRuntimeInstrumentation()
+        .AddAspNetCoreInstrumentation()
+        .AddDataCoreAdapterInstrumentation()
+        .AddPrometheusExporter());
     
 var app = builder.Build();
 
@@ -77,6 +87,7 @@ app.MapDataCoreAdapterApiRoutes();
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapFallback("/{*url}", context => {
     context.Response.Redirect($"/api/app-store-connect/v2.0/host-info/");
