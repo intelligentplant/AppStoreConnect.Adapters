@@ -1,3 +1,7 @@
 ﻿.adapter-status-heading, .copy-adapter-id {
     color: var(--bs-emphasis-color);
 }
+
+    .adapter-status-heading .adapter-status-heading-info {
+        color: var(--bs-body-color);
+    }
