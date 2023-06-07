@@ -828,6 +828,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -874,6 +875,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.BasicInformation;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -932,6 +934,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
