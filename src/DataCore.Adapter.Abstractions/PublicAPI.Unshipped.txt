@@ -2,17 +2,15 @@
 DataCore.Adapter.Common.AdapterDescriptorBuilder
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id, string! name) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterDescriptorExtended!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearExtensionFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearProperties() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(System.Collections.Generic.IEnumerable<string!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithExtensionFeatures(System.Collections.Generic.IEnumerable<System.Uri!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
