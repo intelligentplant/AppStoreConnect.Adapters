@@ -49,6 +49,18 @@ namespace DataCore.Adapter.Common {
         /// Creates a new <see cref="AdapterDescriptorBuilder"/> instance.
         /// </summary>
         /// <param name="id">
+        ///   The adapter ID. This will also be used as the adapter name.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public AdapterDescriptorBuilder(string id): this(id, id) { } 
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterDescriptorBuilder"/> instance.
+        /// </summary>
+        /// <param name="id">
         ///   The adapter ID.
         /// </param>
         /// <param name="name">
@@ -197,6 +209,67 @@ namespace DataCore.Adapter.Common {
         /// </returns>
         public AdapterDescriptorBuilder ClearFeatures() {
             _adapterFeatures.Clear();
+            _adapterExtensionFeatures.Clear();
+            return this;
+        }
+
+
+        /// <summary>
+        /// Removes the specified feature from the descriptor.
+        /// </summary>
+        /// <typeparam name="TFeature">
+        ///   The feature type.
+        /// </typeparam>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        public AdapterDescriptorBuilder ClearFeature<TFeature>() where TFeature : IAdapterFeature {
+            if (typeof(TFeature).IsStandardAdapterFeature()) {
+                _adapterFeatures.Remove(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            }
+            else if (typeof(TFeature).IsExtensionAdapterFeature()) {
+                _adapterExtensionFeatures.Remove(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Removes the specified feature from the descriptor.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        public AdapterDescriptorBuilder ClearFeature(Uri feature) {
+            if (feature != null) {
+                if (feature.IsStandardFeatureUri()) {
+                    _adapterFeatures.Remove(feature.ToString());
+                }
+                else if (feature.IsExtensionFeatureUri()) {
+                    _adapterExtensionFeatures.Remove(feature.ToString());
+                }
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Removes the specified feature from the descriptor.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        public AdapterDescriptorBuilder ClearFeature(string feature) {
+            if (feature != null && Uri.TryCreate(feature, UriKind.Absolute, out var featureUri)) {
+                return ClearFeature(featureUri);
+            }
+
             return this;
         }
 
@@ -239,11 +312,16 @@ namespace DataCore.Adapter.Common {
             }
 
             foreach (var feature in features) {
-                if (feature == null || !feature.IsStandardFeatureUri()) {
+                if (feature == null) {
                     continue;
                 }
 
-                _adapterFeatures.Add(feature.ToString());
+                if (feature.IsStandardFeatureUri()) {
+                    _adapterFeatures.Add(feature.ToString());
+                }
+                else if (feature.IsExtensionFeatureUri()) {
+                    _adapterExtensionFeatures.Add(feature.ToString());
+                }
             }
 
             return this;
@@ -281,21 +359,22 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="features"/> is <see langword="null"/>.
         /// </exception>
-        /// <remarks>
-        ///   <paramref name="features"/> entries that do not represent standard adapter feature 
-        ///   IDs will be ignored.
-        /// </remarks>
         public AdapterDescriptorBuilder WithFeatures(IEnumerable<string> features) {
             if (features == null) {
                 throw new ArgumentNullException(nameof(features));
             }
 
             foreach (var item in features) {
-                if (item == null || !Uri.TryCreate(item, UriKind.Absolute, out var feature) || !feature.IsStandardFeatureUri()) {
+                if (item == null || !Uri.TryCreate(item, UriKind.Absolute, out var feature)) {
                     continue;
                 }
 
-                _adapterFeatures.Add(feature.ToString());
+                if (feature.IsStandardFeatureUri()) {
+                    _adapterFeatures.Add(feature.ToString());
+                }
+                else if (feature.IsExtensionFeatureUri()) {
+                    _adapterExtensionFeatures.Add(feature.ToString());
+                }
             }
 
             return this;
@@ -306,8 +385,7 @@ namespace DataCore.Adapter.Common {
         /// Adds the specified feature to the descriptor.
         /// </summary>
         /// <typeparam name="TFeature">
-        ///   The feature type. Types that do not represent standard adapter features will be 
-        ///   ignored.
+        ///   The feature type.
         /// </typeparam>
         /// <returns>
         ///   The <see cref="AdapterDescriptorBuilder"/>.
@@ -316,138 +394,7 @@ namespace DataCore.Adapter.Common {
             if (typeof(TFeature).IsStandardAdapterFeature()) {
                 _adapterFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Clears the list of extension features supported by the adapter.
-        /// </summary>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder ClearExtensionFeatures() {
-            _adapterExtensionFeatures.Clear();
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds extension features supported by the adapter.
-        /// </summary>
-        /// <param name="features">
-        ///   The extension feature IDs.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <remarks>
-        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
-        ///   IDs will be ignored.
-        /// </remarks>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder WithExtensionFeatures(params Uri[] features) => WithExtensionFeatures((IEnumerable<Uri>) features);
-
-
-        /// <summary>
-        /// Adds extension features supported by the adapter.
-        /// </summary>
-        /// <param name="features">
-        ///   The extension feature IDs.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="features"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
-        ///   IDs will be ignored.
-        /// </remarks>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder WithExtensionFeatures(IEnumerable<Uri> features) {
-            if (features == null) {
-                throw new ArgumentNullException(nameof(features));
-            }
-
-            foreach (var feature in features) {
-                if (feature == null || !feature.IsExtensionFeatureUri()) {
-                    continue;
-                }
-
-                _adapterExtensionFeatures.Add(feature.ToString());
-            }
-
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds extension features supported by the adapter.
-        /// </summary>
-        /// <param name="features">
-        ///   The extension feature IDs.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <remarks>
-        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
-        ///   IDs will be ignored.
-        /// </remarks>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder WithExtensionFeatures(params string[] features) => WithExtensionFeatures((IEnumerable<string>) features);
-
-
-        /// <summary>
-        /// Adds extension features supported by the adapter.
-        /// </summary>
-        /// <param name="features">
-        ///   The extension feature IDs.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="features"/> is <see langword="null"/>.
-        /// </exception>
-        /// <remarks>
-        ///   <paramref name="features"/> entries that do not represent extension adapter feature 
-        ///   IDs will be ignored.
-        /// </remarks>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder WithExtensionFeatures(IEnumerable<string> features) {
-            if (features == null) {
-                throw new ArgumentNullException(nameof(features));
-            }
-
-            foreach (var item in features) {
-                if (!Uri.TryCreate(item, UriKind.Absolute, out var feature) || !feature.IsExtensionFeatureUri()) {
-                    continue;
-                }
-
-                _adapterExtensionFeatures.Add(feature.ToString());
-            }
-
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds the specified feature to the descriptor.
-        /// </summary>
-        /// <typeparam name="TFeature">
-        ///   The feature type. Types that do not represent extension adapter features will be 
-        ///   ignored.
-        /// </typeparam>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        [Obsolete(Extensions.ExtensionFeatureConstants.ObsoleteMessage, Extensions.ExtensionFeatureConstants.ObsoleteError)]
-        public AdapterDescriptorBuilder WithExtensionFeature<TFeature>() where TFeature : Extensions.IAdapterExtensionFeature {
-            if (typeof(TFeature).IsExtensionAdapterFeature()) {
+            else if (typeof(TFeature).IsExtensionAdapterFeature()) {
                 _adapterExtensionFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
             return this;
