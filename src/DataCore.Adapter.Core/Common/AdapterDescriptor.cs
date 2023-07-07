@@ -77,6 +77,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
+        [Obsolete("Use constructor instead.", true)]
         public static AdapterDescriptor Create(string id, string name, string? description) {
             return new AdapterDescriptor(id, name, description);
         }
@@ -97,6 +98,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
+        [Obsolete("Use constructor instead.", true)]
         public static AdapterDescriptor Create(string id, string name) {
             return Create(id, name, null);
         }
@@ -112,6 +114,7 @@ namespace DataCore.Adapter.Common {
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
         /// </exception>
+        [Obsolete("Use constructor instead.", true)]
         public static AdapterDescriptor Create(string id) {
             return Create(id, id, null);
         }
@@ -134,7 +137,7 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return Create(descriptor.Id, descriptor.Name, descriptor.Description);
+            return new AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
         }
 
     }
