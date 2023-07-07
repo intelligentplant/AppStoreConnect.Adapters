@@ -979,7 +979,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return Common.AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
+            return new Common.AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
         }
 
 
