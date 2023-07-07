@@ -65,6 +65,9 @@ namespace DataCore.Adapter.AspNetCore.Internal {
         }
 
 
+        internal static IResult CreateAdapterNotFoundResult(IAdapterCallContext callContext, string adapterId) => Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId));
+
+
         internal static async ValueTask<ResolvedAdapter<TFeature>> ResolveAdapterAsync<TFeature>(
             HttpContext context,
             IAdapterAccessor accessor,
@@ -75,7 +78,7 @@ namespace DataCore.Adapter.AspNetCore.Internal {
 
             var resolvedFeature = await accessor.GetAdapterAndFeature<TFeature>(callContext, adapterId, cancellationToken).ConfigureAwait(false);
             if (!resolvedFeature.IsAdapterResolved) {
-                return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)));
+                return CreateErrorResult<TFeature>(CreateAdapterNotFoundResult(callContext, adapterId));
             }
             if (!resolvedFeature.Adapter.IsEnabled || !resolvedFeature.Adapter.IsRunning) {
                 return CreateErrorResult<TFeature>(Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: string.Format(callContext.CultureInfo, Resources.Error_AdapterIsNotRunning, adapterId)));

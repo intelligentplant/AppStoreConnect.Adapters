@@ -130,12 +130,12 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var descriptor = await _adapterAccessor.GetAdapterDescriptorAsync(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (descriptor == null) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
-            return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
+            return Ok(descriptor); // 200
         }
 
 

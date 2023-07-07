@@ -57,10 +57,10 @@ namespace DataCore.Adapter.Grpc.Server.Services {
         /// <inheritdoc/>
         public override async Task<GetAdapterResponse> GetAdapter(GetAdapterRequest request, ServerCallContext context) {
             var adapterCallContext = new GrpcAdapterCallContext(context);
-            var adapter = await _adapterAccessor.GetAdapter(adapterCallContext, request.AdapterId, context.CancellationToken).ConfigureAwait(false);
+            var descriptor = await _adapterAccessor.GetAdapterDescriptorAsync(adapterCallContext, request.AdapterId, context.CancellationToken).ConfigureAwait(false);
 
             return new GetAdapterResponse() {
-                Adapter = adapter?.CreateExtendedAdapterDescriptor().ToGrpcExtendedAdapterDescriptor()
+                Adapter = descriptor?.ToGrpcExtendedAdapterDescriptor()
             };
         }
 
@@ -70,7 +70,7 @@ namespace DataCore.Adapter.Grpc.Server.Services {
             var adapterCallContext = new GrpcAdapterCallContext(context);
             var adapterId = request.AdapterId;
             var cancellationToken = context.CancellationToken;
-            var adapter = await Util.ResolveAdapterAndFeature<Diagnostics.IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
+            var adapter = await Util.ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, _adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
 
             var result = await adapter.Feature.CheckHealthAsync(adapterCallContext, cancellationToken).ConfigureAwait(false);
 
