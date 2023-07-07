@@ -602,7 +602,24 @@ namespace DataCore.Adapter {
         /// <exception cref="AdapterDescriptorExtended">
         ///  <paramref name="adapter"/> is <see langword="null"/>.
         /// </exception>
-        public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) {
+        public static AdapterDescriptorExtended CreateExtendedAdapterDescriptor(this IAdapter adapter) => adapter.CreateExtendedAdapterDescriptorBuilder().Build();
+
+
+        /// <summary>
+        /// Creates an <see cref="AdapterDescriptorBuilder"/> that is pre-populated using the 
+        /// <see cref="IAdapter"/>.
+        /// </summary>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="AdapterDescriptorBuilder"/> that can be used to build an extended 
+        ///   descriptor for the <paramref name="adapter"/>.
+        /// </returns>
+        /// <exception cref="AdapterDescriptorExtended">
+        ///  <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        public static AdapterDescriptorBuilder CreateExtendedAdapterDescriptorBuilder(this IAdapter adapter) {
             if (adapter == null) {
                 throw new ArgumentNullException(nameof(adapter));
             }
@@ -612,7 +629,7 @@ namespace DataCore.Adapter {
                 .WithFeatures(adapter.Features.Keys)
                 .WithProperties(adapter.Properties);
 
-            return builder.Build();
+            return builder;
         }
 
 

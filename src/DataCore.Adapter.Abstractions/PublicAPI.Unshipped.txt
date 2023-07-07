@@ -45,3 +45,4 @@ DataCore.Adapter.Common.HostInfoBuilder.WithProperties(System.Collections.Generi
 DataCore.Adapter.Common.HostInfoBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.HostInfoBuilder!
+static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptorBuilder(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
