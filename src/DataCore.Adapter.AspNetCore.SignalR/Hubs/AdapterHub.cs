@@ -123,8 +123,8 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
             var adapterCallContext = new SignalRAdapterCallContext(Context);
-            var adapter = await AdapterAccessor.GetAdapter(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
-            return adapter == null ? null! : adapter.CreateExtendedAdapterDescriptor();
+            var descriptor = await AdapterAccessor.GetAdapterDescriptorAsync(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
+            return descriptor!;
         }
 
 

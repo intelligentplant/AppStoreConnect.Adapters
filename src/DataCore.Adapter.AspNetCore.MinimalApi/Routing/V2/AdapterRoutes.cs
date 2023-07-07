@@ -83,12 +83,13 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             string adapterId,
             CancellationToken cancellationToken = default
         ) {
-            var resolverResult = await Utils.ResolveAdapterAsync<IHealthCheck>(context, adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
-            if (resolverResult.Error != null) {
-                return resolverResult.Error;
+            var callContext = new HttpAdapterCallContext(context);
+            var descriptor = await adapterAccessor.GetAdapterDescriptorAsync(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (descriptor == null) {
+                return Utils.CreateAdapterNotFoundResult(callContext, adapterId);
             }
 
-            return Results.Ok(resolverResult.Adapter.CreateExtendedAdapterDescriptor());
+            return Results.Ok(descriptor);
         }
 
 
