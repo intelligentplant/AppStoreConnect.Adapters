@@ -54,7 +54,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="TagValueAnnotationQueryResult"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueAnnotationQueryResult>), 200)]
         public async Task<IActionResult> ReadAnnotations(string adapterId, ReadAnnotationsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -99,7 +99,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the matching <see cref="TagValueAnnotationExtended"/> object.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [Route("{adapterId:maxlength(200)}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(TagValueAnnotationExtended), 200)]
         [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> ReadAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {
@@ -153,7 +153,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   describing the operation.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/{tagId}/create")]
+        [Route("{adapterId:maxlength(200)}/{tagId}/create")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> CreateAnnotation(string adapterId, string tagId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
@@ -212,7 +212,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   describing the operation.
         /// </returns>
         [HttpPut]
-        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [Route("{adapterId:maxlength(200)}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> UpdateAnnotation(string adapterId, string tagId, string annotationId, TagValueAnnotation annotation, CancellationToken cancellationToken) {
@@ -269,7 +269,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   describing the operation.
         /// </returns>
         [HttpDelete]
-        [Route("{adapterId}/{tagId}/{annotationId}")]
+        [Route("{adapterId:maxlength(200)}/{tagId}/{annotationId}")]
         [ProducesResponseType(typeof(WriteTagValueAnnotationResult), 200)]
         [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> DeleteAnnotation(string adapterId, string tagId, string annotationId, CancellationToken cancellationToken) {

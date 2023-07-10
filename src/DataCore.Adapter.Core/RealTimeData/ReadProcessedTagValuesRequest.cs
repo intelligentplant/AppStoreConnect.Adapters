@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 
 namespace DataCore.Adapter.RealTimeData {
@@ -40,6 +41,10 @@ namespace DataCore.Adapter.RealTimeData {
 
             if (DataFunctions.Any(x => x == null)) {
                 yield return new ValidationResult(SharedResources.Error_DataFunctionCannotBeNull, new[] { nameof(DataFunctions) });
+            }
+
+            if (DataFunctions.Any(x => x?.Length > 50)) {
+                yield return new ValidationResult(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_CollectionItemIsTooLong, 50), new[] { nameof(DataFunctions) });
             }
 
             if (SampleInterval <= TimeSpan.Zero) {

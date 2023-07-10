@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -84,13 +85,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the snapshot values for the requested tags.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/snapshot")]
+        [Route("{adapterId:maxlength(200)}/snapshot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadSnapshotValues(string adapterId, [FromQuery] string[] tag = null!, CancellationToken cancellationToken = default) {
-            return ReadSnapshotValues(adapterId, new ReadSnapshotTagValuesRequest() { 
+            var request = new ReadSnapshotTagValuesRequest() {
                 Tags = tag ?? Array.Empty<string>()
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return ReadSnapshotValues(adapterId, request, cancellationToken);
         }
 
 
@@ -110,7 +112,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the snapshot values for the requested tags.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/snapshot")]
+        [Route("{adapterId:maxlength(200)}/snapshot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadSnapshotValues(string adapterId, ReadSnapshotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -164,9 +166,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the raw values for the requested tags.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/raw")]
+        [Route("{adapterId:maxlength(200)}/raw")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadRawValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -188,13 +189,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 end = start.Value.Add(DefaultHistoricalQueryDuration);
             }
 
-            return ReadRawValues(adapterId, new ReadRawTagValuesRequest() {
+            var request = new ReadRawTagValuesRequest() {
                 Tags = tag ?? Array.Empty<string>(),
                 UtcStartTime = Util.ConvertToUniversalTime(start.Value),
                 UtcEndTime = Util.ConvertToUniversalTime(end.Value),
                 SampleCount = count,
                 BoundaryType = boundary
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return ReadRawValues(adapterId, request, cancellationToken);
         }
 
 
@@ -214,7 +217,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the raw values for the requested tags.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/raw")]
+        [Route("{adapterId:maxlength(200)}/raw")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadRawValues(string adapterId, ReadRawTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -270,9 +273,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   charts.
         /// </remarks>
         [HttpGet]
-        [Route("{adapterId}/plot")]
+        [Route("{adapterId:maxlength(200)}/plot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadPlotValues(
             string adapterId, 
             [FromQuery] string[] tag = null!, 
@@ -293,12 +295,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 end = start.Value.Add(DefaultHistoricalQueryDuration);
             }
 
-            return ReadPlotValues(adapterId, new ReadPlotTagValuesRequest() {
+            var request = new ReadPlotTagValuesRequest() {
                 Tags = tag ?? Array.Empty<string>(),
                 UtcStartTime = Util.ConvertToUniversalTime(start.Value),
                 UtcEndTime = Util.ConvertToUniversalTime(end.Value),
                 Intervals = count
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return ReadPlotValues(adapterId, request, cancellationToken);
         }
 
 
@@ -322,7 +326,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   charts.
         /// </remarks>
         [HttpPost]
-        [Route("{adapterId}/plot")]
+        [Route("{adapterId:maxlength(200)}/plot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadPlotValues(string adapterId, ReadPlotTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -367,19 +371,20 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the values for the requested tags at the requested times.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/values-at-times")]
+        [Route("{adapterId:maxlength(200)}/values-at-times")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadValuesAtTimes(
             string adapterId, 
             [FromQuery] string[] tag = null!,
             [FromQuery] DateTime[] time = null!,
             CancellationToken cancellationToken = default
         ) {
-            return ReadValuesAtTimes(adapterId, new ReadTagValuesAtTimesRequest() { 
+            var request = new ReadTagValuesAtTimesRequest() {
                 Tags = tag ?? Array.Empty<string>(),
                 UtcSampleTimes = time?.Select(Util.ConvertToUniversalTime)?.ToArray() ?? Array.Empty<DateTime>()
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return ReadValuesAtTimes(adapterId, request, cancellationToken);
         }
 
 
@@ -399,7 +404,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the values for the requested tags at the requested times.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/values-at-times")]
+        [Route("{adapterId:maxlength(200)}/values-at-times")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadValuesAtTimes(string adapterId, ReadTagValuesAtTimesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -461,9 +466,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
-        [Route("{adapterId}/processed")]
+        [Route("{adapterId:maxlength(200)}/processed")]
         [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> ReadProcessedValues(
             string adapterId,
             [FromQuery] string[] tag = null!,
@@ -491,13 +495,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
 
             var interval = TimeSpan.FromSeconds((end.Value - start.Value).TotalSeconds / count);
 
-            return ReadProcessedValues(adapterId, new ReadProcessedTagValuesRequest() {
+            var request = new ReadProcessedTagValuesRequest() {
                 Tags = tag ?? Array.Empty<string>(),
                 UtcStartTime = Util.ConvertToUniversalTime(start.Value),
                 UtcEndTime = Util.ConvertToUniversalTime(end.Value),
                 SampleInterval = interval,
                 DataFunctions = function ?? Array.Empty<string>()
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+
+            return ReadProcessedValues(adapterId, request, cancellationToken);
         }
 
 
@@ -524,7 +531,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
-        [Route("{adapterId}/processed")]
+        [Route("{adapterId:maxlength(200)}/processed")]
         [ProducesResponseType(typeof(IAsyncEnumerable<ProcessedTagValueQueryResult>), 200)]
         public async Task<IActionResult> ReadProcessedValues(string adapterId, ReadProcessedTagValuesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -570,9 +577,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpGet]
-        [Route("{adapterId}/supported-aggregations")]
+        [Route("{adapterId:maxlength(200)}/supported-aggregations")]
         [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> GetSupportedDataFunctions(string adapterId, CancellationToken cancellationToken) {
             return GetSupportedDataFunctions(adapterId, new GetSupportedDataFunctionsRequest(), cancellationToken);
         }
@@ -601,7 +607,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         /// </remarks>
         /// <seealso cref="DefaultDataFunctions"/>
         [HttpPost]
-        [Route("{adapterId}/supported-aggregations")]
+        [Route("{adapterId:maxlength(200)}/supported-aggregations")]
         [ProducesResponseType(typeof(IAsyncEnumerable<DataFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetSupportedDataFunctions(string adapterId, GetSupportedDataFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -644,7 +650,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects (one per sample written).
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/write/snapshot")]
+        [Route("{adapterId:maxlength(200)}/write/snapshot")]
         [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteSnapshotValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -689,7 +695,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects (one per sample written).
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/write/history")]
+        [Route("{adapterId:maxlength(200)}/write/history")]
         [ProducesResponseType(typeof(IAsyncEnumerable<WriteTagValueResult>), 200)]
         public async Task<IActionResult> WriteHistoricalValues(string adapterId, WriteTagValuesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);

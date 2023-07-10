@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 using DataCore.Adapter.Common;
@@ -28,6 +29,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The value units.
         /// </summary>
+        [MaxLength(50)]
         public string? Units { get; }
 
 

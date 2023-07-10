@@ -1,4 +1,5 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Events;
 
 using Microsoft.AspNetCore.Builder;
@@ -9,15 +10,15 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class EventRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapPost("/{adapterId}/by-time-range", ReadEventMessagesForTimeRangeAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/by-time-range", ReadEventMessagesForTimeRangeAsync)
                 .Produces<IAsyncEnumerable<EventMessage>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/by-cursor", ReadEventMessagesUsingCursorAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/by-cursor", ReadEventMessagesUsingCursorAsync)
                 .Produces<IAsyncEnumerable<EventMessageWithCursorPosition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/write", WriteEventMessagesAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/write", WriteEventMessagesAsync)
                 .Produces<IAsyncEnumerable<WriteEventMessageResult>>()
                 .ProducesDefaultErrors();
         }

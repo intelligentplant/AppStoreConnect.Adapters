@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.DataValidation;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -26,6 +27,7 @@ namespace DataCore.Adapter.Extensions {
         ///   to an adapter-defined base URI.
         /// </remarks>
         [Required]
+        [MaxUriLength(500)]
         public Uri Id { get; set; } = default!;
 
         /// <summary>

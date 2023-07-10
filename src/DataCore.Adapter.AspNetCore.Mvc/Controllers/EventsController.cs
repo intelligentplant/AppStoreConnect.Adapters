@@ -72,7 +72,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="EventMessage"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/by-time-range")]
+        [Route("{adapterId:maxlength(200)}/by-time-range")]
         [ProducesResponseType(typeof(IAsyncEnumerable<EventMessage>), 200)]
         public async Task<IActionResult> ReadEventMessagesForTimeRange(string adapterId, ReadEventMessagesForTimeRangeRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -112,7 +112,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/by-cursor")]
+        [Route("{adapterId:maxlength(200)}/by-cursor")]
         [ProducesResponseType(typeof(IAsyncEnumerable<EventMessageWithCursorPosition>), 200)]
         public async Task<IActionResult> ReadEventMessagesByCursor(string adapterId, ReadEventMessagesUsingCursorRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -155,7 +155,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects (one per sample written).
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/write")]
+        [Route("{adapterId:maxlength(200)}/write")]
         [ProducesResponseType(typeof(IAsyncEnumerable<WriteEventMessageResult>), 200)]
         public async Task<IActionResult> WriteEventMessages(string adapterId, WriteEventMessagesRequestExtended request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -60,15 +61,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/browse")]
+        [Route("{adapterId:maxlength(200)}/browse")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
-        [UseAdapterRequestValidation(true)]
         public Task<IActionResult> BrowseNodes(string adapterId, string? start = null, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default) {
-            return BrowseNodesPost(adapterId, new BrowseAssetModelNodesRequest() { 
+            var request = new BrowseAssetModelNodesRequest() {
                 ParentId = start,
                 PageSize = pageSize,
                 Page = page
-            }, cancellationToken);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return BrowseNodesPost(adapterId, request, cancellationToken);
         }
 
 
@@ -88,7 +90,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/browse")]
+        [Route("{adapterId:maxlength(200)}/browse")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> BrowseNodesPost(string adapterId, BrowseAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -126,7 +128,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/get-by-id")]
+        [Route("{adapterId:maxlength(200)}/get-by-id")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> GetNodes(string adapterId, GetAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -166,7 +168,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the matching <see cref="AssetModelNode"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/find")]
+        [Route("{adapterId:maxlength(200)}/find")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AssetModelNode>), 200)]
         public async Task<IActionResult> FindNodes(string adapterId, FindAssetModelNodesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);

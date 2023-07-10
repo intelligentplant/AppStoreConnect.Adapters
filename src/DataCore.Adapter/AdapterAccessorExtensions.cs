@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
@@ -28,19 +28,33 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   An <see cref="IAsyncEnumerable{T}"/> that will return the available adapters.
         /// </returns>
-        public static IAsyncEnumerable<IAdapter> GetAllAdapters(
+        public static async IAsyncEnumerable<IAdapter> GetAllAdapters(
             this IAdapterAccessor adapterAccessor, 
-            IAdapterCallContext context, 
+            IAdapterCallContext context,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (adapterAccessor == null) {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
 
-            return adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
-                Page = 1,
-                PageSize = int.MaxValue
-            }, cancellationToken);
+            var page = 0;
+
+            while (true) {
+                var @continue = false;
+
+                await foreach (var adapter in adapterAccessor.FindAdapters(context, new FindAdaptersRequest() {
+                    Page = ++page,
+                    PageSize = 500
+                }, cancellationToken).ConfigureAwait(false)) {
+                    yield return adapter;
+                    @continue = true;
+                }
+
+                if (!@continue) {
+                    break;
+                }
+            }
         }
 
 
