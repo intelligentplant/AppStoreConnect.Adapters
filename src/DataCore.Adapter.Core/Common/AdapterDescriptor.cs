@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json.Serialization;
 
 namespace DataCore.Adapter.Common {
@@ -10,10 +11,16 @@ namespace DataCore.Adapter.Common {
     public class AdapterDescriptor {
 
         /// <summary>
+        /// The maximum length of an adapter <see cref="Id"/>.
+        /// </summary>
+        public const int IdMaxLength = 200;
+
+        /// <summary>
         /// The identifier for the adapter. This can be any type of value, as long as it is unique 
         /// within the hosting application, and does not change.
         /// </summary>
         [Required]
+        [MaxLength(IdMaxLength)]
         public string Id { get; }
 
         /// <summary>
@@ -40,17 +47,19 @@ namespace DataCore.Adapter.Common {
         /// <param name="description">
         ///   The adapter description.
         /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/>, white space or longer than <see cref="IdMaxLength"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         [JsonConstructor]
         public AdapterDescriptor(string id, string name, string? description) {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentOutOfRangeException(nameof(id), SharedResources.Error_IdIsRequired)
-                : id;
+                : id.Length > IdMaxLength
+                    ? throw new ArgumentOutOfRangeException(nameof(id), string.Format(CultureInfo.CurrentCulture, SharedResources.Error_IdIsTooLong, IdMaxLength))
+                    : id;
             Name = string.IsNullOrWhiteSpace(name)
                 ? throw new ArgumentOutOfRangeException(nameof(name), SharedResources.Error_NameIsRequired)
                 : name;
@@ -71,10 +80,10 @@ namespace DataCore.Adapter.Common {
         /// <param name="description">
         ///   The adapter description.
         /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/>, white space or longer than <see cref="IdMaxLength"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         [Obsolete("Use constructor instead.", true)]
@@ -92,10 +101,10 @@ namespace DataCore.Adapter.Common {
         /// <param name="name">
         ///   The adapter name.
         /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/>, white space or longer than <see cref="IdMaxLength"/>.
         /// </exception>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         [Obsolete("Use constructor instead.", true)]
@@ -111,8 +120,8 @@ namespace DataCore.Adapter.Common {
         /// <param name="id">
         ///   The adapter ID.
         /// </param>
-        /// <exception cref="ArgumentException">
-        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/>, white space or longer than <see cref="IdMaxLength"/>.
         /// </exception>
         [Obsolete("Use constructor instead.", true)]
         public static AdapterDescriptor Create(string id) {
