@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
@@ -33,7 +36,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// The page size for the query.
         /// </summary>
-        [Range(1, int.MaxValue)]
+        [Range(1, 500)]
         [DefaultValue(10)]
         public int PageSize { get; set; } = 10;
 
@@ -57,6 +60,10 @@ namespace DataCore.Adapter.Events {
         protected override IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
             foreach (var item in base.Validate(validationContext)) {
                 yield return item;
+            }
+
+            if (Topics != null && Topics.Any(x => x?.Length > 500)) {
+                yield return new ValidationResult(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_CollectionItemIsTooLong, 500), new[] { nameof(Topics) });
             }
 
             if (UtcStartTime >= UtcEndTime) {

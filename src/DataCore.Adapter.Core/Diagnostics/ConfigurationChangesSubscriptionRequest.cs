@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 
 using DataCore.Adapter.Common;
@@ -27,6 +28,10 @@ namespace DataCore.Adapter.Diagnostics {
 
             if (ItemTypes != null && ItemTypes.Any(x => string.IsNullOrWhiteSpace(x))) {
                 yield return new ValidationResult(SharedResources.Error_ItemTypeCannotBeNull, new[] { nameof(ItemTypes) });
+            }
+
+            if (ItemTypes != null && ItemTypes.Any(x => x?.Length > 50)) {
+                yield return new ValidationResult(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_CollectionItemIsTooLong, 50), new[] { nameof(ItemTypes) });
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 
 namespace DataCore.Adapter.Events {
@@ -26,6 +27,9 @@ namespace DataCore.Adapter.Events {
             if (Topics != null) {
                 if (Topics.Any(string.IsNullOrWhiteSpace)) {
                     yield return new ValidationResult(SharedResources.Error_SubscriptionTopicsCannotBeNullOrWhiteSpace, new[] { nameof(Topics) });
+                }
+                if (Topics.Any(x => x?.Length > 500)) {
+                    yield return new ValidationResult(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_CollectionItemIsTooLong, 500), new[] { nameof(Topics) });
                 }
                 if (Topics.GroupBy(x => x).Any(x => x.Count() > 1)) {
                     yield return new ValidationResult(SharedResources.Error_DuplicateSubscriptionTopicsAreNotAllowed, new[] { nameof(Topics) });

@@ -14,6 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         [Required]
         [MinLength(1)]
+        [MaxLength(500)]
         public IEnumerable<DateTime> UtcSampleTimes { get; set; } = Array.Empty<DateTime>();
 
     }

@@ -13,6 +13,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// The ID or name of the tag that the annotation is associated with.
         /// </summary>
         [Required]
+        [MaxLength(500)]
         public string Tag { get; set; } = default!;
 
         /// <summary>
