@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CS0618 // Type or member is obsolete
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +54,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the descriptors for the available custom functions.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IEnumerable<CustomFunctionDescriptor>), 200)]
         public async Task<IActionResult> GetFunctionsAsync(string adapterId, GetCustomFunctionsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -105,17 +106,18 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the descriptors for the available custom functions.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IEnumerable<CustomFunctionDescriptor>), 200)]
-        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetFunctionsAsync(string adapterId, string? id = null, string? name = null, string? description = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
-            return await GetFunctionsAsync(adapterId, new GetCustomFunctionsRequest() { 
+            var request = new GetCustomFunctionsRequest() {
                 Id = id,
                 Name = name,
                 Description = description,
                 PageSize = pageSize,
                 Page = page
-            }, cancellationToken).ConfigureAwait(false);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return await GetFunctionsAsync(adapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -135,7 +137,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the extended descriptor for the requested custom function.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/details")]
+        [Route("{adapterId:maxlength(200)}/details")]
         [ProducesResponseType(typeof(CustomFunctionDescriptorExtended), 200)]
         public async Task<IActionResult> GetFunctionAsync(string adapterId, GetCustomFunctionRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -175,13 +177,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the extended descriptor for the requested custom function.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/details")]
+        [Route("{adapterId:maxlength(200)}/details")]
         [ProducesResponseType(typeof(CustomFunctionDescriptorExtended), 200)]
-        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetFunctionAsync(string adapterId, [FromQuery] Uri id, CancellationToken cancellationToken) {
-            return await GetFunctionAsync(adapterId, new GetCustomFunctionRequest() { 
+            var request = new GetCustomFunctionRequest() {
                 Id = id
-            }, cancellationToken).ConfigureAwait(false);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+
+            return await GetFunctionAsync(adapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -204,7 +208,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the result of the custom function invocation.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/invoke")]
+        [Route("{adapterId:maxlength(200)}/invoke")]
         [ProducesResponseType(typeof(CustomFunctionInvocationResponse), 200)]
         public async Task<IActionResult> InvokeFunctionAsync(
             string adapterId,

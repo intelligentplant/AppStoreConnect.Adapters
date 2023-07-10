@@ -54,7 +54,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of adapter extension feature URIs.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IEnumerable<string>), 200)]
         public async Task<IActionResult> GetAvailableExtensions(string adapterId, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -84,7 +84,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a <see cref="FeatureDescriptor"/> object.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/descriptor")]
+        [Route("{adapterId:maxlength(200)}/descriptor")]
         [ProducesResponseType(typeof(FeatureDescriptor), 200)]
         public async Task<IActionResult> GetDescriptor(
             string adapterId, 
@@ -142,7 +142,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/operations")]
+        [Route("{adapterId:maxlength(200)}/operations")]
         [ProducesResponseType(typeof(IEnumerable<ExtensionFeatureOperationDescriptor>), 200)]
         public async Task<IActionResult> GetAvailableOperations(
             string adapterId, 
@@ -201,7 +201,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   operation result.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/operations/invoke")]
+        [Route("{adapterId:maxlength(200)}/operations/invoke")]
         [ProducesResponseType(typeof(InvocationResponse), 200)]
         public async Task<IActionResult> InvokeExtension(
             string adapterId, 

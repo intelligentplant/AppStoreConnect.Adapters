@@ -126,7 +126,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   requested adapter.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -153,7 +153,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   adapter.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/health-status")]
+        [Route("{adapterId:maxlength(200)}/health-status")]
         [ProducesResponseType(typeof(HealthCheckResult), 200)]
         public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
