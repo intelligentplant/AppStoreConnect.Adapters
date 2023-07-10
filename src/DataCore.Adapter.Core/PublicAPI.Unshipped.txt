@@ -1,6 +1,47 @@
 ﻿#nullable enable
+const DataCore.Adapter.Common.AdapterDescriptor.IdMaxLength = 200 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertiesCount = 20 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertyKeyLength = 50 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertyValueLength = 100 -> int
 const DataCore.Adapter.WellKnownProperties.TagValue.Stepped = "Stepped" -> string!
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.Page.get -> int
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.Page.set -> void
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.PageSize.get -> int
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.PageSize.set -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Page.get -> int
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Page.set -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.PageSize.get -> int
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.PageSize.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.Page.get -> int
+DataCore.Adapter.Common.FindAdaptersRequest.Page.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.PageSize.get -> int
+DataCore.Adapter.Common.FindAdaptersRequest.PageSize.set -> void
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute.Length.get -> int
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute.MaxUriLengthAttribute(int length) -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Page.get -> int
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Page.set -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.PageSize.get -> int
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.PageSize.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.Page.get -> int
+DataCore.Adapter.Tags.FindTagsRequest.Page.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.PageSize.get -> int
+DataCore.Adapter.Tags.FindTagsRequest.PageSize.set -> void
+DataCore.Adapter.Tags.GetTagPropertiesRequest.Page.get -> int
+DataCore.Adapter.Tags.GetTagPropertiesRequest.Page.set -> void
+DataCore.Adapter.Tags.GetTagPropertiesRequest.PageSize.get -> int
+DataCore.Adapter.Tags.GetTagPropertiesRequest.PageSize.set -> void
+override DataCore.Adapter.Common.FindAdaptersRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.DataValidation.MaxUriLengthAttribute.FormatErrorMessage(string! name) -> string!
 static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.Variant variant) -> bool
 static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.VariantType variantType) -> bool
 static DataCore.Adapter.RealTimeData.TagValueExtensions.IsFloatingPointNumericType(this DataCore.Adapter.RealTimeData.TagValue! value) -> bool
 static DataCore.Adapter.RealTimeData.TagValueExtensions.TryGetSteppedFlag(this DataCore.Adapter.RealTimeData.TagValueExtended! value, out bool stepped) -> bool
+~static DataCore.Adapter.SharedResources.Error_CollectionItemIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_DescriptionIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_IdIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_KeyIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_NameIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_TooManyEntries.get -> string
+~static DataCore.Adapter.SharedResources.Error_UnitIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_ValueIsTooLong.get -> string
