@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 
 using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Builder;
@@ -12,23 +13,23 @@ using Microsoft.Extensions.Options;
 namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class CustomFunctionRoutes : IRouteProvider {
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", GetCustomFunctionsGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", GetCustomFunctionsGetAsync)
                 .Produces<IEnumerable<CustomFunctionDescriptor>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}", GetCustomFunctionsPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", GetCustomFunctionsPostAsync)
                 .Produces<IEnumerable<CustomFunctionDescriptor>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/details", GetCustomFunctionGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/details", GetCustomFunctionGetAsync)
                 .Produces<CustomFunctionDescriptorExtended>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/details", GetCustomFunctionPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/details", GetCustomFunctionPostAsync)
                 .Produces<CustomFunctionDescriptorExtended>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/invoke", InvokeCustomFunctionAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/invoke", InvokeCustomFunctionAsync)
                 .Produces<CustomFunctionInvocationResponse>()
                 .ProducesDefaultErrors();
         }

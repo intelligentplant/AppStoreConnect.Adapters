@@ -22,11 +22,11 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 .Produces<IAsyncEnumerable<AdapterDescriptor>>()
                 .ProducesValidationProblem();
 
-            builder.MapGet("/{adapterId}", GetAdapterAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", GetAdapterAsync)
                 .Produces<AdapterDescriptorExtended>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/health-status", CheckAdapterHealthAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/health-status", CheckAdapterHealthAsync)
                 .Produces<HealthCheckResult>()
                 .ProducesDefaultErrors();
         }

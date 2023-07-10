@@ -1,4 +1,5 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.AspNetCore.Builder;
@@ -22,59 +23,59 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
 
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("{adapterId}/snapshot", ReadSnapshotTagValuesGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/snapshot", ReadSnapshotTagValuesGetAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/snapshot", ReadSnapshotTagValuesPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/snapshot", ReadSnapshotTagValuesPostAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/raw", ReadRawTagValuesGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/raw", ReadRawTagValuesGetAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/raw", ReadRawTagValuesPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/raw", ReadRawTagValuesPostAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/plot", ReadPlotTagValuesGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/plot", ReadPlotTagValuesGetAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/plot", ReadPlotTagValuesPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/plot", ReadPlotTagValuesPostAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/values-at-times", ReadTagValuesAtTimesGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/values-at-times", ReadTagValuesAtTimesGetAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/values-at-times", ReadTagValuesAtTimesPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/values-at-times", ReadTagValuesAtTimesPostAsync)
                 .Produces<IAsyncEnumerable<TagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/supported-aggregations", GetSupportedAggregationsGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/supported-aggregations", GetSupportedAggregationsGetAsync)
                 .Produces<IAsyncEnumerable<DataFunctionDescriptor>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/supported-aggregations", GetSupportedAggregationsPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/supported-aggregations", GetSupportedAggregationsPostAsync)
                 .Produces<IAsyncEnumerable<DataFunctionDescriptor>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("{adapterId}/processed", ReadProcessedTagValuesGetAsync)
+            builder.MapGet($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/processed", ReadProcessedTagValuesGetAsync)
                 .Produces<IAsyncEnumerable<ProcessedTagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/processed", ReadProcessedTagValuesPostAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/processed", ReadProcessedTagValuesPostAsync)
                 .Produces<IAsyncEnumerable<ProcessedTagValueQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/write/snapshot", WriteSnapshotTagValuesAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/write/snapshot", WriteSnapshotTagValuesAsync)
                 .Produces<IAsyncEnumerable<WriteTagValueResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("{adapterId}/write/history", WriteHistoricalTagValuesAsync)
+            builder.MapPost($"{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/write/history", WriteHistoricalTagValuesAsync)
                 .Produces<IAsyncEnumerable<WriteTagValueResult>>()
                 .ProducesDefaultErrors();
         }
