@@ -27,7 +27,7 @@ namespace DataCore.Adapter.DataValidation {
 
 
         /// <inheritdoc/>
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext) {
+        protected override ValidationResult IsValid(object? value, ValidationContext validationContext) {
             if (Length > 0 && value is Uri uri && uri.ToString().Length > Length) {
                 return new ValidationResult(FormatErrorMessage(validationContext.DisplayName));
             }
