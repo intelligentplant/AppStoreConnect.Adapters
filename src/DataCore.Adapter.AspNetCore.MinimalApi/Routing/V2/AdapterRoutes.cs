@@ -67,11 +67,6 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             }
 
             var callContext = new HttpAdapterCallContext(context);
-            if (request.PageSize > 100) {
-                // Don't allow arbitrarily large queries!
-                request.PageSize = 100;
-            }
-
             var adapters = adapterAccessor.FindAdapters(callContext, request, cancellationToken);
             return Results.Ok(adapters.Transform(adapter => adapter.Descriptor, cancellationToken));
         }

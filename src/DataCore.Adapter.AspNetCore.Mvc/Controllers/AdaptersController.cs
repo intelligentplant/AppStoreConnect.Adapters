@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 PageSize = pageSize,
                 Page = page
             };
-
+            Validator.ValidateObject(request, new ValidationContext(request));
             return FindAdapters(request, cancellationToken);
         }
 
@@ -102,11 +103,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
         public IActionResult FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            if (request.PageSize > 100) {
-                // Don't allow arbitrarily large queries!
-                request.PageSize = 100;
-            }
-
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
             return Util.StreamResults(adapters, x => x.Descriptor);
         }
