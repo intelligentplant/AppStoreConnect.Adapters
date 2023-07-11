@@ -1,4 +1,5 @@
 ﻿#nullable enable
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithSteppedTransition(bool stepped) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 static DataCore.Adapter.AdapterAccessorExtensions.GetAdapterDescriptorAsync(this DataCore.Adapter.IAdapterAccessor! adapterAccessor, DataCore.Adapter.IAdapterCallContext! context, string! adapterId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.AdapterDescriptorExtended?>!
+static DataCore.Adapter.ChannelExtensions.ToEnumerable<T>(this System.Collections.Generic.IAsyncEnumerable<T>! enumerable, int maxItems, int expectedItems, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>!
 static DataCore.Adapter.Security.CertificateUtilities.TryLoadCertificateFromStore(string! path, bool requirePrivateKey, bool allowInvalid, out System.Security.Cryptography.X509Certificates.X509Certificate2? certificate) -> bool
