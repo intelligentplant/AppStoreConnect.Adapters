@@ -686,8 +686,12 @@ namespace DataCore.Adapter {
             }
 
             if (disposing) {
-                DisposeCommon();
-                DisposeFeatures();
+                try {
+                    DisposeFeatures();
+                }
+                finally {
+                    DisposeCommon();
+                }
             }
 
             _disposed = true;
@@ -711,8 +715,12 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            DisposeCommon();
-            await DisposeFeaturesAsync().ConfigureAwait(false);
+            try {
+                await DisposeFeaturesAsync().ConfigureAwait(false);
+            }
+            finally {
+                DisposeCommon();
+            }
         }
 
 
