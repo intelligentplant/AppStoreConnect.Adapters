@@ -28,21 +28,22 @@ namespace Microsoft.AspNetCore.Builder {
         /// <param name="builder">
         ///   The <see cref="IEndpointRouteBuilder"/>.
         /// </param>
-        /// <param name="routePrefix">
-        ///   The route prefix for the API routes. Specify <see langword="null"/> to use the 
-        ///   default route.
+        /// <param name="prefix">
+        ///   The route prefix for the API routes. Specify <see langword="null"/> to use no 
+        ///   prefix.
         /// </param>
         /// <returns>
         ///   The base <see cref="IEndpointConventionBuilder"/> for the adapter API routes.
         /// </returns>
-        internal static IEndpointConventionBuilder MapDataCoreAdapterApiRoutes(this IEndpointRouteBuilder builder, string? routePrefix) {
+        public static IEndpointConventionBuilder MapDataCoreAdapterApiRoutes(this IEndpointRouteBuilder builder, PathString? prefix) {
             var versionedApiRouteBuilder = builder.NewVersionedApi();
 
             // Base for all versioned API routes.
-            if (routePrefix == null) {
-                routePrefix = "/api/app-store-connect";
-            }
-            var api = versionedApiRouteBuilder.MapGroup(string.Concat(routePrefix, "/v{version:apiVersion}")).WithOpenApi();
+            var apiBasePath = prefix == null
+                ? "/api/app-store-connect"
+                : prefix.Value.Add(new PathString("/api/app-store-connect")).ToString();
+
+            var api = versionedApiRouteBuilder.MapGroup(string.Concat(apiBasePath, "/v{version:apiVersion}")).WithOpenApi();
 
             // Add common error handling.
             api.AddEndpointFilter(async (context, next) => {
