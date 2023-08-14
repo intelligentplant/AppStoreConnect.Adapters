@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Claims;
 
@@ -28,6 +29,15 @@ namespace DataCore.Adapter {
         /// The <see cref="System.Globalization.CultureInfo"/> for the caller.
         /// </summary>
         CultureInfo CultureInfo { get; }
+
+        /// <summary>
+        /// The service provider for the call context.
+        /// </summary>
+        /// <remarks>
+        ///   Adapters can use the <see cref="Services"/> property to resolve scoped services for 
+        ///   the calling user.
+        /// </remarks>
+        IServiceProvider Services { get; }
 
         /// <summary>
         /// Additional items related to the call context.

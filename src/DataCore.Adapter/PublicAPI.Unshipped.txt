@@ -1,4 +1,6 @@
 ﻿#nullable enable
+DataCore.Adapter.DefaultAdapterCallContext.DefaultAdapterCallContext(System.Security.Claims.ClaimsPrincipal? user = null, string? connectionId = null, string? correlationId = null, System.Globalization.CultureInfo? cultureInfo = null, System.IServiceProvider? serviceProvider = null) -> void
+DataCore.Adapter.DefaultAdapterCallContext.Services.get -> System.IServiceProvider!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithSteppedTransition(bool stepped) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 static DataCore.Adapter.AdapterAccessorExtensions.GetAdapterDescriptorAsync(this DataCore.Adapter.IAdapterAccessor! adapterAccessor, DataCore.Adapter.IAdapterCallContext! context, string! adapterId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.AdapterDescriptorExtended?>!
 static DataCore.Adapter.ChannelExtensions.ToEnumerable<T>(this System.Collections.Generic.IAsyncEnumerable<T>! enumerable, int maxItems, int expectedItems, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>!
