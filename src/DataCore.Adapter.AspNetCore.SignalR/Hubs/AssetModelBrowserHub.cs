@@ -27,7 +27,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async IAsyncEnumerable<AssetModelNode> BrowseAssetModelNodes(string adapterId, BrowseAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -53,7 +53,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async IAsyncEnumerable<AssetModelNode> GetAssetModelNodes(string adapterId, GetAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IAssetModelBrowse>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -79,7 +79,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   The matching nodes.
         /// </returns>
         public async IAsyncEnumerable<AssetModelNode> FindAssetModelNodes(string adapterId, FindAssetModelNodesRequest request, [EnumeratorCancellation] CancellationToken cancellationToken) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IAssetModelSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 

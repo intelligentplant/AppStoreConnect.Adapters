@@ -1,1 +1,4 @@
 ﻿#nullable enable
+DataCore.Adapter.AspNetCore.Hubs.AdapterHub.AdapterHub(DataCore.Adapter.Common.HostInfo! hostInfo, DataCore.Adapter.IAdapterAccessor! adapterAccessor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! taskScheduler, Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.SignalR.JsonHubProtocolOptions!>! jsonOptions, System.IServiceProvider! serviceProvider) -> void
+DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.Services.get -> System.IServiceProvider!
+DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.SignalRAdapterCallContext(Microsoft.AspNetCore.SignalR.HubCallerContext! hubCallerContext, System.IServiceProvider! serviceProvider) -> void

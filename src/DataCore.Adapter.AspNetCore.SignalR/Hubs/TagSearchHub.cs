@@ -33,7 +33,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagSearch>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -64,7 +64,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagInfo>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<System.Text.Json.JsonElement> GetTagSchema(string adapterId, GetTagSchemaRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -143,7 +143,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<TagDefinition> CreateTag(string adapterId, CreateTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<TagDefinition> UpdateTag(string adapterId, UpdateTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -201,7 +201,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         public async Task<bool> DeleteTag(string adapterId, DeleteTagRequest request) {
             var cancellationToken = Context.ConnectionAborted;
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<ITagConfiguration>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 

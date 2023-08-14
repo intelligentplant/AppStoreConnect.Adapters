@@ -47,6 +47,12 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </summary>
         private readonly System.Text.Json.JsonSerializerOptions? _jsonOptions;
 
+        /// <summary>
+        /// The <see cref="IServiceProvider"/>. Used to create the <see cref="SignalRAdapterCallContext"/> 
+        /// for adapter invocations.
+        /// </summary>
+        private readonly IServiceProvider _serviceProvider;
+
 
         /// <summary>
         /// Creates a new <see cref="AdapterHub"/> object.
@@ -63,16 +69,22 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// <param name="jsonOptions">
         ///   The configured JSON options.
         /// </param>
+        /// <param name="serviceProvider">
+        ///   The <see cref="IServiceProvider"/>. Used to create the <see cref="SignalRAdapterCallContext"/> 
+        ///   for adapter invocations.
+        /// </param>
         public AdapterHub(
             HostInfo hostInfo, 
             IAdapterAccessor adapterAccessor,
             IBackgroundTaskService taskScheduler,
-            Microsoft.Extensions.Options.IOptions<JsonHubProtocolOptions> jsonOptions
+            Microsoft.Extensions.Options.IOptions<JsonHubProtocolOptions> jsonOptions,
+            IServiceProvider serviceProvider
         ) {
             HostInfo = hostInfo ?? throw new ArgumentNullException(nameof(hostInfo));
             AdapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
             BackgroundTaskService = taskScheduler ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _jsonOptions = jsonOptions?.Value?.PayloadSerializerOptions;
+            _serviceProvider = serviceProvider;
         }
 
 
@@ -104,7 +116,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             await foreach (var item in AdapterAccessor.FindAdapters(adapterCallContext, request, cancellationToken).ConfigureAwait(false)) {
                 yield return AdapterDescriptor.FromExisting(item.Descriptor);
@@ -122,7 +134,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   Information about the requested adapter.
         /// </returns>
         public async Task<AdapterDescriptorExtended> GetAdapter(string adapterId) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var descriptor = await AdapterAccessor.GetAdapterDescriptorAsync(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
             return descriptor!;
         }
@@ -138,7 +150,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         ///   Information about the requested adapter.
         /// </returns>
         public async Task<HealthCheckResult> CheckAdapterHealth(string adapterId) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, Context.ConnectionAborted).ConfigureAwait(false);
 
             return await adapter.Feature.CheckHealthAsync(adapterCallContext, Context.ConnectionAborted).ConfigureAwait(false);
@@ -159,7 +171,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
         /// </returns>
         public async IAsyncEnumerable<HealthCheckResult> CreateAdapterHealthChannel(string adapterId, [EnumeratorCancellation] CancellationToken cancellationToken) {
             // Resolve the adapter and feature.
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IHealthCheck>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
 
             await foreach (var item in adapter.Feature.Subscribe(adapterCallContext, cancellationToken).ConfigureAwait(false)) {
