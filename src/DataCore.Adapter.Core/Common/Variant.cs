@@ -792,6 +792,43 @@ namespace DataCore.Adapter.Common {
         /// <param name="value">
         ///   The value.
         /// </param>
+        public Variant(JsonElement value) {
+            Value = value;
+            Type = VariantType.Json;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(JsonElement[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.Json;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
         public Variant(EncodedObject? value) {
             if (value == null) {
                 Value = null;

@@ -16,6 +16,8 @@ DataCore.Adapter.Common.FindAdaptersRequest.Page.get -> int
 DataCore.Adapter.Common.FindAdaptersRequest.Page.set -> void
 DataCore.Adapter.Common.FindAdaptersRequest.PageSize.get -> int
 DataCore.Adapter.Common.FindAdaptersRequest.PageSize.set -> void
+DataCore.Adapter.Common.Variant.Variant(System.Text.Json.JsonElement value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Text.Json.JsonElement[]? value) -> void
 DataCore.Adapter.DataValidation.MaxUriLengthAttribute
 DataCore.Adapter.DataValidation.MaxUriLengthAttribute.Length.get -> int
 DataCore.Adapter.DataValidation.MaxUriLengthAttribute.MaxUriLengthAttribute(int length) -> void

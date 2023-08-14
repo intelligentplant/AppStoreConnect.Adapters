@@ -1,4 +1,5 @@
 ﻿#nullable enable
+DataCore.Adapter.AspNetCore.HttpAdapterCallContext.Services.get -> System.IServiceProvider!
 static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddDependentProcessWatcher(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, int pid, params int[]! additionalPids) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddDependentProcessWatcher(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Collections.Generic.IEnumerable<int>! pids) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Microsoft.Extensions.DependencyInjection.CommonAdapterConfigurationExtensions.AddHostInfo(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, System.Action<DataCore.Adapter.Common.HostInfoBuilder!>! configure) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!

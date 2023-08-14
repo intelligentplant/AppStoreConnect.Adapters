@@ -26,6 +26,9 @@ namespace DataCore.Adapter {
         /// <inheritdoc/>
         public IDictionary<object, object?> Items { get; }
 
+        /// <inheritdoc/>
+        public IServiceProvider Services { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="DefaultAdapterCallContext"/> object.
@@ -42,17 +45,48 @@ namespace DataCore.Adapter {
         /// <param name="cultureInfo">
         ///   The culture info.
         /// </param>
+        /// <param name="serviceProvider">
+        ///   The service provider.
+        /// </param>
         public DefaultAdapterCallContext(
             ClaimsPrincipal? user = null,
             string? connectionId = null,
             string? correlationId = null,
-            CultureInfo? cultureInfo = null
+            CultureInfo? cultureInfo = null,
+            IServiceProvider? serviceProvider = null
         ) {
             User = user;
             ConnectionId = connectionId ?? Guid.NewGuid().ToString();
             CorrelationId = correlationId ?? Guid.NewGuid().ToString();
             CultureInfo = cultureInfo ?? CultureInfo.CurrentUICulture;
             Items = new ConcurrentDictionary<object, object?>();
+            Services = serviceProvider ?? NullServiceProvider.Instance;
+        }
+
+
+        /// <summary>
+        /// Default <see cref="IServiceProvider"/> implementation that always returns <see langword="null"/> 
+        /// when resolving a service.
+        /// </summary>
+        private class NullServiceProvider : IServiceProvider {
+
+            /// <summary>
+            /// Singleton instance.
+            /// </summary>
+            public static IServiceProvider Instance { get; } = new NullServiceProvider();
+
+
+            /// <summary>
+            /// Creates a new <see cref="NullServiceProvider"/> instance.
+            /// </summary>
+            private NullServiceProvider() { }
+
+
+            /// <inheritdoc/>
+            public object GetService(Type serviceType) {
+                return null!;
+            }
+
         }
 
     }
