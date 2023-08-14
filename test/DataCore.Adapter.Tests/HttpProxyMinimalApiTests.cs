@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Tests {
         protected override HttpAdapterProxy CreateProxy(TestContext context, string remoteAdapterId, IServiceProvider serviceProvider) {
             var result = base.CreateProxy(context, remoteAdapterId, serviceProvider);
 
-            result.GetClient().BasePath = "/minimal-api/unit-tests/v2.0";
+            result.GetClient().BasePath = "/minimal-api/unit-tests/api/app-store-connect/v2.0";
 
             return result;
         }
