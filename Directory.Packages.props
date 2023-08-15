@@ -24,7 +24,6 @@
     <PkgVersion_Microsoft_Web_LibraryManager_Build>2.1.175</PkgVersion_Microsoft_Web_LibraryManager_Build>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Asp.Versioning.Http" Version="7.0.0" />
     <PackageVersion Include="Castle.Core" Version="5.1.1" />
     <PackageVersion Include="CsvHelper" Version="30.0.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.24.0" />
@@ -37,7 +36,6 @@
     <PackageVersion Include="Jaahas.HttpRequestTransformer" Version="2.2.0" />
     <PackageVersion Include="JsonSchema.Net.Generation" Version="3.3.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.10" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />

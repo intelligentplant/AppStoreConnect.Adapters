@@ -401,6 +401,47 @@ namespace Microsoft.Extensions.DependencyInjection {
 
 
         /// <summary>
+        /// Adds <see cref="DefaultAdapterAuthorizationService"/> as the registered <see cref="IAdapterAuthorizationService"/>.
+        /// </summary>
+        /// <param name="services">
+        ///   The <see cref="IServiceCollection"/>.
+        /// </param>
+        /// <param name="requireAuthorization">
+        ///   <see langword="true"/> to specify that the <see cref="DefaultAdapterAuthorizationService"/> 
+        ///   must authorize access to adapters or <see langword="false"/> if authorization checks 
+        ///   are not required (that is, no <see cref="FeatureAuthorizationHandler"/> has been 
+        ///   registered by the hosting application).
+        /// </param>
+        /// <remarks>
+        ///   The service is registered as a scoped service.
+        /// </remarks>
+        private static void AddDefaultAdapterAuthorizationService(this IServiceCollection services, bool requireAuthorization) {
+            services.AddScoped(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(requireAuthorization, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+        }
+
+
+        /// <summary>
+        /// Tries to register <see cref="DefaultAdapterAuthorizationService"/> if an 
+        /// <see cref="IAdapterAuthorizationService"/> has not already been registered.
+        /// </summary>
+        /// <param name="services">
+        ///   The <see cref="IServiceCollection"/>.
+        /// </param>
+        /// <param name="requireAuthorization">
+        ///   <see langword="true"/> to specify that the <see cref="DefaultAdapterAuthorizationService"/> 
+        ///   must authorize access to adapters or <see langword="false"/> if authorization checks 
+        ///   are not required (that is, no <see cref="FeatureAuthorizationHandler"/> has been 
+        ///   registered by the hosting application).
+        /// </param>
+        /// <remarks>
+        ///   The service is registered as a scoped service.
+        /// </remarks>
+        private static void TryAddDefaultAdapterAuthorizationService(this IServiceCollection services, bool requireAuthorization) {
+            services.TryAddScoped(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(requireAuthorization, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+        }
+
+
+        /// <summary>
         /// Adds an adapter feature authorization service.
         /// </summary>
         /// <typeparam name="T">
@@ -442,8 +483,8 @@ namespace Microsoft.Extensions.DependencyInjection {
             this IAdapterConfigurationBuilder builder,
             Type implementationType
         ) {
-            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(true, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
-            builder.Services.AddSingleton(typeof(AspNetCore.Authorization.IAuthorizationHandler), implementationType);
+            builder.Services.AddDefaultAdapterAuthorizationService(true);
+            builder.Services.AddScoped(typeof(AspNetCore.Authorization.IAuthorizationHandler), implementationType);
             return builder;
         }
 
@@ -500,7 +541,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             builder.Services.AddAspNetCoreBackgroundTaskService(options => options.AllowWorkItemRegistrationWhileStopped = true);
             builder.Services.TryAddSingleton(HostInfo.Unspecified);
             builder.AddAdapterAccessor<AspNetCoreAdapterAccessor>();
-            builder.Services.AddSingleton(typeof(IAdapterAuthorizationService), sp => new DefaultAdapterAuthorizationService(false, sp.GetService<AspNetCore.Authorization.IAuthorizationService>()));
+            builder.Services.TryAddDefaultAdapterAuthorizationService(false);
             builder.Services.TryAddTransient<IAvailableApiService, DefaultAvailableApiService>();
             builder.AddAutomaticInitialization();
             return builder;

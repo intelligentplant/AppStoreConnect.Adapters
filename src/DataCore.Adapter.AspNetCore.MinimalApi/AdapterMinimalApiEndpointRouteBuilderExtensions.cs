@@ -36,14 +36,12 @@ namespace Microsoft.AspNetCore.Builder {
         ///   The base <see cref="IEndpointConventionBuilder"/> for the adapter API routes.
         /// </returns>
         public static IEndpointConventionBuilder MapDataCoreAdapterApiRoutes(this IEndpointRouteBuilder builder, PathString? prefix) {
-            var versionedApiRouteBuilder = builder.NewVersionedApi();
-
             // Base for all versioned API routes.
             var apiBasePath = prefix == null
                 ? "/api/app-store-connect"
                 : prefix.Value.Add(new PathString("/api/app-store-connect")).ToString();
 
-            var api = versionedApiRouteBuilder.MapGroup(string.Concat(apiBasePath, "/v{version:apiVersion}")).WithOpenApi();
+            var api = builder.MapGroup(apiBasePath);
 
             // Add common error handling.
             api.AddEndpointFilter(async (context, next) => {
@@ -65,7 +63,7 @@ namespace Microsoft.AspNetCore.Builder {
             });
 
             // Base for the v2.0 API
-            var v2api = api.MapGroup("/").HasApiVersion(2, 0);
+            var v2api = api.MapGroup("/v2.0");
 
             DataCore.Adapter.AspNetCore.Routing.V2.AdapterRoutes.Register(v2api.MapGroup("/adapters")
                 .WithGroupName("Adapters"));

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 using DataCore.Adapter;
 using DataCore.Adapter.DependencyInjection;
@@ -74,7 +73,7 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(implementationFactory));
             }
 
-            builder.Services.AddSingleton<IAdapterAccessor, T>(implementationFactory);
+            builder.Services.AddScoped<IAdapterAccessor, T>(implementationFactory);
             return builder;
         }
 
@@ -96,7 +95,7 @@ namespace Microsoft.Extensions.DependencyInjection {
             this IAdapterConfigurationBuilder builder,
             Type implementationType
         ) {
-            builder.Services.AddSingleton(typeof(IAdapterAccessor), implementationType);
+            builder.Services.AddScoped(typeof(IAdapterAccessor), implementationType);
             return builder;
         }
 
