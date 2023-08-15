@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.AspNetCore.Internal {
@@ -15,39 +16,27 @@ namespace DataCore.Adapter.AspNetCore.Internal {
     internal partial class AdapterInitializer {
 
         /// <summary>
+        /// The <see cref="IServiceProvider"/>.
+        /// </summary>
+        private readonly IServiceProvider _serviceProvider;
+
+        /// <summary>
         /// Logging.
         /// </summary>
         private readonly ILogger _logger;
-
-        /// <summary>
-        /// For accessing the available adapters.
-        /// </summary>
-        private readonly IAdapterAccessor _adapterAccessor;
-
-        /// <summary>
-        /// Services that perform started/stopped actions on adapters.
-        /// </summary>
-        private readonly IEnumerable<IAdapterLifetime> _lifetimeServices;
 
 
         /// <summary>
         /// Creates a new <see cref="AdapterInitializer"/> object.
         /// </summary>
-        /// <param name="adapterAccessor">
-        ///   The adapter accessor service.
-        /// </param>
-        /// <param name="lifetimeServices">
-        ///   Services that perform started/stopped actions on adapters.
+        /// <param name="serviceProvider">
+        ///   The <see cref="IServiceProvider"/>.
         /// </param>
         /// <param name="logger">
         ///   The logger for the service.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="adapterAccessor"/> is <see langword="null"/>.
-        /// </exception>
-        public AdapterInitializer(IAdapterAccessor adapterAccessor, IEnumerable<IAdapterLifetime> lifetimeServices, ILogger<AdapterInitializer> logger) {
-            _adapterAccessor = adapterAccessor ?? throw new ArgumentNullException(nameof(adapterAccessor));
-            _lifetimeServices = lifetimeServices ?? Array.Empty<IAdapterLifetime>();
+        public AdapterInitializer(IServiceProvider serviceProvider, ILogger<AdapterInitializer> logger) {
+            _serviceProvider = serviceProvider;
             _logger = logger ?? (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         }
 
@@ -64,20 +53,24 @@ namespace DataCore.Adapter.AspNetCore.Internal {
         /// </returns>
         private async Task RunAsync(CancellationToken stoppingToken) {
             var context = new DefaultAdapterCallContext();
+            using var scope = _serviceProvider.CreateScope();
+
+            var adapterAccessor = scope.ServiceProvider.GetRequiredService<IAdapterAccessor>();
+            var lifetimeServices = scope.ServiceProvider.GetServices<IAdapterLifetime>();
             
             try {
-                await foreach (var adapter in _adapterAccessor.GetAllAdapters(context, stoppingToken).ConfigureAwait(false)) {
+                await foreach (var adapter in adapterAccessor.GetAllAdapters(context, stoppingToken).ConfigureAwait(false)) {
                     if (stoppingToken.IsCancellationRequested) {
                         break;
                     }
 
                     adapter.Started += async _ => {
-                        foreach (var item in _lifetimeServices) {
+                        foreach (var item in lifetimeServices) {
                             await item.StartedAsync(adapter, stoppingToken).ConfigureAwait(false);
                         }
                     };
                     adapter.Stopped += async _ => {
-                        foreach (var item in _lifetimeServices) {
+                        foreach (var item in lifetimeServices) {
                             await item.StoppedAsync(adapter, stoppingToken).ConfigureAwait(false);
                         }
                     };
@@ -101,7 +94,7 @@ namespace DataCore.Adapter.AspNetCore.Internal {
             }
             finally {
                 using (var ctSource = new CancellationTokenSource(TimeSpan.FromSeconds(10))) {
-                    await foreach (var adapter in _adapterAccessor.GetAllAdapters(context, ctSource.Token).ConfigureAwait(false)) {
+                    await foreach (var adapter in adapterAccessor.GetAllAdapters(context, ctSource.Token).ConfigureAwait(false)) {
                         if (!adapter.IsRunning) {
                             continue;
                         }
