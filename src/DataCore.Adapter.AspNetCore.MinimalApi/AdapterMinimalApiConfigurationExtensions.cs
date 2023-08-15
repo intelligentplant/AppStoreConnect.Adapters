@@ -22,7 +22,6 @@ namespace Microsoft.Extensions.DependencyInjection {
         ///   The <see cref="IServiceCollection"/>.
         /// </returns>
         public static IServiceCollection AddDataCoreAdapterApiServices(this IServiceCollection services) {
-            services.AddApiVersioning();
             services.AddTransient<IApiDescriptorProvider, ApiDescriptorProvider>();
 
             services.Configure<JsonOptions>(options => options.SerializerOptions.UseDataCoreAdapterDefaults());
