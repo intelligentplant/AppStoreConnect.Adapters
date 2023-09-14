@@ -105,8 +105,8 @@ builder.Services
         .AddSqlClientInstrumentation()
         // Records activities created by adapters and adapter hosting packages.
         .AddDataCoreAdapterInstrumentation()
-        // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
-        .AddJaegerExporter())
+        // Exports traces in OTLP format using default settings (i.e. http://localhost:4317 using OTLP/gRPC format).
+        .AddOtlpExporter())
     .WithMetrics(otel => otel
         // Set the resource builder to identify where the metrics are coming from.
         .SetResourceBuilder(otelResourceBuilder)

@@ -104,7 +104,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
-                    .AddJaegerExporter());
+                    .AddOtlpExporter());
 
             services.AddOpenApiDocument(options => {
                 options.DocumentName = "v2.0";

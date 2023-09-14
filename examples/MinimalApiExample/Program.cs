@@ -58,7 +58,7 @@ builder.Services
         .SetResourceBuilder(otelResourceBuilder)
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
-        .AddJaegerExporter())
+        .AddOtlpExporter())
     .WithMetrics(otel => otel
         .SetResourceBuilder(otelResourceBuilder)
         .AddRuntimeInstrumentation()
