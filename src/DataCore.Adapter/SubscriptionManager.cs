@@ -404,8 +404,10 @@ namespace DataCore.Adapter {
 
             try {
                 using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
-                    await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
-                    return _masterChannel.Writer.TryWrite((message, subscribers));
+                    if (await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false)) {
+                        return _masterChannel.Writer.TryWrite((message, subscribers));
+                    }
+                    return false;
                 }
             }
             catch (OperationCanceledException) {
@@ -585,7 +587,7 @@ namespace DataCore.Adapter {
         /// capacity, attempts to write additional values into the channel will fail. A value 
         /// less than one indicates no limit.
         /// </summary>
-        public int ChannelCapacity { get; set; } = 100;
+        public int ChannelCapacity { get; set; } = 10000;
 
     }
 
