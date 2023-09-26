@@ -141,10 +141,12 @@ namespace DataCore.Adapter {
             // to _outChannel by a dedicated background task.
             _inChannel = channelCapacity <= 0
                 ? Channel.CreateUnbounded<(TValue, bool)>(new UnboundedChannelOptions() {
+                    AllowSynchronousContinuations = false,
                     SingleReader = true,
                     SingleWriter = false
                 })
                 : Channel.CreateBounded<(TValue, bool)>(new BoundedChannelOptions(channelCapacity) {
+                    AllowSynchronousContinuations = false,
                     SingleReader = true,
                     SingleWriter = false,
                     FullMode = BoundedChannelFullMode.DropWrite
@@ -152,6 +154,7 @@ namespace DataCore.Adapter {
 
             // This is the actual channel exposed via the Reader property.
             _outChannel = Channel.CreateUnbounded<TValue>(new UnboundedChannelOptions() {
+                AllowSynchronousContinuations = false,
                 SingleReader = true,
                 SingleWriter = false,
             });
@@ -247,7 +250,7 @@ namespace DataCore.Adapter {
         private async Task RunIngressLoop(CancellationToken cancellationToken) {
             try {
                 while (await _inChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
-                    while (_inChannel.Reader.TryRead(out var val)) {
+                    while (!cancellationToken.IsCancellationRequested && _inChannel.Reader.TryRead(out var val)) {
                         if (val.Immediate || PublishInterval <= TimeSpan.Zero) {
                             if (PublishInterval > TimeSpan.Zero) {
                                 // Cancel next publish if one is already pending.
