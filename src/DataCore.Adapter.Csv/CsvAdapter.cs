@@ -141,16 +141,27 @@ namespace DataCore.Adapter.Csv {
 
             var snapshotPushUpdateInterval = Options.SnapshotPushUpdateInterval;
             if (snapshotPushUpdateInterval > 0) {
-                var simulatedPush = new PollingSnapshotTagValuePush(
+                //var simulatedPush = new PollingSnapshotTagValuePush(
+                //    this.GetFeature<IReadSnapshotTagValues>()!,
+                //    new PollingSnapshotTagValuePushOptions() {
+                //        Id = Descriptor.Id,
+                //        PollingInterval = TimeSpan.FromMilliseconds(snapshotPushUpdateInterval),
+                //        TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+                //    },
+                //    BackgroundTaskService,
+                //    Logger
+                //);
+
+                var simulatedPush = new PollingSnapshotSubscriptionManager(
                     this.GetFeature<IReadSnapshotTagValues>()!,
-                    new PollingSnapshotTagValuePushOptions() {
-                        Id = Descriptor.Id,
+                    new PollingSnapshotSubscriptionManagerOptions() { 
                         PollingInterval = TimeSpan.FromMilliseconds(snapshotPushUpdateInterval),
-                        TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
+                        TagResolver = SnapshotSubscriptionManager.CreateTagResolverFromAdapter(this)
                     },
                     BackgroundTaskService,
                     Logger
                 );
+
                 AddFeature(typeof(ISnapshotTagValuePush), simulatedPush);
             }
         }
