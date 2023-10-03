@@ -57,10 +57,10 @@ namespace DataCore.Adapter.Tests {
             var baseDir = Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString());
 
             var store1 = CreateStore(baseDir, compressionLevel);
-            await store1.WriteJsonAsync(TestContext.TestName, now);
+            await ((IKeyValueStore) store1).WriteAsync(TestContext.TestName, now);
 
             var store2 = CreateStore(baseDir, compressionLevel);
-            var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
+            var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
 
             Assert.AreEqual(now, readResult);
 

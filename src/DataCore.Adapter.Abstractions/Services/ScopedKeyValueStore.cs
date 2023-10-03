@@ -48,16 +48,16 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
-        public ValueTask WriteAsync(KVKey key, byte[] value) {
+        public ValueTask WriteAsync<T>(KVKey key, T value) {
             var k = KeyValueStore.AddPrefix(Prefix, key);
             return Inner.WriteAsync(k, value);
         }
 
 
         /// <inheritdoc/>
-        public ValueTask<byte[]?> ReadAsync(KVKey key) {
+        public ValueTask<T?> ReadAsync<T>(KVKey key) {
             var k = KeyValueStore.AddPrefix(Prefix, key);
-            return Inner.ReadAsync(k);
+            return Inner.ReadAsync<T>(k);
         }
 
 

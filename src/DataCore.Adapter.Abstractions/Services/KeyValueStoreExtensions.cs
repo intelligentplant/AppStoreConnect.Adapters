@@ -145,12 +145,13 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.WriteAsync<T> instead.", false)]
         public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, options)).ConfigureAwait(false);
+            await store.WriteAsync(key, value).ConfigureAwait(false);
         }
 
 
@@ -181,6 +182,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.WriteAsync<T> instead.", false)]
         public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonTypeInfo<TValue> jsonTypeInfo) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
@@ -189,7 +191,7 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(jsonTypeInfo));
             }
 
-            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, jsonTypeInfo)).ConfigureAwait(false);
+            await store.WriteAsync(key, value).ConfigureAwait(false);
         }
 
 
@@ -214,15 +216,13 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.ReadAsync<T> instead.", false)]
         public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            var result = await store.ReadAsync(key).ConfigureAwait(false);
-            return result == null
-                ? default
-                : JsonSerializer.Deserialize<TValue>(result, options);
+            return await store.ReadAsync<TValue>(key).ConfigureAwait(false);
         }
 
 
@@ -250,6 +250,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.ReadAsync<T> instead.", false)]
         public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonTypeInfo<TValue> jsonTypeInfo) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
@@ -258,10 +259,7 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(jsonTypeInfo));
             }
 
-            var result = await store.ReadAsync(key).ConfigureAwait(false);
-            return result == null
-                ? default
-                : JsonSerializer.Deserialize(result, jsonTypeInfo);
+            return await store.ReadAsync<TValue>(key).ConfigureAwait(false);
         }
 
     }

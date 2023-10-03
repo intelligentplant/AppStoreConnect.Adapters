@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -13,28 +14,11 @@ namespace DataCore.Adapter.Services {
     /// Base implementation of <see cref="IKeyValueStore"/>.
     /// </summary>
     /// <remarks>
-    ///   Inherit from this class instead of implementing <see cref="IKeyValueStore"/> directly.
+    ///   Implementations should extend <see cref="KeyValueStore"/> or <see cref="KeyValueStore{TOptions}"/> 
+    ///   rather than implementing <see cref="IKeyValueStore"/> directly.
     /// </remarks>
+    /// <seealso cref="KeyValueStore{TOptions}"/>
     public abstract class KeyValueStore : IKeyValueStore {
-
-        /// <summary>
-        /// Instrument recording the bytes written to the store.
-        /// </summary>
-        private static Counter<long> s_bytesWritten = Diagnostics.Telemetry.Meter.CreateCounter<long>(
-            "keyvaluestore.io.bytes.out",
-            "By",
-            "Number of bytes written to the key-value store."
-        );
-
-        /// <summary>
-        /// Instrument recording the bytes read from the store.
-        /// </summary>
-        private static Counter<long> s_bytesRead = Diagnostics.Telemetry.Meter.CreateCounter<long>(
-            "keyvaluestore.io.bytes.in",
-            "By",
-            "Number of bytes read from the key-value store."
-        );
-
 
         /// <summary>
         /// The logger for the store.
@@ -53,98 +37,73 @@ namespace DataCore.Adapter.Services {
         }
 
 
-        async ValueTask IKeyValueStore.WriteAsync(KVKey key, byte[] value) {
+        /// <inheritdoc/>
+        async ValueTask IKeyValueStore.WriteAsync<T>(KVKey key, T value) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
-            if (value == null) {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            var compressionLevel = GetCompressionLevel();
-            var encodedBytes = value.Length == 0 || compressionLevel == CompressionLevel.NoCompression
-                    ? value
-                    : await CompressDataAsync(value, compressionLevel).ConfigureAwait(false);
-
-            await WriteAsync(key, encodedBytes).ConfigureAwait(false);
-
-            s_bytesWritten.Add(encodedBytes.LongLength);
+            await WriteAsync(key, value).ConfigureAwait(false);
         }
 
 
-        async ValueTask<byte[]?> IKeyValueStore.ReadAsync(KVKey key) {
+        /// <inheritdoc/>
+        async ValueTask<T?> IKeyValueStore.ReadAsync<T>(KVKey key) where T : default {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
-
-            var compressionLevel = GetCompressionLevel();
-
-            var encodedBytes = await ReadAsync(key).ConfigureAwait(false);
-            if (encodedBytes != null) {
-                s_bytesRead.Add(encodedBytes.LongLength);
-            }
-
-            if (encodedBytes == null || encodedBytes.Length == 0 || compressionLevel == CompressionLevel.NoCompression) {
-                return encodedBytes;
-            }
-
-            return await DecompressDataAsync(encodedBytes).ConfigureAwait(false);
+            return await ReadAsync<T>(key).ConfigureAwait(false); 
         }
 
 
+        /// <inheritdoc/>
         async ValueTask<bool> IKeyValueStore.DeleteAsync(KVKey key) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
             }
-
             return await DeleteAsync(key).ConfigureAwait(false);
         }
 
 
+        /// <inheritdoc/>
         IAsyncEnumerable<KVKey> IKeyValueStore.GetKeysAsync(KVKey? prefix) {
             if (prefix != null && prefix.Value.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
-
             return GetKeysAsync(prefix);
         }
 
 
         /// <summary>
-        /// Gets the compression level to use for store data.
-        /// </summary>
-        /// <returns>
-        /// The compression level.
-        /// </returns>
-        protected abstract CompressionLevel GetCompressionLevel();
-
-
-        /// <summary>
         /// Writes a value to the store.
         /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
         /// <param name="key">
         ///   The key. Guaranteed to have a non-null, non-empty <see cref="KVKey.Value"/>.
         /// </param>
         /// <param name="value">
-        ///   The value. Guaranteed to be non-null.
+        ///   The value.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask"/> that will perform the operation.
+        ///   A <see cref="ValueTask"/> that will complete when the value has been written.
         /// </returns>
-        protected abstract ValueTask WriteAsync(KVKey key, byte[] value);
+        protected abstract ValueTask WriteAsync<T>(KVKey key, T value);
 
 
         /// <summary>
         /// Reads a value from the store.
         /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
         /// <param name="key">
         ///   The key. Guaranteed to have a non-null, non-empty <see cref="KVKey.Value"/>.
         /// </param>
         /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the value of the key, or 
-        ///   <see langword="null"/> if the key does not exist.
+        ///   The value, or <see langword="null"/> if the key does not exist.
         /// </returns>
-        protected abstract ValueTask<byte[]?> ReadAsync(KVKey key);
+        protected abstract ValueTask<T?> ReadAsync<T>(KVKey key);
 
 
         /// <summary>
@@ -173,45 +132,391 @@ namespace DataCore.Adapter.Services {
 
 
         /// <summary>
-        /// Compresses data using GZip compression at the specified compression level.
+        /// Gets the default compression level to use for serialized data.
         /// </summary>
-        /// <param name="data">
-        ///   The data to compress.
+        /// <returns>
+        ///   The default compression level.
+        /// </returns>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   The default compression level is used if no <see cref="CompressionLevel"/> is passed 
+        ///   to the following methods:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <see cref="SerializeToBytesAsync{T}(T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="SerializeToBytesAsync{T}(T, JsonTypeInfo{T}, CompressionLevel?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonTypeInfo{T}, CompressionLevel?)"/>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        protected abstract CompressionLevel GetCompressionLevel();
+
+
+        /// <summary>
+        /// Gets the default JSON serialization options to use when serializing values.
+        /// </summary>
+        /// <returns>
+        ///   The default JSON serialization options.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The default options are used if no <see cref="JsonSerializerOptions"/> are passed 
+        ///   to the following methods:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     <see cref="SerializeToBytesAsync{T}(T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="DeserializeFromBytesAsync{T}(byte[], JsonSerializerOptions?)"/>
+        ///   </item>
+        ///   <item>
+        ///     <see cref="DeserializeFromStreamAsync{T}(Stream, JsonSerializerOptions?)"/>
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        protected abstract JsonSerializerOptions? GetJsonSerializerOptions();
+
+
+        /// <summary>
+        /// Serializes and compresses a value to a byte array.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serialization options to use.
         /// </param>
         /// <param name="compressionLevel">
-        ///   The compression level to use.
+        ///   The compression level to use. If <see langword="null"/>, the value returned by 
+        ///   <see cref="GetCompressionLevel"/> is used.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will compress the data and return the result.
+        ///   The serialized value.
         /// </returns>
-        private async Task<byte[]> CompressDataAsync(byte[] data, CompressionLevel compressionLevel) {
-            using (var destination = new MemoryStream())
-            using (var zip = new GZipStream(destination, compressionLevel, true)) {
-                await zip.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
-                // Need to call Close on GZipStream to ensure that all buffered bytes are written;
-                // calling Flush/FlushAsync is not enough!
-                zip.Close();
-                return destination.ToArray();
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        protected async ValueTask<byte[]> SerializeToBytesAsync<T>(T value, JsonSerializerOptions? jsonOptions = null, CompressionLevel? compressionLevel = null) {
+            using (var ms = new MemoryStream()) {
+                await SerializeToStreamAsync(ms, value, jsonOptions, compressionLevel).ConfigureAwait(false);
+                return ms.ToArray();
+            }
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+        /// <summary>
+        /// Serializes and compresses a value to a byte array.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The JSON serialization type info to use.
+        /// </param>
+        /// <param name="compressionLevel">
+        ///   The compression level to use. If <see langword="null"/>, the value returned by 
+        ///   <see cref="GetCompressionLevel"/> is used.
+        /// </param>
+        /// <returns>
+        ///   The serialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        protected async ValueTask<byte[]> SerializeToBytesAsync<T>(T value, JsonTypeInfo<T> jsonTypeInfo, CompressionLevel? compressionLevel = null) {
+            using (var ms = new MemoryStream()) {
+                await SerializeToStreamAsync(ms, value, jsonTypeInfo ?? throw new ArgumentNullException(nameof(jsonTypeInfo)), compressionLevel).ConfigureAwait(false);
+                return ms.ToArray();
+            }
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+        /// <summary>
+        /// Serializes and compresses a value to a stream.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream to write the serialized value to.
+        /// </param>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serialization options to use.
+        /// </param>
+        /// <param name="compressionLevel">
+        ///   The compression level to use. If <see langword="null"/>, the value returned by 
+        ///   <see cref="GetCompressionLevel"/> is used.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will complete when the value has been serialized.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, JsonSerializerOptions? jsonOptions = null, CompressionLevel? compressionLevel = null) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            var level = compressionLevel ?? GetCompressionLevel();
+
+            using (var compressStream = new GZipStream(stream, level, leaveOpen: true)) {
+                await JsonSerializer.SerializeAsync(compressStream, value, jsonOptions ?? GetJsonSerializerOptions()).ConfigureAwait(false);
+                compressStream.Close();
+            }
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+        /// <summary>
+        /// Serializes and compresses a value to a stream.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream to write the serialized value to.
+        /// </param>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The JSON serialization type info to use.
+        /// </param>
+        /// <param name="compressionLevel">
+        ///   The compression level to use. If <see langword="null"/>, the value returned by 
+        ///   <see cref="GetCompressionLevel"/> is used.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will complete when the value has been serialized.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, JsonTypeInfo<T> jsonTypeInfo, CompressionLevel? compressionLevel = null) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+            if (jsonTypeInfo == null) {
+                throw new ArgumentNullException(nameof(jsonTypeInfo));
+            }
+
+            var level = compressionLevel ?? GetCompressionLevel();
+
+            using (var compressStream = new GZipStream(stream, level, leaveOpen: true)) {
+                await JsonSerializer.SerializeAsync(compressStream, value, jsonTypeInfo).ConfigureAwait(false);
+                compressStream.Close();
+            }
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+        /// <summary>
+        /// Deserializes a value from a compressed byte array.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="data">
+        ///   The serialized value.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serialization options to use.
+        /// </param>
+        /// <returns>
+        ///   The deserialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="data"/> is <see langword="null"/>.
+        /// </exception>
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        protected async ValueTask<T?> DeserializeFromBytesAsync<T>(byte[] data, JsonSerializerOptions? jsonOptions = null) {
+            if (data == null) {
+                throw new ArgumentNullException(nameof(data));
+            }
+            using (var ms = new MemoryStream(data)) {
+                return await DeserializeFromStreamAsync<T?>(ms, jsonOptions).ConfigureAwait(false);
+            }
+        }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+
+        /// <summary>
+        /// Deserializes a value from a compressed byte array.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="data">
+        ///   The serialized value.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The JSON serialization type info to use.
+        /// </param>
+        /// <returns>
+        ///   The deserialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="data"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+        protected async ValueTask<T?> DeserializeFromBytesAsync<T>(byte[] data, JsonTypeInfo<T> jsonTypeInfo) {
+            if (data == null) {
+                throw new ArgumentNullException(nameof(data));
+            }
+            if (jsonTypeInfo == null) {
+                throw new ArgumentNullException(nameof(jsonTypeInfo));
+            }
+            using (var ms = new MemoryStream(data)) {
+                return await DeserializeFromStreamAsync(ms, jsonTypeInfo).ConfigureAwait(false);
             }
         }
 
 
         /// <summary>
-        /// Decompresses data using GZip compression.
+        /// Deserializes a value from a compressed stream.
         /// </summary>
-        /// <param name="data">
-        ///   The data to decompress.
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream containing the serialized value.
+        /// </param>
+        /// <param name="jsonOptions">
+        ///   The JSON serialization options to use.
         /// </param>
         /// <returns>
-        ///   A <see cref="Task{TResult}"/> that will decompress the data and return the result.
+        ///   A <see cref="ValueTask{TResult}"/> that will return the deserialized value.
         /// </returns>
-        private async Task<byte[]> DecompressDataAsync(byte[] data) {
-            using (var source = new MemoryStream(data))
-            using (var zip = new GZipStream(source, CompressionMode.Decompress, true))
-            using (var destination = new MemoryStream()) {
-                await zip.CopyToAsync(destination).ConfigureAwait(false);
-                return destination.ToArray();
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream, JsonSerializerOptions? jsonOptions = null) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
             }
+            using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
+                return await JsonSerializer.DeserializeAsync<T>(decompressStream, jsonOptions ?? GetJsonSerializerOptions()).ConfigureAwait(false);
+            }
+        }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+
+        /// <summary>
+        /// Deserializes a value from a compressed stream.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream containing the serialized value.
+        /// </param>
+        /// <param name="jsonTypeInfo">
+        ///   The JSON serialization type info to use.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the deserialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
+        /// </exception>
+        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+            if (jsonTypeInfo == null) {
+                throw new ArgumentNullException(nameof(jsonTypeInfo));
+            }
+            using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
+                return await JsonSerializer.DeserializeAsync(decompressStream, jsonTypeInfo).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <summary>
+        /// Converts a byte array to a hex string.
+        /// </summary>
+        /// <param name="bytes">
+        ///   The bytes to convert.
+        /// </param>
+        /// <returns>
+        ///   The hex string.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="bytes"/> is <see langword="null"/>.
+        /// </exception>
+        protected string ConvertBytesToHexString(byte[] bytes) {
+            if (bytes == null) {
+                throw new ArgumentNullException(nameof(bytes));
+            }
+            return BitConverter.ToString(bytes).Replace("-", "");
+        }
+
+
+        /// <summary>
+        /// Converts a hex string to an array of bytes.
+        /// </summary>
+        /// <param name="hexString">
+        ///   The hex string.
+        /// </param>
+        /// <returns>
+        ///   The equivalent byte array.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="hexString"/> is <see langword="null"/>.
+        /// </exception>
+        protected byte[] ConvertHexStringToBytes(string hexString) {
+            if (hexString == null) {
+                throw new ArgumentNullException(nameof(hexString));
+            }
+
+            // See https://stackoverflow.com/a/311179
+            var outputLength = hexString.Length / 2;
+            var bytes = new byte[outputLength];
+            for (var i = 0; i < outputLength; i++) {
+                bytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+            }
+
+            return bytes;
         }
 
 
@@ -303,88 +608,6 @@ namespace DataCore.Adapter.Services {
             return true;
         }
 
-
-        /// <summary>
-        /// Converts a byte array to a hex string.
-        /// </summary>
-        /// <param name="bytes">
-        ///   The bytes to convert.
-        /// </param>
-        /// <returns>
-        ///   The hex string.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="bytes"/> is <see langword="null"/>.
-        /// </exception>
-        protected string ConvertBytesToHexString(byte[] bytes) {
-            if (bytes == null) {
-                throw new ArgumentNullException(nameof(bytes));
-            }
-            return BitConverter.ToString(bytes).Replace("-", "");
-        }
-
-
-        /// <summary>
-        /// Converts a hex string to an array of bytes.
-        /// </summary>
-        /// <param name="hexString">
-        ///   The hex string.
-        /// </param>
-        /// <returns>
-        ///   The equivalent byte array.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="hexString"/> is <see langword="null"/>.
-        /// </exception>
-        protected byte[] ConvertHexStringToBytes(string hexString) {
-            if (hexString == null) {
-                throw new ArgumentNullException(nameof(hexString));
-            }
-
-            // See https://stackoverflow.com/a/311179
-            var outputLength = hexString.Length / 2;
-            var bytes = new byte[outputLength];
-            for (var i = 0; i < outputLength; i++) {
-                bytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
-            }
-
-            return bytes;
-        }
-
     }
 
-
-
-    /// <summary>
-    /// Base implementation of <see cref="IKeyValueStore"/>.
-    /// </summary>
-    /// <remarks>
-    ///   Inherit from this class instead of implementing <see cref="IKeyValueStore"/> directly.
-    /// </remarks>
-    public abstract class KeyValueStore<TOptions> : KeyValueStore where TOptions : KeyValueStoreOptions, new() {
-
-        /// <summary>
-        /// The options for the store.
-        /// </summary>
-        protected TOptions Options { get; }
-
-
-        /// <summary>
-        /// Creates a new <see cref="KeyValueStore"/> with the specified key prefix.
-        /// </summary>
-        /// <param name="options">
-        ///   Store options.
-        /// </param>
-        /// <param name="logger">
-        ///   The logger for the store.
-        /// </param>
-        protected KeyValueStore(TOptions? options, ILogger? logger = null) : base(logger) { 
-            Options = options ?? new TOptions();
-        }
-
-
-        /// <inheritdoc/>
-        protected override CompressionLevel GetCompressionLevel() => Options.CompressionLevel;
-
-    }
 }
