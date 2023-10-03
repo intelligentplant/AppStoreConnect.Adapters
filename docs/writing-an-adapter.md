@@ -403,12 +403,7 @@ The following `IKeyValueStore` implementations support persistence:
 - [SQLite](../src/DataCore.Adapter.KeyValueStore.Sqlite)
 - [Microsoft FASTER](../src/DataCore.Adapter.KeyValueStore.FASTER)
 
-`IKeyValueStore` expects values to be specified as `byte[]`. Extension methods exist to automatically serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) e.g.
-
-```csharp
-await kvStore.WriteJsonAsync("UtcLastUpdated", DateTime.UtcNow).ConfigureAwait(false);
-```
-
+The implementations above that support persistence serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) and can be configured to automatically compress the serialized bytes using GZip compression.
 
 # Telemetry
 
