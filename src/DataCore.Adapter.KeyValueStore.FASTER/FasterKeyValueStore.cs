@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -427,14 +428,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
+        protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
             var session = GetPooledSession();
             try {
+
+
                 var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
-                var valueSpanByte = SpanByte.FromFixedSpan(value);
+                var valueSpanByte = SpanByte.FromFixedSpan(await SerializeToBytesAsync(value).ConfigureAwait(false));
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
@@ -452,7 +455,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
+        protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T: default {
             ThrowIfDisposed();
 
             Status status;
@@ -472,11 +475,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             }
 
             if (!status.Found) {
-                return null;
+                return default;
             }
 
             using (spanByteAndMemory.Memory) {
-                return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
+                return await DeserializeFromBytesAsync<T>(spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray()).ConfigureAwait(false);
             }
         }
 

@@ -186,14 +186,13 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// </returns>
         private async ValueTask LoadIndexAsync() {
             try {
-                var readResult = await ReadFileAsync(IndexFileName).ConfigureAwait(false);
+                var index = await ReadFileAsync<IDictionary<string, string>>(IndexFileName).ConfigureAwait(false);
 
-                if (readResult == null || readResult.Length == 0) {
+                if (index == null || index.Count == 0) {
                     _fileIndex = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
                     return;
                 }
 
-                var index = JsonSerializer.Deserialize<Dictionary<string, string>>(readResult);
                 _fileIndex = new ConcurrentDictionary<string, string>(index, StringComparer.Ordinal);
             }
             catch (Exception e) {
@@ -326,7 +325,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   The operation status.
         /// </returns>
-        private async ValueTask WriteFileAsync(string fileName, byte[] value, CompressionLevel compressionLevel) {
+        private async ValueTask WriteFileAsync<T>(string fileName, T value, CompressionLevel? compressionLevel) {
             var @lock = GetOrAddLockForFile(fileName);
             using (await @lock.WriterLockAsync().ConfigureAwait(false)) {
                 var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
@@ -392,13 +391,9 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   A task that will perform the write.
         /// </returns>
-        private async Task WriteFileAsync(FileInfo file, byte[] content, CompressionLevel compressionLevel) {
-            using (var stream = file.OpenWrite())
-            using (var gzStream = new GZipStream(stream, compressionLevel, true)) {
-                await gzStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
-                // Calling Flush/FlushAsync on GZipStream does not always seem to flush all
-                // pending data; calling Close does.
-                gzStream.Close();
+        private async Task WriteFileAsync<T>(FileInfo file, T content, CompressionLevel? compressionLevel) {
+            using (var stream = file.OpenWrite()) { 
+                await SerializeToStreamAsync(stream, content, jsonOptions: null, compressionLevel: compressionLevel).ConfigureAwait(false);
             }
         }
 
@@ -412,12 +407,12 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   The content of the file.
         /// </returns>
-        private async ValueTask<byte[]?> ReadFileAsync(string fileName) {
+        private async ValueTask<T?> ReadFileAsync<T>(string fileName) {
             var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
             var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
 
             if (!file.Exists && !backupFile.Exists) {
-                return null;
+                return default;
             }
 
             var @lock = GetOrAddLockForFile(fileName);
@@ -427,12 +422,12 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 backupFile.Refresh();
 
                 if (!file.Exists && !backupFile.Exists) {
-                    return null;
+                    return default;
                 }
 
                 // Use the backup file if the original file does not exist.
                 var f = file.Exists ? file : backupFile;
-                return await ReadFileAsync(f).ConfigureAwait(false);
+                return await ReadFileAsync<T>(f).ConfigureAwait(false);
             }
         }
 
@@ -446,36 +441,25 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   The content of the file.
         /// </returns>
-        private async Task<byte[]> ReadFileAsync(FileInfo file) {
-            using (var stream = file.OpenRead())
-            using (var gzStream = new GZipStream(stream, CompressionMode.Decompress, true))
-            using (var ms = new MemoryStream()) {
-                await gzStream.CopyToAsync(ms).ConfigureAwait(false);
-                return ms.ToArray();
+        private async Task<T?> ReadFileAsync<T>(FileInfo file) {
+            using (var stream = file.OpenRead()) { 
+                return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
             }
         }
 
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// <see cref="FileSystemKeyValueStore"/> will always return <see cref="CompressionLevel.NoCompression"/>, 
-        /// as it can apply compression more efficiently when reading/writing files instead.
-        /// </remarks>
-        protected override CompressionLevel GetCompressionLevel() => CompressionLevel.NoCompression;
-
-
-        /// <inheritdoc/>
-        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
+        protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
             var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
-            await WriteFileAsync(fileName, value, Options.CompressionLevel).ConfigureAwait(false);
+            await WriteFileAsync(fileName, value, null).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
+        protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T : default {
             await _indexLoader.Value.ConfigureAwait(false);
             var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
-            return await ReadFileAsync(fileName).ConfigureAwait(false);
+            return await ReadFileAsync<T>(fileName).ConfigureAwait(false);
         }
 
 

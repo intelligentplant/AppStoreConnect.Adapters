@@ -1,1 +1,3 @@
 ﻿#nullable enable
+override DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+override DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask

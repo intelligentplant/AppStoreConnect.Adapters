@@ -8,5 +8,3 @@ DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.ConnectionStrin
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.SqliteKeyValueStoreOptions() -> void
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask

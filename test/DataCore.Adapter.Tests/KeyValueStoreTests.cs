@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -28,7 +27,7 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
             }
             finally {
                 if (store is IDisposable disposable) {
@@ -50,9 +49,9 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
                 
-                var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
             }
             finally {
@@ -75,15 +74,15 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
                 
-                var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
 
                 var delete = await store.DeleteAsync(TestContext.TestName);
                 Assert.IsTrue(delete);
 
-                var value2 = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value2 = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(default(DateTime), value2);
             }
             finally {
@@ -107,7 +106,7 @@ namespace DataCore.Adapter.Tests {
                 var keys = Enumerable.Range(1, 10).Select(x => $"key:{x}").ToArray();
 
                 foreach (var key in keys) {
-                    await store.WriteJsonAsync(key, 0);
+                    await store.WriteAsync(key, 0);
                 }
 
                 var keysActual = await store.GetKeysAsStrings().ToEnumerable();
@@ -141,12 +140,12 @@ namespace DataCore.Adapter.Tests {
                     .CreateScopedStore("INNER 1:")
                     .CreateScopedStore("INNER 2:");
 
-                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                await scopedStore.WriteAsync(TestContext.TestName, now);
                 
-                var value = await scopedStore.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await scopedStore.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
 
-                var value2 = await store.ReadJsonAsync<DateTime>("INNER 1:INNER 2:" + TestContext.TestName);
+                var value2 = await store.ReadAsync<DateTime>("INNER 1:INNER 2:" + TestContext.TestName);
                 Assert.AreEqual(now, value2);
             }
             finally {
@@ -171,7 +170,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var scopedStore = store.CreateScopedStore("INNER:");
 
-                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                await scopedStore.WriteAsync(TestContext.TestName, now);
                 
                 var keys = await scopedStore.GetKeysAsStrings().ToEnumerable();
                 Assert.IsTrue(keys.Contains(TestContext.TestName));

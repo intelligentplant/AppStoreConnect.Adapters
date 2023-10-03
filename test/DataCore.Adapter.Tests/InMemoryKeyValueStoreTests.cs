@@ -11,7 +11,7 @@ namespace DataCore.Adapter.Tests {
     public class InMemoryKeyValueStoreTests : KeyValueStoreTests<InMemoryKeyValueStore> {
 
         protected override InMemoryKeyValueStore CreateStore(CompressionLevel compressionLevel) {
-            return new InMemoryKeyValueStore(compressionLevel);
+            return new InMemoryKeyValueStore();
         }
 
     }

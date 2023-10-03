@@ -28,8 +28,6 @@ DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.SegmentSizeBits
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.SegmentSizeBits.set -> void
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 static DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.CreateLocalStorageCheckpointManager(string! path, bool removeOutdated = true) -> FASTER.core.ICheckpointManager!
 virtual DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.Dispose(bool disposing) -> void
 virtual DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask

@@ -4,8 +4,6 @@ abstract DataCore.Adapter.AdapterCore.StopAsyncCore(System.Threading.Cancellatio
 abstract DataCore.Adapter.Services.KeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 abstract DataCore.Adapter.Services.KeyValueStore.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
 abstract DataCore.Adapter.Services.KeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-abstract DataCore.Adapter.Services.KeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-abstract DataCore.Adapter.Services.KeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 const DataCore.Adapter.AdapterCallContextExtensions.ValidateRequestsItemName = "adapter:validate-request-objects" -> string!
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterDisposed = 4 -> int
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterOperationCompleted = 6 -> int
@@ -259,11 +257,8 @@ DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations.UpdateAnnotation(DataCor
 DataCore.Adapter.Services.IKeyValueStore
 DataCore.Adapter.Services.IKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.Services.IKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-DataCore.Adapter.Services.IKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-DataCore.Adapter.Services.IKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.InMemoryKeyValueStore
 DataCore.Adapter.Services.InMemoryKeyValueStore.Dispose() -> void
-DataCore.Adapter.Services.InMemoryKeyValueStore.InMemoryKeyValueStore(System.IO.Compression.CompressionLevel compressionLevel = System.IO.Compression.CompressionLevel.NoCompression) -> void
 DataCore.Adapter.Services.KeyValueStore
 DataCore.Adapter.Services.KeyValueStore.ConvertBytesToHexString(byte[]! bytes) -> string!
 DataCore.Adapter.Services.KeyValueStore.ConvertHexStringToBytes(string! hexString) -> byte[]!
@@ -286,9 +281,7 @@ DataCore.Adapter.Services.KVKey.Value.get -> byte[]!
 DataCore.Adapter.Services.ScopedKeyValueStore
 DataCore.Adapter.Services.ScopedKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.Services.ScopedKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-DataCore.Adapter.Services.ScopedKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
 DataCore.Adapter.Services.ScopedKeyValueStore.ScopedKeyValueStore(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.IKeyValueStore! inner) -> void
-DataCore.Adapter.Services.ScopedKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Tags.ITagConfiguration
 DataCore.Adapter.Tags.ITagConfiguration.CreateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.CreateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Tags.ITagConfiguration.DeleteTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.DeleteTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
@@ -313,7 +306,6 @@ DataCore.Adapter.WellKnownFeatures.Events
 DataCore.Adapter.WellKnownFeatures.Extensions
 DataCore.Adapter.WellKnownFeatures.RealTimeData
 DataCore.Adapter.WellKnownFeatures.Tags
-override DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
 override DataCore.Adapter.Services.KVKey.Equals(object! obj) -> bool
 override DataCore.Adapter.Services.KVKey.GetHashCode() -> int
 static DataCore.Adapter.AdapterCallContextExtensions.SetItem<TKey, TValue>(this DataCore.Adapter.IAdapterCallContext! context, TKey key, TValue? value) -> void

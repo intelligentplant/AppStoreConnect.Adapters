@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -24,6 +25,11 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// The Sqlite connection string.
         /// </summary>
         private readonly string _connectionString;
+
+        /// <summary>
+        /// Lock for the store.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncReaderWriterLock _lock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
 
         /// <summary>
@@ -110,6 +116,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (_lock.WriterLock())
                 using (var command = connection.CreateCommand()) {
                     if (createDatabase) {
                         EnableWriteAheadLogging(command);
@@ -123,12 +130,13 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <inheritdoc/>
-        protected override ValueTask WriteAsync(KVKey key, byte[] value) {
+        protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
             var hexKey = ConvertBytesToHexString(key);
 
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (await _lock.WriterLockAsync().ConfigureAwait(false))
                 using (var transaction = connection.BeginTransaction())
                 using (var command = connection.CreateCommand()) {
                     command.Transaction = transaction;
@@ -136,36 +144,34 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                     // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
                     command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
                     command.Parameters.AddWithValue("$key", hexKey);
-                    command.Parameters.AddWithValue("$value", value);
+                    command.Parameters.AddWithValue("$value", await SerializeToBytesAsync(value).ConfigureAwait(false));
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
-                    return default;
                 }
             }
         }
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
+        protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T : default {
             var hexKey = ConvertBytesToHexString(key);
 
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (await _lock.ReaderLockAsync().ConfigureAwait(false))
                 using (var command = connection.CreateCommand()) {
                     command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
                     command.Parameters.AddWithValue("$key", hexKey);
 
                     using (var reader = command.ExecuteReader()) {
                         if (!reader.Read()) {
-                            return null;
+                            return default;
                         }
 
-                        using (var stream = reader.GetStream(0))
-                        using (var ms = new MemoryStream()) {
-                            await stream.CopyToAsync(ms).ConfigureAwait(false);
-                            return ms.ToArray();
+                        using (var stream = reader.GetStream(0)) {
+                            return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
                         }
                     }
                 }
@@ -174,12 +180,13 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <inheritdoc/>
-        protected override ValueTask<bool> DeleteAsync(KVKey key) {
+        protected override async ValueTask<bool> DeleteAsync(KVKey key) {
             var hexKey = ConvertBytesToHexString(key);
 
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (await _lock.WriterLockAsync().ConfigureAwait(false))
                 using (var transaction = connection.BeginTransaction())
                 using (var command = connection.CreateCommand()) {
                     command.Transaction = transaction;
@@ -189,7 +196,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                     var count = command.ExecuteNonQuery();
                     transaction.Commit();
 
-                    return new ValueTask<bool>(count != 0);
+                    return count != 0;
                 }
             }
         }
@@ -206,6 +213,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
             using (var connection = new SqliteConnection(_connectionString)) {
                 connection.Open();
 
+                using (await _lock.ReaderLockAsync().ConfigureAwait(false))
                 using (var command = connection.CreateCommand()) {
                     if (hexPrefix == null) {
                         command.CommandText = "SELECT key FROM kvstore";

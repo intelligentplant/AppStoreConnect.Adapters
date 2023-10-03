@@ -112,7 +112,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return null;
             }
-            return await _keyValueStore.ReadJsonAsync<string[]>("tags").ConfigureAwait(false);
+            return await _keyValueStore.ReadAsync<string[]>("tags").ConfigureAwait(false);
         }
 
 
@@ -126,7 +126,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return;
             }
-            await _keyValueStore.WriteJsonAsync("tags", _valuesById.Keys.ToArray()).ConfigureAwait(false);
+            await _keyValueStore.WriteAsync("tags", _valuesById.Keys.ToArray()).ConfigureAwait(false);
         }
 
 
@@ -143,7 +143,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return null;
             }
-            return await _keyValueStore.ReadJsonAsync<TagValueQueryResult>($"value:{tagId}").ConfigureAwait(false);
+            return await _keyValueStore.ReadAsync<TagValueQueryResult>($"value:{tagId}").ConfigureAwait(false);
         }
 
 
@@ -160,7 +160,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (_keyValueStore == null) {
                 return;
             }
-            await _keyValueStore.WriteJsonAsync($"value:{value.TagId}", value).ConfigureAwait(false);
+            await _keyValueStore.WriteAsync($"value:{value.TagId}", value).ConfigureAwait(false);
         }
 
 
