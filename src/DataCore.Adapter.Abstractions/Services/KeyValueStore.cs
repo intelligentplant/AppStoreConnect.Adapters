@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -146,16 +144,10 @@ namespace DataCore.Adapter.Services {
         /// 
         /// <list type="bullet">
         ///   <item>
-        ///     <see cref="SerializeToBytesAsync{T}(T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///     <see cref="SerializeToBytesAsync{T}(T, CompressionLevel?)"/>
         ///   </item>
         ///   <item>
-        ///     <see cref="SerializeToBytesAsync{T}(T, JsonTypeInfo{T}, CompressionLevel?)"/>
-        ///   </item>
-        ///   <item>
-        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonSerializerOptions?, CompressionLevel?)"/>
-        ///   </item>
-        ///   <item>
-        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonTypeInfo{T}, CompressionLevel?)"/>
+        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, CompressionLevel?)"/>
         ///   </item>
         /// </list>
         /// 
@@ -164,35 +156,34 @@ namespace DataCore.Adapter.Services {
 
 
         /// <summary>
-        /// Gets the default JSON serialization options to use when serializing values.
+        /// Gets the serializer for the store.
         /// </summary>
         /// <returns>
-        ///   The default JSON serialization options.
+        ///   The serializer.
         /// </returns>
         /// <remarks>
         /// 
         /// <para>
-        ///   The default options are used if no <see cref="JsonSerializerOptions"/> are passed 
-        ///   to the following methods:
+        ///   <see cref="GetSerializer"/> is used by the following methods:
         /// </para>
         /// 
         /// <list type="bullet">
         ///   <item>
-        ///     <see cref="SerializeToBytesAsync{T}(T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///     <see cref="SerializeToBytesAsync{T}(T, CompressionLevel?)"/>
         ///   </item>
         ///   <item>
-        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, JsonSerializerOptions?, CompressionLevel?)"/>
+        ///     <see cref="SerializeToStreamAsync{T}(Stream, T, CompressionLevel?)"/>
         ///   </item>
         ///   <item>
-        ///     <see cref="DeserializeFromBytesAsync{T}(byte[], JsonSerializerOptions?)"/>
+        ///     <see cref="DeserializeFromBytesAsync{T}(byte[])"/>
         ///   </item>
         ///   <item>
-        ///     <see cref="DeserializeFromStreamAsync{T}(Stream, JsonSerializerOptions?)"/>
+        ///     <see cref="DeserializeFromStreamAsync{T}(Stream)"/>
         ///   </item>
         /// </list>
         /// 
         /// </remarks>
-        protected abstract JsonSerializerOptions? GetJsonSerializerOptions();
+        protected abstract IKeyValueStoreSerializer GetSerializer();
 
 
         /// <summary>
@@ -204,9 +195,6 @@ namespace DataCore.Adapter.Services {
         /// <param name="value">
         ///   The value to serialize.
         /// </param>
-        /// <param name="jsonOptions">
-        ///   The JSON serialization options to use.
-        /// </param>
         /// <param name="compressionLevel">
         ///   The compression level to use. If <see langword="null"/>, the value returned by 
         ///   <see cref="GetCompressionLevel"/> is used.
@@ -214,46 +202,12 @@ namespace DataCore.Adapter.Services {
         /// <returns>
         ///   The serialized value.
         /// </returns>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        protected async ValueTask<byte[]> SerializeToBytesAsync<T>(T value, JsonSerializerOptions? jsonOptions = null, CompressionLevel? compressionLevel = null) {
+        protected async ValueTask<byte[]> SerializeToBytesAsync<T>(T value, CompressionLevel? compressionLevel = null) {
             using (var ms = new MemoryStream()) {
-                await SerializeToStreamAsync(ms, value, jsonOptions, compressionLevel).ConfigureAwait(false);
+                await SerializeToStreamAsync(ms, value, compressionLevel).ConfigureAwait(false);
                 return ms.ToArray();
             }
         }
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-
-
-        /// <summary>
-        /// Serializes and compresses a value to a byte array.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="value">
-        ///   The value to serialize.
-        /// </param>
-        /// <param name="jsonTypeInfo">
-        ///   The JSON serialization type info to use.
-        /// </param>
-        /// <param name="compressionLevel">
-        ///   The compression level to use. If <see langword="null"/>, the value returned by 
-        ///   <see cref="GetCompressionLevel"/> is used.
-        /// </param>
-        /// <returns>
-        ///   The serialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
-        /// </exception>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        protected async ValueTask<byte[]> SerializeToBytesAsync<T>(T value, JsonTypeInfo<T> jsonTypeInfo, CompressionLevel? compressionLevel = null) {
-            using (var ms = new MemoryStream()) {
-                await SerializeToStreamAsync(ms, value, jsonTypeInfo ?? throw new ArgumentNullException(nameof(jsonTypeInfo)), compressionLevel).ConfigureAwait(false);
-                return ms.ToArray();
-            }
-        }
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
 
         /// <summary>
@@ -268,9 +222,6 @@ namespace DataCore.Adapter.Services {
         /// <param name="value">
         ///   The value to serialize.
         /// </param>
-        /// <param name="jsonOptions">
-        ///   The JSON serialization options to use.
-        /// </param>
         /// <param name="compressionLevel">
         ///   The compression level to use. If <see langword="null"/>, the value returned by 
         ///   <see cref="GetCompressionLevel"/> is used.
@@ -281,8 +232,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="stream"/> is <see langword="null"/>.
         /// </exception>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, JsonSerializerOptions? jsonOptions = null, CompressionLevel? compressionLevel = null) {
+        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, CompressionLevel? compressionLevel = null) {
             if (stream == null) {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -290,58 +240,10 @@ namespace DataCore.Adapter.Services {
             var level = compressionLevel ?? GetCompressionLevel();
 
             using (var compressStream = new GZipStream(stream, level, leaveOpen: true)) {
-                await JsonSerializer.SerializeAsync(compressStream, value, jsonOptions ?? GetJsonSerializerOptions()).ConfigureAwait(false);
+                await GetSerializer().SerializeAsync(compressStream, value).ConfigureAwait(false);
                 compressStream.Close();
             }
         }
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-
-
-        /// <summary>
-        /// Serializes and compresses a value to a stream.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="stream">
-        ///   The stream to write the serialized value to.
-        /// </param>
-        /// <param name="value">
-        ///   The value to serialize.
-        /// </param>
-        /// <param name="jsonTypeInfo">
-        ///   The JSON serialization type info to use.
-        /// </param>
-        /// <param name="compressionLevel">
-        ///   The compression level to use. If <see langword="null"/>, the value returned by 
-        ///   <see cref="GetCompressionLevel"/> is used.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that will complete when the value has been serialized.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="stream"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
-        /// </exception>
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, JsonTypeInfo<T> jsonTypeInfo, CompressionLevel? compressionLevel = null) {
-            if (stream == null) {
-                throw new ArgumentNullException(nameof(stream));
-            }
-            if (jsonTypeInfo == null) {
-                throw new ArgumentNullException(nameof(jsonTypeInfo));
-            }
-
-            var level = compressionLevel ?? GetCompressionLevel();
-
-            using (var compressStream = new GZipStream(stream, level, leaveOpen: true)) {
-                await JsonSerializer.SerializeAsync(compressStream, value, jsonTypeInfo).ConfigureAwait(false);
-                compressStream.Close();
-            }
-        }
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
 
         /// <summary>
@@ -353,57 +255,18 @@ namespace DataCore.Adapter.Services {
         /// <param name="data">
         ///   The serialized value.
         /// </param>
-        /// <param name="jsonOptions">
-        ///   The JSON serialization options to use.
-        /// </param>
         /// <returns>
         ///   The deserialized value.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="data"/> is <see langword="null"/>.
         /// </exception>
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        protected async ValueTask<T?> DeserializeFromBytesAsync<T>(byte[] data, JsonSerializerOptions? jsonOptions = null) {
+        protected async ValueTask<T?> DeserializeFromBytesAsync<T>(byte[] data) {
             if (data == null) {
                 throw new ArgumentNullException(nameof(data));
             }
             using (var ms = new MemoryStream(data)) {
-                return await DeserializeFromStreamAsync<T?>(ms, jsonOptions).ConfigureAwait(false);
-            }
-        }
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-
-        /// <summary>
-        /// Deserializes a value from a compressed byte array.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="data">
-        ///   The serialized value.
-        /// </param>
-        /// <param name="jsonTypeInfo">
-        ///   The JSON serialization type info to use.
-        /// </param>
-        /// <returns>
-        ///   The deserialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="data"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
-        /// </exception>
-        protected async ValueTask<T?> DeserializeFromBytesAsync<T>(byte[] data, JsonTypeInfo<T> jsonTypeInfo) {
-            if (data == null) {
-                throw new ArgumentNullException(nameof(data));
-            }
-            if (jsonTypeInfo == null) {
-                throw new ArgumentNullException(nameof(jsonTypeInfo));
-            }
-            using (var ms = new MemoryStream(data)) {
-                return await DeserializeFromStreamAsync(ms, jsonTypeInfo).ConfigureAwait(false);
+                return await DeserializeFromStreamAsync<T?>(ms).ConfigureAwait(false);
             }
         }
 
@@ -417,57 +280,18 @@ namespace DataCore.Adapter.Services {
         /// <param name="stream">
         ///   The stream containing the serialized value.
         /// </param>
-        /// <param name="jsonOptions">
-        ///   The JSON serialization options to use.
-        /// </param>
         /// <returns>
         ///   A <see cref="ValueTask{TResult}"/> that will return the deserialized value.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="stream"/> is <see langword="null"/>.
         /// </exception>
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream, JsonSerializerOptions? jsonOptions = null) {
+        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream) {
             if (stream == null) {
                 throw new ArgumentNullException(nameof(stream));
             }
             using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
-                return await JsonSerializer.DeserializeAsync<T>(decompressStream, jsonOptions ?? GetJsonSerializerOptions()).ConfigureAwait(false);
-            }
-        }
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-
-        /// <summary>
-        /// Deserializes a value from a compressed stream.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The value type.
-        /// </typeparam>
-        /// <param name="stream">
-        ///   The stream containing the serialized value.
-        /// </param>
-        /// <param name="jsonTypeInfo">
-        ///   The JSON serialization type info to use.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the deserialized value.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="stream"/> is <see langword="null"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
-        /// </exception>
-        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo) {
-            if (stream == null) {
-                throw new ArgumentNullException(nameof(stream));
-            }
-            if (jsonTypeInfo == null) {
-                throw new ArgumentNullException(nameof(jsonTypeInfo));
-            }
-            using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
-                return await JsonSerializer.DeserializeAsync(decompressStream, jsonTypeInfo).ConfigureAwait(false);
+                return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
             }
         }
 
