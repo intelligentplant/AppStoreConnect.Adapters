@@ -393,7 +393,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// </returns>
         private async Task WriteFileAsync<T>(FileInfo file, T content, CompressionLevel? compressionLevel) {
             using (var stream = file.OpenWrite()) { 
-                await SerializeToStreamAsync(stream, content, jsonOptions: null, compressionLevel: compressionLevel).ConfigureAwait(false);
+                await SerializeToStreamAsync(stream, content, compressionLevel: compressionLevel).ConfigureAwait(false);
             }
         }
 

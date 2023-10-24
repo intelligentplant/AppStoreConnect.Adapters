@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Compression;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
@@ -27,7 +26,9 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
-        protected sealed override JsonSerializerOptions? GetJsonSerializerOptions() => null;
+        protected sealed override IKeyValueStoreSerializer GetSerializer() {
+            throw new NotImplementedException();
+        }
 
 
         /// <inheritdoc/>

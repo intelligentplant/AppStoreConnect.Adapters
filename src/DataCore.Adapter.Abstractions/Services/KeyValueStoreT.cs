@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
-        protected sealed override JsonSerializerOptions? GetJsonSerializerOptions() => Options.JsonOptions;
+        protected sealed override IKeyValueStoreSerializer GetSerializer() => Options.Serializer ?? JsonKeyValueStoreSerializer.Default;
 
     }
 }
