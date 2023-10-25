@@ -1,3 +1,8 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.get -> bool
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.set -> void
+override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.AllowRawWrites.get -> bool
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask

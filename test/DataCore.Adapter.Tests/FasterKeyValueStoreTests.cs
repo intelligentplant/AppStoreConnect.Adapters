@@ -17,8 +17,8 @@ namespace DataCore.Adapter.Tests {
 
     [TestClass]
     public class FasterKeyValueStoreTests : KeyValueStoreTests<FasterKeyValueStore> {
-        protected override FasterKeyValueStore CreateStore(CompressionLevel compressionLevel) {
-            return new FasterKeyValueStore(new FasterKeyValueStoreOptions() { CompressionLevel = compressionLevel });
+        protected override FasterKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
+            return new FasterKeyValueStore(new FasterKeyValueStoreOptions() { CompressionLevel = compressionLevel, EnableRawWrites = enableRawWrites });
         }
 
 

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +16,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public class FasterKeyValueStore : KeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
+    public class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -92,6 +91,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// will be increased.
         /// </summary>
         private const byte ConsecutiveCompactOperationsBeforeThresholdIncrease = 5;
+
+        /// <inheritdoc/>
+        protected override bool AllowRawWrites => Options.EnableRawWrites;
 
 
         /// <summary>
@@ -429,15 +431,36 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         /// <inheritdoc/>
         protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
+            await WriteCoreAsync(key, await SerializeToBytesAsync(value).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask WriteRawAsync(KVKey key, byte[] value) {
+            await WriteCoreAsync(key, value).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Writes raw byte data to the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key.
+        /// </param>
+        /// <param name="value">
+        ///   The raw byte data.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        private async ValueTask WriteCoreAsync(KVKey key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
             var session = GetPooledSession();
             try {
-
-
                 var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
-                var valueSpanByte = SpanByte.FromFixedSpan(await SerializeToBytesAsync(value).ConfigureAwait(false));
+                var valueSpanByte = SpanByte.FromFixedSpan(value);
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
@@ -456,6 +479,31 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         /// <inheritdoc/>
         protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T: default {
+            var data = await ReadCoreAsync(key).ConfigureAwait(false);
+            if (data == null) {
+                return default;
+            }
+
+            return await DeserializeFromBytesAsync<T>(data).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<byte[]?> ReadRawAsync(KVKey key) {
+            return await ReadCoreAsync(key).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Reads raw bytes from the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key.
+        /// </param>
+        /// <returns>
+        ///   The raw bytes, or <see langword="null"/> if the key does not exist.
+        /// </returns>
+        private async ValueTask<byte[]?> ReadCoreAsync(KVKey key) {
             ThrowIfDisposed();
 
             Status status;
@@ -475,11 +523,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             }
 
             if (!status.Found) {
-                return default;
+                return null;
             }
 
             using (spanByteAndMemory.Memory) {
-                return await DeserializeFromBytesAsync<T>(spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray()).ConfigureAwait(false);
+                return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
             }
         }
 

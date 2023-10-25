@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -14,7 +13,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
     /// <summary>
     /// <see cref="IKeyValueStore"/> that uses a Sqlite database to store values.
     /// </summary>
-    public class SqliteKeyValueStore : KeyValueStore<SqliteKeyValueStoreOptions> {
+    public class SqliteKeyValueStore : RawKeyValueStore<SqliteKeyValueStoreOptions> {
 
         /// <summary>
         /// Sqlite error code when the database file is unavailable.
@@ -30,6 +29,9 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// Lock for the store.
         /// </summary>
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _lock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <inheritdoc/>
+        protected override bool AllowRawWrites => Options.EnableRawWrites;
 
 
         /// <summary>
@@ -131,6 +133,29 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
+            await WriteCoreAsync(key, await SerializeToBytesAsync(value).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask WriteRawAsync(KVKey key, byte[] value) {
+            await WriteCoreAsync(key, value).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Writes a raw value to the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key for the value.
+        /// </param>
+        /// <param name="data">
+        ///   The raw value.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        private async ValueTask WriteCoreAsync(KVKey key, byte[] data) {
             var hexKey = ConvertBytesToHexString(key);
 
             using (var connection = new SqliteConnection(_connectionString)) {
@@ -144,7 +169,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                     // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
                     command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
                     command.Parameters.AddWithValue("$key", hexKey);
-                    command.Parameters.AddWithValue("$value", await SerializeToBytesAsync(value).ConfigureAwait(false));
+                    command.Parameters.AddWithValue("$value", data);
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
@@ -172,6 +197,34 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
                         using (var stream = reader.GetStream(0)) {
                             return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<byte[]?> ReadRawAsync(KVKey key) {
+            var hexKey = ConvertBytesToHexString(key);
+
+            using (var connection = new SqliteConnection(_connectionString)) {
+                connection.Open();
+
+                using (await _lock.ReaderLockAsync().ConfigureAwait(false))
+                using (var command = connection.CreateCommand()) {
+                    command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
+                    command.Parameters.AddWithValue("$key", hexKey);
+
+                    using (var reader = command.ExecuteReader()) {
+                        if (!reader.Read()) {
+                            return null;
+                        }
+
+                        using (var stream = reader.GetStream(0))
+                        using (var ms = new MemoryStream()) {
+                            await stream.CopyToAsync(ms).ConfigureAwait(false);
+                            return ms.ToArray();
                         }
                     }
                 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -12,7 +13,7 @@ namespace DataCore.Adapter.Tests {
 
     public abstract class KeyValueStoreTests<T> : TestsBase where T : IKeyValueStore {
 
-        protected abstract T CreateStore(CompressionLevel compressionLevel);
+        protected abstract T CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false);
 
 
         [DataTestMethod]
@@ -214,6 +215,90 @@ namespace DataCore.Adapter.Tests {
                     var task = tasks[i];
                     Assert.IsTrue(task.IsCompleted && !task.IsCanceled && !task.IsFaulted, $"Unexpected result for task {i}.");
                 }
+            }
+            finally {
+                if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldWriteRawValueToStore(CompressionLevel compressionLevel) {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel, enableRawWrites: true);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await rawStore.WriteRawAsync(TestContext.TestName, raw);
+
+                var deserialized = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(now, deserialized);
+            }
+            finally {
+                if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldReadRawValueFromStore(CompressionLevel compressionLevel) {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel, enableRawWrites: true);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await rawStore.WriteRawAsync(TestContext.TestName, raw);
+
+                var raw2 = await rawStore.ReadRawAsync(TestContext.TestName);
+                Assert.IsTrue(raw.SequenceEqual(raw2));
+            }
+            finally {
+                if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task RawWriteShouldThrowException() {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await rawStore.WriteRawAsync(TestContext.TestName, raw));
             }
             finally {
                 if (store is IDisposable disposable) {

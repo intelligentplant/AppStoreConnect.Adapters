@@ -40,7 +40,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override FileSystemKeyValueStore CreateStore(CompressionLevel compressionLevel) {
+        protected override FileSystemKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
             return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()), compressionLevel);
         }
 

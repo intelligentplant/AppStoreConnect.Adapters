@@ -21,6 +21,15 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         public bool ReadOnly { get; set; }
 
         /// <summary>
+        /// When <see langword="true"/>, enables the use of <see cref="Services.IRawKeyValueStore.WriteRawAsync"/> 
+        /// to write raw byte data to the store.
+        /// </summary>
+        /// <remarks>
+        ///   Attempting a raw write will throw an exception if this property is <see langword="false"/>.
+        /// </remarks>
+        public bool EnableRawWrites { get; set; }
+
+        /// <summary>
         /// A factory for creating an <see cref="IDevice"/> for use with the FASTER log.
         /// </summary>
         /// <remarks>

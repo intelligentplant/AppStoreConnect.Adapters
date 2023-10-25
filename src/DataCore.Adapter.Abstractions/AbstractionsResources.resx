@@ -372,6 +372,9 @@
   <data name="Error_KeyValueStore_InvalidKey" xml:space="preserve">
     <value>Zero byte keys are not allowed.</value>
   </data>
+  <data name="Error_KeyValueStore_RawWritesDisabled" xml:space="preserve">
+    <value>Raw writes are not enabled for this store.</value>
+  </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>

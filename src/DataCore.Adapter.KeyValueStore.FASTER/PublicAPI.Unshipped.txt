@@ -1,3 +1,8 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.get -> bool
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.set -> void
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.AllowRawWrites.get -> bool
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
