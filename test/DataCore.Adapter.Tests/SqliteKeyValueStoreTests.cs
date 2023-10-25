@@ -37,10 +37,11 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static SqliteKeyValueStore CreateStore(string fileName, CompressionLevel compressionLevel) {
+        private static SqliteKeyValueStore CreateStore(string fileName, CompressionLevel compressionLevel, bool enableRawWrites) {
             return new SqliteKeyValueStore(new SqliteKeyValueStoreOptions() { 
                 ConnectionString = $"Data Source={fileName};Cache=Shared",
-                CompressionLevel = compressionLevel
+                CompressionLevel = compressionLevel,
+                EnableRawWrites = enableRawWrites
             });
         }
 
@@ -50,8 +51,8 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        protected override SqliteKeyValueStore CreateStore(CompressionLevel compressionLevel) {
-            return CreateStore(GetDatabaseFileName(), compressionLevel);
+        protected override SqliteKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
+            return CreateStore(GetDatabaseFileName(), compressionLevel, enableRawWrites);
         }
 
 
@@ -66,10 +67,10 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var path = GetDatabaseFileName();
 
-            var store1 = CreateStore(path, compressionLevel);
+            var store1 = CreateStore(path, compressionLevel, false);
             await ((IKeyValueStore) store1).WriteAsync(TestContext.TestName, now);
 
-            var store2 = CreateStore(path, compressionLevel);
+            var store2 = CreateStore(path, compressionLevel, false);
             var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
 
             Assert.AreEqual(now, readResult);

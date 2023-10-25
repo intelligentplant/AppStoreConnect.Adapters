@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Services {
 
 
         /// <summary>
-        /// Creates a new <see cref="KeyValueStore"/> with the specified key prefix.
+        /// Creates a new <see cref="KeyValueStore{TOptions}"/>.
         /// </summary>
         /// <param name="options">
         ///   Store options.

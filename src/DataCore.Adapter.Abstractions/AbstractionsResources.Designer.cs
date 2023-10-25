@@ -826,6 +826,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Raw writes are not enabled for this store..
+        /// </summary>
+        public static string Error_KeyValueStore_RawWritesDisabled {
+            get {
+                return ResourceManager.GetString("Error_KeyValueStore_RawWritesDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The {0} feature is not implemented by the adapter..
         /// </summary>
         public static string Error_MissingAdapterFeature {
