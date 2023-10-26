@@ -80,22 +80,43 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static async IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) {
+        public static async IAsyncEnumerable<string> GetKeysAsStringsAsync(this IKeyValueStore store, KVKey? prefix) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
             await foreach (var key in store.GetKeysAsync(prefix).ConfigureAwait(false)) {
-                string result;
-                try {
-                    result = Encoding.UTF8.GetString(key);
+                if (key.Length == 0) {
+                    continue;
                 }
-                catch {
-                    result = BitConverter.ToString(key);
-                }
-                yield return result;
+                yield return key.ToString();
             }
         }
+
+
+        /// <summary>
+        /// Gets the keys that are defined in the store, converted to <see cref="string"/>.
+        /// </summary>
+        /// <param name="store">
+        ///   The <see cref="IKeyValueStore"/>.
+        /// </param>
+        /// <param name="prefix">
+        ///   Only keys with this prefix will be returned.
+        /// </param>
+        /// <returns>
+        ///   The keys, converted to strings.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Each key is converted to a string by calling <see cref="Encoding.GetString(byte[])"/> 
+        ///   on <see cref="Encoding.UTF8"/>. If an exception is thrown during this conversion, the 
+        ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
+        ///   instead.
+        /// </remarks>
+        [Obsolete("Use GetKeysAsStringsAsync instead.", false)]
+        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) => store.GetKeysAsStringsAsync(prefix);
 
 
         /// <summary>
@@ -116,9 +137,29 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) {
-            return store.GetKeysAsStrings(default);
-        }
+        public static IAsyncEnumerable<string> GetKeysAsStringsAsync(this IKeyValueStore store) => store.GetKeysAsStringsAsync(default);
+
+
+        /// <summary>
+        /// Gets the keys that are defined in the store, converted to <see cref="string"/>.
+        /// </summary>
+        /// <param name="store">
+        ///   The <see cref="IKeyValueStore"/>.
+        /// </param>
+        /// <returns>
+        ///   The keys, converted to strings.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Each key is converted to a string by calling <see cref="Encoding.GetString(byte[])"/> 
+        ///   on <see cref="Encoding.UTF8"/>. If an exception is thrown during this conversion, the 
+        ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
+        ///   instead.
+        /// </remarks>
+        [Obsolete("Use GetKeysAsStringsAsync instead.", false)]
+        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) => store.GetKeysAsStringsAsync(default);
 
 
         /// <summary>

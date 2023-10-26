@@ -104,7 +104,7 @@ namespace DataCore.Adapter.Tests {
         public async Task ShouldListKeys(CompressionLevel compressionLevel) {
             var store = CreateStore(compressionLevel);
             try {
-                var keys = Enumerable.Range(1, 10).Select(x => $"key:{x}").ToArray();
+                var keys = Enumerable.Range(1, 100).Select(x => $"key:{x}").ToArray();
 
                 foreach (var key in keys) {
                     await store.WriteAsync(key, 0);
