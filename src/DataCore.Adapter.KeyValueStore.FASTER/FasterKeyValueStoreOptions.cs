@@ -95,15 +95,34 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         public int SegmentSizeBits { get; set; } = 27;
 
         /// <summary>
-        /// The interval at which log checkpoints will be saved to <see cref="ICheckpointManager"/> 
-        /// created by <see cref="CheckpointManagerFactory"/>.
+        /// The interval at which full (index + log) checkpoints will be saved to <see cref="ICheckpointManager"/> 
         /// </summary>
         /// <remarks>
-        ///   Note that checkpoints will not be created if no <see cref="ICheckpointManager"/> is 
-        ///   supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="CheckpointInterval"/> 
+        ///   Note that full checkpoints will not be created if no <see cref="ICheckpointManager"/> 
+        ///   is supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="CheckpointInterval"/> 
         ///   is <see langword="null"/> or less than or equal to <see cref="TimeSpan.Zero"/>.
         /// </remarks>
         public TimeSpan? CheckpointInterval { get; set; }
+
+        /// <summary>
+        /// The interval at which incremental log checkpoints will be saved to <see cref="ICheckpointManager"/> 
+        /// </summary>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   Note that incremental checkpoints will not be created if no <see cref="ICheckpointManager"/> 
+        ///   is supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="IncrementalCheckpointInterval"/> 
+        ///   is <see langword="null"/> or less than or equal to <see cref="TimeSpan.Zero"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   When both full and incremental checkpoints are enabled, the <see cref="IncrementalCheckpointInterval"/> 
+        ///   should be configured so that incremental checkpoints are taken more frequently than 
+        ///   full checkpoints.
+        /// </para>
+        /// 
+        /// </remarks>
+        public TimeSpan? IncrementalCheckpointInterval { get; set; }
 
         /// <summary>
         /// The interval at which the store will check if the log should be compacted by 

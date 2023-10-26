@@ -123,25 +123,4 @@
   <data name="Error_StoreIsReadOnly" xml:space="preserve">
     <value>This operation cannot be performed on a read-only store.</value>
   </data>
-  <data name="Log_CompactionError" xml:space="preserve">
-    <value>An error occurred while compacting the FASTER log.</value>
-  </data>
-  <data name="Log_ErrorWhileCreatingCheckpoint" xml:space="preserve">
-    <value>An error occurred while creating a recovery checkpoint for the FASTER log.</value>
-  </data>
-  <data name="Log_ErrorWhileRecoveringCheckpoint" xml:space="preserve">
-    <value>An error occurred while recovering the FASTER log from the last checkpoint.</value>
-  </data>
-  <data name="Log_LogCompacted" xml:space="preserve">
-    <value>FASTER log compacted. Safe read-only region size before: {SizeBefore} bytes. After: {SizeAfter} bytes. Consecutive compactions: {ConsecutiveIterations}.</value>
-  </data>
-  <data name="Log_LogCompactionThresholdIncreased" xml:space="preserve">
-    <value>FASTER log compaction threshold increased. Before: {SizeBefore} bytes. After: {SizeAfter} bytes.</value>
-  </data>
-  <data name="Log_NoCheckpointManagerProvided" xml:space="preserve">
-    <value>Checkpoint management is disabled; backup and restore of data will not be performed.</value>
-  </data>
-  <data name="Log_SkippingLogCompaction" xml:space="preserve">
-    <value>Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {Size} bytes</value>
-  </data>
 </root>

@@ -1,6 +1,9 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.TakeIncrementalCheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.get -> bool
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IncrementalCheckpointInterval.get -> System.TimeSpan?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IncrementalCheckpointInterval.set -> void
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.AllowRawWrites.get -> bool
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
 override DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -16,7 +17,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
+    public partial class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -28,11 +29,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// is disposed.
         /// </summary>
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Indicates if trace logging can be performed.
-        /// </summary>
-        private readonly bool _logTrace;
 
         /// <summary>
         /// The underlying FASTER store.
@@ -69,7 +65,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// Flags if the periodic checkpoint loop should create a new checkpoint the next 
         /// time it runs.
         /// </summary>
-        private int _checkpointIsRequired;
+        private int _fullCheckpointIsRequired;
+
+        /// <summary>
+        /// Lock used to ensure that incremental and full checkpoints cannot be ongoing at the 
+        /// same time.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncLock _checkpointLock = new Nito.AsyncEx.AsyncLock();
 
         /// <summary>
         /// The size (in bytes) that the read-only portion of the FASTER log must reach before 
@@ -113,15 +115,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _logTrace = Logger.IsEnabled(LogLevel.Trace);
-
             var logSettings = CreateLogSettings(options);
 
             _logDevice = logSettings.LogDevice;
 
             var checkpointManager = options.CheckpointManagerFactory?.Invoke();
             if (checkpointManager == null) {
-                Logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
+                LogCheckpointManagerIsDisabled(Logger);
             }
 
             _fasterKVStore = new FasterKV<SpanByte, SpanByte>(
@@ -141,14 +141,19 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (FasterException e) {
                     // Exception will be thrown if there is not a checkpoint to recover from.
-                    Logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
+                    LogErrorWhileRecoveringCheckpoint(Logger, e);
                 }
 
                 _canRecordCheckpoints = !_readOnly;
 
                 if (_canRecordCheckpoints && options.CheckpointInterval.HasValue && options.CheckpointInterval.Value > TimeSpan.Zero) {
-                    // Start periodic checkpoint task.
-                    _ = RunCheckpointCreationLoopAsync(options.CheckpointInterval.Value, _disposedTokenSource.Token);
+                    // Start periodic full checkpoint task.
+                    _ = RunFullCheckpointLoopAsync(options.CheckpointInterval.Value, _disposedTokenSource.Token);
+                }
+
+                if (_canRecordCheckpoints && options.IncrementalCheckpointInterval.HasValue && options.IncrementalCheckpointInterval.Value > TimeSpan.Zero) {
+                    // Start periodic incremental checkpoint task.
+                    _ = RunIncrementalCheckpointLoopAsync(options.IncrementalCheckpointInterval.Value, _disposedTokenSource.Token);
                 }
             }
 
@@ -243,7 +248,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   A <see cref="Task"/> that will create a snapshot of the FASTER log at the specified 
         ///   <paramref name="interval"/>.
         /// </returns>
-        private async Task RunCheckpointCreationLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
+        private async Task RunFullCheckpointLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
             while (!_disposed && !cancellationToken.IsCancellationRequested) {
                 try {
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
@@ -251,14 +256,42 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                    LogErrorWhileCreatingFullCheckpoint(Logger, e);
                 }
             }
         }
 
 
         /// <summary>
-        /// Takes a full snapshot checkpoint.
+        /// Long-running task that will periodically take an incremental snapshot checkpoint of the FASTER 
+        /// log and persist it using the configured <see cref="ICheckpointManager"/>.
+        /// </summary>
+        /// <param name="interval">
+        ///   The snapshot interval.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will create a snapshot of the FASTER log at the specified 
+        ///   <paramref name="interval"/>.
+        /// </returns>
+        private async Task RunIncrementalCheckpointLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
+            while (!_disposed && !cancellationToken.IsCancellationRequested) {
+                try {
+                    await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                    await TakeIncrementalCheckpointAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception e) {
+                    LogErrorWhileCreatingIncrementalCheckpoint(Logger, e);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Takes a full snapshot checkpoint of both the FASTER index and the log.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -279,18 +312,45 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 throw new InvalidOperationException(Resources.Error_CheckpointsAreDisabled);
             }
 
-            if (Interlocked.CompareExchange(ref _checkpointIsRequired, 0, 1) != 1) {
+            if (Interlocked.CompareExchange(ref _fullCheckpointIsRequired, 0, 1) != 1) {
                 // No checkpoint pending.
                 return false;
             }
 
-            try {
-                var (success, token) = await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
-                return success;
+            using (await _checkpointLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    var (success, token) = await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
+                    return success;
+                }
+                catch {
+                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
+                    throw;
+                }
             }
-            catch {
-                Interlocked.Exchange(ref _checkpointIsRequired, 1);
-                throw;
+        }
+
+
+        /// <summary>
+        /// Takes an incremental checkpoint of the FASTER log.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a flag indicating if a 
+        ///   checkpoint was created.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///   Checkpoint management is disabled.
+        /// </exception>
+        public async ValueTask<bool> TakeIncrementalCheckpointAsync(CancellationToken cancellationToken = default) {
+            if (!_canRecordCheckpoints) {
+                throw new InvalidOperationException(Resources.Error_CheckpointsAreDisabled);
+            }
+
+            using (await _checkpointLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                var(success, token) = await _fasterKVStore.TakeHybridLogCheckpointAsync(CheckpointType.Snapshot, tryIncremental: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+                return success;
             }
         }
 
@@ -318,13 +378,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     // (oldest entries here) BeginAddress <= HeadAddress (where the in-memory region begins) <= SafeReadOnlyAddress (entries between here and tail updated in-place) < TailAddress (entries added here)
                     var safeReadOnlyRegionByteSize = logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress;
                     if (safeReadOnlyRegionByteSize < _logCompactionThresholdBytes) {
-                        if (_logTrace) {
-                            Logger.LogTrace(
-                                Resources.Log_SkippingLogCompaction, 
-                                safeReadOnlyRegionByteSize, 
-                                _logCompactionThresholdBytes
-                            );
-                        }
+                        LogSkippingCompaction(Logger, safeReadOnlyRegionByteSize, _logCompactionThresholdBytes);
                         _numConsecutiveLogCompactions = 0;
                         continue;
                     }
@@ -334,32 +388,18 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     try {
                         session.Compact(compactUntilAddress, CompactionType.Scan);
                         // Log has been modified; we need a new checkpoint to be created.
-                        Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                        Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
                     }
                     finally {
                         ReturnPooledSession(session);
                     }
 
                     _numConsecutiveLogCompactions++;
-
-                    if (_logTrace) {
-                        Logger.LogTrace(
-                            Resources.Log_LogCompacted,
-                            safeReadOnlyRegionByteSize,
-                            logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress,
-                            _numConsecutiveLogCompactions
-                        );
-                    }
+                    LogCompactionCompleted(Logger, safeReadOnlyRegionByteSize, logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress, _numConsecutiveLogCompactions);
 
                     if (_numConsecutiveLogCompactions >= ConsecutiveCompactOperationsBeforeThresholdIncrease) {
                         _logCompactionThresholdBytes *= 2;
-                        if (_logTrace) {
-                            Logger.LogTrace(
-                                Resources.Log_LogCompactionThresholdIncreased, 
-                                _logCompactionThresholdBytes / 2, 
-                                _logCompactionThresholdBytes
-                            );
-                        }
+                        LogCompactionThresholdIncreased(Logger, _logCompactionThresholdBytes / 2, _logCompactionThresholdBytes);
                         _numConsecutiveLogCompactions = 0;
                     }
                 }
@@ -469,7 +509,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
 
                 // Mark the cache as dirty.
-                Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
             }
             finally {
                 ReturnPooledSession(session);
@@ -549,7 +589,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 if (result.Status.Found) {
                     // Mark the cache as dirty.
-                    Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
                 }
 
                 return result.Status.IsCompletedSuccessfully;
@@ -565,10 +605,17 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             await Task.Yield();
             var session = GetPooledSession();
             try {
-                using (var iterator = session.Iterate()) {
-                    while (iterator.GetNext(out var recordInfo)) {
-                        var key = iterator.GetKey().AsSpan().ToArray();
+                var channel = Channel.CreateUnbounded<KVKey>(new UnboundedChannelOptions() { 
+                    SingleReader = true,
+                    SingleWriter = true,
+                    AllowSynchronousContinuations = false
+                });
+                var funcs = new ScanIteratorFunctions(channel);
 
+                session.Iterate(ref funcs);
+
+                while (await channel.Reader.WaitToReadAsync().ConfigureAwait(false)) {
+                    while (channel.Reader.TryRead(out var key)) {
                         if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, key)) {
                             yield return key;
                         }
@@ -635,7 +682,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                                 await TakeFullCheckpointAsync().ConfigureAwait(false);
                             }
                             catch (Exception e) {
-                                Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                                LogErrorWhileCreatingFullCheckpoint(Logger, e);
                             }
                             finally {
                                 @lock.Set();
@@ -663,6 +710,78 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 await TakeFullCheckpointAsync(default).ConfigureAwait(false);
             }
             DisposeCommon();
+        }
+
+
+        [LoggerMessage(100, LogLevel.Information, "Checkpoint management is disabled; backup and restore of data will not be performed.")]
+        static partial void LogCheckpointManagerIsDisabled(ILogger logger);
+
+        [LoggerMessage(101, LogLevel.Warning, "Error while recovering the FASTER log from the latest checkpoint. This message can be ignored the first time the FASTER store is used as there will be no checkpoint available to recover from.")]
+        static partial void LogErrorWhileRecoveringCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(102, LogLevel.Error, "Error while creating an incremental recovery checkpoint for the FASTER log.")]
+        static partial void LogErrorWhileCreatingIncrementalCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(103, LogLevel.Error, "Error while creating a full recovery checkpoint for the FASTER log.")]
+        static partial void LogErrorWhileCreatingFullCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(104, LogLevel.Trace, "Skipping FASTER log compaction. Safe read-only region size: {safeReadOnlyRegionByteSize} bytes. Threshold: {logCompactionThresholdBytes} bytes.")]
+        static partial void LogSkippingCompaction(ILogger logger, long safeReadOnlyRegionByteSize, long logCompactionThresholdBytes);
+
+        [LoggerMessage(105, LogLevel.Trace, "FASTER log compaction completed. Safe read-only region size before: {sizeBeforeBytes} bytes. Size after: {sizeAfterBytes} bytes. Consecutive compactions: {consecutiveCompactions}")]
+        static partial void LogCompactionCompleted(ILogger logger, long sizeBeforeBytes, long sizeAfterBytes, byte consecutiveCompactions);
+
+        [LoggerMessage(106, LogLevel.Trace, "Increasing FASTER log compaction threshold. Previous threshold: {oldThresholdBytes} bytes. New threshold: {newThresholdBytes} bytes.")]
+        static partial void LogCompactionThresholdIncreased(ILogger logger, long oldThresholdBytes, long newThresholdBytes);
+
+
+        /// <summary>
+        /// <see cref="IScanIteratorFunctions{Key, Value}"/> implementation that allows us to use 
+        /// FASTER's "push" key iteration: https://microsoft.github.io/FASTER/docs/fasterkv-basics/#key-iteration
+        /// </summary>
+        private struct ScanIteratorFunctions : IScanIteratorFunctions<SpanByte, SpanByte> {
+
+            /// <summary>
+            /// The channel to publish keys to as they are iterated over.
+            /// </summary>
+            private readonly ChannelWriter<KVKey> _channel;
+
+            /// <summary>
+            /// Creates a new <see cref="ScanIteratorFunctions"/> instance.
+            /// </summary>
+            /// <param name="channel">
+            ///   The channel to publish keys to as they are iterated over.
+            /// </param>
+            public ScanIteratorFunctions(ChannelWriter<KVKey> channel) {
+                _channel = channel;
+            }
+
+            
+            /// <inheritdoc/>
+            public bool OnStart(long beginAddress, long endAddress) => true;
+
+
+            /// <inheritdoc/>
+            public bool SingleReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
+                return _channel.TryWrite(key.AsSpan().ToArray());
+            }
+
+
+            /// <inheritdoc/>
+            public bool ConcurrentReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) => SingleReader(ref key, ref value, recordMetadata, numberOfRecords);
+
+
+            /// <inheritdoc/>
+            public void OnStop(bool completed, long numberOfRecords) {
+                _channel.TryComplete();
+            }
+
+
+            /// <inheritdoc/>
+            public void OnException(Exception exception, long numberOfRecords) {
+                _channel.TryComplete(exception);
+            }
+
         }
 
     }
