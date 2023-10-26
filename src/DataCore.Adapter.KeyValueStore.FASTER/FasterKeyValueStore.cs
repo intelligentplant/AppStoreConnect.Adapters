@@ -405,7 +405,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_CompactionError);
+                    LogCompactionError(Logger, e);
                 }
             }
         }
@@ -733,6 +733,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         [LoggerMessage(106, LogLevel.Trace, "Increasing FASTER log compaction threshold. Previous threshold: {oldThresholdBytes} bytes. New threshold: {newThresholdBytes} bytes.")]
         static partial void LogCompactionThresholdIncreased(ILogger logger, long oldThresholdBytes, long newThresholdBytes);
+
+        [LoggerMessage(107, LogLevel.Error, "Error while performing FASTER log compaction.")]
+        static partial void LogCompactionError(ILogger logger, Exception e);
 
 
         /// <summary>
