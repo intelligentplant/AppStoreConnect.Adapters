@@ -96,6 +96,12 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 Pooling = false
             };
 
+            var file = new FileInfo(Path.IsPathRooted(connectionStringBuilder.DataSource) 
+                    ? connectionStringBuilder.DataSource 
+                    : Path.Combine(AppContext.BaseDirectory, connectionStringBuilder.DataSource));
+
+            file.Directory.Create(); 
+
             using (var readOnlyConnection = new SqliteConnection(connectionStringBuilder.ToString())) {
                 try {
                     readOnlyConnection.Open();
@@ -166,12 +172,18 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 using (var command = connection.CreateCommand()) {
                     command.Transaction = transaction;
 
-                    // TODO: Consider if BLOB I/O is more appropriate here: https://docs.microsoft.com/en-us/dotnet/standard/data/sqlite/blob-io
-                    command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, $value) ON CONFLICT (key) DO UPDATE SET value = $value";
+                    command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, zeroblob($length)) ON CONFLICT (key) DO UPDATE SET value = zeroblob($length) RETURNING rowid";
                     command.Parameters.AddWithValue("$key", hexKey);
-                    command.Parameters.AddWithValue("$value", data);
+                    command.Parameters.AddWithValue("$length", data.Length);
 
-                    command.ExecuteNonQuery();
+                    var rowId = (long) await command.ExecuteScalarAsync().ConfigureAwait(false);
+                    using (var writeStream = new SqliteBlob(connection, "kvstore", "value", rowId)) {
+#if NETSTANDARD2_1_OR_GREATER
+                        await writeStream.WriteAsync(data).ConfigureAwait(false);
+#else
+                        await writeStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+#endif
+                    }
                     transaction.Commit();
                 }
             }
@@ -187,7 +199,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
                 using (await _lock.ReaderLockAsync().ConfigureAwait(false))
                 using (var command = connection.CreateCommand()) {
-                    command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
+                    command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
                     command.Parameters.AddWithValue("$key", hexKey);
 
                     using (var reader = command.ExecuteReader()) {
@@ -195,7 +207,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                             return default;
                         }
 
-                        using (var stream = reader.GetStream(0)) {
+                        using (var stream = reader.GetStream(1)) {
                             return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
                         }
                     }
@@ -213,7 +225,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
                 using (await _lock.ReaderLockAsync().ConfigureAwait(false))
                 using (var command = connection.CreateCommand()) {
-                    command.CommandText = "SELECT value FROM kvstore WHERE key = $key LIMIT 1";
+                    command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
                     command.Parameters.AddWithValue("$key", hexKey);
 
                     using (var reader = command.ExecuteReader()) {
@@ -221,7 +233,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                             return null;
                         }
 
-                        using (var stream = reader.GetStream(0))
+                        using (var stream = reader.GetStream(1))
                         using (var ms = new MemoryStream()) {
                             await stream.CopyToAsync(ms).ConfigureAwait(false);
                             return ms.ToArray();
@@ -257,8 +269,6 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
-            await Task.Yield();
-
             var hexPrefix = prefix == null || prefix.Value.Length == 0 
                 ? null 
                 : ConvertBytesToHexString(prefix);
