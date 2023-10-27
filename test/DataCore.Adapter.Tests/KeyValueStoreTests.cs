@@ -45,6 +45,35 @@ namespace DataCore.Adapter.Tests {
 #if NET6_0_OR_GREATER
         [DataRow(CompressionLevel.SmallestSize)]
 #endif
+        public async Task ShouldUpdateValue(CompressionLevel compressionLevel) {
+            var before = DateTime.UtcNow.AddDays(-1);
+            var after = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel);
+            try {
+                await store.WriteAsync(TestContext.TestName, before);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(before, value);
+
+                await store.WriteAsync(TestContext.TestName, after);
+                value = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(after, value);
+            }
+            finally {
+                if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
         public async Task ShouldReadValueFromStore(CompressionLevel compressionLevel) {
             var now = DateTime.UtcNow;
 
