@@ -14,7 +14,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// The UTC sample time.
         /// </summary>
-        private DateTime _utcSampleTime = DateTime.UtcNow;
+        private DateTime? _utcSampleTime;
 
         /// <summary>
         /// The value for the sample.
@@ -137,7 +137,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public TagValueExtended Build() {
-            return new TagValueExtended(_utcSampleTime, _value, _status, _units, _notes, _error, _properties);
+            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, _properties);
         }
 
 
