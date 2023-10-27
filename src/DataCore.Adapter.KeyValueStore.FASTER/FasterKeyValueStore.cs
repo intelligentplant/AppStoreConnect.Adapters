@@ -602,22 +602,55 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         /// <inheritdoc/>
         protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
-            await Task.Yield();
+            await foreach (var item in GetRecordsCoreAsync(prefix, false).ConfigureAwait(false)) {
+                yield return item.Key;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all keys and metadata in the FASTER KV store with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">
+        ///   The prefix to filter by.
+        /// </param>
+        /// <returns>
+        ///   A sequence of <see cref="FasterRecord"/> objects.
+        /// </returns>
+        /// <remarks>
+        ///   Note that calling <see cref="GetRecordsAsync"/> will iterate over every record in 
+        ///   the FASTER store. Use with caution!
+        /// </remarks>
+        public async IAsyncEnumerable<FasterRecord> GetRecordsAsync(KVKey? prefix = null) {
+            await foreach (var item in GetRecordsCoreAsync(prefix, true).ConfigureAwait(false)) {
+                yield return item;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all keys and metadata in the FASTER KV store with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">
+        ///   The prefix to filter by.
+        /// </param>
+        /// <param name="includeValues">
+        ///   Specifies if record values should be included in the <see cref="FasterRecord"/> instances.
+        /// </param>
+        /// <returns>
+        ///   A sequence of <see cref="FasterRecord"/> objects.
+        /// </returns>
+        private async IAsyncEnumerable<FasterRecord> GetRecordsCoreAsync(KVKey? prefix, bool includeValues) {
             var session = GetPooledSession();
             try {
-                var channel = Channel.CreateUnbounded<KVKey>(new UnboundedChannelOptions() { 
-                    SingleReader = true,
-                    SingleWriter = true,
-                    AllowSynchronousContinuations = false
-                });
-                var funcs = new ScanIteratorFunctions(channel);
+                var funcs = new ScanIteratorFunctions(includeValues);
 
                 session.Iterate(ref funcs);
 
-                while (await channel.Reader.WaitToReadAsync().ConfigureAwait(false)) {
-                    while (channel.Reader.TryRead(out var key)) {
-                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, key)) {
-                            yield return key;
+                while (await funcs.Reader.WaitToReadAsync().ConfigureAwait(false)) {
+                    while (funcs.Reader.TryRead(out var item)) {
+                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, item.Key)) {
+                            yield return item;
                         }
                     }
                 }
@@ -747,16 +780,25 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             /// <summary>
             /// The channel to publish keys to as they are iterated over.
             /// </summary>
-            private readonly ChannelWriter<KVKey> _channel;
+            private readonly Channel<FasterRecord> _channel;
 
             /// <summary>
-            /// Creates a new <see cref="ScanIteratorFunctions"/> instance.
+            /// Specifies if the iterator should include record values.
             /// </summary>
-            /// <param name="channel">
-            ///   The channel to publish keys to as they are iterated over.
-            /// </param>
-            public ScanIteratorFunctions(ChannelWriter<KVKey> channel) {
-                _channel = channel;
+            private readonly bool _includeValues;
+
+            /// <summary>
+            /// The channel reader.
+            /// </summary>
+            public ChannelReader<FasterRecord> Reader => _channel?.Reader!;
+
+            internal ScanIteratorFunctions(bool includeValues) {
+                _includeValues = includeValues;
+                _channel = Channel.CreateUnbounded<FasterRecord>(new UnboundedChannelOptions() {
+                    AllowSynchronousContinuations = false,
+                    SingleReader = true,
+                    SingleWriter = true
+                });
             }
 
             
@@ -766,23 +808,76 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             /// <inheritdoc/>
             public bool SingleReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
-                return _channel.TryWrite(key.AsSpan().ToArray());
+                return _channel.Writer.TryWrite(new FasterRecord(key.AsReadOnlySpan().ToArray(), recordMetadata, false, _includeValues ? new ReadOnlyMemory<byte>(value.AsReadOnlySpan().ToArray()) : default));
             }
 
 
             /// <inheritdoc/>
-            public bool ConcurrentReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) => SingleReader(ref key, ref value, recordMetadata, numberOfRecords);
+            public bool ConcurrentReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
+                return _channel.Writer.TryWrite(new FasterRecord(key.AsReadOnlySpan().ToArray(), recordMetadata, true, _includeValues ? new ReadOnlyMemory<byte>(value.AsReadOnlySpan().ToArray()) : default));
+            }
 
 
             /// <inheritdoc/>
             public void OnStop(bool completed, long numberOfRecords) {
-                _channel.TryComplete();
+                _channel.Writer.TryComplete();
             }
 
 
             /// <inheritdoc/>
             public void OnException(Exception exception, long numberOfRecords) {
-                _channel.TryComplete(exception);
+                _channel.Writer.TryComplete(exception);
+            }
+
+        }
+
+
+        /// <summary>
+        /// A record in the FASTER store.
+        /// </summary>
+        public readonly struct FasterRecord {
+
+            /// <summary>
+            /// The key.
+            /// </summary>
+            public KVKey Key { get; }
+
+            /// <summary>
+            /// The metadata for the record.
+            /// </summary>
+            public RecordMetadata Metadata { get; }
+
+            /// <summary>
+            /// Specifies if the record is located in the mutable portion of the FASTER log.
+            /// </summary>
+            public bool Mutable { get; }
+
+            /// <summary>
+            /// The value for the record.
+            /// </summary>
+            public ReadOnlyMemory<byte> Value { get; }
+
+
+            /// <summary>
+            /// Creates a new <see cref="FasterRecord"/> instance
+            /// </summary>
+            /// <param name="key">
+            ///   The key.
+            /// </param>
+            /// <param name="metadata">
+            ///   The metadata for the record.
+            /// </param>
+            /// <param name="mutable">
+            ///   Specifies if the record is located in the mutable portion of the FASTER log.
+            /// </param>
+            /// <param name="value">
+            ///   The record value.
+            /// </param>
+            internal FasterRecord(KVKey key, RecordMetadata metadata, bool mutable, ReadOnlyMemory<byte> value) {
+                Key = key;
+                Metadata = metadata;
+                Mutable = mutable;
+                Value = value;
             }
 
         }
