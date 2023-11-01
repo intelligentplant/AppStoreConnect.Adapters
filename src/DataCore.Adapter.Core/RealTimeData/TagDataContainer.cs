@@ -37,8 +37,15 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="tagName"/> is <see langword="null"/>.
         /// </exception>
         protected TagDataContainer(string tagId, string tagName) {
-            TagId = tagId ?? throw new ArgumentNullException(nameof(tagId));
-            TagName = tagName ?? throw new ArgumentNullException(nameof(tagName));
+            if (tagId == null) {
+                throw new ArgumentNullException(nameof(tagId));
+            }
+            if (tagName == null) {
+                throw new ArgumentNullException(nameof(tagName));
+            }
+
+            TagId = string.Intern(tagId);
+            TagName = string.Intern(tagName);
         }
 
     }

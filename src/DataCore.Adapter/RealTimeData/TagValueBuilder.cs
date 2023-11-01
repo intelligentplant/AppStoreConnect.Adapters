@@ -174,7 +174,7 @@ namespace DataCore.Adapter.RealTimeData {
             _value = value;
             var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
             if (displayValue != null) {
-                return WithProperty(WellKnownProperties.TagValue.DisplayValue, displayValue);
+                return WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
             }
             return this;
         }
@@ -226,7 +226,9 @@ namespace DataCore.Adapter.RealTimeData {
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
         public TagValueBuilder WithUnits(string? units) {
-            _units = units;
+            _units = string.IsNullOrWhiteSpace(units)
+                ? units
+                : string.Intern(units);
             return this;
         }
 
@@ -361,8 +363,8 @@ namespace DataCore.Adapter.RealTimeData {
         internal TagValueBuilder WithBucketProperties(TagValueBucket bucket) {
             if (bucket != null) {
                 return WithProperties(
-                    AdapterProperty.Create(CommonTagValuePropertyNames.BucketStart, bucket.UtcBucketStart),
-                    AdapterProperty.Create(CommonTagValuePropertyNames.BucketEnd, bucket.UtcBucketEnd)
+                    AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.BucketStart), bucket.UtcBucketStart),
+                    AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.BucketEnd), bucket.UtcBucketEnd)
                 );
             }
 
