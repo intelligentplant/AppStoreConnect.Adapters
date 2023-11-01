@@ -40,8 +40,15 @@ namespace DataCore.Adapter.Tags {
         /// </exception>
         [JsonConstructor]
         public TagIdentifier(string id, string name) {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            if (id == null) {
+                throw new ArgumentNullException(nameof(id));
+            }
+            if (name == null) {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            Id = string.Intern(id);
+            Name = string.Intern(name);
         }
 
 
