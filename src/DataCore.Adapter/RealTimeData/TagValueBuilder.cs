@@ -296,7 +296,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </remarks>
         public TagValueBuilder WithSteppedTransition(bool stepped) {
             var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.Stepped, StringComparison.OrdinalIgnoreCase));
-            return WithProperty(WellKnownProperties.TagValue.Stepped, stepped);
+            return WithProperty(string.Intern(WellKnownProperties.TagValue.Stepped), stepped);
         }
 
 
