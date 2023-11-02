@@ -218,7 +218,8 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(implementationInstance));
             }
 
-            builder.Services.AddSingleton(implementationInstance);
+            builder.Services.AddSingleton(implementationInstance.GetType(), implementationInstance);
+            builder.Services.AddSingleton(typeof(IKeyValueStore), implementationInstance);
 
             return builder;
         }
@@ -244,7 +245,8 @@ namespace Microsoft.Extensions.DependencyInjection {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.AddSingleton<IKeyValueStore, T>();
+            builder.Services.AddSingleton<T>();
+            builder.Services.AddSingleton<IKeyValueStore>(sp => sp.GetRequiredService<T>());
             return builder;
         }
 
@@ -277,8 +279,9 @@ namespace Microsoft.Extensions.DependencyInjection {
             if (implementationFactory == null) {
                 throw new ArgumentNullException(nameof(implementationFactory));
             }
-            
-            builder.Services.AddSingleton<IKeyValueStore, T>(implementationFactory);
+
+            builder.Services.AddSingleton(implementationFactory);
+            builder.Services.AddSingleton<IKeyValueStore>(sp => sp.GetRequiredService<T>());
             return builder;
         }
 
