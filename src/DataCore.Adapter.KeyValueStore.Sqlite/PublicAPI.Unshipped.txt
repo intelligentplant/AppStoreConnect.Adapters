@@ -1,4 +1,7 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.Dispose() -> void
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.get -> bool
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.set -> void
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.AllowRawWrites.get -> bool

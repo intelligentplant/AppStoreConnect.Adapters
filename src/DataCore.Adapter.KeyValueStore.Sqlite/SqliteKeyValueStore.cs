@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -13,12 +14,17 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
     /// <summary>
     /// <see cref="IKeyValueStore"/> that uses a Sqlite database to store values.
     /// </summary>
-    public class SqliteKeyValueStore : RawKeyValueStore<SqliteKeyValueStoreOptions> {
+    public partial class SqliteKeyValueStore : RawKeyValueStore<SqliteKeyValueStoreOptions>, IDisposable {
 
         /// <summary>
         /// Sqlite error code when the database file is unavailable.
         /// </summary>
         private const int SQLITE_CANTOPEN = 14;
+
+        /// <summary>
+        /// Specifies if the object has been disposed.
+        /// </summary>
+        private bool _disposed;
 
         /// <summary>
         /// The Sqlite connection string.
@@ -29,6 +35,29 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// Lock for the store.
         /// </summary>
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _lock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <summary>
+        /// Specifies if the store flushes pending writes to the database in the background.
+        /// </summary>
+        private readonly bool _useBackgroundFlush;
+
+        /// <summary>
+        /// The pending writes to the database.
+        /// </summary>
+        /// <remarks>
+        ///   An entry with a <see langword="null"/> value indicates that the entry will be deleted.
+        /// </remarks>
+        private readonly Dictionary<string, byte[]?> _pendingWrites = new Dictionary<string, byte[]?>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Used to signal when a flush has completed.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncManualResetEvent _flushEvent = new Nito.AsyncEx.AsyncManualResetEvent(false);
+
+        /// <summary>
+        /// A cancellation token source that is cancelled when the object is disposed.
+        /// </summary>
+        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <inheritdoc/>
         protected override bool AllowRawWrites => Options.EnableRawWrites;
@@ -56,6 +85,38 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 : options.ConnectionString;
 
             CreateKVTable();
+
+            _useBackgroundFlush = Options.FlushInterval > TimeSpan.Zero;
+            if (_useBackgroundFlush) {
+                var interval = Options.FlushInterval;
+                var ct = _disposedTokenSource.Token;
+
+                LogFlushEnabled(Logger, interval);
+                
+                _ = Task.Run(async () => {
+                    while (!ct.IsCancellationRequested) {
+                        try { 
+                            await Task.Delay(interval, ct).ConfigureAwait(false);
+                            await FlushCoreAsync(false).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException) { }
+                        catch (Exception e) {
+                            LogFlushError(Logger, e);
+                        }
+                    }
+
+                    // Final flush once cancellation has been requested.
+                    try {
+                        await FlushCoreAsync(false).ConfigureAwait(false);
+                    }
+                    catch (Exception e) {
+                        LogFlushError(Logger, e);
+                    }
+                });
+            }
+            else {
+                LogFlushDisabled(Logger);
+            }
         }
 
 
@@ -139,12 +200,18 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             await WriteCoreAsync(key, await SerializeToBytesAsync(value).ConfigureAwait(false)).ConfigureAwait(false);
         }
 
 
         /// <inheritdoc/>
         protected override async ValueTask WriteRawAsync(KVKey key, byte[] value) {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
             await WriteCoreAsync(key, value).ConfigureAwait(false);
         }
 
@@ -162,29 +229,59 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         ///   A <see cref="ValueTask"/> that will process the operation.
         /// </returns>
         private async ValueTask WriteCoreAsync(KVKey key, byte[] data) {
-            var hexKey = ConvertBytesToHexString(key);
+            using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                var keyAsString = ConvertBytesToHexString(key);
 
-            using (var connection = new SqliteConnection(_connectionString)) {
-                connection.Open();
+                if (_useBackgroundFlush && !_disposed) {
+                    _pendingWrites[keyAsString] = data;
+                    return;
+                }
 
-                using (await _lock.WriterLockAsync().ConfigureAwait(false))
-                using (var transaction = connection.BeginTransaction())
-                using (var command = connection.CreateCommand()) {
-                    command.Transaction = transaction;
+                using (var connection = new SqliteConnection(_connectionString)) {
+                    connection.Open();
 
-                    command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, zeroblob($length)) ON CONFLICT (key) DO UPDATE SET value = zeroblob($length) RETURNING rowid";
-                    command.Parameters.AddWithValue("$key", hexKey);
-                    command.Parameters.AddWithValue("$length", data.Length);
-
-                    var rowId = (long) await command.ExecuteScalarAsync().ConfigureAwait(false);
-                    using (var writeStream = new SqliteBlob(connection, "kvstore", "value", rowId)) {
-#if NETSTANDARD2_1_OR_GREATER
-                        await writeStream.WriteAsync(data).ConfigureAwait(false);
-#else
-                        await writeStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
-#endif
+                    using (var transaction = connection.BeginTransaction()) {
+                        await WriteCoreAsync(connection, transaction, keyAsString, data).ConfigureAwait(false);
+                        transaction.Commit();
                     }
-                    transaction.Commit();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Writes a raw value to the store.
+        /// </summary>
+        /// <param name="connection">
+        ///   The connection to use.
+        /// </param>
+        /// <param name="transaction">
+        ///   The transaction to use.
+        /// </param>
+        /// <param name="key">
+        ///   The key for the value.
+        /// </param>
+        /// <param name="data">
+        ///   The raw value.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        private async ValueTask WriteCoreAsync(SqliteConnection connection, SqliteTransaction transaction, string key, byte[] data) {
+            using (var command = connection.CreateCommand()) {
+                command.Transaction = transaction;
+
+                command.CommandText = "INSERT INTO kvstore (key, value) VALUES ($key, zeroblob($length)) ON CONFLICT (key) DO UPDATE SET value = zeroblob($length) RETURNING rowid";
+                command.Parameters.AddWithValue("$key", key);
+                command.Parameters.AddWithValue("$length", data.Length);
+
+                var rowId = (long) await command.ExecuteScalarAsync().ConfigureAwait(false);
+                using (var writeStream = new SqliteBlob(connection, "kvstore", "value", rowId)) {
+#if NETSTANDARD2_1_OR_GREATER
+                    await writeStream.WriteAsync(data).ConfigureAwait(false);
+#else
+                    await writeStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+#endif
                 }
             }
         }
@@ -192,23 +289,37 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T : default {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
             var hexKey = ConvertBytesToHexString(key);
 
-            using (var connection = new SqliteConnection(_connectionString)) {
-                connection.Open();
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                // Check pending writes first.
+                if (_useBackgroundFlush && _pendingWrites.TryGetValue(hexKey, out var pendingValue)) {
+                    if (pendingValue == null) {
+                        return default;
+                    }
 
-                using (await _lock.ReaderLockAsync().ConfigureAwait(false))
-                using (var command = connection.CreateCommand()) {
-                    command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
-                    command.Parameters.AddWithValue("$key", hexKey);
+                    return await DeserializeFromBytesAsync<T>(pendingValue).ConfigureAwait(false);
+                }
 
-                    using (var reader = command.ExecuteReader()) {
-                        if (!reader.Read()) {
-                            return default;
-                        }
+                using (var connection = new SqliteConnection(_connectionString)) {
+                    connection.Open();
 
-                        using (var stream = reader.GetStream(1)) {
-                            return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
+                    using (var command = connection.CreateCommand()) {
+                        command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
+                        command.Parameters.AddWithValue("$key", hexKey);
+
+                        using (var reader = command.ExecuteReader()) {
+                            if (!reader.Read()) {
+                                return default;
+                            }
+
+                            using (var stream = reader.GetStream(1)) {
+                                return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
+                            }
                         }
                     }
                 }
@@ -218,25 +329,41 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async ValueTask<byte[]?> ReadRawAsync(KVKey key) {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
             var hexKey = ConvertBytesToHexString(key);
 
-            using (var connection = new SqliteConnection(_connectionString)) {
-                connection.Open();
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                // Check pending writes first.
+                if (_useBackgroundFlush && _pendingWrites.TryGetValue(hexKey, out var pendingValue)) {
+                    if (pendingValue == null) {
+                        return default;
+                    }
 
-                using (await _lock.ReaderLockAsync().ConfigureAwait(false))
-                using (var command = connection.CreateCommand()) {
-                    command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
-                    command.Parameters.AddWithValue("$key", hexKey);
+                    var result = new byte[pendingValue.Length];
+                    Array.Copy(pendingValue, result, result.Length);
+                    return result;
+                }
 
-                    using (var reader = command.ExecuteReader()) {
-                        if (!reader.Read()) {
-                            return null;
-                        }
+                using (var connection = new SqliteConnection(_connectionString)) {
+                    connection.Open();
 
-                        using (var stream = reader.GetStream(1))
-                        using (var ms = new MemoryStream()) {
-                            await stream.CopyToAsync(ms).ConfigureAwait(false);
-                            return ms.ToArray();
+                    using (var command = connection.CreateCommand()) {
+                        command.CommandText = "SELECT rowid, value FROM kvstore WHERE key = $key LIMIT 1";
+                        command.Parameters.AddWithValue("$key", hexKey);
+
+                        using (var reader = command.ExecuteReader()) {
+                            if (!reader.Read()) {
+                                return null;
+                            }
+
+                            using (var stream = reader.GetStream(1))
+                            using (var ms = new MemoryStream()) {
+                                await stream.CopyToAsync(ms).ConfigureAwait(false);
+                                return ms.ToArray();
+                            }
                         }
                     }
                 }
@@ -246,23 +373,54 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
         /// <inheritdoc/>
         protected override async ValueTask<bool> DeleteAsync(KVKey key) {
-            var hexKey = ConvertBytesToHexString(key);
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
 
-            using (var connection = new SqliteConnection(_connectionString)) {
-                connection.Open();
+            using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                var keyAsString = ConvertBytesToHexString(key);
 
-                using (await _lock.WriterLockAsync().ConfigureAwait(false))
-                using (var transaction = connection.BeginTransaction())
-                using (var command = connection.CreateCommand()) {
-                    command.Transaction = transaction;
-                    command.CommandText = @"DELETE FROM kvstore WHERE key = $key";
-                    command.Parameters.AddWithValue("$key", hexKey);
-
-                    var count = command.ExecuteNonQuery();
-                    transaction.Commit();
-
-                    return count != 0;
+                if (_useBackgroundFlush && !_disposed) {
+                    _pendingWrites[keyAsString] = null;
+                    return true;
                 }
+
+                using (var connection = new SqliteConnection(_connectionString)) {
+                    connection.Open();
+
+                    using (var transaction = connection.BeginTransaction()) {
+                        var result = await DeleteCoreAsync(connection, transaction, keyAsString).ConfigureAwait(false);
+                        transaction.Commit();
+                        return result;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Deletes a value from the store.
+        /// </summary>
+        /// <param name="connection">
+        ///   The connection to use.
+        /// </param>
+        /// <param name="transaction">
+        ///   The transaction to use.
+        /// </param>
+        /// <param name="key">
+        ///   The key for the value.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will process the operation.
+        /// </returns>
+        private async ValueTask<bool> DeleteCoreAsync(SqliteConnection connection, SqliteTransaction transaction, string key) {
+            using (var command = connection.CreateCommand()) {
+                command.Transaction = transaction;
+                command.CommandText = @"DELETE FROM kvstore WHERE key = $key";
+                command.Parameters.AddWithValue("$key", key);
+
+                var count = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                return count != 0;
             }
         }
 
@@ -294,6 +452,123 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 }
             }
         }
+
+
+        /// <summary>
+        /// Flushes pending writes to the database.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        /// <remarks>
+        ///   Calling <see cref="FlushAsync"/> does nothing unless <see cref="SqliteKeyValueStoreOptions.FlushInterval"/> 
+        ///   is greater than <see cref="TimeSpan.Zero"/>.
+        /// </remarks>
+        public async ValueTask FlushAsync() {
+            if (!_useBackgroundFlush || _disposed) {
+                return;
+            }
+
+            await FlushCoreAsync(true).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Flushes pending writes to the database.
+        /// </summary>
+        /// <param name="manual">
+        ///   Specifies if the flush has been manually or automatically triggered.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        private async ValueTask FlushCoreAsync(bool manual) {
+            if (!_useBackgroundFlush) {
+                return;
+            }
+
+            try {
+                using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                    if (_pendingWrites.Count == 0) {
+                        return;
+                    }
+
+                    LogFlushStarted(Logger, _pendingWrites.Count, manual ? "manual" : "automatic");
+
+                    using (var connection = new SqliteConnection(_connectionString)) {
+                        connection.Open();
+
+                        using (var transaction = connection.BeginTransaction()) {
+                            foreach (var item in _pendingWrites) {
+                                if (item.Value == null) {
+                                    await DeleteCoreAsync(connection, transaction, item.Key).ConfigureAwait(false);
+                                }
+                                else {
+                                    await WriteCoreAsync(connection, transaction, item.Key, item.Value).ConfigureAwait(false);
+                                }
+                            }
+                            transaction.Commit();
+                            _pendingWrites.Clear();
+                        }
+                    }
+                }
+            }
+            finally {
+                _flushEvent.Set();
+                _flushEvent.Reset();
+            }
+        }
+
+
+        /// <summary>
+        /// Waits until pending writes have been flushed to the database.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///   If the store is configured to flush pending writes to the database immediately, 
+        ///   <see cref="WaitForNextFlushAsync"/> will return immediately.
+        /// </remarks>
+        public async ValueTask WaitForNextFlushAsync(CancellationToken cancellationToken = default) {
+            if (!_useBackgroundFlush || _disposed) {
+                return;
+            }
+
+            Task t;
+            using (await _lock.ReaderLockAsync(cancellationToken)) { 
+                if (_disposed) {
+                    return;
+                }
+                t = _flushEvent.WaitAsync(cancellationToken);
+            }
+            await t.ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose() {
+            if (_disposed) {
+                return;
+            }
+
+            _disposedTokenSource.Cancel();
+            _disposedTokenSource.Dispose();
+
+            _disposed = true;
+        }
+
+
+        [LoggerMessage(100, LogLevel.Information, "Changes will be flushed to the database immediately.")]
+        static partial void LogFlushDisabled(ILogger logger);
+
+        [LoggerMessage(101, LogLevel.Information, "Changes will be flushed to the database at an interval of {flushInterval}.")]
+        static partial void LogFlushEnabled(ILogger logger, TimeSpan flushInterval);
+
+        [LoggerMessage(102, LogLevel.Trace, "Flushing {count} pending changes to the database. Flush type: {flushType}")]
+        static partial void LogFlushStarted(ILogger logger, int count, string flushType);
+
+        [LoggerMessage(103, LogLevel.Error, "Error while flushing pending changes to the database.")]
+        static partial void LogFlushError(ILogger logger, Exception e);
 
     }
 }
