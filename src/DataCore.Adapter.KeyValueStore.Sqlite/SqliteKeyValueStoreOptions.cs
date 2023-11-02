@@ -1,4 +1,6 @@
-﻿namespace DataCore.Adapter.KeyValueStore.Sqlite {
+﻿using System;
+
+namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
     /// <summary>
     /// Options for <see cref="SqliteKeyValueStore"/>.
@@ -23,6 +25,15 @@
         ///   Attempting a raw write will throw an exception if this property is <see langword="false"/>.
         /// </remarks>
         public bool EnableRawWrites { get; set; }
+
+        /// <summary>
+        /// The interval at which pending writes are flushed to the database.
+        /// </summary>
+        /// <remarks>
+        ///   Specify a value less than or equal to <see cref="TimeSpan.Zero"/> to write changes 
+        ///   to the database immediately.
+        /// </remarks>
+        public TimeSpan FlushInterval { get; set; }
 
     }
 
