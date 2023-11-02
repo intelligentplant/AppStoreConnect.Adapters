@@ -1,6 +1,11 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.Dispose() -> void
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.get -> bool
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.set -> void
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.FlushInterval.get -> System.TimeSpan
+DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.FlushInterval.set -> void
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.AllowRawWrites.get -> bool
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
