@@ -38,12 +38,12 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static SqliteKeyValueStore CreateStore(string fileName, CompressionLevel compressionLevel, bool enableRawWrites, TimeSpan flushInterval) {
+        private static SqliteKeyValueStore CreateStore(string fileName, CompressionLevel compressionLevel, bool enableRawWrites, SqliteKeyValueStoreWriteBufferOptions writeBufferOptions) {
             return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(AssemblyInitializer.ApplicationServices, new SqliteKeyValueStoreOptions() { 
                 ConnectionString = $"Data Source={fileName};Cache=Shared",
                 CompressionLevel = compressionLevel,
                 EnableRawWrites = enableRawWrites,
-                FlushInterval = flushInterval
+                WriteBuffer = writeBufferOptions
             });
         }
 
@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Tests {
 
 
         protected override SqliteKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
-            return CreateStore(GetDatabaseFileName(), compressionLevel, enableRawWrites, TimeSpan.Zero);
+            return CreateStore(GetDatabaseFileName(), compressionLevel, enableRawWrites, null);
         }
 
 
@@ -69,10 +69,10 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var path = GetDatabaseFileName();
 
-            var store1 = CreateStore(path, compressionLevel, false, TimeSpan.Zero);
+            var store1 = CreateStore(path, compressionLevel, false, null);
             await ((IKeyValueStore) store1).WriteAsync(TestContext.TestName, now);
 
-            var store2 = CreateStore(path, compressionLevel, false, TimeSpan.Zero);
+            var store2 = CreateStore(path, compressionLevel, false, null);
             var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
 
             Assert.AreEqual(now, readResult);
@@ -84,7 +84,10 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var path = GetDatabaseFileName();
 
-            using var store = CreateStore(path, CompressionLevel.NoCompression, false, TimeSpan.FromMilliseconds(100));
+            using var store = CreateStore(path, CompressionLevel.NoCompression, false, new SqliteKeyValueStoreWriteBufferOptions() { 
+                Enabled = true,
+                FlushInterval = TimeSpan.FromMilliseconds(100)
+            });
 
             await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, now);
             CancelAfter(TimeSpan.FromSeconds(5));
@@ -100,7 +103,10 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var path = GetDatabaseFileName();
 
-            using var store = CreateStore(path, CompressionLevel.NoCompression, false, TimeSpan.FromSeconds(60));
+            using var store = CreateStore(path, CompressionLevel.NoCompression, false, new SqliteKeyValueStoreWriteBufferOptions() { 
+                Enabled = true,
+                FlushInterval = TimeSpan.FromSeconds(60)
+            });
 
             await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, now);
             _ = Task.Run(async () => {

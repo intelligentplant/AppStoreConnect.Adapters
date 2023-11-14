@@ -1,7 +1,6 @@
 ﻿#nullable enable
 const DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.DefaultConnectionString = "Data Source=adapter-kvstore.db" -> string!
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.SqliteKeyValueStore(DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore!>? logger = null) -> void
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.ConnectionString.get -> string!
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.ConnectionString.set -> void
