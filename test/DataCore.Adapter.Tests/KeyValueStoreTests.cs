@@ -336,6 +336,128 @@ namespace DataCore.Adapter.Tests {
             }
         }
 
+
+        [TestMethod]
+        public async Task ShouldCopyAllKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName, now);
+            var count = await store1.BulkCopyToAsync(store2);
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyAllKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName, now);
+            var count = await store1.BulkCopyFromAsync(store2);
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyFilteredKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName + ":1:Value", now);
+            await store1.WriteAsync(TestContext.TestName + ":2:Value", now);
+            var count = await store1.BulkCopyToAsync(store2, TestContext.TestName + ":1");
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName + ":1:Value");
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyFilteredKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName + ":1:Value", now);
+            await store2.WriteAsync(TestContext.TestName + ":2:Value", now);
+            var count = await store1.BulkCopyFromAsync(store2, TestContext.TestName + ":1");
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName + ":1:Value");
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopySpecifiedKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName, now);
+            var count = await store1.CopyToAsync(store2, new KVKey[] { TestContext.TestName });
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopySpecifiedKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName, now);
+            var count = await store1.CopyFromAsync(store2, new KVKey[] { TestContext.TestName });
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
     }
 
 }

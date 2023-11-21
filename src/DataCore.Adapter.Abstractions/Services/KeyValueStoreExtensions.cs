@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
+
     /// <summary>
     /// Extensions for <see cref="IKeyValueStore"/>.
     /// </summary>
@@ -303,5 +305,174 @@ namespace DataCore.Adapter.Services {
             return await store.ReadAsync<TValue>(key).ConfigureAwait(false);
         }
 
+
+        /// <summary>
+        /// Copies all keys and values matching the specified prefix to another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keyPrefix">
+        ///   The filter to apply to keys read from the source store.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> BulkCopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, KVKey? keyPrefix = null, CancellationToken cancellationToken = default) {
+            if (source == null) {
+                throw new ArgumentNullException(nameof(source));
+            }
+            if (destination == null) {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            var count = 0;
+
+            await foreach (var key in source.GetKeysAsync(keyPrefix).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var value = await source.ReadRawAsync(key).ConfigureAwait(false);
+                if (value == null) {
+                    continue;
+                }
+
+                await destination.WriteRawAsync(key, value).ConfigureAwait(false);
+                count++;
+            }
+
+            return count;
+        }
+
+
+        /// <summary>
+        /// Copies all keys and values matching the specified prefix from another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keyPrefix">
+        ///   The filter to apply to keys read from the source store.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> BulkCopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, KVKey? keyPrefix = null, CancellationToken cancellationToken = default) {
+            return await source.BulkCopyToAsync(destination, keyPrefix, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Copies the specified keys and values to another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keys">
+        ///   The keys to copy.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="keys"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> CopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
+            if (source == null) {
+                throw new ArgumentNullException(nameof(source));
+            }
+            if (destination == null) {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            var count = 0;
+
+            foreach (var key in keys) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (key.Length == 0) {
+                    continue;
+                }
+
+                var value = await source.ReadRawAsync(key).ConfigureAwait(false);
+                if (value == null) {
+                    continue;
+                }
+
+                await destination.WriteRawAsync(key, value).ConfigureAwait(false);
+                count++;
+            }
+
+            return count;
+        }
+
+
+        /// <summary>
+        /// Copies the specified keys and values from another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keys">
+        ///   The keys to copy.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="keys"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> CopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
+           return await source.CopyToAsync(destination, keys, cancellationToken).ConfigureAwait(false);
+        }
+
     }
+
 }
