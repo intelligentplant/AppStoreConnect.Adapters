@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -493,26 +494,49 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   A <see cref="ValueTask"/> that will process the operation.
         /// </returns>
-        private async ValueTask WriteCoreAsync(KVKey key, byte[] value) {
+        private async ValueTask WriteCoreAsync(byte[] key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
             var session = GetPooledSession();
-            try {
-                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
-                var valueSpanByte = SpanByte.FromFixedSpan(value);
 
-                var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
+            // Rent some memory that we will copy the key and value bytes into. We can then pin
+            // the memory for the duration of the upsert, as required when using SpanByte:
+            // https://github.com/microsoft/FASTER/pull/349
 
-                while (result.Status.IsPending) {
-                    result = await result.CompleteAsync().ConfigureAwait(false);
+            using (var memoryOwner = MemoryPool<byte>.Shared.Rent()) {
+                if (memoryOwner == null) {
+                    throw new InvalidOperationException(Resources.Error_UnableToRentSharedMemory);
                 }
 
-                // Mark the cache as dirty.
-                Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
-            }
-            finally {
-                ReturnPooledSession(session);
+                var memory = memoryOwner.Memory;
+
+                try {
+                    for (var i = 0; i < key.Length; i++) {
+                        memory.Span[i] = key[i];
+                    }
+
+                    for (var i = 0; i < value.Length; i++) {
+                        memory.Span[key.Length + i] = value[i];
+                    }
+
+                    using (memory.Pin()) {
+                        var keySpanByte = SpanByte.FromFixedSpan(memory.Slice(0, key.Length).Span);
+                        var valueSpanByte = SpanByte.FromFixedSpan(memory.Slice(key.Length, value.Length).Span);
+
+                        var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
+
+                        while (result.Status.IsPending) {
+                            result = await result.CompleteAsync().ConfigureAwait(false);
+                        }
+                    }
+
+                    // Mark the cache as dirty.
+                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
+                }
+                finally {
+                    ReturnPooledSession(session);
+                }
             }
         }
 
@@ -808,13 +832,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             /// <inheritdoc/>
             public bool SingleReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
-                return _channel.Writer.TryWrite(new FasterRecord(key.AsReadOnlySpan().ToArray(), recordMetadata, false, _includeValues ? new ReadOnlyMemory<byte>(value.AsReadOnlySpan().ToArray()) : default));
+                return _channel.Writer.TryWrite(new FasterRecord(key.ToByteArray(), recordMetadata, false, _includeValues ? new ReadOnlyMemory<byte>(value.ToByteArray()) : default));
             }
 
 
             /// <inheritdoc/>
             public bool ConcurrentReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
-                return _channel.Writer.TryWrite(new FasterRecord(key.AsReadOnlySpan().ToArray(), recordMetadata, true, _includeValues ? new ReadOnlyMemory<byte>(value.AsReadOnlySpan().ToArray()) : default));
+                return _channel.Writer.TryWrite(new FasterRecord(key.ToByteArray(), recordMetadata, true, _includeValues ? new ReadOnlyMemory<byte>(value.ToByteArray()) : default));
             }
 
 
