@@ -1,11 +1,11 @@
-﻿using System;
+﻿using DataCore.Adapter.Services;
 
 namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
     /// <summary>
     /// Options for <see cref="SqliteKeyValueStore"/>.
     /// </summary>
-    public class SqliteKeyValueStoreOptions : Services.KeyValueStoreOptions {
+    public class SqliteKeyValueStoreOptions : KeyValueStoreOptions {
 
         /// <summary>
         /// Default Sqlite connection string.
@@ -18,7 +18,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         public string ConnectionString { get; set; } = DefaultConnectionString;
 
         /// <summary>
-        /// When <see langword="true"/>, enables the use of <see cref="Services.IRawKeyValueStore.WriteRawAsync"/> 
+        /// When <see langword="true"/>, enables the use of <see cref="IRawKeyValueStore.WriteRawAsync"/> 
         /// to write raw byte data to the store.
         /// </summary>
         /// <remarks>
@@ -27,13 +27,22 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         public bool EnableRawWrites { get; set; }
 
         /// <summary>
-        /// The interval at which pending writes are flushed to the database.
+        /// The options for the write buffer.
         /// </summary>
-        /// <remarks>
-        ///   Specify a value less than or equal to <see cref="TimeSpan.Zero"/> to write changes 
-        ///   to the database immediately.
-        /// </remarks>
-        public TimeSpan FlushInterval { get; set; }
+        public SqliteKeyValueStoreWriteBufferOptions WriteBuffer { get; set; } = new SqliteKeyValueStoreWriteBufferOptions();
+
+    }
+
+
+    /// <summary>
+    /// Options for <see cref="SqliteKeyValueStore"/> write buffer.
+    /// </summary>
+    public class SqliteKeyValueStoreWriteBufferOptions : KeyValueStoreWriteBufferOptions {
+
+        /// <summary>
+        /// Specifies if the write buffer is enabled.
+        /// </summary>
+        public bool Enabled { get; set; }
 
     }
 

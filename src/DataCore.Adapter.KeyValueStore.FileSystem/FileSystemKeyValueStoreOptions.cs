@@ -31,6 +31,11 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// </summary>
         public int HashBuckets { get; set; } = DefaultHashBuckets;
 
+        /// <summary>
+        /// The options for the write buffer.
+        /// </summary>
+        public FileSystemKeyValueStoreWriteBufferOptions WriteBuffer { get; set; } = new FileSystemKeyValueStoreWriteBufferOptions();
+
 
         /// <summary>
         /// Creates a new <see cref="FileSystemKeyValueStoreOptions"/> object.
@@ -38,6 +43,19 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         public FileSystemKeyValueStoreOptions() {
             CompressionLevel = CompressionLevel.NoCompression;
         }
+
+    }
+
+
+    /// <summary>
+    /// Options for <see cref="FileSystemKeyValueStore"/> write buffer.
+    /// </summary>
+    public class FileSystemKeyValueStoreWriteBufferOptions : Services.KeyValueStoreWriteBufferOptions {
+
+        /// <summary>
+        /// Specifies if the write buffer is enabled.
+        /// </summary>
+        public bool Enabled { get; set; }
 
     }
 

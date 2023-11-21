@@ -32,16 +32,17 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        private static FileSystemKeyValueStore CreateStore(string baseDirectory, CompressionLevel compressionLevel) {
+        private static FileSystemKeyValueStore CreateStore(string baseDirectory, CompressionLevel compressionLevel, FileSystemKeyValueStoreWriteBufferOptions writeBufferOptions) {
             return new FileSystemKeyValueStore(new FileSystemKeyValueStoreOptions() {
                 Path = baseDirectory,
-                CompressionLevel = compressionLevel
+                CompressionLevel = compressionLevel,
+                WriteBuffer = writeBufferOptions
             });
         }
 
 
         protected override FileSystemKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
-            return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()), compressionLevel);
+            return CreateStore(Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString()), compressionLevel, null);
         }
 
 
@@ -56,15 +57,55 @@ namespace DataCore.Adapter.Tests {
             var now = DateTime.UtcNow;
             var baseDir = Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString());
 
-            var store1 = CreateStore(baseDir, compressionLevel);
+            var store1 = CreateStore(baseDir, compressionLevel, null);
             await ((IKeyValueStore) store1).WriteAsync(TestContext.TestName, now);
 
-            var store2 = CreateStore(baseDir, compressionLevel);
+            var store2 = CreateStore(baseDir, compressionLevel, null);
             var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
 
             Assert.AreEqual(now, readResult);
+        }
 
-            var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
+
+        [TestMethod]
+        public async Task ShouldFlushAtConfiguredInterval() {
+            var now = DateTime.UtcNow;
+            var baseDir = Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString());
+
+            using var store = CreateStore(baseDir, CompressionLevel.NoCompression, new FileSystemKeyValueStoreWriteBufferOptions() {
+                Enabled = true,
+                FlushInterval = TimeSpan.FromMilliseconds(100)
+            });
+
+            await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, now);
+            CancelAfter(TimeSpan.FromSeconds(5));
+            await store.WaitForNextFlushAsync(CancellationToken);
+
+            var readResult = await ((IKeyValueStore) store).ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldFlushManually() {
+            var now = DateTime.UtcNow;
+            var baseDir = Path.Combine(s_baseDirectory.FullName, Guid.NewGuid().ToString());
+
+            using var store = CreateStore(baseDir, CompressionLevel.NoCompression, new FileSystemKeyValueStoreWriteBufferOptions() {
+                Enabled = true,
+                FlushInterval = TimeSpan.FromSeconds(60)
+            });
+
+            await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, now);
+            _ = Task.Run(async () => {
+                await Task.Delay(50);
+                await store.FlushAsync();
+            });
+            CancelAfter(TimeSpan.FromSeconds(5));
+            await store.WaitForNextFlushAsync(CancellationToken);
+
+            var readResult = await ((IKeyValueStore) store).ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
         }
 
     }

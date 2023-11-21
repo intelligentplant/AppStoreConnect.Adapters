@@ -3,12 +3,9 @@ const DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.D
 const DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.DefaultPath = "./KeyValueStore" -> string!
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.Dispose() -> void
-DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.FileSystemKeyValueStore(DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore!>? logger = null) -> void
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.FileSystemKeyValueStoreOptions() -> void
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.HashBuckets.get -> int
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.HashBuckets.set -> void
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.Path.get -> string!
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.Path.set -> void
-override DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
-override DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!

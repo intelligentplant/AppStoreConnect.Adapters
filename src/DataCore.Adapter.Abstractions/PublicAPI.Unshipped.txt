@@ -71,6 +71,27 @@ DataCore.Adapter.Services.KeyValueStore.SerializeToBytesAsync<T>(T value, System
 DataCore.Adapter.Services.KeyValueStore.SerializeToStreamAsync<T>(System.IO.Stream! stream, T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer?
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.DeleteAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.Dispose() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.KeyValueStoreWriteBuffer(DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions! options, System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<DataCore.Adapter.Services.KVKey, byte[]?>>!, System.Threading.Tasks.Task!>! callback, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Services.KeyValueStoreWriteBuffer!>? logger = null) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult>
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Found.get -> bool
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult(bool found, byte[]? value) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Value.get -> byte[]?
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.get -> System.TimeSpan
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyValueStoreWriteBufferOptions() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.set -> void
 DataCore.Adapter.Services.RawKeyValueStore<TOptions>
 DataCore.Adapter.Services.RawKeyValueStore<TOptions>.RawKeyValueStore(TOptions? options, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
 DataCore.Adapter.Services.ScopedKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
