@@ -77,5 +77,14 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 return ResourceManager.GetString("Error_StoreIsReadOnly", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to rent memory from the shared buffer..
+        /// </summary>
+        internal static string Error_UnableToRentSharedMemory {
+            get {
+                return ResourceManager.GetString("Error_UnableToRentSharedMemory", resourceCulture);
+            }
+        }
     }
 }
