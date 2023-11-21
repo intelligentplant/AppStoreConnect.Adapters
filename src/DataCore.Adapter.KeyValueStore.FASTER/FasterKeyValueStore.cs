@@ -504,7 +504,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             // the memory for the duration of the upsert, as required when using SpanByte:
             // https://github.com/microsoft/FASTER/pull/349
 
-            using (var memoryOwner = MemoryPool<byte>.Shared.Rent()) {
+            using (var memoryOwner = MemoryPool<byte>.Shared.Rent(key.Length + value.Length)) {
                 if (memoryOwner == null) {
                     throw new InvalidOperationException(Resources.Error_UnableToRentSharedMemory);
                 }
