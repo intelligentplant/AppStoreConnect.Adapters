@@ -123,4 +123,7 @@
   <data name="Error_StoreIsReadOnly" xml:space="preserve">
     <value>This operation cannot be performed on a read-only store.</value>
   </data>
+  <data name="Error_UnableToRentSharedMemory" xml:space="preserve">
+    <value>Unable to rent memory from the shared buffer.</value>
+  </data>
 </root>
