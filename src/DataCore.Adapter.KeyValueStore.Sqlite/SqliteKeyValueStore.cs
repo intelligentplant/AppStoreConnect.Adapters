@@ -37,14 +37,14 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _lock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
         /// <summary>
-        /// Specifies if the store flushes pending writes to the database in the background.
-        /// </summary>
-        private readonly bool _useBackgroundFlush;
-
-        /// <summary>
         /// The write buffer, if configured.
         /// </summary>
         private readonly KeyValueStoreWriteBuffer? _writeBuffer;
+
+        /// <summary>
+        /// Specifies if the store uses a write buffer.
+        /// </summary>
+        private bool UseWriteBuffer => _writeBuffer != null;
 
         /// <summary>
         /// A cancellation token source that is cancelled when the object is disposed.
@@ -79,7 +79,6 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
             CreateKVTable();
 
             if (Options.WriteBuffer?.Enabled ?? false) {
-                _useBackgroundFlush = true;
                 _writeBuffer = new KeyValueStoreWriteBuffer(options.WriteBuffer, OnFlushAsync, logger?.CreateLogger<KeyValueStoreWriteBuffer>());
             }
             else {
@@ -198,7 +197,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         /// </returns>
         private async ValueTask WriteCoreAsync(KVKey key, byte[] data) {
             using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
-                if (_useBackgroundFlush && !_disposed) {
+                if (UseWriteBuffer && !_disposed) {
                     await _writeBuffer!.WriteAsync(key, data, _disposedTokenSource.Token).ConfigureAwait(false);
                     return;
                 }
@@ -267,7 +266,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 }
 
                 // Check pending writes first.
-                if (_useBackgroundFlush) {
+                if (UseWriteBuffer) {
                     var pendingValue = await _writeBuffer!.ReadAsync(key, _disposedTokenSource.Token).ConfigureAwait(false);
                     if (pendingValue.Found) {
                         return pendingValue.Value == null
@@ -310,7 +309,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
                 }
 
                 // Check pending writes first.
-                if (_useBackgroundFlush) {
+                if (UseWriteBuffer) {
                     var pendingValue = await _writeBuffer!.ReadAsync(key, _disposedTokenSource.Token).ConfigureAwait(false);
                     if (pendingValue.Found) {
                         if (pendingValue.Value == null) {
@@ -354,7 +353,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
             }
 
             using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
-                if (_useBackgroundFlush && !_disposed) {
+                if (UseWriteBuffer && !_disposed) {
                     await _writeBuffer!.DeleteAsync(key, _disposedTokenSource.Token).ConfigureAwait(false);
                     return true;
                 }
@@ -466,7 +465,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         ///   a write buffer.
         /// </remarks>
         public async ValueTask FlushAsync() {
-            if (!_useBackgroundFlush || _disposed) {
+            if (!UseWriteBuffer || _disposed) {
                 return;
             }
 
@@ -484,7 +483,7 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
         ///   configured to use a write buffer.
         /// </remarks>
         public async ValueTask WaitForNextFlushAsync(CancellationToken cancellationToken = default) {
-            if (!_useBackgroundFlush || _disposed) {
+            if (!UseWriteBuffer || _disposed) {
                 return;
             }
 
