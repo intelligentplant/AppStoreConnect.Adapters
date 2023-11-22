@@ -29,7 +29,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var now = DateTime.UtcNow;
 
-                using (var store1 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() { 
+                await using (var store1 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() { 
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
@@ -39,7 +39,7 @@ namespace DataCore.Adapter.Tests {
                     // checkpoint manager.
                 }
 
-                using (var store2 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store2 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
                     var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Tests {
             var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
 
             try {
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 

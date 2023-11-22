@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// <summary>
     /// Default <see cref="IKeyValueStore"/> implementation.
     /// </summary>
-    public partial class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
+    public sealed partial class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IAsyncDisposable {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -331,6 +331,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         }
 
 
+
         /// <summary>
         /// Takes an incremental checkpoint of the FASTER log.
         /// </summary>
@@ -500,43 +501,30 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             var session = GetPooledSession();
 
-            // Rent some memory that we will copy the key and value bytes into. We can then pin
-            // the memory for the duration of the upsert, as required when using SpanByte:
-            // https://github.com/microsoft/FASTER/pull/349
+            // We need to pin the key and value bytes for the duration of the upsert, as required
+            // when using SpanByte: https://github.com/microsoft/FASTER/pull/349
 
-            using (var memoryOwner = MemoryPool<byte>.Shared.Rent(key.Length + value.Length)) {
-                if (memoryOwner == null) {
-                    throw new InvalidOperationException(Resources.Error_UnableToRentSharedMemory);
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+            var valueHandle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
+            try {
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
+                var valueSpanByte = new SpanByte(value.Length, valueHandle.AddrOfPinnedObject());
+
+                var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
+
+                while (result.Status.IsPending) {
+                    result = await result.CompleteAsync().ConfigureAwait(false);
                 }
 
-                var memory = memoryOwner.Memory;
+                // Mark the cache as dirty.
+                Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
+            }
+            finally {
+                keyHandle.Free();
+                valueHandle.Free();
 
-                try {
-                    for (var i = 0; i < key.Length; i++) {
-                        memory.Span[i] = key[i];
-                    }
-
-                    for (var i = 0; i < value.Length; i++) {
-                        memory.Span[key.Length + i] = value[i];
-                    }
-
-                    using (memory.Pin()) {
-                        var keySpanByte = SpanByte.FromFixedSpan(memory.Slice(0, key.Length).Span);
-                        var valueSpanByte = SpanByte.FromFixedSpan(memory.Slice(key.Length, value.Length).Span);
-
-                        var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
-
-                        while (result.Status.IsPending) {
-                            result = await result.CompleteAsync().ConfigureAwait(false);
-                        }
-                    }
-
-                    // Mark the cache as dirty.
-                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
-                }
-                finally {
-                    ReturnPooledSession(session);
-                }
+                ReturnPooledSession(session);
             }
         }
 
@@ -686,25 +674,22 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-
-        /// <inheritdoc/>
         public async ValueTask DisposeAsync() {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(false);
-        }
+            if (_disposed) {
+                return;
+            }
 
-
-        /// <summary>
-        /// Disposes of managed resources.
-        /// </summary>
-        private void DisposeCommon() {
             _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
+
+            // Record final checkpoint.
+            if (_canRecordCheckpoints) {
+                try {
+                    await TakeFullCheckpointAsync(default).ConfigureAwait(false);
+                }
+                catch (Exception e) {
+                    LogErrorWhileCreatingFullCheckpoint(Logger, e);
+                }
+            }
 
             // Dispose of all sessions.
             while (_sessionPool.TryDequeue(out var session)) {
@@ -716,57 +701,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             // Dispose of underlying log device.
             _logDevice.Dispose();
-        }
 
-
-        /// <summary>
-        /// Disposes of resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the object is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
-        /// </param>
-        protected virtual void Dispose(bool disposing) {
-            if (_disposed) {
-                return;
-            }
-
-            if (disposing) {
-                if (_canRecordCheckpoints) {
-                    using (var @lock = new ManualResetEventSlim()) {
-                        _ = Task.Run(async () => { 
-                            try {
-                                await TakeFullCheckpointAsync().ConfigureAwait(false);
-                            }
-                            catch (Exception e) {
-                                LogErrorWhileCreatingFullCheckpoint(Logger, e);
-                            }
-                            finally {
-                                @lock.Set();
-                            }
-                        });
-                        @lock.Wait();
-                    }
-                    
-                }
-                DisposeCommon();
-            }
+            _disposedTokenSource.Dispose();
 
             _disposed = true;
-        }
-
-
-        /// <summary>
-        /// Asynchronously disposes of resources.
-        /// </summary>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that will asynchronously dispose of resources.
-        /// </returns>
-        protected virtual async ValueTask DisposeAsyncCore() {
-            if (_canRecordCheckpoints) {
-                await TakeFullCheckpointAsync(default).ConfigureAwait(false);
-            }
-            DisposeCommon();
         }
 
 
