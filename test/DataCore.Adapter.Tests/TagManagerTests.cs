@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName +  "-1").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -85,7 +85,7 @@ namespace DataCore.Adapter.Tests {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
                 var tag2 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-2").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -120,7 +120,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -128,7 +128,7 @@ namespace DataCore.Adapter.Tests {
                     await tm.AddOrUpdateTagAsync(tag1);
                 }
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -156,7 +156,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -164,7 +164,7 @@ namespace DataCore.Adapter.Tests {
                     await tm.AddOrUpdateTagAsync(tag1);
                 }
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -193,7 +193,7 @@ namespace DataCore.Adapter.Tests {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
                 var tag2 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-2").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -202,7 +202,7 @@ namespace DataCore.Adapter.Tests {
                     await tm.AddOrUpdateTagAsync(tag2);
                 }
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -234,7 +234,7 @@ namespace DataCore.Adapter.Tests {
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
@@ -274,7 +274,7 @@ namespace DataCore.Adapter.Tests {
                 var tag1 = new TagDefinitionBuilder().WithId(id).WithName(TestContext.TestName + "-1").Build();
                 var tag2 = new TagDefinitionBuilder().WithId(id).WithName(TestContext.TestName + "-2").Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {

@@ -22,7 +22,7 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() { 
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
@@ -114,7 +114,7 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
@@ -168,7 +168,7 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
@@ -179,7 +179,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
