@@ -54,6 +54,15 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
+        async ValueTask<bool> IKeyValueStore.ExistsAsync(KVKey key) {
+            if (key.Length == 0) {
+                throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
+            }
+            return await ExistsAsync(key).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
         async ValueTask<bool> IKeyValueStore.DeleteAsync(KVKey key) {
             if (key.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(key));
@@ -102,6 +111,18 @@ namespace DataCore.Adapter.Services {
         ///   The value, or <see langword="null"/> if the key does not exist.
         /// </returns>
         protected abstract ValueTask<T?> ReadAsync<T>(KVKey key);
+
+
+        /// <summary>
+        /// Tests if a key exists in the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key to test.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the key exists; otherwise, <see langword="false"/>.
+        /// </returns>
+        protected abstract ValueTask<bool> ExistsAsync(KVKey key);
 
 
         /// <summary>

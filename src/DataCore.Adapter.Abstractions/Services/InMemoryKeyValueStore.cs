@@ -52,6 +52,13 @@ namespace DataCore.Adapter.Services {
 
 
         /// <inheritdoc/>
+        protected override ValueTask<bool> ExistsAsync(KVKey key) {
+            var keyAsString = System.Text.Encoding.UTF8.GetString(key);
+            return new ValueTask<bool>(_values.ContainsKey(keyAsString));
+        }
+
+
+        /// <inheritdoc/>
         protected override ValueTask<bool> DeleteAsync(KVKey key) {
             var keyAsString = System.Text.Encoding.UTF8.GetString(key);
             return new ValueTask<bool>(_values.TryRemove(keyAsString, out _));
