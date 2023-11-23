@@ -1,13 +1,15 @@
 ﻿#nullable enable
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord.FasterRecord() -> void
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord.Key.get -> DataCore.Adapter.Services.KVKey
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord.Metadata.get -> FASTER.core.RecordMetadata
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord.Mutable.get -> bool
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord.Value.get -> System.ReadOnlyMemory<byte>
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.GetRecordsAsync(DataCore.Adapter.Services.KVKey? prefix = null) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterRecord>!
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.GetRecordsAsync(DataCore.Adapter.Services.KVKey? prefix = null) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.KeyValueStore.FASTER.FasterRecord>!
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.TakeIncrementalCheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.get -> bool
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.set -> void
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IncrementalCheckpointInterval.get -> System.TimeSpan?
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.IncrementalCheckpointInterval.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.Name.get -> string?
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.Name.set -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord.FasterRecord() -> void
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord.Key.get -> DataCore.Adapter.Services.KVKey
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord.Metadata.get -> FASTER.core.RecordMetadata
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord.Mutable.get -> bool
+DataCore.Adapter.KeyValueStore.FASTER.FasterRecord.Value.get -> System.ReadOnlyMemory<byte>

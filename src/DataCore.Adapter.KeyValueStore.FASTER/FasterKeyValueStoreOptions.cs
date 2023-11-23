@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 using FASTER.core;
 
@@ -8,6 +9,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     /// Options for <see cref="FasterKeyValueStore"/>.
     /// </summary>
     public class FasterKeyValueStoreOptions : Services.KeyValueStoreOptions {
+
+        /// <summary>
+        /// The name for the <see cref="FasterKeyValueStore"/> instance.
+        /// </summary>
+        /// <remarks>
+        ///   The name is used to identify the store in telemetry data. If not specified, a 
+        ///   default name will be used.
+        /// </remarks>
+        [MaxLength(50)]
+        public string? Name { get; set; }
 
         /// <summary>
         /// Specifies if the <see cref="FasterKeyValueStore"/> is read-only.
