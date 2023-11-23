@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Services;
 
 using FASTER.core;
@@ -16,9 +18,89 @@ using Microsoft.Extensions.Logging;
 namespace DataCore.Adapter.KeyValueStore.FASTER {
 
     /// <summary>
-    /// Default <see cref="IKeyValueStore"/> implementation.
+    /// <see cref="IKeyValueStore"/> implementation that uses <a href="https://microsoft.github.io/FASTER/">Microsoft FASTER</a> as its backing store.
     /// </summary>
     public sealed partial class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IAsyncDisposable {
+
+        /// <summary>
+        /// Active instances of <see cref="FasterKeyValueStore"/>. These are tracked to allow 
+        /// metrics to be reported for each instance.
+        /// </summary>
+        private static readonly List<FasterKeyValueStore> s_instances = new List<FasterKeyValueStore>();
+
+        /// <summary>
+        /// Lock for accessing <see cref="s_instances"/>.
+        /// </summary>
+        private static readonly Nito.AsyncEx.AsyncReaderWriterLock s_instancesLock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <summary>
+        /// Creates a metric tag that identifies the <see cref="FasterKeyValueStore"/> instance 
+        /// that a measurement was observed on.
+        /// </summary>
+        /// <param name="instance">
+        ///   The <see cref="FasterKeyValueStore"/> instance.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="KeyValuePair{TKey, TValue}"/> that can be added to the metric 
+        ///   measurement.
+        /// </returns>
+        private static KeyValuePair<string, object?> CreateInstanceIdTag(FasterKeyValueStore instance) => new KeyValuePair<string, object?>("data_core.instance_id", instance._instanceName);
+
+        /// <summary>
+        /// Instrument for observing the total in-memory footprint for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_totalSizeGauge = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Total",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetTotalSize(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Total size of the FASTER index, in-memory log and read cache.");
+
+        /// <summary>
+        /// Instrument for observing the size of the in-memory index for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_indexSizeGauge = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Index",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetIndexSize(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the FASTER index.");
+
+        /// <summary>
+        /// Instrument for observing the size of the in-memory log for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_logSize = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Log",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetLogSize(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the in-memory portion of the FASTER log.");
+
+        /// <summary>
+        /// Instrument for observing the size of the reach cache for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_readCacheSize = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.ReadCache",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetReadCacheSize(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the FASTER read cache.");
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -32,9 +114,19 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
+        /// The name of the store instance. This name is used in metrics.
+        /// </summary>
+        private readonly string _instanceName;
+
+        /// <summary>
         /// The underlying FASTER store.
         /// </summary>
         private readonly FasterKV<SpanByte, SpanByte> _fasterKVStore;
+
+        /// <summary>
+        /// The size tracker for the im-memory portion and read cache for the FASTER store.
+        /// </summary>
+        private readonly CacheSizeTracker _sizeTracker;
 
         /// <summary>
         /// The FASTER device used to store the on-disk portion of the log.
@@ -116,6 +208,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 throw new ArgumentNullException(nameof(options));
             }
 
+            _instanceName = string.IsNullOrWhiteSpace(options.Name)
+                ? "$default"
+                : options.Name!;
+
             var logSettings = CreateLogSettings(options);
 
             _logDevice = logSettings.LogDevice;
@@ -132,8 +228,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     CheckpointManager = checkpointManager
                 }
             );
+            _sizeTracker = new CacheSizeTracker(_fasterKVStore);
 
-            _clientSessionBuilder = _fasterKVStore.For(new SpanByteFunctions<Empty>());
+            _clientSessionBuilder = _fasterKVStore.For(new SizeTrackingSpanByteFunctions(_sizeTracker));
             _readOnly = options.ReadOnly;
 
             if (checkpointManager != null) {
@@ -163,6 +260,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     ? (long) Math.Pow(2, options.MemorySizeBits) * 2
                     : options.CompactionThresholdBytes;
                 _ = RunLogCompactionLoopAsync(options.CompactionInterval.Value, _disposedTokenSource.Token);
+            }
+
+            using (s_instancesLock.WriterLock()) {
+                s_instances.Add(this);
             }
         }
 
@@ -555,15 +656,17 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   The raw bytes, or <see langword="null"/> if the key does not exist.
         /// </returns>
-        private async ValueTask<byte[]?> ReadCoreAsync(KVKey key) {
+        private async ValueTask<byte[]?> ReadCoreAsync(byte[] key) {
             ThrowIfDisposed();
 
             Status status;
             SpanByteAndMemory spanByteAndMemory;
 
             var session = GetPooledSession();
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+
             try {
-                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
                 SpanByte valueSpanByte = default;
 
                 var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
@@ -571,6 +674,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 (status, spanByteAndMemory) = result.Complete();
             }
             finally {
+                keyHandle.Free();
                 ReturnPooledSession(session);
             }
 
@@ -581,6 +685,46 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             using (spanByteAndMemory.Memory) {
                 return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
             }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<bool> ExistsAsync(KVKey key) {
+            return await ExistsCoreAsync(key).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Tests if a key exists in the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key to test.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the key exists; otherwise, <see langword="false"/>.
+        /// </returns>
+        private async ValueTask<bool> ExistsCoreAsync(byte[] key) {
+            ThrowIfDisposed();
+
+            Status status;
+
+            var session = GetPooledSession();
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+
+            try {
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
+                SpanByte valueSpanByte = default;
+
+                var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
+
+                (status, _) = result.Complete();
+            }
+            finally {
+                keyHandle.Free();
+                ReturnPooledSession(session);
+            }
+
+            return status.Found;
         }
 
 
@@ -679,6 +823,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 return;
             }
 
+            using (await s_instancesLock.WriterLockAsync().ConfigureAwait(false)) {
+                s_instances.Remove(this);
+            }
+
             _disposedTokenSource.Cancel();
 
             // Record final checkpoint.
@@ -731,118 +879,6 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         [LoggerMessage(107, LogLevel.Error, "Error while performing FASTER log compaction.")]
         static partial void LogCompactionError(ILogger logger, Exception e);
-
-
-        /// <summary>
-        /// <see cref="IScanIteratorFunctions{Key, Value}"/> implementation that allows us to use 
-        /// FASTER's "push" key iteration: https://microsoft.github.io/FASTER/docs/fasterkv-basics/#key-iteration
-        /// </summary>
-        private struct ScanIteratorFunctions : IScanIteratorFunctions<SpanByte, SpanByte> {
-
-            /// <summary>
-            /// The channel to publish keys to as they are iterated over.
-            /// </summary>
-            private readonly Channel<FasterRecord> _channel;
-
-            /// <summary>
-            /// Specifies if the iterator should include record values.
-            /// </summary>
-            private readonly bool _includeValues;
-
-            /// <summary>
-            /// The channel reader.
-            /// </summary>
-            public ChannelReader<FasterRecord> Reader => _channel?.Reader!;
-
-            internal ScanIteratorFunctions(bool includeValues) {
-                _includeValues = includeValues;
-                _channel = Channel.CreateUnbounded<FasterRecord>(new UnboundedChannelOptions() {
-                    AllowSynchronousContinuations = false,
-                    SingleReader = true,
-                    SingleWriter = true
-                });
-            }
-
-            
-            /// <inheritdoc/>
-            public bool OnStart(long beginAddress, long endAddress) => true;
-
-
-            /// <inheritdoc/>
-            public bool SingleReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
-                return _channel.Writer.TryWrite(new FasterRecord(key.ToByteArray(), recordMetadata, false, _includeValues ? new ReadOnlyMemory<byte>(value.ToByteArray()) : default));
-            }
-
-
-            /// <inheritdoc/>
-            public bool ConcurrentReader(ref SpanByte key, ref SpanByte value, RecordMetadata recordMetadata, long numberOfRecords) {
-                return _channel.Writer.TryWrite(new FasterRecord(key.ToByteArray(), recordMetadata, true, _includeValues ? new ReadOnlyMemory<byte>(value.ToByteArray()) : default));
-            }
-
-
-            /// <inheritdoc/>
-            public void OnStop(bool completed, long numberOfRecords) {
-                _channel.Writer.TryComplete();
-            }
-
-
-            /// <inheritdoc/>
-            public void OnException(Exception exception, long numberOfRecords) {
-                _channel.Writer.TryComplete(exception);
-            }
-
-        }
-
-
-        /// <summary>
-        /// A record in the FASTER store.
-        /// </summary>
-        public readonly struct FasterRecord {
-
-            /// <summary>
-            /// The key.
-            /// </summary>
-            public KVKey Key { get; }
-
-            /// <summary>
-            /// The metadata for the record.
-            /// </summary>
-            public RecordMetadata Metadata { get; }
-
-            /// <summary>
-            /// Specifies if the record is located in the mutable portion of the FASTER log.
-            /// </summary>
-            public bool Mutable { get; }
-
-            /// <summary>
-            /// The value for the record.
-            /// </summary>
-            public ReadOnlyMemory<byte> Value { get; }
-
-
-            /// <summary>
-            /// Creates a new <see cref="FasterRecord"/> instance
-            /// </summary>
-            /// <param name="key">
-            ///   The key.
-            /// </param>
-            /// <param name="metadata">
-            ///   The metadata for the record.
-            /// </param>
-            /// <param name="mutable">
-            ///   Specifies if the record is located in the mutable portion of the FASTER log.
-            /// </param>
-            /// <param name="value">
-            ///   The record value.
-            /// </param>
-            internal FasterRecord(KVKey key, RecordMetadata metadata, bool mutable, ReadOnlyMemory<byte> value) {
-                Key = key;
-                Metadata = metadata;
-                Mutable = mutable;
-                Value = value;
-            }
-
-        }
 
     }
 }

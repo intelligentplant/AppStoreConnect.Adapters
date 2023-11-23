@@ -452,6 +452,22 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
 
 
         /// <inheritdoc/>
+        protected override async ValueTask<bool> ExistsAsync(KVKey key) {
+            if (UseWriteBuffer) {
+                var readResult = await _writeBuffer!.ReadAsync(key).ConfigureAwait(false);
+                if (readResult.Found) {
+                    return readResult.Value != null;
+                }
+            }
+
+            await _indexLoader.Value.ConfigureAwait(false);
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                return TryGetFileNameForKey(key, out _);
+            }
+        }
+
+
+        /// <inheritdoc/>
         protected override async ValueTask<bool> DeleteAsync(KVKey key) {
             if (UseWriteBuffer) {
                 await _writeBuffer!.DeleteAsync(key).ConfigureAwait(false);

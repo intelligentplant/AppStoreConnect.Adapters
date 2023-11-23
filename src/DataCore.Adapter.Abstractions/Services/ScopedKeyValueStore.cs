@@ -8,12 +8,7 @@ namespace DataCore.Adapter.Services {
     /// <see cref="IKeyValueStore"/> that wraps an existing <see cref="IKeyValueStore"/> and 
     /// automatically modifies keys passed in or out of the store using a scoped prefix.
     /// </summary>
-    /// <remarks>
-    ///   You can simplify creating instances of this class by using the 
-    ///   <see cref="KeyValueStoreExtensions.CreateScopedStore(IKeyValueStore, KVKey)"/> 
-    ///   extension method.
-    /// </remarks>
-    public class ScopedKeyValueStore : IKeyValueStore {
+    internal class ScopedKeyValueStore : IKeyValueStore {
 
         /// <summary>
         /// The prefix to apply to keys read from or written to the inner store.
@@ -42,8 +37,18 @@ namespace DataCore.Adapter.Services {
             if (prefix.Value.Length == 0) {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
-            Prefix = prefix;
-            Inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            if (inner == null) {
+                throw new ArgumentNullException(nameof(inner));
+            }
+
+            if (inner is ScopedKeyValueStore scoped) {
+                Prefix = KeyValueStore.AddPrefix(scoped.Prefix, prefix);
+                Inner = scoped.Inner;
+            }
+            else {
+                Prefix = prefix;
+                Inner = inner;
+            }
         }
 
 
@@ -58,6 +63,13 @@ namespace DataCore.Adapter.Services {
         public ValueTask<T?> ReadAsync<T>(KVKey key) {
             var k = KeyValueStore.AddPrefix(Prefix, key);
             return Inner.ReadAsync<T>(k);
+        }
+
+
+        /// <inheritdoc/>
+        public ValueTask<bool> ExistsAsync(KVKey key) {
+            var k = KeyValueStore.AddPrefix(Prefix, key);
+            return Inner.ExistsAsync(k);
         }
 
 

@@ -347,6 +347,40 @@ namespace DataCore.Adapter.KeyValueStore.Sqlite {
 
 
         /// <inheritdoc/>
+        protected override async ValueTask<bool> ExistsAsync(KVKey key) {
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                if (_disposed) {
+                    return false;
+                }
+
+                // Check pending writes first.
+                if (UseWriteBuffer) {
+                    var pendingValue = await _writeBuffer!.ReadAsync(key, _disposedTokenSource.Token).ConfigureAwait(false);
+                    if (pendingValue.Found) {
+                        return pendingValue.Value != null;
+                    }
+                }
+
+                using (var connection = new SqliteConnection(_connectionString)) {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand()) {
+                        command.CommandText = "SELECT COUNT(*) FROM kvstore WHERE key = $key";
+                        command.Parameters.AddWithValue("$key", ConvertBytesToHexString(key));
+
+                        var count = Convert.ToInt32(await command.ExecuteScalarAsync(_disposedTokenSource.Token).ConfigureAwait(false));
+                        return count != 0;
+                    }
+                }
+            }
+        }
+
+
+        /// <inheritdoc/>
         protected override async ValueTask<bool> DeleteAsync(KVKey key) {
             if (_disposed) {
                 throw new ObjectDisposedException(GetType().FullName);

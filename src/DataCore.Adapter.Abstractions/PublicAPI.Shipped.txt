@@ -278,10 +278,6 @@ DataCore.Adapter.Services.KVKey.KVKey() -> void
 DataCore.Adapter.Services.KVKey.KVKey(byte[]? value) -> void
 DataCore.Adapter.Services.KVKey.Length.get -> int
 DataCore.Adapter.Services.KVKey.Value.get -> byte[]!
-DataCore.Adapter.Services.ScopedKeyValueStore
-DataCore.Adapter.Services.ScopedKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
-DataCore.Adapter.Services.ScopedKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-DataCore.Adapter.Services.ScopedKeyValueStore.ScopedKeyValueStore(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.IKeyValueStore! inner) -> void
 DataCore.Adapter.Tags.ITagConfiguration
 DataCore.Adapter.Tags.ITagConfiguration.CreateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.CreateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Tags.ITagConfiguration.DeleteTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.DeleteTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!

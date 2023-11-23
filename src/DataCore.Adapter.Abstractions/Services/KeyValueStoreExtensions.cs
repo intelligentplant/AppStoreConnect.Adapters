@@ -49,12 +49,8 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
 
-            if (store is ScopedKeyValueStore scoped) {
-                // This store is already an instance of ScopedKeyValueStore. Instead of wrapping
-                // the scoped store and recursively applying key prefixes in every operation, we
-                // will wrap the inner store and concatenate the prefix for this store with the
-                // prefix passed to this method.
-                return new ScopedKeyValueStore(KeyValueStore.AddPrefix(scoped.Prefix, prefix), scoped.Inner);
+            if (store is IRawKeyValueStore raw) {
+                return new ScopedRawKeyValueStore(prefix, raw);
             }
 
             return new ScopedKeyValueStore(prefix, store);
@@ -318,6 +314,9 @@ namespace DataCore.Adapter.Services {
         /// <param name="keyPrefix">
         ///   The filter to apply to keys read from the source store.
         /// </param>
+        /// <param name="overwrite">
+        ///   Specifies if existing keys in the destination store should be overwritten.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -330,7 +329,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="destination"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<int> BulkCopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, KVKey? keyPrefix = null, CancellationToken cancellationToken = default) {
+        public static async Task<int> BulkCopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, KVKey? keyPrefix = null, bool overwrite = false, CancellationToken cancellationToken = default) {
             if (source == null) {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -346,6 +345,13 @@ namespace DataCore.Adapter.Services {
                 var value = await source.ReadRawAsync(key).ConfigureAwait(false);
                 if (value == null) {
                     continue;
+                }
+
+                if (!overwrite) {
+                    var exists = await destination.ExistsAsync(key).ConfigureAwait(false);
+                    if (exists) {
+                        continue;
+                    }
                 }
 
                 await destination.WriteRawAsync(key, value).ConfigureAwait(false);
@@ -368,6 +374,9 @@ namespace DataCore.Adapter.Services {
         /// <param name="keyPrefix">
         ///   The filter to apply to keys read from the source store.
         /// </param>
+        /// <param name="overwrite">
+        ///   Specifies if existing keys in the destination store should be overwritten.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
@@ -380,8 +389,8 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="destination"/> is <see langword="null"/>.
         /// </exception>
-        public static async Task<int> BulkCopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, KVKey? keyPrefix = null, CancellationToken cancellationToken = default) {
-            return await source.BulkCopyToAsync(destination, keyPrefix, cancellationToken).ConfigureAwait(false);
+        public static async Task<int> BulkCopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, KVKey? keyPrefix = null, bool overwrite = false, CancellationToken cancellationToken = default) {
+            return await source.BulkCopyToAsync(destination, keyPrefix, overwrite, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -412,6 +421,10 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="keys"/> is <see langword="null"/>.
         /// </exception>
+        /// <remarks>
+        ///   Unlike <see cref="BulkCopyToAsync"/>, <see cref="CopyToAsync"/> will always 
+        ///   overwrite keys in the destination store.
+        /// </remarks>
         public static async Task<int> CopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
             if (source == null) {
                 throw new ArgumentNullException(nameof(source));
@@ -469,6 +482,10 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="keys"/> is <see langword="null"/>.
         /// </exception>
+        /// <remarks>
+        ///   Unlike <see cref="BulkCopyFromAsync"/>, <see cref="CopyFromAsync"/> will always 
+        ///   overwrite keys in the destination store.
+        /// </remarks>
         public static async Task<int> CopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
            return await source.CopyToAsync(destination, keys, cancellationToken).ConfigureAwait(false);
         }

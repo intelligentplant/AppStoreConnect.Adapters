@@ -31,7 +31,10 @@ namespace DataCore.Adapter.Tests {
                 await store.WriteAsync(TestContext.TestName, now);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -67,6 +70,26 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        [TestMethod]
+        public async Task KeyShouldExistInStore() {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(CompressionLevel.NoCompression);
+            try {
+                await store.WriteAsync(TestContext.TestName, now);
+                Assert.IsTrue(await store.ExistsAsync(TestContext.TestName));
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
         [DataTestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
@@ -85,7 +108,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(now, value);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -116,7 +142,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(default(DateTime), value2);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -147,7 +176,10 @@ namespace DataCore.Adapter.Tests {
                 }
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -179,7 +211,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(now, value2);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -206,7 +241,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(keys.Contains(TestContext.TestName));
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -246,7 +284,10 @@ namespace DataCore.Adapter.Tests {
                 }
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -277,7 +318,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(now, deserialized);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -308,7 +352,10 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(raw.SequenceEqual(raw2));
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -330,7 +377,10 @@ namespace DataCore.Adapter.Tests {
                 await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await rawStore.WriteRawAsync(TestContext.TestName, raw));
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
