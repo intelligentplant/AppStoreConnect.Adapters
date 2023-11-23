@@ -62,6 +62,18 @@ namespace DataCore.Adapter.Services {
 
 
         /// <summary>
+        /// Tests if a key exists in the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key to test.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the key exists; otherwise, <see langword="false"/>.
+        /// </returns>
+        ValueTask<bool> ExistsAsync(KVKey key);
+
+
+        /// <summary>
         /// Deletes a value from the store.
         /// </summary>
         /// <param name="key">
