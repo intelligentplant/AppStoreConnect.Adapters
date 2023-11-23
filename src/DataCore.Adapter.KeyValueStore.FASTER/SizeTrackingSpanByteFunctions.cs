@@ -49,11 +49,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         public override bool ConcurrentDeleter(ref SpanByte key, ref SpanByte value, ref DeleteInfo deleteInfo) {
             var delta = value.TotalSize;
             if (base.ConcurrentDeleter(ref key, ref value, ref deleteInfo)) {
-                if (deleteInfo.RecordInfo.Invalid) {
-                    delta += key.TotalSize;
-                }
-
                 _sizeTracker.UpdateHeapSize(-delta);
+                if (deleteInfo.RecordInfo.Invalid) {
+                    // Record was marked as invalid. FASTER example code indicates that this means
+                    // that the record was not inserted, so deduct the size of the key from the
+                    // heap as well.
+                    _sizeTracker.UpdateHeapSize(-key.TotalSize);
+                }
                 return true;
             }
 

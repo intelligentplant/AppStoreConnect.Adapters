@@ -31,19 +31,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         private int _heapSize;
 
         /// <summary>
-        /// The number of records in the heap for the <see cref="_log"/>.
-        /// </summary>
-        private int _recordCount;
-
-        /// <summary>
         /// The total size of the <see cref="_log"/> and heap.
         /// </summary>
         public long TotalMemorySize => _log.MemorySizeBytes + _heapSize;
-
-        /// <summary>
-        /// The number of records in the heap for the <see cref="LogAccessor{Key, Value}"/>.
-        /// </summary>
-        public int RecordCount => _recordCount;
 
 
         /// <summary>
@@ -79,15 +69,21 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             while (iterator.GetNext(out var recordInfo, out var key, out var value)) {
                 size += key.TotalSize;
+
+                // If the record has not been deleted (i.e. it has been replaced by an upsert
+                // operation), we need to account for the size of the value that was replaced in
+                // addition to the size of the key.
+                //
+                // If the record is being deleted then the size of the evicted value is already
+                // reported by SizeTrackingSpanByteFunctions.ConcurrentDeleter so we only need to
+                // deduct the size of the evicted key here.
+
                 if (!recordInfo.Tombstone) {
-                    // The record has not been deleted (e.g. it has been evicted and replaced
-                    // due to an update), so we need to account for the value size that was
-                    // replaced.
                     size += value.TotalSize;
                 }
             }
 
-            Interlocked.Add(ref _heapSize, -size);
+            UpdateHeapSize(-size);
         }
 
 
@@ -98,15 +94,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   The change in heap size, in bytes.
         /// </param>
         internal void UpdateHeapSize(int delta) {
+            if (delta == 0) {
+                return;
+            }
             Interlocked.Add(ref _heapSize, delta);
-            // If the delta is positive, we have added a new record to the heap; otherwise, we
-            // have removed a record.
-            if (delta > 0) {
-                Interlocked.Increment(ref _recordCount);
-            }
-            else {
-                Interlocked.Decrement(ref _recordCount);
-            }
         }
 
 
