@@ -108,9 +108,13 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="data"/> is <see langword="null"/>.
         /// </exception>
-        private async ValueTask<byte[]> CompressRawBytesAsync(byte[] data, CompressionLevel? compressionLevel = null) {
+        protected virtual async ValueTask<byte[]> CompressRawBytesAsync(byte[] data, CompressionLevel? compressionLevel = null) {
             if (data == null) {
                 throw new ArgumentNullException(nameof(data));
+            }
+
+            if (IsGzipped(data)) {
+                return data;
             }
 
             var level = compressionLevel ?? GetCompressionLevel();
@@ -124,10 +128,27 @@ namespace DataCore.Adapter.Services {
         }
 
 
-        private async ValueTask<byte[]> DecompressRawBytesAsync(byte[] data) {
+        /// <summary>
+        /// Decompresses raw byte data.
+        /// </summary>
+        /// <param name="data">
+        ///   The compressed raw byte data.
+        /// </param>
+        /// <returns>
+        ///   The decompressed raw byte data.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="data"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual async ValueTask<byte[]> DecompressRawBytesAsync(byte[] data) {
             if (data == null) {
                 throw new ArgumentNullException(nameof(data));
             }
+
+            if (!IsGzipped(data)) {
+                return data;
+            }
+
             using (var ms1 = new MemoryStream(data))
             using (var decompressStream = new GZipStream(ms1, CompressionMode.Decompress, leaveOpen: true))
             using (var ms2 = new MemoryStream()) {
@@ -135,6 +156,18 @@ namespace DataCore.Adapter.Services {
                 return ms2.ToArray();
             }
         }
+
+
+        /// <summary>
+        /// Checks if the data is gzipped.
+        /// </summary>
+        /// <param name="data">
+        ///   The data to check.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the data is gzipped; otherwise, <see langword="false"/>.
+        /// </returns>
+        private static bool IsGzipped(byte[] data) => data.Length >= 2 && data[0] == 0x1F && data[1] == 0x8B;
 
     }
 }
