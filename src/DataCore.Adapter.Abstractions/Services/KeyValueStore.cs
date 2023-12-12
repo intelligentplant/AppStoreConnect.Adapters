@@ -313,13 +313,9 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            if (IsGzipped(stream)) {
-                using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
-                    return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
-                }
+            using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
+                return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
             }
-
-            return await GetSerializer().DeserializeAsync<T?>(stream).ConfigureAwait(false);
         }
 
 
