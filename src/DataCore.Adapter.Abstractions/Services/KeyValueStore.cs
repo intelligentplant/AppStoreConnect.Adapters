@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -311,9 +312,65 @@ namespace DataCore.Adapter.Services {
             if (stream == null) {
                 throw new ArgumentNullException(nameof(stream));
             }
-            using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
-                return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
+
+            if (IsGzipped(stream)) {
+                using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
+                    return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
+                }
             }
+
+            return await GetSerializer().DeserializeAsync<T?>(stream).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Tests if the specified stream contains gzipped data.
+        /// </summary>
+        /// <param name="stream">
+        ///   The stream.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the first two bytes in the stream are 0x1F and 0x8B; 
+        ///   otherwise, <see langword="false"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+        protected static bool IsGzipped(Stream stream) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            try {
+                using (var subscription = MemoryPool<byte>.Shared.Rent(2)) {
+#if NETSTANDARD2_1_OR_GREATER
+                    var bytesRead = stream.Read(subscription.Memory.Span);
+                    return bytesRead >= 2 && subscription.Memory.Span[0] == 0x1F && subscription.Memory.Span[1] == 0x8B;
+#else
+                    var arr = subscription.Memory.Span.ToArray();
+                    var bytesRead = stream.Read(arr, 0, 2);
+                    return bytesRead == 2 && arr[0] == 0x1F && arr[1] == 0x8B;
+#endif
+                }
+            }
+            finally {
+                stream.Position = 0;
+            }
+        }
+
+
+        /// <summary>
+        /// Tests if the specified byte array contains gzipped data.
+        /// </summary>
+        /// <param name="data">
+        ///   The byte array.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the first two bytes in the array are 0x1F and 0x8B; 
+        ///   otherwise, <see langword="false"/>.
+        /// </returns>
+        protected static bool IsGzipped(Span<byte> data) { 
+            return data.Length >= 2 && data[0] == 0x1F && data[1] == 0x8B;
         }
 
 

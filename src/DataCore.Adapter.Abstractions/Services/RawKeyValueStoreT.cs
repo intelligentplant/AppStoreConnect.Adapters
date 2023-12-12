@@ -157,17 +157,5 @@ namespace DataCore.Adapter.Services {
             }
         }
 
-
-        /// <summary>
-        /// Checks if the data is gzipped.
-        /// </summary>
-        /// <param name="data">
-        ///   The data to check.
-        /// </param>
-        /// <returns>
-        ///   <see langword="true"/> if the data is gzipped; otherwise, <see langword="false"/>.
-        /// </returns>
-        private static bool IsGzipped(byte[] data) => data.Length >= 2 && data[0] == 0x1F && data[1] == 0x8B;
-
     }
 }
