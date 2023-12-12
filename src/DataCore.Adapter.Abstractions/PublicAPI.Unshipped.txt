@@ -68,7 +68,9 @@ DataCore.Adapter.Services.JsonKeyValueStoreSerializer.DeserializeAsync<T>(System
 DataCore.Adapter.Services.JsonKeyValueStoreSerializer.JsonKeyValueStoreSerializer(System.Text.Json.JsonSerializerOptions? jsonOptions) -> void
 DataCore.Adapter.Services.JsonKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.KeyValueStore.DeserializeFromBytesAsync<T>(byte[]! data) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamCoreAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
 DataCore.Adapter.Services.KeyValueStore.SerializeToBytesAsync<T>(T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+DataCore.Adapter.Services.KeyValueStore.SerializeToStreamCoreAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer?
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.set -> void
 DataCore.Adapter.Services.KeyValueStoreWriteBuffer
