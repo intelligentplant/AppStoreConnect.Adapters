@@ -254,7 +254,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="stream"/> is <see langword="null"/>.
         /// </exception>
-        protected async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, CompressionLevel? compressionLevel = null) {
+        protected virtual async ValueTask SerializeToStreamAsync<T>(Stream stream, T value, CompressionLevel? compressionLevel = null) {
             if (stream == null) {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -262,9 +262,35 @@ namespace DataCore.Adapter.Services {
             var level = compressionLevel ?? GetCompressionLevel();
 
             using (var compressStream = new GZipStream(stream, level, leaveOpen: true)) {
-                await GetSerializer().SerializeAsync(compressStream, value).ConfigureAwait(false);
+                await SerializeToStreamCoreAsync(compressStream, value).ConfigureAwait(false);
                 compressStream.Close();
             }
+        }
+
+
+        /// <summary>
+        /// Serializes a value to a stream.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream to write the serialized value to.
+        /// </param>
+        /// <param name="value">
+        ///   The value to serialize.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will complete when the value has been serialized.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+        protected async ValueTask SerializeToStreamCoreAsync<T>(Stream stream, T value) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+            await GetSerializer().SerializeAsync(stream, value).ConfigureAwait(false);
         }
 
 
@@ -308,14 +334,38 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="stream"/> is <see langword="null"/>.
         /// </exception>
-        protected async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream) {
+        protected virtual async ValueTask<T?> DeserializeFromStreamAsync<T>(Stream stream) {
             if (stream == null) {
                 throw new ArgumentNullException(nameof(stream));
             }
 
             using (var decompressStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true)) {
-                return await GetSerializer().DeserializeAsync<T?>(decompressStream).ConfigureAwait(false);
+                return await DeserializeFromStreamCoreAsync<T>(decompressStream).ConfigureAwait(false);
             }
+        }
+
+
+        /// <summary>
+        /// Deserializes a value from a stream.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The value type.
+        /// </typeparam>
+        /// <param name="stream">
+        ///   The stream containing the serialized value.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return the deserialized value.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="stream"/> is <see langword="null"/>.
+        /// </exception>
+        protected async ValueTask<T?> DeserializeFromStreamCoreAsync<T>(Stream stream) {
+            if (stream == null) {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            return await GetSerializer().DeserializeAsync<T?>(stream).ConfigureAwait(false);
         }
 
 
