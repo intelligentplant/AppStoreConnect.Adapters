@@ -105,14 +105,7 @@ namespace DataCore.Adapter.Services {
         /// <returns>
         ///   A byte array containing the compressed raw data.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="data"/> is <see langword="null"/>.
-        /// </exception>
-        private async ValueTask<byte[]> CompressRawBytesAsync(byte[] data, CompressionLevel? compressionLevel = null) {
-            if (data == null) {
-                throw new ArgumentNullException(nameof(data));
-            }
-
+        protected virtual async ValueTask<byte[]> CompressRawBytesAsync(byte[] data, CompressionLevel? compressionLevel = null) {
             var level = compressionLevel ?? GetCompressionLevel();
 
             using (var ms = new MemoryStream())
@@ -124,10 +117,19 @@ namespace DataCore.Adapter.Services {
         }
 
 
-        private async ValueTask<byte[]> DecompressRawBytesAsync(byte[] data) {
-            if (data == null) {
-                throw new ArgumentNullException(nameof(data));
-            }
+        /// <summary>
+        /// Decompresses raw byte data.
+        /// </summary>
+        /// <param name="data">
+        ///   The compressed raw byte data.
+        /// </param>
+        /// <returns>
+        ///   The decompressed raw byte data.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="data"/> is <see langword="null"/>.
+        /// </exception>
+        protected virtual async ValueTask<byte[]> DecompressRawBytesAsync(byte[] data) {
             using (var ms1 = new MemoryStream(data))
             using (var decompressStream = new GZipStream(ms1, CompressionMode.Decompress, leaveOpen: true))
             using (var ms2 = new MemoryStream()) {

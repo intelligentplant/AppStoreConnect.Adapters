@@ -52,7 +52,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   The total in-memory size of the FASTER store, in bytes.
         /// </returns>
-        internal long GetTotalSize() => GetIndexSize() + GetLogSize() + GetReadCacheSize();
+        internal long GetTotalSizeBytes() => GetIndexSizeBytes() + GetLogSizeBytes() + GetReadCacheSizeBytes();
 
         /// <summary>
         /// Gets the size of the FASTER index.
@@ -60,7 +60,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   The size of the FASTER index, in bytes.
         /// </returns>
-        internal long GetIndexSize() => (_store.IndexSize * 64) + (_store.OverflowBucketCount * 64);
+        internal long GetIndexSizeBytes() => (_store.IndexSize * 64) + (_store.OverflowBucketCount * 64);
 
         /// <summary>
         /// Gets the size of the in-memory portion of the FASTER log.
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   The size of the in-memory portion of the FASTER log, in bytes.
         /// </returns>
-        internal long GetLogSize() => _logSizeTracker.TotalMemorySize;
+        internal long GetLogSizeBytes() => _logSizeTracker.TotalMemorySizeBytes;
 
         /// <summary>
         /// Gets the size of the FASTER read cache.
@@ -76,7 +76,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <returns>
         ///   The size of the FASTER read cache, in bytes.
         /// </returns>
-        internal long GetReadCacheSize() => _readCacheSizeTracker?.TotalMemorySize ?? 0;
+        internal long GetReadCacheSizeBytes() => _readCacheSizeTracker?.TotalMemorySizeBytes ?? 0;
 
 
         /// <summary>

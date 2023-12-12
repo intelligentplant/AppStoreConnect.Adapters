@@ -68,9 +68,9 @@ DataCore.Adapter.Services.JsonKeyValueStoreSerializer.DeserializeAsync<T>(System
 DataCore.Adapter.Services.JsonKeyValueStoreSerializer.JsonKeyValueStoreSerializer(System.Text.Json.JsonSerializerOptions? jsonOptions) -> void
 DataCore.Adapter.Services.JsonKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.KeyValueStore.DeserializeFromBytesAsync<T>(byte[]! data) -> System.Threading.Tasks.ValueTask<T?>
-DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamCoreAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
 DataCore.Adapter.Services.KeyValueStore.SerializeToBytesAsync<T>(T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
-DataCore.Adapter.Services.KeyValueStore.SerializeToStreamAsync<T>(System.IO.Stream! stream, T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStore.SerializeToStreamCoreAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer?
 DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.set -> void
 DataCore.Adapter.Services.KeyValueStoreWriteBuffer
@@ -101,6 +101,8 @@ override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompression
 override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
 static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptorBuilder(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 static DataCore.Adapter.Services.JsonKeyValueStoreSerializer.Default.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.IO.Stream! stream) -> bool
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.Span<byte> data) -> bool
 static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
 static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyToAsync(this DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
 static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, System.Collections.Generic.IEnumerable<DataCore.Adapter.Services.KVKey>! keys, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
@@ -108,4 +110,8 @@ static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyToAsync(this DataCo
 static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store) -> System.Collections.Generic.IAsyncEnumerable<string!>!
 static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<string!>!
 static DataCore.Adapter.Services.KVKey.implicit operator string?(DataCore.Adapter.Services.KVKey value) -> string?
+virtual DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+virtual DataCore.Adapter.Services.KeyValueStore.SerializeToStreamAsync<T>(System.IO.Stream! stream, T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.CompressRawBytesAsync(byte[]! data, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.DecompressRawBytesAsync(byte[]! data) -> System.Threading.Tasks.ValueTask<byte[]!>
 ~static DataCore.Adapter.AbstractionsResources.Error_KeyValueStore_RawWritesDisabled.get -> string
