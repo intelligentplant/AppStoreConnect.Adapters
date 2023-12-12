@@ -31,9 +31,19 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         private int _heapSize;
 
         /// <summary>
-        /// The total size of the <see cref="_log"/> and heap.
+        /// Actual memory used by the log (not including heap objects).
         /// </summary>
-        public long TotalMemorySize => _log.MemorySizeBytes + _heapSize;
+        public long MemorySizeBytes => _log.MemorySizeBytes;
+
+        /// <summary>
+        /// The size of the log's heap objects.
+        /// </summary>
+        public int HeapSizeBytes => _heapSize;
+
+        /// <summary>
+        /// The total size of the log and heap.
+        /// </summary>
+        public long TotalMemorySizeBytes => MemorySizeBytes + HeapSizeBytes;
 
 
         /// <summary>

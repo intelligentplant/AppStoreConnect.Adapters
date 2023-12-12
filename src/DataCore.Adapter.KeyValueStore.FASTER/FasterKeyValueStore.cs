@@ -54,7 +54,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             "KeyValueStore.FASTER.Size.Total",
             () => {
                 using (s_instancesLock.ReaderLock()) {
-                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetTotalSize(), CreateInstanceIdTag(x))).ToArray();
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetTotalSizeBytes(), CreateInstanceIdTag(x))).ToArray();
                 }
             },
             "By",
@@ -68,7 +68,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             "KeyValueStore.FASTER.Size.Index",
             () => {
                 using (s_instancesLock.ReaderLock()) {
-                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetIndexSize(), CreateInstanceIdTag(x))).ToArray();
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetIndexSizeBytes(), CreateInstanceIdTag(x))).ToArray();
                 }
             },
             "By",
@@ -82,7 +82,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             "KeyValueStore.FASTER.Size.Log",
             () => {
                 using (s_instancesLock.ReaderLock()) {
-                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetLogSize(), CreateInstanceIdTag(x))).ToArray();
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetLogSizeBytes(), CreateInstanceIdTag(x))).ToArray();
                 }
             },
             "By",
@@ -96,7 +96,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             "KeyValueStore.FASTER.Size.ReadCache",
             () => {
                 using (s_instancesLock.ReaderLock()) {
-                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetReadCacheSize(), CreateInstanceIdTag(x))).ToArray();
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetReadCacheSizeBytes(), CreateInstanceIdTag(x))).ToArray();
                 }
             },
             "By",
