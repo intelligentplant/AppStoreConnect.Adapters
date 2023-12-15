@@ -77,8 +77,8 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             var size = 0;
 
-            while (iterator.GetNext(out var recordInfo, out var key, out var value)) {
-                size += key.TotalSize;
+            while (iterator.GetNext(out var recordInfo)) {
+                size += iterator.GetKey().TotalSize;
 
                 // If the record has not been deleted (i.e. it has been replaced by an upsert
                 // operation), we need to account for the size of the value that was replaced in
@@ -89,7 +89,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 // deduct the size of the evicted key here.
 
                 if (!recordInfo.Tombstone) {
-                    size += value.TotalSize;
+                    size += iterator.GetValue().TotalSize;
                 }
             }
 
