@@ -1,7 +1,6 @@
 ﻿#nullable enable
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.DisposeAsync() -> System.Threading.Tasks.ValueTask
-DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterKeyValueStore(DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore!>? logger = null) -> void
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.TakeFullCheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.CheckpointInterval.get -> System.TimeSpan?
