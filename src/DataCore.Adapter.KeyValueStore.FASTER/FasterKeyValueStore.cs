@@ -197,13 +197,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <param name="options">
         ///   The options for the store.
         /// </param>
-        /// <param name="logger">
-        ///   The <see cref="ILogger"/> for the store.
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> to use when creating loggers for the store.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) : base(options, logger) {
+        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILoggerFactory? loggerFactory = null) : base(options, loggerFactory?.CreateLogger<FasterKeyValueStore>()) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
@@ -224,9 +224,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             _fasterKVStore = new FasterKV<SpanByte, SpanByte>(
                 options.IndexBucketCount,
                 logSettings,
-                checkpointManager == null ? null : new CheckpointSettings() { 
+                checkpointManager == null ? null : new CheckpointSettings() {
                     CheckpointManager = checkpointManager
-                }
+                },
+                logger: loggerFactory?.CreateLogger($"{typeof(FasterKV<SpanByte, SpanByte>).Namespace}.FasterKV")
             );
             _sizeTracker = new CacheSizeTracker(_fasterKVStore);
 

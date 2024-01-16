@@ -152,7 +152,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   a read-only part of the FASTER log. These items remain in FASTER until the log is 
         ///   compacted. Compaction is performed on a periodic basis via the <see cref="CompactionInterval"/> 
         ///   setting. At each compaction interval, the FASTER log will be compacted if it is 
-        ///   created than the current size threshold, in order to remove expired records from the 
+        ///   greater than the current size threshold, in order to remove expired records from the 
         ///   log.
         /// </para>
         /// 

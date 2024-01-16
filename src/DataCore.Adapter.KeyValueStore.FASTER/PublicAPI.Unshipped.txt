@@ -1,4 +1,5 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.FasterKeyValueStore(DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.GetRecordsAsync(DataCore.Adapter.Services.KVKey? prefix = null) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.KeyValueStore.FASTER.FasterRecord>!
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStore.TakeIncrementalCheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.KeyValueStore.FASTER.FasterKeyValueStoreOptions.EnableRawWrites.get -> bool
