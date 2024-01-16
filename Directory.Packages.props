@@ -10,41 +10,41 @@
   project. 
   -->
   <PropertyGroup>
-    <PkgVersion_OpenTelemetry>1.6.0</PkgVersion_OpenTelemetry>
-    <PkgVersion_OpenTelemetry_Api>1.6.0</PkgVersion_OpenTelemetry_Api>
-    <PkgVersion_OpenTelemetry_Exporter_Console>1.6.0</PkgVersion_OpenTelemetry_Exporter_Console>
-    <PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>1.6.0</PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>
-    <PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>1.6.0-rc.1</PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>
-    <PkgVersion_OpenTelemetry_Extensions_Hosting>1.6.0</PkgVersion_OpenTelemetry_Extensions_Hosting>
-    <PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>
+    <PkgVersion_OpenTelemetry>1.7.0</PkgVersion_OpenTelemetry>
+    <PkgVersion_OpenTelemetry_Api>1.7.0</PkgVersion_OpenTelemetry_Api>
+    <PkgVersion_OpenTelemetry_Exporter_Console>1.7.0</PkgVersion_OpenTelemetry_Exporter_Console>
+    <PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>1.7.0</PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>
+    <PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>1.7.0-rc.1</PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>
+    <PkgVersion_OpenTelemetry_Extensions_Hosting>1.7.0</PkgVersion_OpenTelemetry_Extensions_Hosting>
+    <PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>
     <PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient>
-    <PkgVersion_OpenTelemetry_Instrumentation_Http>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_Http>
-    <PkgVersion_OpenTelemetry_Instrumentation_Runtime>1.5.1</PkgVersion_OpenTelemetry_Instrumentation_Runtime>
+    <PkgVersion_OpenTelemetry_Instrumentation_Http>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_Http>
+    <PkgVersion_OpenTelemetry_Instrumentation_Runtime>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_Runtime>
     <PkgVersion_OpenTelemetry_Instrumentation_SqlClient>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_SqlClient>
     <PkgVersion_Microsoft_Web_LibraryManager_Build>2.1.175</PkgVersion_Microsoft_Web_LibraryManager_Build>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Castle.Core" Version="5.1.1" />
     <PackageVersion Include="CsvHelper" Version="30.0.1" />
-    <PackageVersion Include="Google.Protobuf" Version="3.25.1" />
-    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.59.0" />
-    <PackageVersion Include="Grpc.Net.Client" Version="2.59.0" />
-    <PackageVersion Include="Grpc.Tools" Version="2.59.0" />
+    <PackageVersion Include="Google.Protobuf" Version="3.25.2" />
+    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.60.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.60.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.60.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks" Version="11.0.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="11.0.0" />
     <PackageVersion Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="11.0.0" />
     <PackageVersion Include="Jaahas.HttpRequestTransformer" Version="2.2.0" />
-    <PackageVersion Include="JsonSchema.Net.Generation" Version="3.4.1" />
+    <PackageVersion Include="JsonSchema.Net.Generation" Version="3.5.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.FASTER.Core" Version="2.6.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
@@ -75,7 +75,7 @@
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Net.Http.Json" Version="8.0.0" />
     <PackageVersion Include="System.Net.Http.WinHttpHandler" Version="8.0.0" />
-    <PackageVersion Include="System.Text.Json" Version="8.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.1" />
     <PackageVersion Include="System.Threading.Channels" Version="8.0.0" />
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
