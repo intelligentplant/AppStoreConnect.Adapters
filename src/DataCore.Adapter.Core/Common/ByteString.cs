@@ -93,7 +93,7 @@ namespace DataCore.Adapter.Common {
             }
 
             try {
-                result = new ByteString(base64);
+                result = new ByteString(base64!);
                 return true;
             }
             catch (FormatException) {
