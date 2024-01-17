@@ -49,14 +49,71 @@ namespace DataCore.Adapter.Common {
         /// <param name="bytes">
         ///   The byte sequence.
         /// </param>
-        public ByteString(byte[] bytes) {
+        public ByteString(byte[]? bytes) {
             Bytes = bytes ?? Array.Empty<byte>();
         }
 
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Creates a new <see cref="ByteString"/> instance.
+        /// </summary>
+        /// <param name="base64">
+        ///   The base64-encoded byte sequence.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="base64"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="FormatException">
+        ///   <paramref name="base64"/> is not a valid base64-encoded string.
+        /// </exception>
+        public ByteString(string base64) {
+            if (base64 == null) {
+                throw new ArgumentNullException(nameof(base64));
+            }
+            Bytes = Convert.FromBase64String(base64);
+        }
+
+
+        /// <summary>
+        /// Tried to parse a base64-encoded string into a <see cref="ByteString"/> instance.
+        /// </summary>
+        /// <param name="base64">
+        ///   The base64-encoded byte sequence.
+        /// </param>
+        /// <param name="result">
+        ///   The parsed <see cref="ByteString"/> instance.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if parsing was successful; otherwise, <see langword="false"/>.
+        /// </returns>
+        public static bool TryParse(string? base64, out ByteString result) {
+            if (string.IsNullOrWhiteSpace(base64)) {
+                result = default;
+                return false;
+            }
+
+            try {
+                result = new ByteString(base64);
+                return true;
+            }
+            catch (FormatException) {
+                result = default;
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the <see cref="ByteString"/> to a base64-encoded string.
+        /// </summary>
+        /// <returns>
+        ///   The base64-encoded string.
+        /// </returns>
+        /// <remarks>
+        ///   If <see cref="IsEmpty"/> is <see langword="true"/>, an empty string is returned.
+        /// </remarks>
         public override string ToString() { 
-            if (Bytes.IsEmpty) {
+            if (IsEmpty) {
                 return string.Empty;
             }
 
@@ -104,13 +161,19 @@ namespace DataCore.Adapter.Common {
         public static implicit operator ByteString(ReadOnlyMemory<byte> bytes) => new ByteString(bytes);
 
         /// <inheritdoc/>
-        public static implicit operator ByteString(byte[] bytes) => new ByteString(bytes);
+        public static implicit operator ByteString(byte[]? bytes) => new ByteString(bytes);
 
         /// <inheritdoc/>
         public static implicit operator ReadOnlyMemory<byte>(ByteString bytes) => bytes.Bytes;
 
         /// <inheritdoc/>
         public static implicit operator byte[](ByteString bytes) => bytes.Bytes.ToArray();
+
+        /// <inheritdoc/>
+        public static bool operator ==(ByteString left, ByteString right) => left.Equals(right);
+
+        /// <inheritdoc/>
+        public static bool operator !=(ByteString left, ByteString right) => !left.Equals(right);
 
     }
 
