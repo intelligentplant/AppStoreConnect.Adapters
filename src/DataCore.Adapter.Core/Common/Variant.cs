@@ -153,7 +153,9 @@ namespace DataCore.Adapter.Common {
             if (TryGetVariantType(valueType, out var variantType)) {
                 if (variantType == VariantType.ByteString) {
                     // Ensure that byte[] is explicitly converted to ByteString
-                    Value = (ByteString) value;
+                    Value = value is ByteString byteString
+                        ? byteString
+                        : new ByteString((byte[]) value);
                 }
                 else {
                     Value = value;
@@ -207,6 +209,14 @@ namespace DataCore.Adapter.Common {
             if (value == null) {
                 Value = null;
                 Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            if (value.Rank == 1 && value.GetType().GetElementType() == typeof(byte)) {
+                // Special case for byte[] - convert to ByteString
+                Value = new ByteString((byte[]) value);
+                Type = VariantType.ByteString;
                 ArrayDimensions = null;
                 return;
             }
@@ -955,7 +965,7 @@ namespace DataCore.Adapter.Common {
             }
 
             return arrayDimensions;
-        } 
+        }
 
 
         /// <summary>
@@ -979,15 +989,6 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (type.IsArray) {
-                var elementType = type.GetElementType();
-                if (elementType == null) {
-                    variantType = VariantType.Unknown;
-                    return false;
-                }
-                return VariantTypeMap.TryGetValue(elementType, out variantType);
-            }
-
             return VariantTypeMap.TryGetValue(type, out variantType);
         }
 
@@ -1008,7 +1009,16 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="type"/> is <see langword="null"/>.
         /// </exception>
         public static bool IsSupportedValueType(Type type) {
-            return TryGetVariantType(type, out var _);
+            if (TryGetVariantType(type, out _)) {
+                return true;
+            }
+
+            if (type.IsArray) {
+                var elementType = type.GetElementType();
+                return TryGetVariantType(elementType, out _);
+            }
+
+            return false;
         }
 
 
