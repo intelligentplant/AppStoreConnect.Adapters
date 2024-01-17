@@ -57,6 +57,19 @@ namespace DataCore.Adapter.Common {
 
 
         /// <inheritdoc/>
+        public static implicit operator Variant(ByteString val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ByteString(Variant val) => val.Value == null ? default : (ByteString) val.Value;
+
+        /// <inheritdoc/>
+        public static implicit operator Variant(ByteString[]? val) => new Variant(val);
+
+        /// <inheritdoc/>
+        public static explicit operator ByteString[]?(Variant val) => (ByteString[]?) val.Value;
+
+
+        /// <inheritdoc/>
         public static implicit operator Variant(short val) => new Variant(val);
 
         /// <inheritdoc/>

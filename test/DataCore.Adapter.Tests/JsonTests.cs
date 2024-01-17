@@ -101,6 +101,22 @@ namespace DataCore.Adapter.Tests {
         }
 
 
+        [DataTestMethod]
+        [DataRow(false, byte.MinValue)]
+        [DataRow(false, byte.MaxValue)]
+        [DataRow(false, byte.MinValue, byte.MaxValue)]
+        [DataRow(true, byte.MinValue, byte.MaxValue)]
+        public void Variant_ByteStringShouldRoundTrip(bool arrayTest, params byte[] values) {
+            var options = GetOptions();
+            if (arrayTest) {
+                VariantRoundTripTest(values.Select(x => new ByteString(new[] { x })).ToArray(), options);
+            }
+            else {
+                VariantRoundTripTest((ByteString) values, options);
+            }
+        }
+
+
         [TestMethod]
         public void Variant_DateTimeShouldRoundTrip() {
             var now = DateTime.UtcNow;

@@ -82,6 +82,10 @@ namespace DataCore.Adapter.NewtonsoftJson {
                     return isArray
                         ? new Variant(ReadArray<byte>(valueToken, arrayDimensions!, serializer))
                         : new Variant(valueToken.ToObject<byte>());
+                case VariantType.ByteString:
+                    return isArray
+                        ? new Variant(ReadArray<ByteString>(valueToken, arrayDimensions!, serializer))
+                        : new Variant(valueToken.ToObject<ByteString>());
                 case VariantType.DateTime:
                     return isArray
                         ? new Variant(ReadArray<DateTime>(valueToken, arrayDimensions!, serializer))

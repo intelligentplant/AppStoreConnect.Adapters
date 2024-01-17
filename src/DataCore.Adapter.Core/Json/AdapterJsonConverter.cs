@@ -14,13 +14,6 @@ namespace DataCore.Adapter.Json {
     internal abstract class AdapterJsonConverter<T> : JsonConverter<T> {
 
         /// <summary>
-        /// A flag indicating if <typeparamref name="T"/> is serliazed/deserialized as a JSON 
-        /// object.
-        /// </summary>
-        protected virtual bool SerializeAsObject { get; set; } = true;
-
-
-        /// <summary>
         /// Throws a <see cref="JsonException"/> to indicate that the JSON structure is invalid.
         /// </summary>
         protected void ThrowInvalidJsonError() {
