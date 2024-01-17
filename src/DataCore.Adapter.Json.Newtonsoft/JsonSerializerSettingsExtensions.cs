@@ -79,6 +79,7 @@ namespace DataCore.Adapter.NewtonsoftJson {
             converters.Add(new JsonElementConverter(jsonElementConverterOptions));
             converters.Add(new NullableJsonElementConverter(jsonElementConverterOptions));
             converters.Add(new VariantConverter());
+            converters.Add(new ByteStringConverter());
         }
 
     }

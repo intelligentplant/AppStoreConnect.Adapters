@@ -16,6 +16,7 @@ namespace DataCore.Adapter.Tests {
         [DataTestMethod]
         [DataRow(typeof(bool), typeof(bool[]), typeof(bool[,]), typeof(bool[,,]))]
         [DataRow(typeof(byte), typeof(byte[]), typeof(byte[,]), typeof(byte[,,]))]
+        [DataRow(typeof(ByteString), typeof(ByteString[]), typeof(ByteString[,]), typeof(ByteString[,,]))]
         [DataRow(typeof(DateTime), typeof(DateTime[]), typeof(DateTime[,]), typeof(DateTime[,,]))]
         [DataRow(typeof(double), typeof(double[]), typeof(double[,]), typeof(double[,,]))]
         [DataRow(typeof(EncodedObject), typeof(EncodedObject[]), typeof(EncodedObject[,]), typeof(EncodedObject[,,]))]
@@ -102,7 +103,7 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldAllowImplicitConversionFromByteArray() {
-            byte[] value = new byte [] { 255, 254 };
+            byte[] value = new byte[] { 255, 254 };
             Variant variant = value;
             ValidateVariant(variant, VariantType.Byte, value, new[] { value.Length });
         }
@@ -122,6 +123,46 @@ namespace DataCore.Adapter.Tests {
             byte[] value = new byte[] { 255, 254 };
             Variant variant = value;
             var actualValue = (byte[]) variant;
+            Assert.IsTrue(value.SequenceEqual(actualValue));
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromByteString() {
+            ByteString value = new byte[] { 255, 254 };
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.ByteString, value, null);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowImplicitConversionFromByteStringArray() {
+            ByteString[] value = {
+                (ByteString) new byte[] { 255, 254 },
+                (ByteString) new byte[] { 128, 127 }
+            };
+            Variant variant = value;
+            ValidateVariant(variant, VariantType.ByteString, value, new[] { value.Length });
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToByteString() {
+            ByteString value = new byte[] { 255, 254 };
+            Variant variant = value;
+            var actualValue = (ByteString) variant;
+            Assert.AreEqual(value, actualValue);
+        }
+
+
+        [TestMethod]
+        public void VariantShouldAllowExplicitConversionToByteStringArray() {
+            ByteString[] value = {
+                (ByteString) new byte[] { 255, 254 },
+                (ByteString) new byte[] { 128, 127 }
+            };
+            Variant variant = value;
+            var actualValue = (ByteString[]) variant;
             Assert.IsTrue(value.SequenceEqual(actualValue));
         }
 

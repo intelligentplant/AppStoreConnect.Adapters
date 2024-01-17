@@ -1,5 +1,9 @@
 ﻿#nullable enable
+DataCore.Adapter.NewtonsoftJson.ByteStringConverter
+DataCore.Adapter.NewtonsoftJson.ByteStringConverter.ByteStringConverter() -> void
 DataCore.Adapter.NewtonsoftJson.JsonElementConverter.JsonElementConverter(System.Text.Json.JsonSerializerOptions? options) -> void
 DataCore.Adapter.NewtonsoftJson.NullableJsonElementConverter.NullableJsonElementConverter(System.Text.Json.JsonSerializerOptions? options) -> void
+override DataCore.Adapter.NewtonsoftJson.ByteStringConverter.ReadJson(Newtonsoft.Json.JsonReader! reader, System.Type! objectType, DataCore.Adapter.Common.ByteString existingValue, bool hasExistingValue, Newtonsoft.Json.JsonSerializer! serializer) -> DataCore.Adapter.Common.ByteString
+override DataCore.Adapter.NewtonsoftJson.ByteStringConverter.WriteJson(Newtonsoft.Json.JsonWriter! writer, DataCore.Adapter.Common.ByteString value, Newtonsoft.Json.JsonSerializer! serializer) -> void
 static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this Newtonsoft.Json.JsonSerializerSettings! settings, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
 static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this System.Collections.Generic.ICollection<Newtonsoft.Json.JsonConverter!>! converters, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void

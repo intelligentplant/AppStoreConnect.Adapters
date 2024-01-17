@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Common {
         public static IReadOnlyDictionary<Type, VariantType> VariantTypeMap { get; } = new System.Collections.ObjectModel.ReadOnlyDictionary<Type, VariantType>(new Dictionary<Type, VariantType>() {
             [typeof(bool)] = VariantType.Boolean,
             [typeof(byte)] = VariantType.Byte,
+            [typeof(ByteString)] = VariantType.ByteString,
             [typeof(DateTime)] = VariantType.DateTime,
             [typeof(double)] = VariantType.Double,
             [typeof(EncodedObject)] = VariantType.ExtensionObject,
@@ -279,6 +280,43 @@ namespace DataCore.Adapter.Common {
 
             Value = value;
             Type = VariantType.Byte;
+            ArrayDimensions = GetArrayDimensions(value);
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified value.
+        /// </summary>
+        /// <param name="value">
+        ///   The value.
+        /// </param>
+        public Variant(ByteString value) {
+            Value = value;
+            Type = VariantType.ByteString;
+            ArrayDimensions = null;
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="Variant"/> instance with the specified array value.
+        /// </summary>
+        /// <param name="value">
+        ///   The array value.
+        /// </param>
+        /// <remarks>
+        ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
+        ///   will be equal to <see cref="Null"/>.
+        /// </remarks>
+        public Variant(ByteString[]? value) {
+            if (value == null) {
+                Value = null;
+                Type = VariantType.Null;
+                ArrayDimensions = null;
+                return;
+            }
+
+            Value = value;
+            Type = VariantType.ByteString;
             ArrayDimensions = GetArrayDimensions(value);
         }
 
@@ -1085,7 +1123,6 @@ namespace DataCore.Adapter.Common {
             if (Value is string s) {
                 return s;
             }
-
             if (Value is Array a) {
                 return a.ToString();
             }
@@ -1189,6 +1226,10 @@ namespace DataCore.Adapter.Common {
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<byte>(valueElement, arrayDimensions!, options))
                         : valueElement.Deserialize<byte>(options);
+                case VariantType.ByteString:
+                    return isArray
+                        ? new Variant(JsonExtensions.ReadArray<ByteString>(valueElement, arrayDimensions!, options))
+                        : valueElement.Deserialize<ByteString>(options);
                 case VariantType.DateTime:
                     return isArray
                         ? new Variant(JsonExtensions.ReadArray<DateTime>(valueElement, arrayDimensions!, options))
