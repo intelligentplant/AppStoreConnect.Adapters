@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Common {
         public static IReadOnlyDictionary<Type, VariantType> VariantTypeMap { get; } = new System.Collections.ObjectModel.ReadOnlyDictionary<Type, VariantType>(new Dictionary<Type, VariantType>() {
             [typeof(bool)] = VariantType.Boolean,
             [typeof(byte)] = VariantType.Byte,
+            [typeof(byte[])] = VariantType.ByteString,
             [typeof(ByteString)] = VariantType.ByteString,
             [typeof(DateTime)] = VariantType.DateTime,
             [typeof(double)] = VariantType.Double,
@@ -147,22 +148,30 @@ namespace DataCore.Adapter.Common {
                 return;
             }
 
-            VariantType variantType;
-            int[]? arrayDimensions = null;
+            var valueType = value.GetType();
 
-            if (value is Array a) {
-                GetArraySettings(a, out variantType, out arrayDimensions);
-            }
-            else {
-                var valueType = value.GetType();
-                if (!TryGetVariantType(valueType, out variantType)) {
-                    throw new ArgumentOutOfRangeException(nameof(value), valueType, SharedResources.Error_TypeIsUnsupported);
+            if (TryGetVariantType(valueType, out var variantType)) {
+                if (variantType == VariantType.ByteString) {
+                    // Ensure that byte[] is explicitly converted to ByteString
+                    Value = (ByteString) value;
                 }
+                else {
+                    Value = value;
+                }
+                Type = variantType;
+                ArrayDimensions = null;
+                return;
+            }
+            
+            if (value is Array arr) {
+                GetArraySettings(arr, out variantType, out var arrayDimensions);
+                Value = value;
+                Type = variantType;
+                ArrayDimensions = arrayDimensions;
+                return;
             }
 
-            Value = value;
-            Type = variantType;
-            ArrayDimensions = arrayDimensions;
+            throw new ArgumentOutOfRangeException(nameof(value), valueType, SharedResources.Error_TypeIsUnsupported);
         }
 
 
@@ -267,21 +276,20 @@ namespace DataCore.Adapter.Common {
         ///   The array value.
         /// </param>
         /// <remarks>
+        /// 
+        /// <para>
         ///   If <paramref name="value"/> is <see langword="null"/>, the <see cref="Variant"/> 
         ///   will be equal to <see cref="Null"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   Unlike with other <see cref="Variant"/> constructors that accept an array value, this 
+        ///   constructor converts the <paramref name="value"/> to a <see cref="ByteString"/> and 
+        ///   sets the <see cref="ArrayDimensions"/> of the <see cref="Variant"/> to <see langword="null"/>.
+        /// </para>
+        /// 
         /// </remarks>
-        public Variant(byte[]? value) {
-            if (value == null) {
-                Value = null;
-                Type = VariantType.Null;
-                ArrayDimensions = null;
-                return;
-            }
-
-            Value = value;
-            Type = VariantType.Byte;
-            ArrayDimensions = GetArrayDimensions(value);
-        }
+        public Variant(byte[]? value) : this((ByteString) value) { }
 
 
         /// <summary>
@@ -1041,10 +1049,6 @@ namespace DataCore.Adapter.Common {
                 return v;
             }
 
-            if (value is Array a) {
-                return new Variant(a);
-            }
-
             return new Variant(value);
         }
 
@@ -1311,7 +1315,7 @@ namespace DataCore.Adapter.Common {
             if (value.Value == null) {
                 WriteNullPropertyValue(writer, nameof(Variant.Value), options);
             }
-            else if (value.Value is Array arr) {
+            else if (value.Value is Array arr && value.ArrayDimensions != null) {
                 writer.WritePropertyName(ConvertPropertyName(nameof(Variant.Value), options));
                 JsonExtensions.WriteArray(writer, arr, options);
             }
