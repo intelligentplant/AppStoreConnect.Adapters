@@ -15,7 +15,8 @@ DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.PageSize.set -> void
 DataCore.Adapter.Common.ByteString
 DataCore.Adapter.Common.ByteString.Bytes.get -> System.ReadOnlyMemory<byte>
 DataCore.Adapter.Common.ByteString.ByteString() -> void
-DataCore.Adapter.Common.ByteString.ByteString(byte[]! bytes) -> void
+DataCore.Adapter.Common.ByteString.ByteString(byte[]? bytes) -> void
+DataCore.Adapter.Common.ByteString.ByteString(string! base64) -> void
 DataCore.Adapter.Common.ByteString.ByteString(System.ReadOnlyMemory<byte> bytes) -> void
 DataCore.Adapter.Common.ByteString.Equals(DataCore.Adapter.Common.ByteString other) -> bool
 DataCore.Adapter.Common.ByteString.IsEmpty.get -> bool
@@ -51,9 +52,12 @@ override DataCore.Adapter.Common.FindAdaptersRequest.Validate(System.ComponentMo
 override DataCore.Adapter.DataValidation.MaxUriLengthAttribute.FormatErrorMessage(string! name) -> string!
 static DataCore.Adapter.Common.ByteString.Empty.get -> DataCore.Adapter.Common.ByteString
 static DataCore.Adapter.Common.ByteString.implicit operator byte[]!(DataCore.Adapter.Common.ByteString bytes) -> byte[]!
-static DataCore.Adapter.Common.ByteString.implicit operator DataCore.Adapter.Common.ByteString(byte[]! bytes) -> DataCore.Adapter.Common.ByteString
+static DataCore.Adapter.Common.ByteString.implicit operator DataCore.Adapter.Common.ByteString(byte[]? bytes) -> DataCore.Adapter.Common.ByteString
 static DataCore.Adapter.Common.ByteString.implicit operator DataCore.Adapter.Common.ByteString(System.ReadOnlyMemory<byte> bytes) -> DataCore.Adapter.Common.ByteString
 static DataCore.Adapter.Common.ByteString.implicit operator System.ReadOnlyMemory<byte>(DataCore.Adapter.Common.ByteString bytes) -> System.ReadOnlyMemory<byte>
+static DataCore.Adapter.Common.ByteString.operator !=(DataCore.Adapter.Common.ByteString left, DataCore.Adapter.Common.ByteString right) -> bool
+static DataCore.Adapter.Common.ByteString.operator ==(DataCore.Adapter.Common.ByteString left, DataCore.Adapter.Common.ByteString right) -> bool
+static DataCore.Adapter.Common.ByteString.TryParse(string? base64, out DataCore.Adapter.Common.ByteString result) -> bool
 static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.ByteString(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.ByteString
 static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.ByteString[]?(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.ByteString[]?
 static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(DataCore.Adapter.Common.ByteString val) -> DataCore.Adapter.Common.Variant
