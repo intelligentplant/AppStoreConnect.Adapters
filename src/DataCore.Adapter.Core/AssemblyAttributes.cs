@@ -7,3 +7,6 @@
 // DataCore.Adapter.Json is allowed to use internals from this assembly so that it can correctly 
 // deserialize Variant instances.
 [assembly: InternalsVisibleTo("DataCore.Adapter.Json")]
+
+// Unit tests are allowed to use internals from this assembly.
+[assembly: InternalsVisibleTo("DataCore.Adapter.Tests")]
