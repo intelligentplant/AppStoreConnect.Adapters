@@ -41,7 +41,16 @@ namespace DataCore.Adapter.Tests {
 
         private static void ValidateVariant(Variant variant, VariantType expectedType, object expectedValue, int[] expectedArrayDimensions) {
             Assert.AreEqual(expectedType, variant.Type);
-            if (expectedValue is Array arr) {
+
+            if (expectedValue is byte[] bytes && expectedType != VariantType.SByte) {
+                // Special handling for when the expected value is byte[] as this will be treated
+                // as a ByteString by the Variant constructor. We ensure that we are not expecting
+                // the variant type to be SByte because "expectedValue is byte[]" returns true for
+                // both byte[] and sbyte[].
+                Assert.IsNull(variant.ArrayDimensions);
+                Assert.AreEqual((ByteString) bytes, variant.Value);
+            }
+            else if (expectedValue is Array arr) {
                 Assert.IsTrue(expectedArrayDimensions.SequenceEqual(variant.ArrayDimensions));
                 Assert.AreEqual(arr.Rank, variant.ArrayDimensions!.Length);
 
@@ -104,8 +113,9 @@ namespace DataCore.Adapter.Tests {
         [TestMethod]
         public void VariantShouldAllowImplicitConversionFromByteArray() {
             byte[] value = new byte[] { 255, 254 };
+            // byte[] will be treated as a ByteString by the Variant constructor
             Variant variant = value;
-            ValidateVariant(variant, VariantType.Byte, value, new[] { value.Length });
+            ValidateVariant(variant, VariantType.ByteString, value, null);
         }
 
 
