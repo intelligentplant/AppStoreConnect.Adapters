@@ -368,11 +368,6 @@ DataCore.Adapter.RealTimeData.Utilities.AggregationHelper.GetAggregatedValues(Sy
 DataCore.Adapter.RealTimeData.Utilities.AggregationHelper.GetSupportedDataFunctions() -> System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.DataFunctionDescriptor!>!
 DataCore.Adapter.RealTimeData.Utilities.AggregationHelper.RegisterDataFunction(DataCore.Adapter.RealTimeData.DataFunctionDescriptor! descriptor, DataCore.Adapter.RealTimeData.Utilities.AggregateCalculator! calculator) -> bool
 DataCore.Adapter.RealTimeData.Utilities.AggregationHelper.UnregisterDataFunction(string! functionId) -> bool
-DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo
-DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo.BestQualityValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
-DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo.BoundaryInfo() -> void
-DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo.BoundaryStatus.get -> DataCore.Adapter.RealTimeData.TagValueStatus
-DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo.ClosestValue.get -> DataCore.Adapter.RealTimeData.TagValueExtended?
 DataCore.Adapter.RealTimeData.Utilities.CommonTagValuePropertyNames
 DataCore.Adapter.RealTimeData.Utilities.InterpolationCalculationType
 DataCore.Adapter.RealTimeData.Utilities.InterpolationCalculationType.Interpolate = 0 -> DataCore.Adapter.RealTimeData.Utilities.InterpolationCalculationType
@@ -387,10 +382,8 @@ DataCore.Adapter.RealTimeData.Utilities.PlotValue.PlotValue(DataCore.Adapter.Rea
 DataCore.Adapter.RealTimeData.Utilities.PlotValue.Sample.get -> DataCore.Adapter.RealTimeData.TagValueExtended!
 DataCore.Adapter.RealTimeData.Utilities.PlotValueSelector
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket
-DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.EndBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo!
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.RawSampleCount.get -> int
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.RawSamples.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.TagValueExtended!>!
-DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.StartBoundary.get -> DataCore.Adapter.RealTimeData.Utilities.BoundaryInfo!
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.TagValueBucket(System.DateTime utcBucketStart, System.DateTime utcBucketEnd, System.DateTime utcQueryStart, System.DateTime utcQueryEnd) -> void
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.UtcBucketEnd.get -> System.DateTime
 DataCore.Adapter.RealTimeData.Utilities.TagValueBucket.UtcBucketStart.get -> System.DateTime

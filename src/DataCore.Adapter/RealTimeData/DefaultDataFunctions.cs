@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+
 using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
