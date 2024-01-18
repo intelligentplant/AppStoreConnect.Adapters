@@ -179,7 +179,7 @@ namespace DataCore.Adapter.AssetModel {
             // "nodes" key contains an array of the defined node IDs.
             var readResult = _keyValueStore == null 
                 ? null 
-                : await _keyValueStore.ReadJsonAsync<string[]>("nodes").ConfigureAwait(false);
+                : await _keyValueStore.ReadAsync<string[]>("nodes").ConfigureAwait(false);
             
             if (cancellationToken.IsCancellationRequested) {
                 return;
@@ -198,7 +198,7 @@ namespace DataCore.Adapter.AssetModel {
                     }
 
                     // "nodes:{id}" key contains the the definition with ID {id}.
-                    var nodeReadResult = await _keyValueStore!.ReadJsonAsync<AssetModelNode>(string.Concat("nodes:", nodeId)).ConfigureAwait(false);
+                    var nodeReadResult = await _keyValueStore!.ReadAsync<AssetModelNode>(string.Concat("nodes:", nodeId)).ConfigureAwait(false);
                     if (nodeReadResult == null) {
                         continue;
                     }
@@ -353,7 +353,7 @@ namespace DataCore.Adapter.AssetModel {
             try {
                 if (_keyValueStore != null) {
                     // "nodes:{id}" key contains the definition with ID {id}.
-                    await _keyValueStore.WriteJsonAsync(string.Concat("nodes:", node.Id), node).ConfigureAwait(false);
+                    await _keyValueStore.WriteAsync(string.Concat("nodes:", node.Id), node).ConfigureAwait(false);
                 }
 
                 // Flags if the keys in _nodesById have been modified by this operation. We will
@@ -372,7 +372,7 @@ namespace DataCore.Adapter.AssetModel {
                 if (indexHasChanged) {
                     if (_keyValueStore != null) {
                         // "nodes" key contains an array of the defined node IDs.
-                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
+                        await _keyValueStore.WriteAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
                     }
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
                 }
@@ -488,7 +488,7 @@ namespace DataCore.Adapter.AssetModel {
 
                     if (_keyValueStore != null) {
                         // "nodes" key contains an array of the defined node IDs.
-                        await _keyValueStore.WriteJsonAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
+                        await _keyValueStore.WriteAsync("nodes", _nodesById.Keys.ToArray()).ConfigureAwait(false);
                     }
 
                     await OnConfigurationChangeAsync(node, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);

@@ -1,1 +1,10 @@
 ﻿#nullable enable
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.FileSystemKeyValueStore(DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? logger = null) -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.WriteBuffer.get -> DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions!
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.WriteBuffer.set -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.Enabled.get -> bool
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.Enabled.set -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.FileSystemKeyValueStoreWriteBufferOptions() -> void

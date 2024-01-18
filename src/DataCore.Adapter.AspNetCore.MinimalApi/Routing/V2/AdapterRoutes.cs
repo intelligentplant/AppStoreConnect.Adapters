@@ -22,11 +22,11 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 .Produces<IAsyncEnumerable<AdapterDescriptor>>()
                 .ProducesValidationProblem();
 
-            builder.MapGet("/{adapterId}", GetAdapterAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", GetAdapterAsync)
                 .Produces<AdapterDescriptorExtended>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/health-status", CheckAdapterHealthAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/health-status", CheckAdapterHealthAsync)
                 .Produces<HealthCheckResult>()
                 .ProducesDefaultErrors();
         }
@@ -67,11 +67,6 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             }
 
             var callContext = new HttpAdapterCallContext(context);
-            if (request.PageSize > 100) {
-                // Don't allow arbitrarily large queries!
-                request.PageSize = 100;
-            }
-
             var adapters = adapterAccessor.FindAdapters(callContext, request, cancellationToken);
             return Results.Ok(adapters.Transform(adapter => adapter.Descriptor, cancellationToken));
         }
@@ -83,12 +78,13 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
             string adapterId,
             CancellationToken cancellationToken = default
         ) {
-            var resolverResult = await Utils.ResolveAdapterAsync<IHealthCheck>(context, adapterAccessor, adapterId, cancellationToken).ConfigureAwait(false);
-            if (resolverResult.Error != null) {
-                return resolverResult.Error;
+            var callContext = new HttpAdapterCallContext(context);
+            var descriptor = await adapterAccessor.GetAdapterDescriptorAsync(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (descriptor == null) {
+                return Utils.CreateAdapterNotFoundResult(callContext, adapterId);
             }
 
-            return Results.Ok(resolverResult.Adapter.CreateExtendedAdapterDescriptor());
+            return Results.Ok(descriptor);
         }
 
 

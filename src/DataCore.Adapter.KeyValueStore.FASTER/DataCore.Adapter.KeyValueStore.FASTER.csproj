@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net48;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
     <RootNamespace>DataCore.Adapter.KeyValueStore.FASTER</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.KeyValueStore.FASTER</PackageId>
     <Description>Key-value store for App Store Connect adapters using Microsoft FASTER.</Description>
@@ -10,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.FASTER.Core" />
+    <PackageReference Include="System.Threading.Channels" />
   </ItemGroup>
 
   <ItemGroup>

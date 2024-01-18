@@ -33,7 +33,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             string adapterId,
             Uri featureUri
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             if (featureUri == null || !featureUri.IsAbsoluteUri) {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri), nameof(featureUri));
@@ -73,7 +73,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             string adapterId,
             Uri featureUri
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             if (featureUri == null || !featureUri.IsAbsoluteUri) {
                 throw new ArgumentException(string.Format(adapterCallContext.CultureInfo, Resources.Error_UnsupportedInterface, featureUri), nameof(featureUri));
@@ -115,7 +115,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             string adapterId, 
             InvocationRequest request
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             ValidateObject(request);
 
             var operationId = request.OperationId.EnsurePathHasTrailingSlash();
@@ -160,7 +160,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             ValidateObject(request);
 
             var operationId = request.OperationId.EnsurePathHasTrailingSlash();
@@ -207,7 +207,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             ValidateObject(request);
 
             var operationId = request.OperationId.EnsurePathHasTrailingSlash();

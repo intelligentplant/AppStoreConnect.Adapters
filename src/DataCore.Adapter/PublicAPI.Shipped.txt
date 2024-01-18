@@ -110,7 +110,6 @@ DataCore.Adapter.DefaultAdapterCallContext
 DataCore.Adapter.DefaultAdapterCallContext.ConnectionId.get -> string!
 DataCore.Adapter.DefaultAdapterCallContext.CorrelationId.get -> string!
 DataCore.Adapter.DefaultAdapterCallContext.CultureInfo.get -> System.Globalization.CultureInfo!
-DataCore.Adapter.DefaultAdapterCallContext.DefaultAdapterCallContext(System.Security.Claims.ClaimsPrincipal? user = null, string? connectionId = null, string? correlationId = null, System.Globalization.CultureInfo? cultureInfo = null) -> void
 DataCore.Adapter.DefaultAdapterCallContext.Items.get -> System.Collections.Generic.IDictionary<object!, object?>!
 DataCore.Adapter.DefaultAdapterCallContext.User.get -> System.Security.Claims.ClaimsPrincipal?
 DataCore.Adapter.DefaultRetryPolicy

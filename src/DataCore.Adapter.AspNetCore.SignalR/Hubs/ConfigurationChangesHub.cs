@@ -33,7 +33,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IConfigurationChanges>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 

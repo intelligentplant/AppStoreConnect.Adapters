@@ -4,8 +4,6 @@ abstract DataCore.Adapter.AdapterCore.StopAsyncCore(System.Threading.Cancellatio
 abstract DataCore.Adapter.Services.KeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 abstract DataCore.Adapter.Services.KeyValueStore.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
 abstract DataCore.Adapter.Services.KeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-abstract DataCore.Adapter.Services.KeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-abstract DataCore.Adapter.Services.KeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 const DataCore.Adapter.AdapterCallContextExtensions.ValidateRequestsItemName = "adapter:validate-request-objects" -> string!
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterDisposed = 4 -> int
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterOperationCompleted = 6 -> int
@@ -17,17 +15,6 @@ const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItem
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItemOut = 8 -> int
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterUpdated = 3 -> int
 const DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName = "IntelligentPlant.AppStoreConnect.Adapter" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdAverage = "AVG" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdCount = "COUNT" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdDelta = "DELTA" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdInterpolate = "INTERP" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMaximum = "MAX" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMinimum = "MIN" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentBad = "PERCENTBAD" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentGood = "PERCENTGOOD" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdRange = "RANGE" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdStandardDeviation = "STDDEV" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdVariance = "VARIANCE" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelBrowse = "asc:features/asset-model/browse/" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelSearch = "asc:features/asset-model/search/" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.BaseUri = "asc:features/asset-model/" -> string!
@@ -230,8 +217,6 @@ DataCore.Adapter.IAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.Hos
 DataCore.Adapter.IBackgroundTaskServiceProvider
 DataCore.Adapter.IBackgroundTaskServiceProvider.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.MethodInfoUtil
-DataCore.Adapter.RealTimeData.DefaultDataFunctions
-DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants
 DataCore.Adapter.RealTimeData.IReadPlotTagValues
 DataCore.Adapter.RealTimeData.IReadPlotTagValues.ReadPlotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
 DataCore.Adapter.RealTimeData.IReadProcessedTagValues
@@ -259,11 +244,8 @@ DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations.UpdateAnnotation(DataCor
 DataCore.Adapter.Services.IKeyValueStore
 DataCore.Adapter.Services.IKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.Services.IKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-DataCore.Adapter.Services.IKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-DataCore.Adapter.Services.IKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Services.InMemoryKeyValueStore
 DataCore.Adapter.Services.InMemoryKeyValueStore.Dispose() -> void
-DataCore.Adapter.Services.InMemoryKeyValueStore.InMemoryKeyValueStore(System.IO.Compression.CompressionLevel compressionLevel = System.IO.Compression.CompressionLevel.NoCompression) -> void
 DataCore.Adapter.Services.KeyValueStore
 DataCore.Adapter.Services.KeyValueStore.ConvertBytesToHexString(byte[]! bytes) -> string!
 DataCore.Adapter.Services.KeyValueStore.ConvertHexStringToBytes(string! hexString) -> byte[]!
@@ -283,12 +265,6 @@ DataCore.Adapter.Services.KVKey.KVKey() -> void
 DataCore.Adapter.Services.KVKey.KVKey(byte[]? value) -> void
 DataCore.Adapter.Services.KVKey.Length.get -> int
 DataCore.Adapter.Services.KVKey.Value.get -> byte[]!
-DataCore.Adapter.Services.ScopedKeyValueStore
-DataCore.Adapter.Services.ScopedKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
-DataCore.Adapter.Services.ScopedKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-DataCore.Adapter.Services.ScopedKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-DataCore.Adapter.Services.ScopedKeyValueStore.ScopedKeyValueStore(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.IKeyValueStore! inner) -> void
-DataCore.Adapter.Services.ScopedKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Tags.ITagConfiguration
 DataCore.Adapter.Tags.ITagConfiguration.CreateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.CreateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Tags.ITagConfiguration.DeleteTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.DeleteTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
@@ -313,7 +289,6 @@ DataCore.Adapter.WellKnownFeatures.Events
 DataCore.Adapter.WellKnownFeatures.Extensions
 DataCore.Adapter.WellKnownFeatures.RealTimeData
 DataCore.Adapter.WellKnownFeatures.Tags
-override DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
 override DataCore.Adapter.Services.KVKey.Equals(object! obj) -> bool
 override DataCore.Adapter.Services.KVKey.GetHashCode() -> int
 static DataCore.Adapter.AdapterCallContextExtensions.SetItem<TKey, TValue>(this DataCore.Adapter.IAdapterCallContext! context, TKey key, TValue? value) -> void
@@ -393,18 +368,6 @@ static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2>(System.Func<T1, T2>
 static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Action<T>! func) -> System.Reflection.MethodInfo?
 static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Func<T>! func) -> System.Reflection.MethodInfo?
 static DataCore.Adapter.MethodInfoUtil.TryGetInterfaceMethodDeclaration(System.Reflection.MethodInfo? method, out System.Reflection.MethodInfo? interfaceMethod) -> bool
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Average.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Count.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Delta.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.FindById(string! id) -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor?
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Interpolate.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Maximum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Minimum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentBad.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentGood.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Range.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.StandardDeviation.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Variance.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
 static DataCore.Adapter.Services.KeyValueStore.AddPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
 static DataCore.Adapter.Services.KeyValueStore.RemovePrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
 static DataCore.Adapter.Services.KeyValueStore.StartsWithPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> bool
@@ -468,36 +431,6 @@ virtual DataCore.Adapter.AdapterCore.ValidateInvocationParameter(object! paramet
 ~static DataCore.Adapter.AbstractionsResources.Category_Tags.get -> string
 ~static DataCore.Adapter.AbstractionsResources.Culture.get -> System.Globalization.CultureInfo
 ~static DataCore.Adapter.AbstractionsResources.Culture.set -> void
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Avg_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Avg_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Count_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Count_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Delta_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Delta_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Interp_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Interp_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Max_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Max_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Min_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Min_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_PercentBad_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_PercentBad_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_PercentGood_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_PercentGood_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_StatusCalculation.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_StatusCalculation_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_StatusCalculation_ValueWorstCase.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_TimestampCalculation.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_TimestampCalculation_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMaximum.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Property_TimestampCalculation_ValueMinimum.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Range_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Range_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_StandardDeviation_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_StandardDeviation_Name.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Variance_Description.get -> string
-~static DataCore.Adapter.AbstractionsResources.DataFunction_Variance_Name.get -> string
 ~static DataCore.Adapter.AbstractionsResources.Description_AssetModelBrowse.get -> string
 ~static DataCore.Adapter.AbstractionsResources.Description_AssetModelSearch.get -> string
 ~static DataCore.Adapter.AbstractionsResources.Description_ConfigurationChanges.get -> string

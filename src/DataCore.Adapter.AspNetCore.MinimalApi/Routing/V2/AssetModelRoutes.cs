@@ -1,5 +1,6 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
 using DataCore.Adapter.AssetModel;
+using DataCore.Adapter.Common;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -9,23 +10,23 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class AssetModelRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}/browse", BrowseNodesGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/browse", BrowseNodesGetAsync)
                 .Produces<IAsyncEnumerable<AssetModelNode>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/browse", BrowseNodesPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/browse", BrowseNodesPostAsync)
                 .Produces<IAsyncEnumerable<AssetModelNode>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/get-by-id", GetNodesGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/get-by-id", GetNodesGetAsync)
                 .Produces<IAsyncEnumerable<AssetModelNode>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/get-by-id", GetNodesPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/get-by-id", GetNodesPostAsync)
                 .Produces<IAsyncEnumerable<AssetModelNode>>()
                 .ProducesDefaultErrors();
             
-            builder.MapPost("/{adapterId}/find", FindNodesAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/find", FindNodesAsync)
                 .Produces<IAsyncEnumerable<AssetModelNode>>()
                 .ProducesDefaultErrors();
         }

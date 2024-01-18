@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -54,7 +55,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="AdapterProperty"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/properties")]
+        [Route("{adapterId:maxlength(200)}/properties")]
         [ProducesResponseType(typeof(IAsyncEnumerable<AdapterProperty>), 200)]
         public async Task<IActionResult> GetTagProperties(string adapterId, GetTagPropertiesRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -99,14 +100,15 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/properties")]
+        [Route("{adapterId:maxlength(200)}/properties")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
-        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTagProperties(string adapterId, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
-            return await GetTagProperties(adapterId, new GetTagPropertiesRequest() {
+            var request = new GetTagPropertiesRequest() {
                 PageSize = pageSize,
                 Page = page
-            }, cancellationToken).ConfigureAwait(false);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return await GetTagProperties(adapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -126,8 +128,8 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/find")]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}/find")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> FindTags(string adapterId, FindTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -181,18 +183,19 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a collection of <see cref="TagDefinition"/> objects.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/find")]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}/find")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
-        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> FindTags(string adapterId, string? name = null, string? description = null, string? units = null, int pageSize = 10, int page = 1, CancellationToken cancellationToken = default) {
-            return await FindTags(adapterId, new FindTagsRequest() {
+            var request = new FindTagsRequest() {
                 Name = name,
                 Description = description,
                 Units = units,
                 PageSize = pageSize,
                 Page = page
-            }, cancellationToken).ConfigureAwait(false);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return await FindTags(adapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -213,7 +216,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/get-by-id")]
+        [Route("{adapterId:maxlength(200)}/get-by-id")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
         public async Task<IActionResult> GetTags(string adapterId, GetTagsRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -255,13 +258,14 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   objects.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/get-by-id")]
+        [Route("{adapterId:maxlength(200)}/get-by-id")]
         [ProducesResponseType(typeof(IAsyncEnumerable<TagDefinition>), 200)]
-        [UseAdapterRequestValidation(true)]
         public async Task<IActionResult> GetTags(string adapterId, [FromQuery] string[] tag, CancellationToken cancellationToken) {
-            return await GetTags(adapterId, new GetTagsRequest() {
+            var request = new GetTagsRequest() {
                 Tags = tag
-            }, cancellationToken).ConfigureAwait(false);
+            };
+            Validator.ValidateObject(request, new ValidationContext(request), true);
+            return await GetTags(adapterId, request, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -279,7 +283,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   model.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/schema")]
+        [Route("{adapterId:maxlength(200)}/schema")]
         [ProducesResponseType(typeof(System.Text.Json.JsonElement), 200)]
         public async Task<IActionResult> GetTagSchema(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -322,7 +326,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the created <see cref="TagDefinition"/> object.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/create")]
+        [Route("{adapterId:maxlength(200)}/create")]
         [ProducesResponseType(typeof(TagDefinition), 200)]
         public async Task<IActionResult> CreateTag(string adapterId, CreateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -372,7 +376,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain the updated <see cref="TagDefinition"/> object.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/update")]
+        [Route("{adapterId:maxlength(200)}/update")]
         [ProducesResponseType(typeof(TagDefinition), 200)]
         public async Task<IActionResult> UpdateTag(string adapterId, UpdateTagRequest request, [FromServices] Microsoft.Extensions.Options.IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
@@ -419,7 +423,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   Successful responses contain a Boolean value indicating if the tag was deleted.
         /// </returns>
         [HttpPost]
-        [Route("{adapterId}/delete")]
+        [Route("{adapterId:maxlength(200)}/delete")]
         [ProducesResponseType(typeof(bool), 200)]
         public async Task<IActionResult> DeleteTag(string adapterId, DeleteTagRequest request, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);

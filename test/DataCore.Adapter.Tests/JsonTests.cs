@@ -11,6 +11,7 @@ using DataCore.Adapter.Json;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
+using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -41,7 +42,7 @@ namespace DataCore.Adapter.Tests {
         private void VariantRoundTripTest<T>(T value, JsonSerializerOptions options) {
             var variant = Variant.FromValue(value);
             var json = JsonSerializer.Serialize(variant, options);
-            
+
             var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
             Assert.AreEqual(variant.Type, deserialized.Type);
 
@@ -97,6 +98,22 @@ namespace DataCore.Adapter.Tests {
             }
             else {
                 VariantRoundTripTest(values, options);
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(false, byte.MinValue)]
+        [DataRow(false, byte.MaxValue)]
+        [DataRow(false, byte.MinValue, byte.MaxValue)]
+        [DataRow(true, byte.MinValue, byte.MaxValue)]
+        public void Variant_ByteStringShouldRoundTrip(bool arrayTest, params byte[] values) {
+            var options = GetOptions();
+            if (arrayTest) {
+                VariantRoundTripTest(values.Select(x => new ByteString(new[] { x })).ToArray(), options);
+            }
+            else {
+                VariantRoundTripTest((ByteString) values, options);
             }
         }
 
@@ -201,7 +218,7 @@ namespace DataCore.Adapter.Tests {
             var options = GetOptions();
             JsonElement ToJsonElement(string json) => JsonSerializer.Deserialize<JsonElement>(json, options);
 
-            
+
             if (values.Length == 1) {
                 VariantRoundTripTest(ToJsonElement(values[0]), options);
             }
@@ -315,27 +332,41 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void Variant_MultidimensionalArrayShouldRoundTrip() {
-            var arr3d = new int[,,] { 
-                { 
-                    { 1, 2, 3 }, 
-                    { 4, 5, 6 } 
-                }, 
-                { 
-                    { 7, 8, 9 }, 
-                    { 10, 11, 12 } 
-                }, 
-                { 
-                    { 13, 14, 15 }, 
-                    { 16, 17, 18 } 
-                }, 
-                { 
-                    { 19, 20, 21 }, 
-                    { 22, 23, 24 } 
-                } 
+            var arr3d = new int[,,] {
+                {
+                    { 1, 2, 3 },
+                    { 4, 5, 6 }
+                },
+                {
+                    { 7, 8, 9 },
+                    { 10, 11, 12 }
+                },
+                {
+                    { 13, 14, 15 },
+                    { 16, 17, 18 }
+                },
+                {
+                    { 19, 20, 21 },
+                    { 22, 23, 24 }
+                }
             };
 
             VariantRoundTripTest(arr3d, GetOptions());
 
+        }
+
+
+        [TestMethod]
+        public void Variant_LegacyByteArrayShouldDeserializeAsByteString() {
+            var variant = new Variant(new byte[] { 0, 127, 136, 254 }, VariantType.Byte, new[] { 4 });
+            var options = GetOptions();
+
+            var json = JsonSerializer.Serialize(variant, options);
+
+            var deserialized = JsonSerializer.Deserialize<Variant>(json, options);
+
+            Assert.AreEqual(VariantType.ByteString, deserialized.Type);
+            Assert.AreEqual(new ByteString((byte[]) variant.Value), (ByteString) deserialized.Value);
         }
 
 

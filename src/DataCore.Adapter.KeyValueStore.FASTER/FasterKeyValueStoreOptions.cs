@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 using FASTER.core;
 
@@ -10,6 +11,16 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
     public class FasterKeyValueStoreOptions : Services.KeyValueStoreOptions {
 
         /// <summary>
+        /// The name for the <see cref="FasterKeyValueStore"/> instance.
+        /// </summary>
+        /// <remarks>
+        ///   The name is used to identify the store in telemetry data. If not specified, a 
+        ///   default name will be used.
+        /// </remarks>
+        [MaxLength(50)]
+        public string? Name { get; set; }
+
+        /// <summary>
         /// Specifies if the <see cref="FasterKeyValueStore"/> is read-only.
         /// </summary>
         /// <remarks>
@@ -19,6 +30,15 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   and <see cref="CheckpointInterval"/> properties.
         /// </remarks>
         public bool ReadOnly { get; set; }
+
+        /// <summary>
+        /// When <see langword="true"/>, enables the use of <see cref="Services.IRawKeyValueStore.WriteRawAsync"/> 
+        /// to write raw byte data to the store.
+        /// </summary>
+        /// <remarks>
+        ///   Attempting a raw write will throw an exception if this property is <see langword="false"/>.
+        /// </remarks>
+        public bool EnableRawWrites { get; set; }
 
         /// <summary>
         /// A factory for creating an <see cref="IDevice"/> for use with the FASTER log.
@@ -86,15 +106,34 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         public int SegmentSizeBits { get; set; } = 27;
 
         /// <summary>
-        /// The interval at which log checkpoints will be saved to <see cref="ICheckpointManager"/> 
-        /// created by <see cref="CheckpointManagerFactory"/>.
+        /// The interval at which full (index + log) checkpoints will be saved to <see cref="ICheckpointManager"/> 
         /// </summary>
         /// <remarks>
-        ///   Note that checkpoints will not be created if no <see cref="ICheckpointManager"/> is 
-        ///   supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="CheckpointInterval"/> 
+        ///   Note that full checkpoints will not be created if no <see cref="ICheckpointManager"/> 
+        ///   is supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="CheckpointInterval"/> 
         ///   is <see langword="null"/> or less than or equal to <see cref="TimeSpan.Zero"/>.
         /// </remarks>
         public TimeSpan? CheckpointInterval { get; set; }
+
+        /// <summary>
+        /// The interval at which incremental log checkpoints will be saved to <see cref="ICheckpointManager"/> 
+        /// </summary>
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   Note that incremental checkpoints will not be created if no <see cref="ICheckpointManager"/> 
+        ///   is supplied by <see cref="CheckpointManagerFactory"/>, or if <see cref="IncrementalCheckpointInterval"/> 
+        ///   is <see langword="null"/> or less than or equal to <see cref="TimeSpan.Zero"/>.
+        /// </para>
+        /// 
+        /// <para>
+        ///   When both full and incremental checkpoints are enabled, the <see cref="IncrementalCheckpointInterval"/> 
+        ///   should be configured so that incremental checkpoints are taken more frequently than 
+        ///   full checkpoints.
+        /// </para>
+        /// 
+        /// </remarks>
+        public TimeSpan? IncrementalCheckpointInterval { get; set; }
 
         /// <summary>
         /// The interval at which the store will check if the log should be compacted by 
@@ -113,7 +152,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   a read-only part of the FASTER log. These items remain in FASTER until the log is 
         ///   compacted. Compaction is performed on a periodic basis via the <see cref="CompactionInterval"/> 
         ///   setting. At each compaction interval, the FASTER log will be compacted if it is 
-        ///   created than the current size threshold, in order to remove expired records from the 
+        ///   greater than the current size threshold, in order to remove expired records from the 
         ///   log.
         /// </para>
         /// 

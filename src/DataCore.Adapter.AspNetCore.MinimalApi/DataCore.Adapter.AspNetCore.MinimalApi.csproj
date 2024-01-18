@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net7.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.MinimalApi</PackageId>
     <Description>ASP.NET Core types for hosting App Store Connect adapter APIs.</Description>
@@ -15,8 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Http" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="MiniValidation" />
   </ItemGroup>
 

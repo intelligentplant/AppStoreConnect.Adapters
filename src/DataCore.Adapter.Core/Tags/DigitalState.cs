@@ -38,7 +38,10 @@ namespace DataCore.Adapter.Tags {
         /// </exception>
         [JsonConstructor]
         public DigitalState(string name, int value) {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            if (name == null) {
+                throw new ArgumentNullException(nameof(name));
+            }
+            Name = string.Intern(name);
             Value = value;
         }
 

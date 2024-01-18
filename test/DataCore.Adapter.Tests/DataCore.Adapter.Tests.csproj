@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net6.0;net48</TargetFrameworks>
+    <TargetFrameworks>net8.0;net6.0;net48</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -67,7 +67,7 @@
   </Choose>
 
   <!-- Minimal API project is only supported on >= net7.0 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' And '$(TargetFramework)' != 'net6.0' ">
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj" />
   </ItemGroup>
   

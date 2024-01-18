@@ -42,7 +42,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePushWithTopics>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -75,7 +75,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             CancellationToken cancellationToken
         ) {
             // Resolve the adapter and feature.
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IEventMessagePush>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -109,7 +109,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesForTimeRange>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -140,7 +140,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IReadEventMessagesUsingCursor>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 
@@ -178,7 +178,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
             var adapter = await ResolveAdapterAndFeature<IWriteEventMessages>(adapterCallContext, adapterId, cancellationToken).ConfigureAwait(false);
             ValidateObject(request);
 

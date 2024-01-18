@@ -821,7 +821,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(CommonTagValuePropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN))
+                            AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Average), goodQualitySamples.First().GetValueOrDefault(double.NaN))
                          )
                         .Build()
                 };
@@ -837,7 +837,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.Average, avg)
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Average), avg)
                     )
                     .Build()
             };
@@ -884,8 +884,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                         .WithBucketProperties(bucket)
                         .WithProperties(
                             CreateXPoweredByProperty(),
-                            AdapterProperty.Create(CommonTagValuePropertyNames.Average, goodQualitySamples.First().GetValueOrDefault(double.NaN)),
-                            AdapterProperty.Create(CommonTagValuePropertyNames.Variance, 0d)
+                            AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Average), goodQualitySamples.First().GetValueOrDefault(double.NaN)),
+                            AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Variance), 0d)
                         )
                         .Build()
                 };
@@ -906,11 +906,11 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket)
                     .WithProperties(
                         CreateXPoweredByProperty(),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.Average, avg),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.Variance, variance),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.LowerBound, lowerBound),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.UpperBound, upperBound),
-                        AdapterProperty.Create(CommonTagValuePropertyNames.Sigma, sigma)
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Average), avg),
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Variance), variance),
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.LowerBound), lowerBound),
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.UpperBound), upperBound),
+                        AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.Sigma), sigma)
                     )
                     .Build()
             };
@@ -1458,7 +1458,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   A new <see cref="AdapterProperty"/> object.
         /// </returns>
         internal static AdapterProperty CreateXPoweredByProperty() {
-            return AdapterProperty.Create(CommonTagValuePropertyNames.XPoweredBy, s_xPoweredByPropertyValue.Value);
+            return AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.XPoweredBy), s_xPoweredByPropertyValue.Value);
         }
 
 
@@ -1492,7 +1492,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         private static TagValueExtended CreateErrorTagValue(TagValueBucket bucket, DateTime sampleTime, string error) {
             return new TagValueBuilder()
                 .WithUtcSampleTime(sampleTime)
-                .WithValue(Resources.TagValue_ProcessedValue_Error)
+                .WithValue(string.Intern(Resources.TagValue_ProcessedValue_Error))
                 .WithStatus(TagValueStatus.Bad)
                 .WithError(error)
                 .WithBucketProperties(bucket)

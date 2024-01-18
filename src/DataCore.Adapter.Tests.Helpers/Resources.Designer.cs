@@ -385,6 +385,15 @@ namespace DataCore.Adapter.Tests {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tag search did not return any results..
+        /// </summary>
+        internal static string TagSearchReturnedZeroResults {
+            get {
+                return ResourceManager.GetString("TagSearchReturnedZeroResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sample time {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z was not found in the expected sample times list. This indicates that multiple values were received with this timestamp for tag &apos;{1}&apos;..
         /// </summary>
         internal static string TimestampWasReceivedMultipleTimes {

@@ -1,4 +1,5 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Tags;
 
 using Microsoft.AspNetCore.Builder;
@@ -10,51 +11,51 @@ using Microsoft.Extensions.Options;
 namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class TagRoutes : IRouteProvider {
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", FindTagsGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", FindTagsGetAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}", FindTagsPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", FindTagsPostAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/find", FindTagsGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/find", FindTagsGetAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/find", FindTagsPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/find", FindTagsPostAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/properties", GetTagPropertiesGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/properties", GetTagPropertiesGetAsync)
                 .Produces<IAsyncEnumerable<Common.AdapterProperty>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/properties", GetTagPropertiesPostAsync)
-                .Produces<IAsyncEnumerable<Common.AdapterProperty>>()
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/properties", GetTagPropertiesPostAsync)
+                .Produces<IAsyncEnumerable<AdapterProperty>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/get-by-id", GetTagsGetAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/get-by-id", GetTagsGetAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/get-by-id", GetTagsPostAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/get-by-id", GetTagsPostAsync)
                 .Produces<IAsyncEnumerable<TagDefinition>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/schema", GetTagSchemaAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/schema", GetTagSchemaAsync)
                 .Produces<System.Text.Json.JsonElement>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/create", CreateTagAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/create", CreateTagAsync)
                 .Produces<TagDefinition>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/update", UpdateTagAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/update", UpdateTagAsync)
                 .Produces<TagDefinition>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/delete", DeleteTagAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/delete", DeleteTagAsync)
                 .Produces<bool>()
                 .ProducesDefaultErrors();
         }

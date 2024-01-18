@@ -28,21 +28,20 @@ namespace Microsoft.AspNetCore.Builder {
         /// <param name="builder">
         ///   The <see cref="IEndpointRouteBuilder"/>.
         /// </param>
-        /// <param name="routePrefix">
-        ///   The route prefix for the API routes. Specify <see langword="null"/> to use the 
-        ///   default route.
+        /// <param name="prefix">
+        ///   The route prefix for the API routes. Specify <see langword="null"/> to use no 
+        ///   prefix.
         /// </param>
         /// <returns>
         ///   The base <see cref="IEndpointConventionBuilder"/> for the adapter API routes.
         /// </returns>
-        internal static IEndpointConventionBuilder MapDataCoreAdapterApiRoutes(this IEndpointRouteBuilder builder, string? routePrefix) {
-            var versionedApiRouteBuilder = builder.NewVersionedApi();
-
+        public static IEndpointConventionBuilder MapDataCoreAdapterApiRoutes(this IEndpointRouteBuilder builder, PathString? prefix) {
             // Base for all versioned API routes.
-            if (routePrefix == null) {
-                routePrefix = "/api/app-store-connect";
-            }
-            var api = versionedApiRouteBuilder.MapGroup(string.Concat(routePrefix, "/v{version:apiVersion}")).WithOpenApi();
+            var apiBasePath = prefix == null
+                ? "/api/app-store-connect"
+                : prefix.Value.Add(new PathString("/api/app-store-connect")).ToString();
+
+            var api = builder.MapGroup(apiBasePath);
 
             // Add common error handling.
             api.AddEndpointFilter(async (context, next) => {
@@ -64,7 +63,7 @@ namespace Microsoft.AspNetCore.Builder {
             });
 
             // Base for the v2.0 API
-            var v2api = api.MapGroup("/").HasApiVersion(2, 0);
+            var v2api = api.MapGroup("/v2.0");
 
             DataCore.Adapter.AspNetCore.Routing.V2.AdapterRoutes.Register(v2api.MapGroup("/adapters")
                 .WithGroupName("Adapters"));

@@ -29,7 +29,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
             ValidateObject(request);
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             var resolvedFeature = await ResolveAdapterAndFeature<ICustomFunctions>(
                 adapterCallContext,
@@ -62,7 +62,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
             ValidateObject(request);
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             var resolvedFeature = await ResolveAdapterAndFeature<ICustomFunctions>(
                 adapterCallContext,
@@ -95,7 +95,7 @@ namespace DataCore.Adapter.AspNetCore.Hubs {
             }
             ValidateObject(request);
 
-            var adapterCallContext = new SignalRAdapterCallContext(Context);
+            var adapterCallContext = new SignalRAdapterCallContext(Context, _serviceProvider);
 
             var resolvedFeature = await ResolveAdapterAndFeature<ICustomFunctions>(
                 adapterCallContext,

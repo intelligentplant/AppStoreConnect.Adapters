@@ -2,7 +2,6 @@
 
 using MqttAdapter;
 
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -14,14 +13,28 @@ using OpenTelemetry.Trace;
 var builder = WebApplication.CreateBuilder(args);
 
 // Our adapter settings are stored in adaptersettings.json.
-builder.Configuration
-    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
+builder.Configuration.AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
-builder.Services
-    .AddLocalization();
+// Parent PID. If specified, we will gracefully shut down if the parent process exits.
+var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
+if (pid > 0) {
+    builder.Services.AddDependentProcessWatcher(pid);
+}
+
+// Host instance ID.
+var instanceId = builder.Configuration.GetValue<string>("AppStoreConnect:Adapter:Host:InstanceId");
+if (string.IsNullOrWhiteSpace(instanceId)) {
+    instanceId = System.Net.Dns.GetHostName();
+}
+
+builder.Services.AddLocalization();
+
+// Allows failed requests to generate RFC 7807 responses.
+builder.Services.AddProblemDetails();
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
+    .AddDataCoreAdapterApiServices()
     .AddHostInfo(
         name: "ASP.NET Core Adapter Host",
         description: "ASP.NET Core adapter host for MQTT"
@@ -54,45 +67,34 @@ builder.Services
     // since this will not be supplied by the service provider.
     .AddAdapter<MyAdapter>(Constants.AdapterId);
 
-// Register adapter MVC controllers.
-builder.Services
-    .AddMvc()
-    .AddDataCoreAdapterMvc();
-
 // Register adapter SignalR hub.
-builder.Services
-    .AddSignalR()
+builder.Services.AddSignalR()
     .AddDataCoreAdapterSignalR();
 
 // Register adapter gRPC services.
-builder.Services
-    .AddGrpc()
+builder.Services.AddGrpc()
     .AddDataCoreAdapterGrpc();
+
+// Register the Razor Pages services used by the UI.
+builder.Services.AddRazorPages();
 
 // Register adapter health checks. See https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks
 // for more information about ASP.NET Core health checks.
-builder.Services
-    .AddHealthChecks()
+builder.Services.AddHealthChecks()
     .AddAdapterHealthChecks();
 
-// Resource builder for OpenTelemetry trace/metrics export. We will use the adapter ID as the
-// OpenTelemetry service instance ID for the host.
-var otelResourceBuilder = ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(Constants.AdapterId);
-
+// Register OpenTelemetry services. This can be safely removed if not required.
 builder.Services
     .AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService(instanceId))
     .WithTracing(otel => otel
-        // Set the resource builder to identify where the traces are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Records incoming HTTP requests made to the adapter host.
         .AddAspNetCoreInstrumentation()
         // Records activities created by adapters and adapter hosting packages.
         .AddDataCoreAdapterInstrumentation()
-        // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
-        .AddJaegerExporter())
+        // Exports traces in OTLP format using default settings (i.e. http://localhost:4317 using OTLP/gRPC format).
+        .AddOtlpExporter())
     .WithMetrics(otel => otel
-        // Set the resource builder to identify where the metrics are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Observe instrumentation for the .NET runtime.
         .AddRuntimeInstrumentation()
         // Observe ASP.NET Core instrumentation.
@@ -101,11 +103,13 @@ builder.Services
         .AddDataCoreAdapterInstrumentation()
         // Exports metrics in Prometheus format using default settings. Prometheus metrics are
         // served via the scraping endpoint registered below.
-        .AddPrometheusExporter())
-    .StartWithHost();
+        .AddPrometheusExporter());
 
 // Build the app and the request pipeline.
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();
@@ -122,7 +126,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapDataCoreAdapterApiRoutes();
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");

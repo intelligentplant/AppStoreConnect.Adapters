@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AssetModel;
@@ -16,32 +15,10 @@ using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Services;
 using DataCore.Adapter.Tags;
 
-using IntelligentPlant.BackgroundTasks;
-
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DataCore.Adapter.Tests {
     public class ExampleAdapter : AdapterCore, ITagInfo, IReadSnapshotTagValues {
-
-        //private CancellationTokenSource _stopTokenSource;
-
-        //public IBackgroundTaskService BackgroundTaskService { get; }
-
-        //public AdapterDescriptor Descriptor { get; }
-
-        //public AdapterTypeDescriptor TypeDescriptor { get; }
-
-        //public IAdapterFeaturesCollection Features { get; }
-
-        //public IEnumerable<AdapterProperty> Properties { get; } = Array.Empty<AdapterProperty>();
-
-        //public bool IsEnabled { get; set; } = true;
-
-        //public bool IsRunning { get; } = true;
-
-        //public event Func<IAdapter, Task> Started;
-
-        //public event Func<IAdapter, Task> Stopped;
 
         private readonly SnapshotSubscriptionManager _snapshotSubscriptionManager;
 
@@ -54,14 +31,7 @@ namespace DataCore.Adapter.Tests {
         private readonly CustomFunctions _customFunctions;
 
 
-        public ExampleAdapter() : base(AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests")) {
-            //BackgroundTaskService = new BackgroundTaskServiceWrapper(
-            //    IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default,
-            //    () => _stopTokenSource?.Token ?? default
-            //);
-            //Descriptor = AdapterDescriptor.Create("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests");
-            //TypeDescriptor = this.CreateTypeDescriptor();
-            //var features = new AdapterFeaturesCollection();
+        public ExampleAdapter() : base(new AdapterDescriptor("unit-tests", "Unit Tests Adapter", "Adapter for use in unit tests")) {
             _snapshotSubscriptionManager = new SnapshotSubscriptionManager(this);
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
@@ -75,13 +45,10 @@ namespace DataCore.Adapter.Tests {
             AddFeatures(_assetModelManager);
             AddFeatures(_customFunctions);
             AddFeatures(new PingPongExtension(BackgroundTaskService, AssemblyInitializer.ApplicationServices.GetServices<IObjectEncoder>()));
-            //Features = features;
         }
 
 
         protected override async Task StartAsyncCore(CancellationToken cancellationToken = default) {
-            //_stopTokenSource = new CancellationTokenSource();
-
             using var sha = System.Security.Cryptography.SHA256.Create();
 
             var nodes = new[] { "Alpha", "Beta", "Gamma", "Delta" }.ToDictionary(x => x, x => GetNodeId(x));
@@ -99,10 +66,6 @@ namespace DataCore.Adapter.Tests {
                     UtcServerTime = DateTime.UtcNow
                 });
             }, cancellationToken: cancellationToken);
-
-            //if (Started != null) {
-            //    await Started.Invoke(this).ConfigureAwait(false);
-            //}
         }
 
 
@@ -113,12 +76,6 @@ namespace DataCore.Adapter.Tests {
 
 
         protected override Task StopAsyncCore(CancellationToken cancellationToken = default) {
-            //_stopTokenSource?.Cancel();
-            //_stopTokenSource?.Dispose();
-
-            //if (Stopped != null) {
-            //    await Stopped.Invoke(this).ConfigureAwait(false);
-            //}
             return Task.CompletedTask;
         }
 

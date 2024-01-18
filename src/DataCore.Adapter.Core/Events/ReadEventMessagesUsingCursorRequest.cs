@@ -12,17 +12,19 @@ namespace DataCore.Adapter.Events {
         /// The topic to read messages for. This property will be ignored if the adapter does not 
         /// support a topic-based event model.
         /// </summary>
+        [MaxLength(500)]
         public string? Topic { get; set; }
 
         /// <summary>
         /// The cursor position to start the query at.
         /// </summary>
+        [MaxLength(500)]
         public string? CursorPosition { get; set; }
 
         /// <summary>
         /// The page size for the query.
         /// </summary>
-        [Range(1, int.MaxValue)]
+        [Range(1, 500)]
         [DefaultValue(10)]
         public int PageSize { get; set; } = 10;
 

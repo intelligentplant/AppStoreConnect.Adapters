@@ -142,11 +142,19 @@
   <data name="Error_CannotEncodeType" xml:space="preserve">
     <value>The specified type cannot be encoded by this encoder.</value>
   </data>
+  <data name="Error_CollectionItemIsTooLong" xml:space="preserve">
+    <value>Maximum length of an entry in the collection is {0}.</value>
+    <comment>{0} - maximum length</comment>
+  </data>
   <data name="Error_ContentTypeIsRequired" xml:space="preserve">
     <value>You must specify a content type.</value>
   </data>
   <data name="Error_DataFunctionCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null data function name.</value>
+  </data>
+  <data name="Error_DescriptionIsTooLong" xml:space="preserve">
+    <value>Maximum description length is {0}.</value>
+    <comment>{0} - maximum length</comment>
   </data>
   <data name="Error_DuplicateSubscriptionTopicsAreNotAllowed" xml:space="preserve">
     <value>Duplicate subscription topics are not allowed.</value>
@@ -164,6 +172,10 @@
   </data>
   <data name="Error_IdIsRequired" xml:space="preserve">
     <value>You must specify an ID.</value>
+  </data>
+  <data name="Error_IdIsTooLong" xml:space="preserve">
+    <value>Maximum ID length is {0}.</value>
+    <comment>{0} - maximum length</comment>
   </data>
   <data name="Error_IntervalCountMustBeGreaterThanZero" xml:space="preserve">
     <value>Interval count must be greater than zero.</value>
@@ -193,8 +205,16 @@
   <data name="Error_ItemTypeCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null or white space item type.</value>
   </data>
+  <data name="Error_KeyIsTooLong" xml:space="preserve">
+    <value>Maximum key length is {0}.</value>
+    <comment>{0} - maximum length</comment>
+  </data>
   <data name="Error_NameIsRequired" xml:space="preserve">
     <value>You must specify a name.</value>
+  </data>
+  <data name="Error_NameIsTooLong" xml:space="preserve">
+    <value>Maximum name length is {0}.</value>
+    <comment>{0} - maximum length</comment>
   </data>
   <data name="Error_NameOrIdCannotBeNull" xml:space="preserve">
     <value>You cannot specify a null name or ID.</value>
@@ -232,6 +252,10 @@
   <data name="Error_TagSearchRequiresAtLeastOneFilter" xml:space="preserve">
     <value>At least one tag search filter field must be specified.</value>
   </data>
+  <data name="Error_TooManyEntries" xml:space="preserve">
+    <value>Maximum number of entries is {0}.</value>
+    <comment>{0} - maximum count</comment>
+  </data>
   <data name="Error_TypeIdIsUndefined" xml:space="preserve">
     <value>The type does not define a {0} attribute.</value>
     <comment>{0} - TypeIdAttribute name</comment>
@@ -245,6 +269,14 @@
   <data name="Error_UnableToResolveNameOrId" xml:space="preserve">
     <value>Unable to resolve name or ID '{0}'.</value>
     <comment>{0} - name or ID.</comment>
+  </data>
+  <data name="Error_UnitIsTooLong" xml:space="preserve">
+    <value>Maximum unit length is {0}.</value>
+    <comment>{0} - maximum length</comment>
+  </data>
+  <data name="Error_ValueIsTooLong" xml:space="preserve">
+    <value>Maximum value length is {0}.</value>
+    <comment>{0} - maximum length</comment>
   </data>
   <data name="HostInfo_Unspecified_Description" xml:space="preserve">
     <value>Host information has not been provided.</value>

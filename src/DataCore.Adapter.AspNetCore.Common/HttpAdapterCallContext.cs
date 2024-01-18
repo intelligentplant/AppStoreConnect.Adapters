@@ -42,6 +42,11 @@ namespace DataCore.Adapter.AspNetCore {
             get { return Provider.Items; }
         }
 
+        /// <inheritdoc/>
+        public IServiceProvider Services {
+            get { return Provider.RequestServices; }
+        }
+
 
         /// <summary>
         /// Creates a new <see cref="HttpAdapterCallContext"/> object.

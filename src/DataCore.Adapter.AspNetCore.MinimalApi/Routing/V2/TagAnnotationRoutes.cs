@@ -1,4 +1,5 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.RealTimeData;
 
 using Microsoft.AspNetCore.Builder;
@@ -9,23 +10,39 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class TagAnnotationRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapPost("/{adapterId}", ReadAnnotationsAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", ReadAnnotationsAsync)
                 .Produces<IAsyncEnumerable<TagValueAnnotationQueryResult>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/{tagId}/{annotationId}", ReadAnnotationAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/{{tagId}}/{{annotationId}}", ReadAnnotationAsync)
                 .Produces<TagValueAnnotationExtended>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/{tagId}/create", CreateAnnotationAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/get-by-id", ReadAnnotationRequestAsync)
+                .Produces<TagValueAnnotationExtended>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/{{tagId}}/create", CreateAnnotationAsync)
                 .Produces<WriteTagValueAnnotationResult>()
                 .ProducesDefaultErrors();
 
-            builder.MapPut("/{adapterId}/{tagId}/{annotationId}", UpdateAnnotationAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/create", CreateAnnotationRequestAsync)
                 .Produces<WriteTagValueAnnotationResult>()
                 .ProducesDefaultErrors();
 
-            builder.MapDelete("/{adapterId}/{tagId}/{annotationId}", DeleteAnnotationAsync)
+            builder.MapPut($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/{{tagId}}/{{annotationId}}", UpdateAnnotationAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/update", UpdateAnnotationRequestAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
+
+            builder.MapDelete($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/{{tagId}}/{{annotationId}}", DeleteAnnotationAsync)
+                .Produces<WriteTagValueAnnotationResult>()
+                .ProducesDefaultErrors();
+
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/delete", DeleteAnnotationRequestAsync)
                 .Produces<WriteTagValueAnnotationResult>()
                 .ProducesDefaultErrors();
         }
@@ -46,7 +63,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
         }
 
 
-        private static async Task<IResult> ReadAnnotationAsync(
+        private static Task<IResult> ReadAnnotationAsync(
             HttpContext context,
             IAdapterAccessor adapterAccessor,
             string adapterId,
@@ -59,6 +76,17 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 Tag = tagId,
             };
 
+            return ReadAnnotationRequestAsync(context, adapterAccessor, adapterId, request, cancellationToken);
+        }
+
+
+        private static async Task<IResult> ReadAnnotationRequestAsync(
+            HttpContext context,
+            IAdapterAccessor adapterAccessor,
+            string adapterId,
+            ReadAnnotationRequest request,
+            CancellationToken cancellationToken = default
+        ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<IReadTagValueAnnotations>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
             if (resolverResult.Error != null) {
                 return resolverResult.Error;
@@ -67,7 +95,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
         }
 
 
-        private static async Task<IResult> CreateAnnotationAsync(
+        private static Task<IResult> CreateAnnotationAsync(
             HttpContext context,
             IAdapterAccessor adapterAccessor,
             string adapterId,
@@ -80,6 +108,17 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 Annotation = annotation
             };
 
+            return CreateAnnotationRequestAsync(context, adapterAccessor, adapterId, request, cancellationToken);
+        }
+
+
+        private static async Task<IResult> CreateAnnotationRequestAsync(
+            HttpContext context,
+            IAdapterAccessor adapterAccessor,
+            string adapterId,
+            CreateAnnotationRequest request,
+            CancellationToken cancellationToken = default
+        ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<IWriteTagValueAnnotations>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
             if (resolverResult.Error != null) {
                 return resolverResult.Error;
@@ -89,7 +128,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
         }
 
 
-        private static async Task<IResult> UpdateAnnotationAsync(
+        private static Task<IResult> UpdateAnnotationAsync(
             HttpContext context,
             IAdapterAccessor adapterAccessor,
             string adapterId,
@@ -104,6 +143,17 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 Annotation = annotation
             };
 
+            return UpdateAnnotationRequestAsync(context, adapterAccessor, adapterId, request, cancellationToken);
+        }
+
+
+        private static async Task<IResult> UpdateAnnotationRequestAsync(
+            HttpContext context,
+            IAdapterAccessor adapterAccessor,
+            string adapterId,
+            UpdateAnnotationRequest request,
+            CancellationToken cancellationToken = default
+        ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<IWriteTagValueAnnotations>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
             if (resolverResult.Error != null) {
                 return resolverResult.Error;
@@ -113,7 +163,7 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
         }
 
 
-        private static async Task<IResult> DeleteAnnotationAsync(
+        private static Task<IResult> DeleteAnnotationAsync(
             HttpContext context,
             IAdapterAccessor adapterAccessor,
             string adapterId,
@@ -126,6 +176,17 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
                 AnnotationId = annotationId
             };
 
+            return DeleteAnnotationRequestAsync(context, adapterAccessor, adapterId, request, cancellationToken);
+        }
+
+
+        private static async Task<IResult> DeleteAnnotationRequestAsync(
+            HttpContext context,
+            IAdapterAccessor adapterAccessor,
+            string adapterId,
+            DeleteAnnotationRequest request,
+            CancellationToken cancellationToken = default
+        ) {
             var resolverResult = await Utils.ResolveAdapterAndValidateRequestAsync<IWriteTagValueAnnotations>(context, adapterAccessor, adapterId, request, true, cancellationToken).ConfigureAwait(false);
             if (resolverResult.Error != null) {
                 return resolverResult.Error;

@@ -1,4 +1,5 @@
 ﻿using DataCore.Adapter.AspNetCore.Internal;
+using DataCore.Adapter.Common;
 using DataCore.Adapter.Extensions;
 
 using Microsoft.AspNetCore.Builder;
@@ -11,19 +12,19 @@ namespace DataCore.Adapter.AspNetCore.Routing.V2 {
     internal class ExtensionRoutes : IRouteProvider {
 
         public static void Register(IEndpointRouteBuilder builder) {
-            builder.MapGet("/{adapterId}", GetAvailableExtensionsAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}", GetAvailableExtensionsAsync)
                 .Produces<IEnumerable<string>>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/descriptor", GetDescriptorAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/descriptor", GetDescriptorAsync)
                 .Produces<Common.FeatureDescriptor>()
                 .ProducesDefaultErrors();
 
-            builder.MapGet("/{adapterId}/operations", GetAvailableOperationsAsync)
+            builder.MapGet($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/operations", GetAvailableOperationsAsync)
                 .Produces<IEnumerable<ExtensionFeatureOperationDescriptor>>()
                 .ProducesDefaultErrors();
 
-            builder.MapPost("/{adapterId}/operations/invoke", InvokeOperationAsync)
+            builder.MapPost($"/{{adapterId:maxlength({AdapterDescriptor.IdMaxLength})}}/operations/invoke", InvokeOperationAsync)
                 .Produces<InvocationResponse>()
                 .ProducesDefaultErrors();
         }

@@ -174,17 +174,30 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            await foreach (var val in _readSnapshotFeature.ReadSnapshotTagValues(
-                new DefaultAdapterCallContext(),
-                new ReadSnapshotTagValuesRequest() {
-                    Tags = tags
-                }, cancellationToken
-            ).ConfigureAwait(false)) {
-                if (val == null) {
-                    continue;
+            const int MaxTagsPerRequest = 100;
+            var page = 0;
+            var @continue = false;
+
+            do {
+                ++page;
+                var pageTags = tags.Skip((page - 1) * MaxTagsPerRequest).Take(MaxTagsPerRequest).ToArray();
+                if (pageTags.Length == 0) {
+                    break;
                 }
-                await ValueReceived(val, cancellationToken).ConfigureAwait(false);
-            }
+                @continue = pageTags.Length == MaxTagsPerRequest;
+
+                await foreach (var val in _readSnapshotFeature.ReadSnapshotTagValues(
+                    new DefaultAdapterCallContext(),
+                    new ReadSnapshotTagValuesRequest() {
+                        Tags = tags
+                    }, cancellationToken
+                ).ConfigureAwait(false)) {
+                    if (val == null) {
+                        continue;
+                    }
+                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
+                }
+            } while (@continue);
         }
 
 

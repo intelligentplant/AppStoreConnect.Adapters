@@ -6,7 +6,7 @@ An adapter is a component that exposes real-time process data and/or alarm & eve
 
 You can find a tutorial for writing a simple MQTT adapter [here](./tutorials/mqtt-adapter).
 
-All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](/src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
+All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](../src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
 
 > Note that adapters do not have to directly implement the feature interfaces themselves. Instead, the adapter can delegate the feature implementation to a helper class. This is described in more detail [below](#delegating-feature-implementations-to-external-providers).
 
@@ -403,12 +403,7 @@ The following `IKeyValueStore` implementations support persistence:
 - [SQLite](../src/DataCore.Adapter.KeyValueStore.Sqlite)
 - [Microsoft FASTER](../src/DataCore.Adapter.KeyValueStore.FASTER)
 
-`IKeyValueStore` expects values to be specified as `byte[]`. Extension methods exist to automatically serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) e.g.
-
-```csharp
-await kvStore.WriteJsonAsync("UtcLastUpdated", DateTime.UtcNow).ConfigureAwait(false);
-```
-
+The implementations above that support persistence serialize values to/from JSON using [System.Text.Json](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/overview) and can be configured to automatically compress the serialized bytes using GZip compression.
 
 # Telemetry
 

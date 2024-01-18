@@ -501,14 +501,15 @@ namespace DataCore.Adapter {
             var companyName = type.Assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company;
 
             var uri = adapterAttribute?.Uri ?? new Uri(string.Concat("asc:adapter-type/", type.FullName, "/"));
-            return new AdapterTypeDescriptor(
-                uri,
-                adapterAttribute?.GetName(),
-                adapterAttribute?.GetDescription(),
-                type.Assembly.GetInformationalVersion(),
-                vendorAttribute?.CreateVendorInfo() ?? (string.IsNullOrWhiteSpace(companyName) ? null : new VendorInfo(companyName, null)),
-                adapterAttribute?.HelpUrl
-            );
+
+            var builder = new AdapterTypeDescriptorBuilder(uri)
+                .WithName(adapterAttribute?.GetName())
+                .WithDescription(adapterAttribute?.GetDescription())
+                .WithVersion(type.Assembly.GetInformationalVersion())
+                .WithVendor(vendorAttribute?.CreateVendorInfo() ?? (string.IsNullOrWhiteSpace(companyName) ? null : new VendorInfo(companyName, null)))
+                .WithHelpUrl(adapterAttribute?.HelpUrl);
+
+            return builder.Build();
         }
 
     }

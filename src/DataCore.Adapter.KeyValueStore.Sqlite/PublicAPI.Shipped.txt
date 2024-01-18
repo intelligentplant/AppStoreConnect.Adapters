@@ -1,12 +1,9 @@
 ﻿#nullable enable
 const DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.DefaultConnectionString = "Data Source=adapter-kvstore.db" -> string!
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.SqliteKeyValueStore(DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore!>? logger = null) -> void
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.ConnectionString.get -> string!
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.ConnectionString.set -> void
 DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.SqliteKeyValueStoreOptions() -> void
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask

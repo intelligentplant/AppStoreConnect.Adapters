@@ -2,7 +2,6 @@
 const Microsoft.Extensions.DependencyInjection.SignalRConfigurationExtensions.HubRoute = "/signalr/app-store-connect/v2.0" -> string!
 DataCore.Adapter.AspNetCore.Hubs.AdapterHub
 DataCore.Adapter.AspNetCore.Hubs.AdapterHub.AdapterAccessor.get -> DataCore.Adapter.IAdapterAccessor!
-DataCore.Adapter.AspNetCore.Hubs.AdapterHub.AdapterHub(DataCore.Adapter.Common.HostInfo! hostInfo, DataCore.Adapter.IAdapterAccessor! adapterAccessor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! taskScheduler, Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.SignalR.JsonHubProtocolOptions!>! jsonOptions) -> void
 DataCore.Adapter.AspNetCore.Hubs.AdapterHub.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.AspNetCore.Hubs.AdapterHub.BrowseAssetModelNodes(string! adapterId, DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
 DataCore.Adapter.AspNetCore.Hubs.AdapterHub.CheckAdapterHealth(string! adapterId) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
@@ -54,7 +53,6 @@ DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.ConnectionId.get -> string
 DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.CorrelationId.get -> string!
 DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.CultureInfo.get -> System.Globalization.CultureInfo!
 DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.Items.get -> System.Collections.Generic.IDictionary<object!, object?>!
-DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.SignalRAdapterCallContext(Microsoft.AspNetCore.SignalR.HubCallerContext! hubCallerContext) -> void
 DataCore.Adapter.AspNetCore.SignalRAdapterCallContext.User.get -> System.Security.Claims.ClaimsPrincipal?
 Microsoft.AspNetCore.Routing.AdapterSignalREndpointDataSourceExtensions
 Microsoft.Extensions.DependencyInjection.SignalRConfigurationExtensions

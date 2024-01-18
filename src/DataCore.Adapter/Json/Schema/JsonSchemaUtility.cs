@@ -94,7 +94,7 @@ namespace DataCore.Adapter.Json.Schema {
         public static JsonElement CreateJsonSchema<T>(JsonSerializerOptions? options = null) {
             RegisterExtensions();
             var builder = new JsonSchemaBuilder().FromType<T>(new SchemaGeneratorConfiguration() {
-                PropertyNamingMethod = name => options?.PropertyNamingPolicy?.ConvertName(name) ?? name
+                PropertyNameResolver = member => options?.PropertyNamingPolicy?.ConvertName(member.Name) ?? member.Name
             });
 
             return JsonSerializer.SerializeToElement(builder.Build(), options);

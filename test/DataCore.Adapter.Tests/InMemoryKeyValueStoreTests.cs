@@ -10,8 +10,8 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class InMemoryKeyValueStoreTests : KeyValueStoreTests<InMemoryKeyValueStore> {
 
-        protected override InMemoryKeyValueStore CreateStore(CompressionLevel compressionLevel) {
-            return new InMemoryKeyValueStore(compressionLevel);
+        protected override InMemoryKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
+            return new InMemoryKeyValueStore();
         }
 
     }

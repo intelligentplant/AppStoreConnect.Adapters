@@ -21,7 +21,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Other code removed for brevity
 
-builder.Services.AddDataCoreAdapterApiServices();
+builder.Services
+    .AddDataCoreAdapterAspNetCoreServices()
+    .AddDataCoreAdapterApiServices();
 ```
 
 Once the application has been built, register the API routes:
