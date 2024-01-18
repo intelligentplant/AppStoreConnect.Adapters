@@ -95,15 +95,11 @@ builder.Services.AddRazorPages();
 builder.Services.AddHealthChecks()
     .AddAdapterHealthChecks();
 
-// Resource builder for OpenTelemetry trace/metrics export.
-var otelResourceBuilder = ResourceBuilder.CreateDefault()
-    .AddDataCoreAdapterApiService(instanceId);
-
 // Register OpenTelemetry services. This can be safely removed if not required.
-builder.Services.AddOpenTelemetry()
+builder.Services
+    .AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService(instanceId))
     .WithTracing(otel => otel
-        // Set the resource builder to identify where the traces are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Records incoming HTTP requests made to the adapter host.
         .AddAspNetCoreInstrumentation()
         // Records outgoing HTTP requests made by the adapter host.
@@ -117,8 +113,6 @@ builder.Services.AddOpenTelemetry()
         // Exports traces in OTLP format using default settings (i.e. http://localhost:4317 using OTLP/gRPC format).
         .AddOtlpExporter())
     .WithMetrics(otel => otel
-        // Set the resource builder to identify where the metrics are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Observe instrumentation for the .NET runtime.
         .AddRuntimeInstrumentation()
         // Observe ASP.NET Core instrumentation.

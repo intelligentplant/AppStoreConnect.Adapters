@@ -49,18 +49,14 @@ builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
-var otelResourceBuilder = ResourceBuilder.CreateDefault()
-    .AddDataCoreAdapterApiService();
-
 builder.Services
     .AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService())
     .WithTracing(otel => otel
-        .SetResourceBuilder(otelResourceBuilder)
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
         .AddOtlpExporter())
     .WithMetrics(otel => otel
-        .SetResourceBuilder(otelResourceBuilder)
         .AddRuntimeInstrumentation()
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
