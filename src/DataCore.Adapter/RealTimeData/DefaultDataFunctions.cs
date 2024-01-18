@@ -288,44 +288,6 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Time-weighted average value over a time period.
-        /// </summary>
-        public static DataFunctionDescriptor TimeAverage { get; } = DataFunctionDescriptor.Create(
-            Constants.FunctionIdTimeAverage,
-            AbstractionsResources.DataFunction_TimeAvg_Name,
-            AbstractionsResources.DataFunction_TimeAvg_Description,
-            DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
-        );
-
-
-        /// <summary>
-        /// Variance of good-quality samples in a time period.
-        /// </summary>
-        public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
-            Constants.FunctionIdVariance,
-            AbstractionsResources.DataFunction_Variance_Name,
-            AbstractionsResources.DataFunction_Variance_Description,
-            DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    AbstractionsResources.DataFunction_Property_StatusCalculation,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    AbstractionsResources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
-        );
-
-
-        /// <summary>
         /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
