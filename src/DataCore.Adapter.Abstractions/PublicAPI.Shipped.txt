@@ -15,17 +15,6 @@ const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItem
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItemOut = 8 -> int
 const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterUpdated = 3 -> int
 const DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName = "IntelligentPlant.AppStoreConnect.Adapter" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdAverage = "AVG" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdCount = "COUNT" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdDelta = "DELTA" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdInterpolate = "INTERP" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMaximum = "MAX" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMinimum = "MIN" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentBad = "PERCENTBAD" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentGood = "PERCENTGOOD" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdRange = "RANGE" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdStandardDeviation = "STDDEV" -> string!
-const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdVariance = "VARIANCE" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelBrowse = "asc:features/asset-model/browse/" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelSearch = "asc:features/asset-model/search/" -> string!
 const DataCore.Adapter.WellKnownFeatures.AssetModel.BaseUri = "asc:features/asset-model/" -> string!
@@ -228,8 +217,6 @@ DataCore.Adapter.IAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.Hos
 DataCore.Adapter.IBackgroundTaskServiceProvider
 DataCore.Adapter.IBackgroundTaskServiceProvider.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.MethodInfoUtil
-DataCore.Adapter.RealTimeData.DefaultDataFunctions
-DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants
 DataCore.Adapter.RealTimeData.IReadPlotTagValues
 DataCore.Adapter.RealTimeData.IReadPlotTagValues.ReadPlotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
 DataCore.Adapter.RealTimeData.IReadProcessedTagValues
@@ -381,18 +368,6 @@ static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2>(System.Func<T1, T2>
 static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Action<T>! func) -> System.Reflection.MethodInfo?
 static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Func<T>! func) -> System.Reflection.MethodInfo?
 static DataCore.Adapter.MethodInfoUtil.TryGetInterfaceMethodDeclaration(System.Reflection.MethodInfo? method, out System.Reflection.MethodInfo? interfaceMethod) -> bool
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Average.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Count.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Delta.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.FindById(string! id) -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor?
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Interpolate.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Maximum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Minimum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentBad.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentGood.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Range.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.StandardDeviation.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
-static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Variance.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
 static DataCore.Adapter.Services.KeyValueStore.AddPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
 static DataCore.Adapter.Services.KeyValueStore.RemovePrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
 static DataCore.Adapter.Services.KeyValueStore.StartsWithPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> bool

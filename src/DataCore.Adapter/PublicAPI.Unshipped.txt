@@ -1,7 +1,32 @@
 ﻿#nullable enable
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdAverage = "AVG" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdCount = "COUNT" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdDelta = "DELTA" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdInterpolate = "INTERP" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMaximum = "MAX" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdMinimum = "MIN" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentBad = "PERCENTBAD" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdPercentGood = "PERCENTGOOD" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdRange = "RANGE" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdStandardDeviation = "STDDEV" -> string!
+const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdVariance = "VARIANCE" -> string!
 DataCore.Adapter.DefaultAdapterCallContext.DefaultAdapterCallContext(System.Security.Claims.ClaimsPrincipal? user = null, string? connectionId = null, string? correlationId = null, System.Globalization.CultureInfo? cultureInfo = null, System.IServiceProvider? serviceProvider = null) -> void
 DataCore.Adapter.DefaultAdapterCallContext.Services.get -> System.IServiceProvider!
+DataCore.Adapter.RealTimeData.DefaultDataFunctions
+DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithSteppedTransition(bool stepped) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 static DataCore.Adapter.AdapterAccessorExtensions.GetAdapterDescriptorAsync(this DataCore.Adapter.IAdapterAccessor! adapterAccessor, DataCore.Adapter.IAdapterCallContext! context, string! adapterId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.AdapterDescriptorExtended?>!
 static DataCore.Adapter.ChannelExtensions.ToEnumerable<T>(this System.Collections.Generic.IAsyncEnumerable<T>! enumerable, int maxItems, int expectedItems, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<T>!>!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Average.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Count.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Delta.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.FindById(string! id) -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor?
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Interpolate.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Maximum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Minimum.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentBad.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.PercentGood.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Range.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.StandardDeviation.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Variance.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
 static DataCore.Adapter.Security.CertificateUtilities.TryLoadCertificateFromStore(string! path, bool requirePrivateKey, bool allowInvalid, out System.Security.Cryptography.X509Certificates.X509Certificate2? certificate) -> bool

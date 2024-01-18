@@ -11,7 +11,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Constants associated with <see cref="DefaultDataFunctions"/>.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Organisation of static class")]
         public static class Constants {
 
             /// <summary>
