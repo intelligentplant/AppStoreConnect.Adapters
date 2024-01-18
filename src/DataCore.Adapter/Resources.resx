@@ -174,6 +174,9 @@
   <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
     <value>The method used to calculate the quality status for the function.</value>
   </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped" xml:space="preserve">
+    <value>"Uncertain" if any non-good quality or NaN values were present in the calculation interval, or if the value was calculated from a partial data set. Otherwise, the quality is "Good".</value>
+  </data>
   <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
     <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
   </data>
@@ -203,6 +206,12 @@
   </data>
   <data name="DataFunction_StandardDeviation_Name" xml:space="preserve">
     <value>Standard Deviation</value>
+  </data>
+  <data name="DataFunction_TimeAvg_Description" xml:space="preserve">
+    <value>Time-weighted average value calculated over sample interval.</value>
+  </data>
+  <data name="DataFunction_TimeAvg_Name" xml:space="preserve">
+    <value>Time Average</value>
   </data>
   <data name="DataFunction_Variance_Description" xml:space="preserve">
     <value>The variance of all good-quality values in each sample interval</value>

@@ -59,6 +59,11 @@ namespace DataCore.Adapter.RealTimeData {
             public const string FunctionIdPercentBad = "PERCENTBAD";
 
             /// <summary>
+            /// Time-weighted average function ID.
+            /// </summary>
+            public const string FunctionIdTimeAverage = "TIMEAVERAGE";
+
+            /// <summary>
             /// Variance function ID.
             /// </summary>
             public const string FunctionIdVariance = "VARIANCE";
@@ -225,25 +230,6 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Variance of good-quality samples in a time period.
-        /// </summary>
-        public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
-            Constants.FunctionIdVariance,
-            Resources.DataFunction_Variance_Name,
-            Resources.DataFunction_Variance_Description,
-            DataFunctionSampleTimeType.StartTime,
-            DataFunctionStatusType.Custom,
-            new[] {
-                AdapterProperty.Create(
-                    Resources.DataFunction_Property_StatusCalculation,
-                    Resources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
-                    Resources.DataFunction_Property_StatusCalculation_Description
-                )
-            }
-        );
-
-
-        /// <summary>
         /// Standard deviation of good-quality samples in a time period.
         /// </summary>
         public static DataFunctionDescriptor StandardDeviation { get; } = DataFunctionDescriptor.Create(
@@ -263,11 +249,50 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
+        /// Time-weighted average value over a time period.
+        /// </summary>
+        public static DataFunctionDescriptor TimeAverage { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdTimeAverage,
+            Resources.DataFunction_TimeAvg_Name,
+            Resources.DataFunction_TimeAvg_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Custom,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_StatusCalculation,
+                    Resources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped,
+                    Resources.DataFunction_Property_StatusCalculation_Description
+                )
+            }
+        );
+
+
+        /// <summary>
+        /// Variance of good-quality samples in a time period.
+        /// </summary>
+        public static DataFunctionDescriptor Variance { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdVariance,
+            Resources.DataFunction_Variance_Name,
+            Resources.DataFunction_Variance_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Custom,
+            new[] {
+                AdapterProperty.Create(
+                    Resources.DataFunction_Property_StatusCalculation,
+                    Resources.DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped,
+                    Resources.DataFunction_Property_StatusCalculation_Description
+                )
+            }
+        );
+
+
+        /// <summary>
         /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
             Interpolate,
             Average,
+            TimeAverage,
             Minimum,
             Maximum,
             Count,
