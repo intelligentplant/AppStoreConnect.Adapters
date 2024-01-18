@@ -100,8 +100,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add OpenTelemetry tracing
             services
                 .AddOpenTelemetry()
+                .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService())
                 .WithTracing(builder => builder
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
                     .AddOtlpExporter());
