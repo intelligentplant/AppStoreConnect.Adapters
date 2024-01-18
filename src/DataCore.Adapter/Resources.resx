@@ -120,6 +120,96 @@
   <data name="AdapterSubscription_AnonymousUserName" xml:space="preserve">
     <value>&lt;Anonymous&gt;</value>
   </data>
+  <data name="DataFunction_Avg_Description" xml:space="preserve">
+    <value>Average value calculated over sample interval.</value>
+  </data>
+  <data name="DataFunction_Avg_Name" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="DataFunction_Count_Description" xml:space="preserve">
+    <value>The number of good-quality raw samples that have been recorded for the tag at each sample interval.</value>
+  </data>
+  <data name="DataFunction_Count_Name" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="DataFunction_Delta_Description" xml:space="preserve">
+    <value>The signed difference between the earliest good-quality value and latest good-quality value in each sample interval.</value>
+  </data>
+  <data name="DataFunction_Delta_Name" xml:space="preserve">
+    <value>Delta</value>
+  </data>
+  <data name="DataFunction_Interp_Description" xml:space="preserve">
+    <value>Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval.</value>
+  </data>
+  <data name="DataFunction_Interp_Name" xml:space="preserve">
+    <value>Interpolated</value>
+  </data>
+  <data name="DataFunction_Max_Description" xml:space="preserve">
+    <value>Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.</value>
+  </data>
+  <data name="DataFunction_Max_Name" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="DataFunction_Min_Description" xml:space="preserve">
+    <value>Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.</value>
+  </data>
+  <data name="DataFunction_Min_Name" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="DataFunction_PercentBad_Description" xml:space="preserve">
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a bad-quality status.</value>
+  </data>
+  <data name="DataFunction_PercentBad_Name" xml:space="preserve">
+    <value>Percent Bad</value>
+  </data>
+  <data name="DataFunction_PercentGood_Description" xml:space="preserve">
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a good-quality status.</value>
+  </data>
+  <data name="DataFunction_PercentGood_Name" xml:space="preserve">
+    <value>Percent Good</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation" xml:space="preserve">
+    <value>Status Calculation</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
+    <value>The method used to calculate the quality status for the function.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
+    <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueWorstCase" xml:space="preserve">
+    <value>Worst-case status of the samples used in the calculation.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation" xml:space="preserve">
+    <value>Timestamp Calculation</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_Description" xml:space="preserve">
+    <value>The method used to calculate the timestamp for the function.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMaximum" xml:space="preserve">
+    <value>Timestamp of maximum value</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMinimum" xml:space="preserve">
+    <value>Timestamp of minimum value</value>
+  </data>
+  <data name="DataFunction_Range_Description" xml:space="preserve">
+    <value>The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
+  </data>
+  <data name="DataFunction_Range_Name" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="DataFunction_StandardDeviation_Description" xml:space="preserve">
+    <value>The standard deviation of all good-quality values in each sample interval</value>
+  </data>
+  <data name="DataFunction_StandardDeviation_Name" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
+  <data name="DataFunction_Variance_Description" xml:space="preserve">
+    <value>The variance of all good-quality values in each sample interval</value>
+  </data>
+  <data name="DataFunction_Variance_Name" xml:space="preserve">
+    <value>Variance</value>
+  </data>
   <data name="Error_AdapterDescriptionIsTooLong" xml:space="preserve">
     <value>Maximum adapter description length is {0}.</value>
   </data>
