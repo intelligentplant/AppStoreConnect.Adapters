@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Logging;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -133,7 +134,9 @@ namespace DataCore.Adapter {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            Logger = new ScopedLogger(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, new Dictionary<string, object?>() {
+                ["AdapterId"] = Descriptor.Id
+            });
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
             // initially in a cancelled state.
@@ -149,7 +152,7 @@ namespace DataCore.Adapter {
             _hasStartBeenCalled = true;
 
             if (!IsEnabled) {
-                Logger.LogWarning(AbstractionsResources.Log_AdapterIsDisabled, Descriptor.Id);
+                LogAdapterDisabled(Logger, Descriptor.Id);
                 return;
             }
 
@@ -166,7 +169,7 @@ namespace DataCore.Adapter {
                 }
 
                 using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
-                    Logger.LogInformation(AbstractionsResources.Log_StartingAdapter, Descriptor.Id);
+                    LogAdapterStarting(Logger, Descriptor.Id);
                     IsStarting = true;
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
@@ -179,7 +182,7 @@ namespace DataCore.Adapter {
                     }
 
                     Telemetry.EventSource.AdapterStarted(Descriptor.Id);
-                    Logger.LogInformation(AbstractionsResources.Log_StartedAdapter, Descriptor.Id);
+                    LogAdapterStarted(Logger, Descriptor.Id);
 
                     BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
                     if (Started != null) {
@@ -202,10 +205,10 @@ namespace DataCore.Adapter {
                     _shutdownInProgress.Reset();
 
                     try {
-                        Logger.LogInformation(AbstractionsResources.Log_StoppingAdapter, Descriptor.Id);
+                        LogAdapterStopping(Logger, Descriptor.Id);
                         await StopAsyncCore(default).ConfigureAwait(false);
                         Telemetry.EventSource.AdapterStopped(Descriptor.Id);
-                        Logger.LogInformation(AbstractionsResources.Log_StoppedAdapter, Descriptor.Id);
+                        LogAdapterStopped(Logger, Descriptor.Id);
 
                         _isRunning = false;
                         _stopTokenSource.Cancel();
