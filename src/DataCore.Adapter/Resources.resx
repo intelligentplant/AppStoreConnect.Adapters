@@ -403,26 +403,11 @@
   <data name="Log_InMemoryEventMessageManager_WroteMessage" xml:space="preserve">
     <value>Wrote event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
   </data>
-  <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
-    <value>Updated adapter options are not valid.</value>
-  </data>
   <data name="Log_PublishToSubscriberThrewException" xml:space="preserve">
     <value>Publish to subscriber with connection ID '{connectionId}' failed with error.</value>
   </data>
   <data name="Log_PublishToSubscriberWasUnsuccessful" xml:space="preserve">
     <value>Publish to subscriber with connection ID '{connectionId}' failed.</value>
-  </data>
-  <data name="Log_StartedAdapter" xml:space="preserve">
-    <value>Started adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StartingAdapter" xml:space="preserve">
-    <value>Starting adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StoppedAdapter" xml:space="preserve">
-    <value>Stopped adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StoppingAdapter" xml:space="preserve">
-    <value>Stopping adapter '{AdapterId}' (disposing: false).</value>
   </data>
   <data name="TagValue_ProcessedValue_Error" xml:space="preserve">
     <value>ERROR</value>

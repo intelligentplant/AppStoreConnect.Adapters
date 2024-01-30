@@ -871,15 +871,6 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Updated adapter options are not valid..
-        /// </summary>
-        internal static string Log_InvalidAdapterOptionsUpdate {
-            get {
-                return ResourceManager.GetString("Log_InvalidAdapterOptionsUpdate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Publish to subscriber with connection ID &apos;{connectionId}&apos; failed with error..
         /// </summary>
         internal static string Log_PublishToSubscriberThrewException {
@@ -894,42 +885,6 @@ namespace DataCore.Adapter {
         internal static string Log_PublishToSubscriberWasUnsuccessful {
             get {
                 return ResourceManager.GetString("Log_PublishToSubscriberWasUnsuccessful", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Started adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StartedAdapter {
-            get {
-                return ResourceManager.GetString("Log_StartedAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Starting adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StartingAdapter {
-            get {
-                return ResourceManager.GetString("Log_StartingAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Stopped adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StoppedAdapter {
-            get {
-                return ResourceManager.GetString("Log_StoppedAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterId}&apos; (disposing: false)..
-        /// </summary>
-        internal static string Log_StoppingAdapter {
-            get {
-                return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
             }
         }
         

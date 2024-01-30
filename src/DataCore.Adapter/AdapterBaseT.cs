@@ -279,7 +279,7 @@ namespace DataCore.Adapter {
                     );
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_InvalidAdapterOptionsUpdate);
+                    LogAdapterOptionsUpdateInvalid(Logger, e);
                     return;
                 }
 
@@ -528,6 +528,13 @@ namespace DataCore.Adapter {
             _optionsMonitorSubscription?.Dispose();
             _healthCheckManager.Dispose();
         }
+
+        #endregion
+
+        #region [ Logger Messages ]
+
+        [LoggerMessage(100, LogLevel.Error, "Updated adapter options are not valid.")]
+        static partial void LogAdapterOptionsUpdateInvalid(ILogger logger, Exception error);
 
         #endregion
 
