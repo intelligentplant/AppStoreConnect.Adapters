@@ -43,10 +43,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The logger for the adapter.
         /// </summary>
-        /// <remarks>
-        ///   This property may be deprecated in the future. Use <see cref="LoggerFactory"/> to 
-        ///   create <see cref="ILogger"/> instances for subclasses or helper types instead.
-        /// </remarks>
+        [Obsolete("Use LoggerFactory to create ILogger instances instead.")]
         protected internal ILogger Logger => _logger;
 
         /// <summary>
