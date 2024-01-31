@@ -6,11 +6,23 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+using Serilog;
+
 // The [VendorInfo] attribute is used to add vendor information to the adapters in this assembly,
 // as well as the host information for the application.
 [assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging using Serilog. Additional logging destinations such as files can be added
+// using appsettings.json. See https://github.com/serilog/serilog-settings-configuration for more
+// information.
+builder.Host.UseSerilog((context, services, configuration) => { 
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 // Our adapter settings are stored in adaptersettings.json.
 builder.Configuration
