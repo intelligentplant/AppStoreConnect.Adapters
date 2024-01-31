@@ -15,7 +15,6 @@ DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.GetClient() -> Dat
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.GetOrCreateExtensionHubConnection(string! key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.SignalR.Client.HubConnection!>!
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.RemoteDescriptor.get -> DataCore.Adapter.Common.AdapterDescriptorExtended!
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.HostInfo!
-DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.SignalRAdapterProxy(string! id, DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy!>? logger) -> void
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxyOptions
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxyOptions.CompatibilityLevel.get -> DataCore.Adapter.AspNetCore.SignalR.Client.CompatibilityLevel
 DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxyOptions.CompatibilityLevel.set -> void

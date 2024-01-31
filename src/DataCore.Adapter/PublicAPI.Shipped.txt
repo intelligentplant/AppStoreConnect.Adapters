@@ -117,7 +117,6 @@ DataCore.Adapter.DefaultRetryPolicy.DefaultRetryPolicy() -> void
 DataCore.Adapter.DefaultRetryPolicy.DefaultRetryPolicy(params System.TimeSpan[]! retryDelays) -> void
 DataCore.Adapter.DefaultRetryPolicy.NextRetryDelay(DataCore.Adapter.RetryContext! retryContext) -> System.TimeSpan?
 DataCore.Adapter.Diagnostics.ConfigurationChanges
-DataCore.Adapter.Diagnostics.ConfigurationChanges.ConfigurationChanges(DataCore.Adapter.Diagnostics.ConfigurationChangesOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.Diagnostics.ConfigurationChanges.NotifyAsync(DataCore.Adapter.Diagnostics.ConfigurationChange! change, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Diagnostics.ConfigurationChanges.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Diagnostics.ConfigurationChange!>!
 DataCore.Adapter.Diagnostics.ConfigurationChangesOptions
@@ -140,13 +139,11 @@ DataCore.Adapter.Events.EventMessageBuilder.WithProperty(string! name, object! v
 DataCore.Adapter.Events.EventMessageBuilder.WithTopic(string? topic) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithUtcEventTime(System.DateTime utcEventTime) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessagePush
-DataCore.Adapter.Events.EventMessagePush.EventMessagePush(DataCore.Adapter.Events.EventMessagePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.Events.EventMessagePush.HasActiveSubscriptions.get -> bool
 DataCore.Adapter.Events.EventMessagePush.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
 DataCore.Adapter.Events.EventMessagePushOptions
 DataCore.Adapter.Events.EventMessagePushOptions.EventMessagePushOptions() -> void
 DataCore.Adapter.Events.EventMessagePushWithTopics
-DataCore.Adapter.Events.EventMessagePushWithTopics.EventMessagePushWithTopics(DataCore.Adapter.Events.EventMessagePushWithTopicsOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.Events.EventMessagePushWithTopics.GetSubscribedTopics() -> System.Collections.Generic.IEnumerable<string!>!
 DataCore.Adapter.Events.EventMessagePushWithTopics.HasActiveSubscriptions.get -> bool
 DataCore.Adapter.Events.EventMessagePushWithTopics.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessageSubscriptionUpdate!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
@@ -165,7 +162,6 @@ DataCore.Adapter.Events.EventSubscriptionChannel.SubscriptionType.get -> DataCor
 DataCore.Adapter.Events.InMemoryEventMessageStore
 DataCore.Adapter.Events.InMemoryEventMessageStore.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.Events.InMemoryEventMessageStore.Dispose() -> void
-DataCore.Adapter.Events.InMemoryEventMessageStore.InMemoryEventMessageStore(DataCore.Adapter.Events.InMemoryEventMessageStoreOptions? options = null, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
 DataCore.Adapter.Events.InMemoryEventMessageStore.Publish -> System.Action<DataCore.Adapter.Events.EventMessage!>?
 DataCore.Adapter.Events.InMemoryEventMessageStore.ReadEventMessagesForTimeRange(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
 DataCore.Adapter.Events.InMemoryEventMessageStore.ReadEventMessagesUsingCursor(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessageWithCursorPosition!>!
@@ -244,7 +240,6 @@ DataCore.Adapter.Extensions.CustomFunctions
 DataCore.Adapter.Extensions.CustomFunctions.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.Extensions.CustomFunctions.BaseUri.get -> System.Uri!
 DataCore.Adapter.Extensions.CustomFunctions.CreateJsonSchema<T>() -> System.Text.Json.JsonElement
-DataCore.Adapter.Extensions.CustomFunctions.CustomFunctions(System.Uri! baseUri, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, System.Text.Json.JsonSerializerOptions? jsonOptions = null, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
 DataCore.Adapter.Extensions.CustomFunctions.RegisterFunctionAsync(DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended! descriptor, DataCore.Adapter.Extensions.CustomFunctionHandler! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 DataCore.Adapter.Extensions.CustomFunctions.RegisterFunctionAsync<TRequest, TResponse>(string! name, string? description, DataCore.Adapter.Extensions.CustomFunctionHandler<TRequest, TResponse>! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 DataCore.Adapter.Extensions.CustomFunctions.RegisterFunctionAsync<TRequest, TResponse>(System.Uri! id, string! name, string? description, DataCore.Adapter.Extensions.CustomFunctionHandler<TRequest, TResponse>! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
@@ -277,7 +272,6 @@ DataCore.Adapter.RealTimeData.InMemoryTagValueAnnotationManager.CreateOrUpdateAn
 DataCore.Adapter.RealTimeData.InMemoryTagValueAnnotationManager.DeleteAnnotationAsync(string! tagId, string! annotationId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 DataCore.Adapter.RealTimeData.InMemoryTagValueAnnotationManager.InMemoryTagValueAnnotationManager(DataCore.Adapter.RealTimeData.TagValueAnnotationManagerOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService) -> void
 DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePush
-DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePush.PollingSnapshotTagValuePush(DataCore.Adapter.RealTimeData.IReadSnapshotTagValues! readSnapshotFeature, DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePushOptions
 DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePushOptions.PollingInterval.get -> System.TimeSpan
 DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePushOptions.PollingInterval.set -> void
@@ -295,17 +289,14 @@ DataCore.Adapter.RealTimeData.RealTimeDataFeatureExtensions
 DataCore.Adapter.RealTimeData.SnapshotTagValueManager
 DataCore.Adapter.RealTimeData.SnapshotTagValueManager.DeleteSnapshotTagValueAsync(DataCore.Adapter.Tags.TagIdentifier! tag, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.RealTimeData.SnapshotTagValueManager.ReadSnapshotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
-DataCore.Adapter.RealTimeData.SnapshotTagValueManager.SnapshotTagValueManager(DataCore.Adapter.RealTimeData.SnapshotTagValueManagerOptions? options = null, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, DataCore.Adapter.Services.IKeyValueStore? keyValueStore = null, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValueManagerOptions
 DataCore.Adapter.RealTimeData.SnapshotTagValueManagerOptions.SnapshotTagValueManagerOptions() -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValuePush
-DataCore.Adapter.RealTimeData.SnapshotTagValuePush.SnapshotTagValuePush(DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.GetSubscribedTags() -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.TagIdentifier!>!
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.HasSubscribersAsync(DataCore.Adapter.Tags.TagIdentifier! tag) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.PublishValueToSubscribersAsync(DataCore.Adapter.RealTimeData.TagValueQueryResult! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.RemoveCachedValuesIfNoSubscribersAsync(System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.TagIdentifier!>! tags, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
-DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.SnapshotTagValuePushBase(DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushExtensions
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions
@@ -438,7 +429,6 @@ DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.Op
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.Publish -> System.Action<TValue>?
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.SubscriptionAdded -> System.Action<TSubscription!>?
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.SubscriptionCancelled -> System.Action<TSubscription!>?
-DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.SubscriptionManager(TOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger? logger) -> void
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.~SubscriptionManager() -> void
 DataCore.Adapter.SubscriptionManagerOptions
 DataCore.Adapter.SubscriptionManagerOptions.AdapterId.get -> string?
@@ -512,7 +502,6 @@ DataCore.Adapter.Tags.TagManager.GetTagAsync(string! tagNameOrId, System.Threadi
 DataCore.Adapter.Tags.TagManager.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
 DataCore.Adapter.Tags.TagManager.GetTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Tags.TagManager.InitAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
-DataCore.Adapter.Tags.TagManager.TagManager(DataCore.Adapter.Services.IKeyValueStore? keyValueStore = null, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? tagPropertyDefinitions = null, System.Func<DataCore.Adapter.Diagnostics.ConfigurationChange!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? onConfigurationChange = null) -> void
 DataCore.Adapter.Tags.TagResolver
 DataCore.Adapter.ValidationExtensions
 override DataCore.Adapter.AdapterBase<TAdapterOptions>.Dispose(bool disposing) -> void
