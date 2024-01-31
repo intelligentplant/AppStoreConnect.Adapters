@@ -57,7 +57,7 @@ namespace DataCore.Adapter.Example {
             _assetModelBrowser = new AssetModelManager(new InMemoryKeyValueStore(), BackgroundTaskService);
 
             AddFeatures(_assetModelBrowser);
-            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
+            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, LoggerFactory));
 #pragma warning disable CS0618 // Type or member is obsolete
             AddExtensionFeatures(new ExampleExtensionImpl(this, encoders));
 #pragma warning restore CS0618 // Type or member is obsolete

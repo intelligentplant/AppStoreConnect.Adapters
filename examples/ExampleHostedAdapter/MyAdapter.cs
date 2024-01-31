@@ -59,7 +59,7 @@ namespace ExampleHostedAdapter {
             // when e.g. tags or asset model nodes are created by our adapter.
             _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() { 
                 Id = Descriptor.Id
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
             // Tell the adapter to advertise that it supports all of the adapter features
             // implemented by the ConfigurationChanges object.
@@ -90,7 +90,9 @@ namespace ExampleHostedAdapter {
                 new[] { s_tagCreatedAtPropertyDefinition },
                 // When tags are created, updated or deleted, we will notify interested parties
                 // via the ConfigurationChanges object we created above.
-                _configurationChanges.NotifyAsync
+                _configurationChanges.NotifyAsync,
+                // Create a logger for the TagManager.
+                LoggerFactory.CreateLogger<TagManager>()
             );
 
             // Tell the adapter to advertise that it supports all of the adapter features
