@@ -24,6 +24,11 @@ The `Program.cs` file configures the dependency injection container and applicat
 The Razor Pages for the application define a basic user interface. The `Settings` page is used to configure the `MyAdapterOptions` for the adapter at runtime. Submitting the form will overwrite the contents of the `adaptersettings.json` file. Remember to extend the form when you add new properties to the `MyAdapterOptions` class!
 
 
+# Logging
+
+The adapter host uses [Serilog](https://serilog.net/) for logging. The `appsettings.json` file configures the logger to write to the console using formatting that is similar to ASP.NET Core's default console logger. Additional log destinations (such as files or structured logging services) can be added by modifying the `Serilog` section of the `appsettings.json` file. See [here](https://github.com/serilog/serilog-settings-configuration) for more details.
+
+
 # Deployment
 
 Your adapter host is an ASP.NET Core application. Microsoft's documentation about deploying and hosting ASP.NET Core applications is available [here](https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy).

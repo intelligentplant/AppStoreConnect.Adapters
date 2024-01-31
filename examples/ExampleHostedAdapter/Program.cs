@@ -14,19 +14,19 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Our adapter settings are stored in adaptersettings.json.
+builder.Configuration
+    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
+
 // Configure logging using Serilog. Additional logging destinations such as files can be added
 // using appsettings.json. See https://github.com/serilog/serilog-settings-configuration for more
 // information.
-builder.Host.UseSerilog((context, services, configuration) => { 
+builder.Host.UseSerilog((context, services, configuration) => {
     configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext();
 });
-
-// Our adapter settings are stored in adaptersettings.json.
-builder.Configuration
-    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
 // Parent PID. If specified, we will gracefully shut down if the parent process exits.
 var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
