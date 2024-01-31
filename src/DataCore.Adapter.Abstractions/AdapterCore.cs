@@ -190,6 +190,7 @@ namespace DataCore.Adapter {
         ///   that always returns the specified <paramref name="logger"/>.
         /// </remarks>
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;

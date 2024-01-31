@@ -14,6 +14,7 @@ using IntelligentPlant.BackgroundTasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 namespace DataCore.Adapter {
 
@@ -27,6 +28,11 @@ namespace DataCore.Adapter {
     public abstract partial class AdapterBase<TAdapterOptions> : AdapterCore where TAdapterOptions : AdapterOptions, new() {
 
         #region [ Fields / Properties ]
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        private readonly ILogger _logger;
 
         /// <summary>
         /// The <typeparamref name="TAdapterOptions"/> monitor subscription.
@@ -66,14 +72,14 @@ namespace DataCore.Adapter {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the adapter. Can be <see langword="null"/>.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>.
         /// </param>
         private AdapterBase(
-            string id, 
-            IBackgroundTaskService? backgroundTaskService, 
-            ILogger? logger
-        ) : base(new AdapterDescriptor(id, id, null), backgroundTaskService, logger) {           
+            string id,
+            IBackgroundTaskService? backgroundTaskService,
+            ILoggerFactory? loggerFactory
+        ) : base(new AdapterDescriptor(id, id, null), backgroundTaskService, loggerFactory) {
             if (string.IsNullOrWhiteSpace(id)) {
                 throw new ArgumentException(Resources.Error_AdapterIdIsRequired);
             }
@@ -81,6 +87,245 @@ namespace DataCore.Adapter {
             if (id.Length > AdapterConstants.MaxIdLength) {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, AdapterConstants.MaxIdLength), nameof(id));
             }
+
+            _logger = LoggerFactory.CreateLogger($"{typeof(AdapterBase).FullName}.{nameof(AdapterBase<TAdapterOptions>)}");
+
+            Options = default!;
+            _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
+
+            // Register default features.
+            AddDefaultFeatures();
+
+            // Automatically register features implemented directly on the adapter if required. 
+            var autoRegisterFeatures = GetType().GetCustomAttribute<AutomaticFeatureRegistrationAttribute>(true);
+            if (autoRegisterFeatures?.IsEnabled ?? true) {
+                AddFeatures(this);
+            }
+
+            Started += adapter => {
+                OnHealthStatusChanged();
+                return Task.CompletedTask;
+            };
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterBase{TAdapterOptions}"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is longer than <see cref="AdapterConstants.MaxIdLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   The <paramref name="options"/> are not valid.
+        /// </exception>
+        protected AdapterBase(
+            string id,
+            TAdapterOptions options,
+            IBackgroundTaskService? backgroundTaskService,
+            ILoggerFactory? loggerFactory
+        ) : this(id, Microsoft.Extensions.Options.Options.Create(options ?? throw new ArgumentNullException(nameof(options))), backgroundTaskService, loggerFactory) { }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterBase{TAdapterOptions}"/> object that receives its 
+        /// configuration from an <see cref="IOptions{TOptions}"/>.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="options">
+        ///   The adapter options.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is longer than <see cref="AdapterConstants.MaxIdLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   The value of the <paramref name="options"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   The value of the <paramref name="options"/> is not valid.
+        /// </exception>
+        protected AdapterBase(
+            string id,
+            IOptions<TAdapterOptions> options,
+            IBackgroundTaskService? backgroundTaskService,
+            ILoggerFactory? loggerFactory = null
+        ) : this(id, backgroundTaskService, loggerFactory) {
+            if (options == null) {
+                throw new ArgumentNullException(nameof(options));
+            }
+            var opts = options.Value;
+            if (opts == null) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NoOptionsFoundForAdapter, id));
+            }
+            Validator.ValidateObject(opts, new ValidationContext(opts), true);
+            Options = opts;
+            UpdateDescriptor(opts.Name, opts.Description);
+            if (!Options.IsEnabled) {
+                Disable();
+            }
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterBase{TAdapterOptions}"/> object that receives its 
+        /// configuration from an <see cref="IOptionsMonitor{TOptions}"/> and can monitor for 
+        /// configuration changes.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="optionsMonitor">
+        ///   The monitor for the adapter's options type. The <see cref="IOptionsMonitor{TOptions}"/> 
+        ///   key used is the supplied <paramref name="id"/>.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter. Can be <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        ///   <paramref name="id"/> is longer than <see cref="AdapterConstants.MaxIdLength"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="optionsMonitor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="optionsMonitor"/> does not contain an entry that can be used with this adapter.
+        /// </exception>
+        /// <exception cref="ValidationException">
+        ///   The initial options retrieved from <paramref name="optionsMonitor"/> are not valid.
+        /// </exception>
+        /// <remarks>
+        ///   Note to implementers: override the <see cref="OnOptionsChange"/> method on your 
+        ///   adapter implementation to receive notifications of options changes received from the 
+        ///   <paramref name="optionsMonitor"/>.
+        /// </remarks>
+        protected AdapterBase(
+            string id,
+            IOptionsMonitor<TAdapterOptions> optionsMonitor,
+            IBackgroundTaskService? backgroundTaskService,
+            ILoggerFactory? loggerFactory
+        ) : this(
+            id,
+            backgroundTaskService,
+            loggerFactory
+        ) {
+            if (optionsMonitor == null) {
+                throw new ArgumentNullException(nameof(optionsMonitor));
+            }
+
+            var options = optionsMonitor.Get(id);
+            if (options == null) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_NoOptionsFoundForAdapter, id));
+            }
+
+            // Validate options.
+            Validator.ValidateObject(
+                options,
+                new ValidationContext(options),
+                true
+            );
+
+            Options = options;
+            UpdateDescriptor(options.Name, options.Description);
+            if (!Options.IsEnabled) {
+                Disable();
+            }
+
+            _optionsMonitorSubscription = optionsMonitor.OnChange((opts, name) => {
+                if (!string.Equals(name, id, StringComparison.Ordinal)) {
+                    return;
+                }
+
+                // Validate updated options.
+                try {
+                    if (opts == null) {
+                        throw new ArgumentNullException(nameof(opts));
+                    }
+                    Validator.ValidateObject(
+                        opts,
+                        new ValidationContext(opts),
+                        true
+                    );
+                }
+                catch (Exception e) {
+                    LogAdapterOptionsUpdateInvalid(_logger, e, id);
+                    return;
+                }
+
+                var previous = Options;
+                Options = opts;
+                OnOptionsChangeInternal(opts, previous);
+            });
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterBase{TAdapterOptions}"/> object.
+        /// </summary>
+        /// <param name="id">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
+        ///   operations. Specify <see langword="null"/> to use the default implementation.
+        /// </param>
+        /// <param name="logger">
+        ///   The logger for the adapter. Can be <see langword="null"/>.
+        /// </param>
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
+        private AdapterBase(
+            string id,
+            IBackgroundTaskService? backgroundTaskService,
+            ILogger? logger
+        ) : base(new AdapterDescriptor(id, id, null), backgroundTaskService, logger) {
+            if (string.IsNullOrWhiteSpace(id)) {
+                throw new ArgumentException(Resources.Error_AdapterIdIsRequired);
+            }
+
+            if (id.Length > AdapterConstants.MaxIdLength) {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Error_AdapterIdIsTooLong, AdapterConstants.MaxIdLength), nameof(id));
+            }
+
+            _logger = LoggerFactory.CreateLogger($"{typeof(AdapterBase).FullName}.{nameof(AdapterBase<TAdapterOptions>)}");
 
             Options = default!;
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
@@ -129,6 +374,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   The <paramref name="options"/> are not valid.
         /// </exception>
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterBase(
             string id,
             TAdapterOptions options,
@@ -169,6 +415,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ValidationException">
         ///   The value of the <paramref name="options"/> is not valid.
         /// </exception>
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterBase(
             string id,
             IOptions<TAdapterOptions> options,
@@ -208,7 +455,7 @@ namespace DataCore.Adapter {
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="logger">
-        ///   The logger factory for the adapter. Can be <see langword="null"/>.
+        ///   The logger for the adapter. Can be <see langword="null"/>.
         /// </param>
         /// <exception cref="ArgumentException">
         ///   <paramref name="id"/> is <see langword="null"/> or white space.
@@ -230,6 +477,7 @@ namespace DataCore.Adapter {
         ///   adapter implementation to receive notifications of options changes received from the 
         ///   <paramref name="optionsMonitor"/>.
         /// </remarks>
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterBase(
             string id,
             IOptionsMonitor<TAdapterOptions> optionsMonitor, 
@@ -279,7 +527,7 @@ namespace DataCore.Adapter {
                     );
                 }
                 catch (Exception e) {
-                    LogAdapterOptionsUpdateInvalid(Logger, e);
+                    LogAdapterOptionsUpdateInvalid(_logger, e, id);
                     return;
                 }
 
@@ -533,10 +781,11 @@ namespace DataCore.Adapter {
 
         #region [ Logger Messages ]
 
-        [LoggerMessage(100, LogLevel.Error, "Updated adapter options are not valid.")]
-        static partial void LogAdapterOptionsUpdateInvalid(ILogger logger, Exception error);
+        [LoggerMessage(100, LogLevel.Error, "Updated options for adapter '{id}' are not valid.")]
+        static partial void LogAdapterOptionsUpdateInvalid(ILogger logger, Exception error, string id);
 
         #endregion
 
     }
 }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads

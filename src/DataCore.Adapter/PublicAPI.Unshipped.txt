@@ -12,6 +12,9 @@ const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdSta
 const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdTimeAverage = "TIMEAVERAGE" -> string!
 const DataCore.Adapter.RealTimeData.DefaultDataFunctions.Constants.FunctionIdVariance = "VARIANCE" -> string!
 const DataCore.Adapter.RealTimeData.Utilities.CommonTagValuePropertyNames.Partial = "Partial" -> string!
+DataCore.Adapter.AdapterBase<TAdapterOptions>.AdapterBase(string! id, Microsoft.Extensions.Options.IOptions<TAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
+DataCore.Adapter.AdapterBase<TAdapterOptions>.AdapterBase(string! id, Microsoft.Extensions.Options.IOptionsMonitor<TAdapterOptions!>! optionsMonitor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
+DataCore.Adapter.AdapterBase<TAdapterOptions>.AdapterBase(string! id, TAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
 DataCore.Adapter.DefaultAdapterCallContext.DefaultAdapterCallContext(System.Security.Claims.ClaimsPrincipal? user = null, string? connectionId = null, string? correlationId = null, System.Globalization.CultureInfo? cultureInfo = null, System.IServiceProvider? serviceProvider = null) -> void
 DataCore.Adapter.DefaultAdapterCallContext.Services.get -> System.IServiceProvider!
 DataCore.Adapter.RealTimeData.DefaultDataFunctions
