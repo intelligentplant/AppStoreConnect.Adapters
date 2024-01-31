@@ -96,7 +96,7 @@ namespace DataCore.Adapter.WaveGenerator {
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
                 PollingInterval = GetSampleInterval(),
                 TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, Logger));
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>()));
             AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
         }
 
@@ -127,7 +127,7 @@ namespace DataCore.Adapter.WaveGenerator {
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
                 PollingInterval = GetSampleInterval(),
                 TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, Logger));
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>()));
             AddFeatures(ReadHistoricalTagValues.ForAdapter(this));
         }
 

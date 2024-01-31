@@ -37,7 +37,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
-        public SnapshotTagValuePush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) 
+        public SnapshotTagValuePush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger<SnapshotTagValuePush>? logger) 
             : base(options, backgroundTaskService, logger) { }
 
 

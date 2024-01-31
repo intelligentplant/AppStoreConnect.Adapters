@@ -149,7 +149,7 @@ namespace DataCore.Adapter.Csv {
                         TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
                     },
                     BackgroundTaskService,
-                    Logger
+                    LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>()
                 );
                 AddFeature(typeof(ISnapshotTagValuePush), simulatedPush);
             }

@@ -355,60 +355,6 @@
   <data name="HealthChecks_DisplayName_OverallAdapterHealth" xml:space="preserve">
     <value>Adapter Health</value>
   </data>
-  <data name="Log_AdapterIsDisabled" xml:space="preserve">
-    <value>Adapter '{AdapterId}' is disabled.</value>
-  </data>
-  <data name="Log_AdapterStartupError" xml:space="preserve">
-    <value>An error occurred while starting adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_AdapterStopError" xml:space="preserve">
-    <value>An error occurred while stopping adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_DisposingAdapter" xml:space="preserve">
-    <value>Stopping adapter '{AdapterId}' (disposing: true).</value>
-  </data>
-  <data name="Log_ErrorDuringSnapshotPushRefresh" xml:space="preserve">
-    <value>Error while refreshing subscribed snapshot tag values.</value>
-  </data>
-  <data name="Log_ErrorInBackgroundTask" xml:space="preserve">
-    <value>Error in background task '{WorkItem}'.</value>
-  </data>
-  <data name="Log_ErrorInEventSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the event subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotPollingUpdateLoop" xml:space="preserve">
-    <value>An error occurred while the snapshot subscription manager was polling for new values.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the snapshot subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfEventMessageSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of an event message subscription.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfFeature" xml:space="preserve">
-    <value>Error while disposing feature: {feature}</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of a snapshot subscription.</value>
-  </data>
-  <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change for {count} tags: Action = '{action}'</value>
-  </data>
-  <data name="Log_ErrorWhileProcessingSubscriptionTopicChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change for {count} topics: Action = '{action}'</value>
-  </data>
-  <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
-    <value>Evicted event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
-  </data>
-  <data name="Log_InMemoryEventMessageManager_WroteMessage" xml:space="preserve">
-    <value>Wrote event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
-  </data>
-  <data name="Log_PublishToSubscriberThrewException" xml:space="preserve">
-    <value>Publish to subscriber with connection ID '{connectionId}' failed with error.</value>
-  </data>
-  <data name="Log_PublishToSubscriberWasUnsuccessful" xml:space="preserve">
-    <value>Publish to subscriber with connection ID '{connectionId}' failed.</value>
-  </data>
   <data name="TagValue_ProcessedValue_Error" xml:space="preserve">
     <value>ERROR</value>
   </data>

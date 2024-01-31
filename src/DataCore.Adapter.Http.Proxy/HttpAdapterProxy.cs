@@ -342,7 +342,7 @@ namespace DataCore.Adapter.Http.Proxy {
                         TagResolver = Adapter.RealTimeData.SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
                     },
                     BackgroundTaskService,
-                    Logger
+                    LoggerFactory.CreateLogger<Adapter.RealTimeData.PollingSnapshotTagValuePush>()
                 );
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }

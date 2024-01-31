@@ -14,7 +14,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements an in-memory event message store that implements push, read, and write operations.
     /// </summary>
-    public sealed class InMemoryEventMessageStore : IEventMessagePush, IEventMessagePushWithTopics, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages, IBackgroundTaskServiceProvider, IDisposable {
+    public sealed partial class InMemoryEventMessageStore : IEventMessagePush, IEventMessagePushWithTopics, IReadEventMessagesForTimeRange, IReadEventMessagesUsingCursor, IWriteEventMessages, IBackgroundTaskServiceProvider, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed;
@@ -34,7 +34,7 @@ namespace DataCore.Adapter.Events {
         /// <summary>
         /// Logging.
         /// </summary>
-        private readonly ILogger Logger;
+        private readonly ILogger<InMemoryEventMessageStore> _logger;
 
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use.
@@ -87,24 +87,27 @@ namespace DataCore.Adapter.Events {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> to use when running background operations.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the <see cref="InMemoryEventMessageStore"/>.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the <see cref="InMemoryEventMessageStore"/>.
         /// </param>
         public InMemoryEventMessageStore(
             InMemoryEventMessageStoreOptions? options = null, 
             IBackgroundTaskService? backgroundTaskService = null, 
-            ILogger? logger = null
+            ILoggerFactory? loggerFactory = null
         ) {
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            if (loggerFactory == null) {
+                loggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+            }
+            _logger = loggerFactory.CreateLogger<InMemoryEventMessageStore>();
             _disposedToken = _disposedTokenSource.Token;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
-            _push = new EventMessagePush(options, backgroundTaskService, Logger);
+            _push = new EventMessagePush(options, backgroundTaskService, loggerFactory.CreateLogger<EventMessagePush>());
             var pushWithTopicsOptions = new EventMessagePushWithTopicsOptions();
             if (options != null) {
                 pushWithTopicsOptions.MaxSubscriptionCount = options.MaxSubscriptionCount;
                 pushWithTopicsOptions.ChannelCapacity = options.ChannelCapacity;
             }
-            _pushWithTopics = new EventMessagePushWithTopics(pushWithTopicsOptions, backgroundTaskService, Logger);
+            _pushWithTopics = new EventMessagePushWithTopics(pushWithTopicsOptions, backgroundTaskService, loggerFactory.CreateLogger<EventMessagePushWithTopics>());
             _capacity = options?.Capacity ?? -1;
         }
 
@@ -149,26 +152,13 @@ namespace DataCore.Adapter.Events {
             _eventMessagesLock.EnterWriteLock();
             try {
                 var msg = EventMessageBuilder.CreateFromExisting(message).Build();
-                if (Logger.IsEnabled(LogLevel.Trace)) {
-                    Logger.LogTrace(
-                        Resources.Log_InMemoryEventMessageManager_WroteMessage, 
-                        cursorPosition, 
-                        msg.Id, 
-                        msg.UtcEventTime
-                    );
-                }
+                LogMessageWritten(msg.Id, cursorPosition, msg.UtcEventTime);
                 _eventMessages.Add(cursorPosition, msg);
                 if (_capacity > 0 && _eventMessages.Count > _capacity) {
-
                     // Over capacity; remove earliest message.
-                    if (Logger.IsEnabled(LogLevel.Trace)) {
+                    if (_logger.IsEnabled(LogLevel.Trace)) {
                         var evicted = _eventMessages.First();
-                        Logger.LogTrace(
-                            Resources.Log_InMemoryEventMessageManager_EvictedMessage, 
-                            evicted.Key, 
-                            evicted.Value.Id, 
-                            evicted.Value.UtcEventTime
-                        );
+                        LogMessageEvicted(evicted.Value.Id, evicted.Key, evicted.Value.UtcEventTime);
                     }
                     
                     _eventMessages.RemoveAt(0);
@@ -395,6 +385,13 @@ namespace DataCore.Adapter.Events {
             }
             _eventMessagesLock.Dispose();
         }
+
+
+        [LoggerMessage(1, LogLevel.Trace, "Wrote event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.")]
+        partial void LogMessageWritten(string id, CursorPosition cursorPosition, DateTime timestamp);
+
+        [LoggerMessage(2, LogLevel.Trace, "Evicted event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.")]
+        partial void LogMessageEvicted(string id, CursorPosition cursorPosition, DateTime timestamp);
 
 
         /// <summary>

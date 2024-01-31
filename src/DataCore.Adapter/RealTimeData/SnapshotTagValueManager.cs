@@ -57,13 +57,13 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <see langword="null"/> if persistence of tag values is not required.
         /// </param>
         /// <param name="logger">
-        ///   The <see cref="ILogger"/> to use.
+        ///   The logger to use.
         /// </param>
         public SnapshotTagValueManager(
             SnapshotTagValueManagerOptions? options = null,
             IBackgroundTaskService? backgroundTaskService = null,
             IKeyValueStore? keyValueStore = null,
-            ILogger? logger = null
+            ILogger<SnapshotTagValueManager>? logger = null
         ) : base(options, backgroundTaskService, logger) {
             _keyValueStore = keyValueStore?.CreateScopedStore("snapshot-tag-value-manager:");
 

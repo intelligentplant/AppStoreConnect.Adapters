@@ -29,7 +29,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TSubscription">
     ///   The subscription type.
     /// </typeparam>
-    public abstract class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
+    public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
         : IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable 
         where TOptions : SubscriptionManagerOptions, new() 
         where TSubscription : SubscriptionChannel<TTopic, TValue> {
@@ -537,18 +537,33 @@ namespace DataCore.Adapter {
                         }
 
                         try {
-                            var success = subscriber.Publish(item.Value);
-                            if (!success) {
-                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                            if (subscriber.Publish(item.Value)) {
+                                LogPublishToSubscriberSucceeded(Logger, subscriber.Context?.ConnectionId);
+                            }
+                            else {
+                                LogPublishToSubscriberFailed(Logger, subscriber.Context?.ConnectionId);
                             }
                         }
                         catch (Exception e) {
-                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                            LogPublishToSubscriberFaulted(Logger, e, subscriber.Context?.ConnectionId);
                         }
                     }
                 }
             }
         }
+
+
+        [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
+        static partial void LogPublishToSubscriberSucceeded(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(2, LogLevel.Trace, "Publish to subscriber '{subscriberId}' failed.")]
+        static partial void LogPublishToSubscriberFailed(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(3, LogLevel.Error, "Publish to subscriber '{subscriberId}' faulted.")]
+        static partial void LogPublishToSubscriberFaulted(ILogger logger, Exception e, string? subscriberId);
+
     }
 
 

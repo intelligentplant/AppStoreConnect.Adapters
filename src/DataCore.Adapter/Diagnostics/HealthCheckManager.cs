@@ -76,7 +76,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// </param>
         internal HealthCheckManager(AdapterBase<TAdapterOptions> adapter) {
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
-            _logger = adapter.LoggerFactory.CreateLogger($"{typeof(HealthCheckManager<TAdapterOptions>).FullName}.{nameof(HealthCheckManager<AdapterOptions>)}");
+            _logger = adapter.LoggerFactory.CreateLogger("DataCore.Adapter.Diagnostics.HealthCheckManager");
         }
 
 
@@ -162,15 +162,15 @@ namespace DataCore.Adapter.Diagnostics {
 
                 try {
                     if (await registration.PublishAsync(update, false).ConfigureAwait(false)) {
-                        LogPublishToSubscriberSucceeded(registration.Subscriber.Context?.ConnectionId);
+                        LogPublishToSubscriberSucceeded(_logger, registration.Subscriber.Context?.ConnectionId);
                     }
                     else {
-                        LogPublishToSubscriberFailed(registration.Subscriber.Context?.ConnectionId);
+                        LogPublishToSubscriberFailed(_logger, registration.Subscriber.Context?.ConnectionId);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    LogPublishToSubscriberFaulted(e, registration.Subscriber.Context?.ConnectionId);
+                    LogPublishToSubscriberFaulted(_logger, e, registration.Subscriber.Context?.ConnectionId);
                 }
             }
         }
@@ -321,16 +321,16 @@ namespace DataCore.Adapter.Diagnostics {
         }
 
 
-        [LoggerMessage(1, LogLevel.Trace, "Publish to connection '{connectionId}' succeeded.")]
-        partial void LogPublishToSubscriberSucceeded(string? connectionId);
+        [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
+        static partial void LogPublishToSubscriberSucceeded(ILogger logger, string? subscriberId);
 
 
-        [LoggerMessage(2, LogLevel.Trace, "Publish to connection '{connectionId}' failed.")]
-        partial void LogPublishToSubscriberFailed(string? connectionId);
+        [LoggerMessage(2, LogLevel.Trace, "Publish to subscriber '{subscriberId}' failed.")]
+        static partial void LogPublishToSubscriberFailed(ILogger logger, string? subscriberId);
 
 
-        [LoggerMessage(3, LogLevel.Error, "Publish to connection '{connectionId}' faulted.")]
-        partial void LogPublishToSubscriberFaulted(Exception e, string? connectionId);
+        [LoggerMessage(3, LogLevel.Error, "Publish to subscriber '{subscriberId}' faulted.")]
+        static partial void LogPublishToSubscriberFaulted(ILogger logger, Exception e, string? subscriberId);
 
 
         /// <summary>
