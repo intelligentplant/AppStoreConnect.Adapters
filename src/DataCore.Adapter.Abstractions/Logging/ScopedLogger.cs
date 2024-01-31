@@ -10,6 +10,11 @@ namespace DataCore.Adapter.Logging {
     internal class ScopedLogger : ILogger, IDisposable {
 
         /// <summary>
+        /// Specifies if the logger has been disposed.
+        /// </summary>
+        private bool _disposed;
+
+        /// <summary>
         /// The underlying logger.
         /// </summary>
         private readonly ILogger _logger;
@@ -55,7 +60,12 @@ namespace DataCore.Adapter.Logging {
 
         /// <inheritdoc/>
         public void Dispose() {
+            if (_disposed) {
+                return;
+            }
+
             _scope?.Dispose();
+            _disposed = true;
         }
 
     }

@@ -143,7 +143,7 @@ namespace DataCore.Adapter {
             }
 
             if (wrapper == null) {
-                LogUnableToCreateFeatureWrapper(Logger, featureType.FullName, Descriptor.Id);
+                LogUnableToCreateFeatureWrapper(_logger, featureType.FullName, Descriptor.Id);
             }
 
             if (!_featureLookup.TryAdd(uri!, wrapper ?? feature)) {
@@ -454,7 +454,7 @@ namespace DataCore.Adapter {
                     }
                 }
                 catch (Exception e) {
-                    LogErrorWhileDisposingFeature(Logger, e, unwrapped, Descriptor.Id);
+                    LogErrorWhileDisposingFeature(_logger, e, unwrapped, Descriptor.Id);
                 }
             }
 
@@ -466,7 +466,7 @@ namespace DataCore.Adapter {
                             await item.DisposeAsync().ConfigureAwait(false);
                         }
                         catch (Exception e) {
-                            LogErrorWhileDisposingFeature(Logger, e, item, Descriptor.Id);
+                            LogErrorWhileDisposingFeature(_logger, e, item, Descriptor.Id);
                         }
                     }
                 });
@@ -505,7 +505,7 @@ namespace DataCore.Adapter {
                     await DisposeFeatureAsync(unwrapped).ConfigureAwait(false);
                 }
                 catch (Exception e) {
-                    LogErrorWhileDisposingFeature(Logger, e, unwrapped, Descriptor.Id);
+                    LogErrorWhileDisposingFeature(_logger, e, unwrapped, Descriptor.Id);
                 }
             }
         }
