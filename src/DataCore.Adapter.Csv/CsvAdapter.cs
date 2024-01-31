@@ -61,8 +61,8 @@ namespace DataCore.Adapter.Csv {
         ///   The <see cref="IBackgroundTaskService"/> that the adapter can use to run background 
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the adapter.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -70,8 +70,8 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, CsvAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
-            : base(id, options, backgroundTaskService, logger) {
+        public CsvAdapter(string id, CsvAdapterOptions options, IBackgroundTaskService backgroundTaskService, ILoggerFactory loggerFactory)
+            : base(id, options, backgroundTaskService, loggerFactory) {
             AddFeatures();
         }
 
@@ -91,7 +91,7 @@ namespace DataCore.Adapter.Csv {
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the adapter.
+        ///   The logger factory for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -99,7 +99,7 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptions<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptions<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILoggerFactory logger)
             : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }
@@ -121,7 +121,7 @@ namespace DataCore.Adapter.Csv {
         ///   operations. Specify <see langword="null"/> to use the default implementation.
         /// </param>
         /// <param name="logger">
-        ///   The logger for the adapter.
+        ///   The logger factory for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
@@ -129,7 +129,7 @@ namespace DataCore.Adapter.Csv {
         /// <exception cref="System.ComponentModel.DataAnnotations.ValidationException">
         ///   <paramref name="options"/> fails validation.
         /// </exception>
-        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILogger<CsvAdapter> logger)
+        public CsvAdapter(string id, Microsoft.Extensions.Options.IOptionsMonitor<CsvAdapterOptions> options, IBackgroundTaskService backgroundTaskService, ILoggerFactory logger)
             : base(id, options, backgroundTaskService, logger) {
             AddFeatures();
         }

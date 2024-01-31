@@ -55,7 +55,7 @@ namespace DataCore.Adapter.Tests {
 
         private abstract class TestAdapterBase : AdapterBase, IReadSnapshotTagValues {
 
-            protected TestAdapterBase(string id) : base(id, null, null, null, null) { }
+            protected TestAdapterBase(string id) : base(id, null, null, null, (Microsoft.Extensions.Logging.ILoggerFactory) null) { }
 
             protected override Task StartAsync(CancellationToken cancellationToken) {
                 return Task.CompletedTask;

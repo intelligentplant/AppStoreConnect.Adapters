@@ -82,15 +82,17 @@ namespace DataCore.Adapter.WaveGenerator {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the adapter.
         /// </param>
-        /// <param name="logger">
-        ///   The <see cref="ILogger"/> for the adapter.
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> for the adapter.
         /// </param>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public WaveGeneratorAdapter(
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
             string id,
             IOptions<WaveGeneratorAdapterOptions> options,
             IBackgroundTaskService? backgroundTaskService = null,
-            ILogger<WaveGeneratorAdapter>? logger = null
-        ) : base(id, options, backgroundTaskService, logger) {
+            ILoggerFactory? loggerFactory = null
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
                 PollingInterval = GetSampleInterval(),
                 TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
@@ -111,15 +113,17 @@ namespace DataCore.Adapter.WaveGenerator {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the adapter.
         /// </param>
-        /// <param name="logger">
-        ///   The <see cref="ILogger"/> for the adapter.
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> for the adapter.
         /// </param>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public WaveGeneratorAdapter(
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
             string id, 
             WaveGeneratorAdapterOptions options, 
             IBackgroundTaskService? backgroundTaskService = null, 
-            ILogger<WaveGeneratorAdapter>? logger = null
-        ) : base(id, options, backgroundTaskService, logger) {
+            ILoggerFactory? loggerFactory = null
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
             AddFeatures(new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
                 PollingInterval = GetSampleInterval(),
                 TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)

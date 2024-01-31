@@ -488,13 +488,4 @@ virtual DataCore.Adapter.AdapterCore.ValidateInvocationParameter(object! paramet
 ~static DataCore.Adapter.AbstractionsResources.Error_UnableToResolveMethod.get -> string
 ~static DataCore.Adapter.AbstractionsResources.Error_ValueStopwatch_NotInitialised.get -> string
 ~static DataCore.Adapter.AbstractionsResources.LocalizableString_LocalizationFailed.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_AdapterIsDisabled.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_AdapterStartupError.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_AdapterStopError.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_ErrorWhileDisposingOfFeature.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_StartedAdapter.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_StartingAdapter.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_StoppedAdapter.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_StoppingAdapter.get -> string
-~static DataCore.Adapter.AbstractionsResources.Log_UnableToCreateFeatureWrapper.get -> string
 ~static DataCore.Adapter.AbstractionsResources.ResourceManager.get -> System.Resources.ResourceManager

@@ -31,9 +31,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// <summary>
         /// Gets the proxy's logger.
         /// </summary>
-        protected ILogger Logger {
-            get { return Proxy.Logger; }
-        }
+        protected ILogger Logger { get; }
 
         /// <summary>
         /// The adapter ID for the remote adapter.
@@ -122,6 +120,7 @@ namespace DataCore.Adapter.Http.Proxy {
         /// </param>
         protected ProxyAdapterFeature(HttpAdapterProxy proxy) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            Logger = proxy.LoggerFactory.CreateLogger(GetType());
         }
 
 

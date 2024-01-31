@@ -52,8 +52,8 @@ namespace ExampleHostedAdapter {
             IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService backgroundTaskService,
-            ILogger<MyAdapter> logger
-        ) : base(id, options, backgroundTaskService, logger) {
+            ILoggerFactory loggerFactory
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
             // when e.g. tags or asset model nodes are created by our adapter.
@@ -110,7 +110,7 @@ namespace ExampleHostedAdapter {
                 Id = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>());
 
             // Tell the adapter to advertise that it supports all of the adapter features
             // implemented by the PollingSnapshotTagValuePush object.
@@ -122,7 +122,7 @@ namespace ExampleHostedAdapter {
                 TypeDescriptor.Id, 
                 BackgroundTaskService, 
                 jsonOptions.Value.SerializerOptions, 
-                Logger
+                LoggerFactory.CreateLogger<CustomFunctions>()
             );
 
             // Tell the adapter to advertise that it supports all of the adapter features
