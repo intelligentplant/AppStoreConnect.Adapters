@@ -163,7 +163,7 @@ var snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagV
     AdapterId = Descriptor.Id,
     PollingInterval = TimeSpan.FromSeconds(5),
     TagResolver = SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
-}, BackgroundTaskService, Logger);
+}, BackgroundTaskService, LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>());
 
 AddFeatures(snapshotPush);
 ```
@@ -468,7 +468,7 @@ Instrumentation is automatically generated for the following metrics on all feat
   "AllowedHosts": "*",
   "Kestrel": {
     "EndpointDefaults": {
-      "Protocols": "Http1AndHttp2"
+      "Protocols": "Http1AndHttp2AndHttp3"
     }
   },
   "CsvAdapter": {
