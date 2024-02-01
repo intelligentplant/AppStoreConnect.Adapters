@@ -92,14 +92,14 @@ namespace DataCore.Adapter.Tests {
 
                     // Add in-memory event message management
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())
+                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILoggerFactory>())
                     );
 
                     // Add dummy tag value writing.
                     adapter.AddStandardFeatures(new NullValueWrite());
 
                     // Add configuration change notifier.
-                    var configurationChanges = ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>());
+                    var configurationChanges = ActivatorUtilities.CreateInstance<Diagnostics.ConfigurationChanges>(sp, sp.GetService<ILogger<Diagnostics.ConfigurationChanges>>());
                     adapter.AddStandardFeatures(configurationChanges);
 
                     // Add asset model.
