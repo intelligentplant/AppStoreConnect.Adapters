@@ -30,10 +30,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
-        /// Gets the logger for the proxy.
+        /// Gets the logger factory for the proxy.
         /// </summary>
-        internal new ILogger Logger {
-            get { return base.Logger; }
+        internal new ILoggerFactory LoggerFactory {
+            get { return base.LoggerFactory; }
         }
 
         /// <summary>
@@ -141,20 +141,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
         ///   extension objects.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         public SignalRAdapterProxy(
             string id,
             SignalRAdapterProxyOptions options, 
             IBackgroundTaskService? backgroundTaskService,
             IEnumerable<IObjectEncoder> encoders,
-            ILogger<SignalRAdapterProxy>? logger
+            ILoggerFactory? loggerFactory
         ) : base(
             id,
             options, 
             backgroundTaskService, 
-            logger
+            loggerFactory
         ) {
 #pragma warning disable CS0618 // Type or member is obsolete
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));

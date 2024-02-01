@@ -31,9 +31,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <summary>
         /// Gets the logger for the proxy.
         /// </summary>
-        protected ILogger Logger {
-            get { return Proxy.Logger; }
-        }
+        protected ILogger Logger { get; }
 
         /// <summary>
         /// The adapter ID for the remote adapter.
@@ -117,6 +115,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// </param>
         protected ProxyAdapterFeature(SignalRAdapterProxy proxy) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            Logger = proxy.LoggerFactory.CreateLogger(GetType());
         }
 
 

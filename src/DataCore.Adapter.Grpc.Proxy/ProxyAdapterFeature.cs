@@ -30,11 +30,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
         protected GrpcAdapterProxy Proxy { get; }
 
         /// <summary>
-        /// Gets the logger for the proxy.
+        /// Gets the logger for the proxy feature.
         /// </summary>
-        protected ILogger Logger {
-            get { return Proxy.Logger; }
-        }
+        protected ILogger Logger { get; }
 
         /// <summary>
         /// The adapter ID for the remote adapter.
@@ -118,6 +116,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// </param>
         protected ProxyAdapterFeature(GrpcAdapterProxy proxy) {
             Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            Logger = proxy.LoggerFactory.CreateLogger(GetType());
         }
 
 

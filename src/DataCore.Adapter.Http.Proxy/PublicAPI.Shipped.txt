@@ -6,8 +6,6 @@ DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl
 DataCore.Adapter.Http.Proxy.Extensions.AdapterExtensionFeatureImpl.AdapterExtensionFeatureImpl(DataCore.Adapter.Http.Proxy.HttpAdapterProxy! proxy) -> void
 DataCore.Adapter.Http.Proxy.HttpAdapterProxy
 DataCore.Adapter.Http.Proxy.HttpAdapterProxy.GetClient() -> DataCore.Adapter.Http.Client.AdapterHttpClient!
-DataCore.Adapter.Http.Proxy.HttpAdapterProxy.HttpAdapterProxy(string! id, DataCore.Adapter.Http.Client.AdapterHttpClient! client, DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? taskScheduler, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Http.Proxy.HttpAdapterProxy!>? logger) -> void
-DataCore.Adapter.Http.Proxy.HttpAdapterProxy.Logger.get -> Microsoft.Extensions.Logging.ILogger!
 DataCore.Adapter.Http.Proxy.HttpAdapterProxy.RemoteDescriptor.get -> DataCore.Adapter.Common.AdapterDescriptorExtended!
 DataCore.Adapter.Http.Proxy.HttpAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.HostInfo!
 DataCore.Adapter.Http.Proxy.HttpAdapterProxy.TryGetSignalRClient(DataCore.Adapter.IAdapterCallContext! context, out DataCore.Adapter.AspNetCore.SignalR.Client.AdapterSignalRClient? client) -> bool

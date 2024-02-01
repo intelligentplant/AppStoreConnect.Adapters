@@ -1,1 +1,2 @@
 ﻿#nullable enable
+DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.SignalRAdapterProxy(string! id, DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void

@@ -52,14 +52,14 @@ namespace ExampleHostedAdapter {
             IOptions<JsonOptions> jsonOptions,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService backgroundTaskService,
-            ILogger<MyAdapter> logger
-        ) : base(id, options, backgroundTaskService, logger) {
+            ILoggerFactory loggerFactory
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
             // when e.g. tags or asset model nodes are created by our adapter.
             _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() { 
                 Id = Descriptor.Id
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
             // Tell the adapter to advertise that it supports all of the adapter features
             // implemented by the ConfigurationChanges object.
@@ -90,7 +90,9 @@ namespace ExampleHostedAdapter {
                 new[] { s_tagCreatedAtPropertyDefinition },
                 // When tags are created, updated or deleted, we will notify interested parties
                 // via the ConfigurationChanges object we created above.
-                _configurationChanges.NotifyAsync
+                _configurationChanges.NotifyAsync,
+                // Create a logger for the TagManager.
+                LoggerFactory.CreateLogger<TagManager>()
             );
 
             // Tell the adapter to advertise that it supports all of the adapter features
@@ -110,7 +112,7 @@ namespace ExampleHostedAdapter {
                 Id = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>());
 
             // Tell the adapter to advertise that it supports all of the adapter features
             // implemented by the PollingSnapshotTagValuePush object.
@@ -122,7 +124,7 @@ namespace ExampleHostedAdapter {
                 TypeDescriptor.Id, 
                 BackgroundTaskService, 
                 jsonOptions.Value.SerializerOptions, 
-                Logger
+                LoggerFactory.CreateLogger<CustomFunctions>()
             );
 
             // Tell the adapter to advertise that it supports all of the adapter features

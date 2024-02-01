@@ -66,7 +66,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
                     // Add in-memory event message management
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())    
+                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILoggerFactory>())    
                     );
 
                     return adapter;

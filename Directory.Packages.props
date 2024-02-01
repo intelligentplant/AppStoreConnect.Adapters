@@ -4,25 +4,6 @@
     <EnablePackageVersionOverride>false</EnablePackageVersionOverride>
     <NoWarn>NU1507;$(NoWarn)</NoWarn>
   </PropertyGroup>
-  <!-- 
-  Define package versions for OpenTelemetry and LibMan packages as build properties. This allows us to inject 
-  the correct package versions into the templated project files when building the DataCore.Adapter.Templates 
-  project. 
-  -->
-  <PropertyGroup>
-    <PkgVersion_OpenTelemetry>1.7.0</PkgVersion_OpenTelemetry>
-    <PkgVersion_OpenTelemetry_Api>1.7.0</PkgVersion_OpenTelemetry_Api>
-    <PkgVersion_OpenTelemetry_Exporter_Console>1.7.0</PkgVersion_OpenTelemetry_Exporter_Console>
-    <PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>1.7.0</PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol>
-    <PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>1.7.0-rc.1</PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore>
-    <PkgVersion_OpenTelemetry_Extensions_Hosting>1.7.0</PkgVersion_OpenTelemetry_Extensions_Hosting>
-    <PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_AspNetCore>
-    <PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient>
-    <PkgVersion_OpenTelemetry_Instrumentation_Http>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_Http>
-    <PkgVersion_OpenTelemetry_Instrumentation_Runtime>1.7.0</PkgVersion_OpenTelemetry_Instrumentation_Runtime>
-    <PkgVersion_OpenTelemetry_Instrumentation_SqlClient>1.6.0-beta.3</PkgVersion_OpenTelemetry_Instrumentation_SqlClient>
-    <PkgVersion_Microsoft_Web_LibraryManager_Build>2.1.175</PkgVersion_Microsoft_Web_LibraryManager_Build>
-  </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Castle.Core" Version="5.1.1" />
     <PackageVersion Include="CsvHelper" Version="30.0.1" />
@@ -50,25 +31,27 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="$(PkgVersion_Microsoft_Web_LibraryManager_Build)" />
+    <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
     <PackageVersion Include="MiniValidation" Version="0.9.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.1.1" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.1.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
     <PackageVersion Include="NSwag.AspNetCore" Version="13.20.0" />
-    <PackageVersion Include="OpenTelemetry" Version="$(PkgVersion_OpenTelemetry)" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="$(PkgVersion_OpenTelemetry_Api)" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="$(PkgVersion_OpenTelemetry_Exporter_Console)" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(PkgVersion_OpenTelemetry_Exporter_OpenTelemetryProtocol)" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="$(PkgVersion_OpenTelemetry_Exporter_Prometheus_AspNetCore)" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(PkgVersion_OpenTelemetry_Extensions_Hosting)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(PkgVersion_OpenTelemetry_Instrumentation_AspNetCore)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="$(PkgVersion_OpenTelemetry_Instrumentation_GrpcNetClient)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(PkgVersion_OpenTelemetry_Instrumentation_Http)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(PkgVersion_OpenTelemetry_Instrumentation_Runtime)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="$(PkgVersion_OpenTelemetry_Instrumentation_SqlClient)" />
+    <PackageVersion Include="OpenTelemetry" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.7.0-rc.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.6.0-beta.3" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.7.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.6.0-beta.3" />
     <PackageVersion Include="Semver" Version="2.3.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageVersion Include="Serilog.Expressions" Version="4.0.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_green" Version="2.1.6" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />

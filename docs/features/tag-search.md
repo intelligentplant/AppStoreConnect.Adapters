@@ -27,12 +27,12 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         string id,
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
 
         _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
             Id = id
-        }, BackgroundTaskService, Logger);
+        }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
         AddFeatures(_configurationChanges);
 
@@ -40,7 +40,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
             null,
             BackgroundTaskService,
             new[] { s_tagCreatedAtPropertyDefinition },
-            _configurationChanges.NotifyAsync
+            _configurationChanges.NotifyAsync,
+            LoggerFactory.CreateLogger<TagManager>()
         );
 
         AddFeatures(_tagManager);
@@ -63,12 +64,12 @@ public MyAdapter(
     IOptions<MyAdapterOptions> options,
     IBackgroundTaskService backgroundTaskService,
     IKeyValueStore keyValueStore,
-    ILogger<MyAdapter> logger
-) : base(id, options, backgroundTaskService, logger) {
+    ILoggerFactory loggerFactory
+) : base(id, options, backgroundTaskService, loggerFactory) {
 
     _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
         Id = id
-    }, BackgroundTaskService, Logger);
+    }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
     AddFeatures(_configurationChanges);
 
@@ -76,7 +77,8 @@ public MyAdapter(
         keyValueStore,
         BackgroundTaskService,
         new[] { s_tagCreatedAtPropertyDefinition },
-        _configurationChanges.NotifyAsync
+        _configurationChanges.NotifyAsync,
+        LoggerFactory.CreateLogger<TagManager>()
     );
 
     AddFeatures(_tagManager);

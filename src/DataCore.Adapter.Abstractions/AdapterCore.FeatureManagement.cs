@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Extensions;
 
-using Microsoft.Extensions.Logging;
-
 namespace DataCore.Adapter {
     partial class AdapterCore : IAdapterFeaturesCollection {
 
@@ -145,7 +143,7 @@ namespace DataCore.Adapter {
             }
 
             if (wrapper == null) {
-                Logger.LogWarning(AbstractionsResources.Log_UnableToCreateFeatureWrapper, featureType.FullName);
+                LogUnableToCreateFeatureWrapper(_logger, featureType.FullName, Descriptor.Id);
             }
 
             if (!_featureLookup.TryAdd(uri!, wrapper ?? feature)) {
@@ -456,7 +454,7 @@ namespace DataCore.Adapter {
                     }
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, unwrapped);
+                    LogErrorWhileDisposingFeature(_logger, e, unwrapped, Descriptor.Id);
                 }
             }
 
@@ -468,7 +466,7 @@ namespace DataCore.Adapter {
                             await item.DisposeAsync().ConfigureAwait(false);
                         }
                         catch (Exception e) {
-                            Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, item);
+                            LogErrorWhileDisposingFeature(_logger, e, item, Descriptor.Id);
                         }
                     }
                 });
@@ -507,7 +505,7 @@ namespace DataCore.Adapter {
                     await DisposeFeatureAsync(unwrapped).ConfigureAwait(false);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, AbstractionsResources.Log_ErrorWhileDisposingOfFeature, unwrapped);
+                    LogErrorWhileDisposingFeature(_logger, e, unwrapped, Descriptor.Id);
                 }
             }
         }

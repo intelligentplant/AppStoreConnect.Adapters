@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Diagnostics {
         public ConfigurationChanges(
             ConfigurationChangesOptions? options, 
             IBackgroundTaskService? backgroundTaskService, 
-            ILogger? logger
+            ILogger<ConfigurationChanges>? logger
         ) : base(options, backgroundTaskService, logger) { }
 
 

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using IntelligentPlant.BackgroundTasks;
 
 using JsonSchema = Json.Schema;
-using Json.Schema.Generation;
 
 using Microsoft.Extensions.Logging;
 using System.Globalization;
@@ -19,7 +18,7 @@ namespace DataCore.Adapter.Extensions {
     /// <see cref="ICustomFunctions"/> implementation that allows custom functions to be 
     /// dynamically registered and unregistered at runtime.
     /// </summary>
-    public sealed class CustomFunctions : ICustomFunctions {
+    public sealed partial class CustomFunctions : ICustomFunctions {
 
         /// <summary>
         /// The base URI for custom functions registered using a relative URI.
@@ -29,7 +28,7 @@ namespace DataCore.Adapter.Extensions {
         /// <summary>
         /// Logging.
         /// </summary>
-        private readonly ILogger _logger;
+        private readonly ILogger<CustomFunctions> _logger;
 
         /// <summary>
         /// JSON options to use when serializing/deserializing.
@@ -73,7 +72,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="baseUri"/> is not an absolute URI.
         /// </exception>
-        public CustomFunctions(Uri baseUri, IBackgroundTaskService? backgroundTaskService = null, JsonSerializerOptions? jsonOptions = null, ILogger? logger = null) {
+        public CustomFunctions(Uri baseUri, IBackgroundTaskService? backgroundTaskService = null, JsonSerializerOptions? jsonOptions = null, ILogger<CustomFunctions>? logger = null) {
             if (baseUri == null) {
                 throw new ArgumentNullException(nameof(baseUri));
             }
@@ -83,7 +82,7 @@ namespace DataCore.Adapter.Extensions {
             BaseUri = new Uri(baseUri.EnsurePathHasTrailingSlash(), "custom-functions/");
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _jsonOptions = jsonOptions;
-            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<CustomFunctions>.Instance;
         }
 
 
@@ -161,6 +160,7 @@ namespace DataCore.Adapter.Extensions {
                 );
 
                 _functions[lookupId] = reg;
+                LogFunctionRegistered(lookupId);
             }
 
             return true;
@@ -343,7 +343,13 @@ namespace DataCore.Adapter.Extensions {
             }
 
             using (await _functionsLock.WriterLockAsync(cancellationToken).ConfigureAwait(false)) {
-                return _functions.Remove(id.EnsurePathHasTrailingSlash());
+                var lookupId = id.EnsurePathHasTrailingSlash();
+                if (_functions.Remove(lookupId)) {
+                    LogFunctionUnregistered(lookupId);
+                    return true;
+                }
+
+                return false;
             }
         }
 
@@ -451,6 +457,7 @@ namespace DataCore.Adapter.Extensions {
                 handler = func.Handler;
             }
 
+            LogFunctionInvoked(lookupId);
             return await handler.Invoke(context, request, cancellationToken).ConfigureAwait(false);
         }
 
@@ -597,6 +604,16 @@ namespace DataCore.Adapter.Extensions {
                 };
             };
         }
+
+
+        [LoggerMessage(1, LogLevel.Debug, "Registered custom function '{id}'.")]
+        partial void LogFunctionRegistered(Uri id);
+
+        [LoggerMessage(2, LogLevel.Debug, "Unregistered custom function '{id}'.")]
+        partial void LogFunctionUnregistered(Uri id);
+
+        [LoggerMessage(3, LogLevel.Trace, "Invoked custom function '{id}'.")]
+        partial void LogFunctionInvoked(Uri id);
 
 
         /// <summary>

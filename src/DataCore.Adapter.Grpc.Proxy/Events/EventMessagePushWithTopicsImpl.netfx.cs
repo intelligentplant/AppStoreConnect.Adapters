@@ -11,6 +11,8 @@ using DataCore.Adapter.Events;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace DataCore.Adapter.Grpc.Proxy.Events {
 
     partial class EventMessagePushWithTopicsImpl {
@@ -50,7 +52,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                 OnTopicSubscriptionsAdded = async (instance, topics, _) => await OnTagsAddedAsync(instance, context, client, topics, request, cancellationToken).ConfigureAwait(false),
                 OnTopicSubscriptionsRemoved = async (instance, topics, _) => await OnTagsRemovedAsync(instance, topics).ConfigureAwait(false)
             };
-            var result = new EventMessagePushWithTopics(options, BackgroundTaskService, Logger);
+            var result = new EventMessagePushWithTopics(options, BackgroundTaskService, Proxy.LoggerFactory.CreateLogger<EventMessagePushWithTopics>());
 
             return result;
         }

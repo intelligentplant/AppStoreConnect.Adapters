@@ -30,8 +30,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         string id,
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
         // TODO: Implement the ITagInfo feature or delegate it to an external provider.
 
         _snapshotPush = new SnapshotTagValuePush(
@@ -45,7 +45,7 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
                 }
             },
             BackgroundTaskService,
-            Logger
+            LoggerFactory.CreateLogger<SnapshotTagValuePush>()
         );
 
         AddFeatures(_snapshotPush);
@@ -75,7 +75,7 @@ Alternatively, instead of specifying callback methods in the `SnapshotTagValuePu
 ```cs
 public class MySnapshotPush : SnapshotTagValuePush {
 
-    public MySnapshotPush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
+    public MySnapshotPush(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger<MySnapshotPush>? logger)
         : base(options, backgroundTaskService, logger) { }
 
     protected override IAsyncEnumerable<TagIdentifier> ResolveTags(IAdapterCallContext context, IEnumerable<string> tags, [EnumeratorCancellation] CancellationToken cancellationToken) {
@@ -120,8 +120,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         string id,
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
         // TODO: Implement the ITagInfo and IReadSnapshotTagValues features or delegate them to external providers.
 
         _snapshotPush = new PollingSnapshotTagValuePush(
@@ -131,7 +131,7 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
             },
             BackgroundTaskService,
-            Logger
+            LoggerFactory.CreateLogger<PollingSnapshotTagValuePush>()
         );
 
         AddFeatures(_snapshotPush);
@@ -160,8 +160,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
         IKeyValueStore keyValueStore,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
         // TODO: Implement the ITagInfo feature or delegate it to an external provider.
 
         _snapshotManager = new SnapshotTagValueManager(
@@ -170,7 +170,7 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
             },
             BackgroundTaskService,
             keyValueStore,
-            Logger
+            LoggerFactory.CreateLogger<SnapshotTagValueManager>()
         );
 
         AddFeatures(_snapshotManager);
@@ -231,11 +231,11 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
         IKeyValueStore keyValueStore,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
         _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
             Id = id
-        }, BackgroundTaskService, Logger);
+        }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
         AddFeatures(_configurationChanges);
 
@@ -243,7 +243,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
             keyValueStore,
             BackgroundTaskService,
             new[] { s_tagCreatedAtPropertyDefinition },
-            _configurationChanges.NotifyAsync
+            _configurationChanges.NotifyAsync,
+            LoggerFactory.CreateLogger<TagManager>()
         );
 
         AddFeatures(_tagManager);
@@ -254,7 +255,7 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
             },
             BackgroundTaskService,
             keyValueStore,
-            Logger
+            LoggerFactory.CreateLogger<SnapshotTagValueManager>()
         );
 
         AddFeatures(_snapshotManager);

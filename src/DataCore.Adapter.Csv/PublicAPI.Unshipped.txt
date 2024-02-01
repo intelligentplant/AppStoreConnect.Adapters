@@ -1,1 +1,4 @@
 ﻿#nullable enable
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, DataCore.Adapter.Csv.CsvAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void

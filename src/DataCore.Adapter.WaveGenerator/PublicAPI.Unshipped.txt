@@ -1,1 +1,3 @@
 ﻿#nullable enable
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void

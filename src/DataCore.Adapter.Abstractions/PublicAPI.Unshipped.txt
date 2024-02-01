@@ -6,6 +6,8 @@ abstract DataCore.Adapter.Services.KeyValueStore.WriteAsync<T>(DataCore.Adapter.
 abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.AllowRawWrites.get -> bool
 abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
 abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.AdapterCore.AdapterCore(DataCore.Adapter.Common.AdapterDescriptor! descriptor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
+DataCore.Adapter.AdapterCore.LoggerFactory.get -> Microsoft.Extensions.Logging.ILoggerFactory!
 DataCore.Adapter.Common.AdapterDescriptorBuilder
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor) -> void

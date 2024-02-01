@@ -12,6 +12,8 @@ using DataCore.Adapter.Services;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace DataCore.Adapter.Tags {
 
     /// <summary>
@@ -22,12 +24,17 @@ namespace DataCore.Adapter.Tags {
     ///   The <see cref="TagManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
+    public partial class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
         
         /// <summary>
         /// Indicates if the object has been disposed.
         /// </summary>
         private bool _disposed;
+
+        /// <summary>
+        /// The logger for the tag manager.
+        /// </summary>
+        private readonly ILogger<TagManager> _logger;
 
         /// <summary>
         /// Holds the in-memory tag definitions indexed by ID.
@@ -95,12 +102,17 @@ namespace DataCore.Adapter.Tags {
         /// <param name="onConfigurationChange">
         ///   An optional callback that will be invoked when a tag is added, updated, or deleted.
         /// </param>
+        /// <param name="logger">
+        ///   The logger for the tag manager.
+        /// </param>
         public TagManager(
             IKeyValueStore? keyValueStore = null, 
             IBackgroundTaskService? backgroundTaskService = null, 
             IEnumerable<AdapterProperty>? tagPropertyDefinitions = null,
-            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
+            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
+            ILogger<TagManager>? logger = null
         ) {
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TagManager>.Instance;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
             _keyValueStore = keyValueStore?.CreateScopedStore("tag-manager:");
@@ -365,6 +377,7 @@ namespace DataCore.Adapter.Tags {
             _tagsByName[tag.Name] = tag;
 
             if (indexHasChanged) {
+                LogCreatedTag(tag.Id, tag.Name);
                 if (_keyValueStore != null) {
                     // "tags" key contains an array of the defined tag IDs.
                     await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
@@ -372,6 +385,7 @@ namespace DataCore.Adapter.Tags {
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
             }
             else {
+                LogUpdatedTag(tag.Id, tag.Name);
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -420,6 +434,7 @@ namespace DataCore.Adapter.Tags {
                 _tagsById.TryRemove(tag.Id, out _);
                 _tagsByName.TryRemove(tag.Name, out _);
 
+                LogDeletedTag(tag.Id, tag.Name);
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
                 if (_keyValueStore != null) {
@@ -543,6 +558,16 @@ namespace DataCore.Adapter.Tags {
 
             GC.SuppressFinalize(this);
         }
+
+
+        [LoggerMessage(1, LogLevel.Debug, "Created tag '{name}' (ID: '{id}')")]
+        partial void LogCreatedTag(string id, string name);
+
+        [LoggerMessage(2, LogLevel.Debug, "Updated tag '{name}' (ID: '{id}')")]
+        partial void LogUpdatedTag(string id, string name);
+
+        [LoggerMessage(3, LogLevel.Debug, "Deleted tag '{name}' (ID: '{id}')")]
+        partial void LogDeletedTag(string id, string name);
 
     }
 }

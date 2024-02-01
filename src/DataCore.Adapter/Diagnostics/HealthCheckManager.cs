@@ -16,12 +16,17 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Default <see cref="IHealthCheck"/> implementation.
     /// </summary>
-    internal class HealthCheckManager<TAdapterOptions> : IBackgroundTaskServiceProvider, IHealthCheck, IDisposable where TAdapterOptions : AdapterOptions, new() {
+    internal partial class HealthCheckManager<TAdapterOptions> : IBackgroundTaskServiceProvider, IHealthCheck, IDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the object has been disposed.
         /// </summary>
         private bool _isDisposed;
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        private readonly ILogger _logger;
 
         /// <summary>
         /// The owning adapter.
@@ -71,6 +76,7 @@ namespace DataCore.Adapter.Diagnostics {
         /// </param>
         internal HealthCheckManager(AdapterBase<TAdapterOptions> adapter) {
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+            _logger = adapter.LoggerFactory.CreateLogger("DataCore.Adapter.Diagnostics.HealthCheckManager");
         }
 
 
@@ -155,14 +161,16 @@ namespace DataCore.Adapter.Diagnostics {
                 }
 
                 try {
-                    var success = await registration.PublishAsync(update, false).ConfigureAwait(false);
-                    if (!success) {
-                        _adapter.Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, registration.Subscriber.Context?.ConnectionId);
+                    if (await registration.PublishAsync(update, false).ConfigureAwait(false)) {
+                        LogPublishToSubscriberSucceeded(_logger, registration.Subscriber.Context?.ConnectionId);
+                    }
+                    else {
+                        LogPublishToSubscriberFailed(_logger, registration.Subscriber.Context?.ConnectionId);
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    _adapter.Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, registration.Subscriber.Context?.ConnectionId);
+                    LogPublishToSubscriberFaulted(_logger, e, registration.Subscriber.Context?.ConnectionId);
                 }
             }
         }
@@ -311,6 +319,18 @@ namespace DataCore.Adapter.Diagnostics {
             _subscriptions.Clear();
             _isDisposed = true;
         }
+
+
+        [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
+        static partial void LogPublishToSubscriberSucceeded(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(2, LogLevel.Trace, "Publish to subscriber '{subscriberId}' failed.")]
+        static partial void LogPublishToSubscriberFailed(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(3, LogLevel.Error, "Publish to subscriber '{subscriberId}' faulted.")]
+        static partial void LogPublishToSubscriberFaulted(ILogger logger, Exception e, string? subscriberId);
 
 
         /// <summary>

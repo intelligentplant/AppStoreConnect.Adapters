@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Logging;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -26,9 +27,24 @@ namespace DataCore.Adapter {
         private bool _disposed;
 
         /// <summary>
-        /// Logging.
+        /// The logger factory for the adapter.
         /// </summary>
-        protected internal ILogger Logger { get; }
+        /// <remarks>
+        ///   All <see cref="ILogger"/> instances created by the factory define a scope that 
+        ///   specifies the adapter's ID.
+        /// </remarks>
+        protected internal ILoggerFactory LoggerFactory { get; }
+
+        /// <summary>
+        /// The logger for the adapter.
+        /// </summary>
+        private readonly ILogger<AdapterCore> _logger;
+
+        /// <summary>
+        /// The logger for the adapter.
+        /// </summary>
+        [Obsolete("Use LoggerFactory to create ILogger instances instead.")]
+        protected internal ILogger Logger => _logger;
 
         /// <summary>
         /// Specifies if the adapter is currently running.
@@ -123,17 +139,24 @@ namespace DataCore.Adapter {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the adapter.
         /// </param>
-        /// <param name="logger">
-        ///   The <see cref="ILogger"/> for the adapter.
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="descriptor"/> is <see langword="null"/>.
         /// </exception>
-        protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
+        protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService, ILoggerFactory? loggerFactory) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
+            LoggerFactory = loggerFactory == null
+                ? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance
+                : new ScopedLoggerFactory(loggerFactory, new Dictionary<string, object?>() {
+                    ["AdapterId"] = Descriptor.Id
+                });
+
+            _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
             // initially in a cancelled state.
@@ -144,12 +167,54 @@ namespace DataCore.Adapter {
         }
 
 
+        /// <summary>
+        /// Creates a new <see cref="AdapterCore"/> instance.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor for the adapter.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> for the adapter.
+        /// </param>
+        /// <param name="logger">
+        ///   The <see cref="ILogger"/> for the adapter.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Using this constructor overload will assign a <see cref="LoggerFactory"/> property 
+        ///   that always returns the specified <paramref name="logger"/>.
+        /// </remarks>
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
+        protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
+            Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+            TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
+            
+            LoggerFactory = new WrapperLoggerFactory(new ScopedLogger(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, new Dictionary<string, object?>() {
+                ["AdapterId"] = Descriptor.Id
+            }));
+
+            _logger = LoggerFactory.CreateLogger<AdapterCore>();
+
+            // Create initial stopped token source and cancel it immediately so that StopToken is
+            // initially in a cancelled state.
+            _stopTokenSource = new CancellationTokenSource();
+            _stopTokenSource.Cancel();
+
+            Enable();
+        }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
             _hasStartBeenCalled = true;
 
             if (!IsEnabled) {
-                Logger.LogWarning(AbstractionsResources.Log_AdapterIsDisabled, Descriptor.Id);
+                LogAdapterDisabled(_logger, Descriptor.Id);
                 return;
             }
 
@@ -166,7 +231,7 @@ namespace DataCore.Adapter {
                 }
 
                 using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
-                    Logger.LogInformation(AbstractionsResources.Log_StartingAdapter, Descriptor.Id);
+                    LogAdapterStarting(_logger, Descriptor.Id);
                     IsStarting = true;
                     try {
                         using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
@@ -179,7 +244,7 @@ namespace DataCore.Adapter {
                     }
 
                     Telemetry.EventSource.AdapterStarted(Descriptor.Id);
-                    Logger.LogInformation(AbstractionsResources.Log_StartedAdapter, Descriptor.Id);
+                    LogAdapterStarted(_logger, Descriptor.Id);
 
                     BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
                     if (Started != null) {
@@ -202,10 +267,10 @@ namespace DataCore.Adapter {
                     _shutdownInProgress.Reset();
 
                     try {
-                        Logger.LogInformation(AbstractionsResources.Log_StoppingAdapter, Descriptor.Id);
+                        LogAdapterStopping(_logger, Descriptor.Id);
                         await StopAsyncCore(default).ConfigureAwait(false);
                         Telemetry.EventSource.AdapterStopped(Descriptor.Id);
-                        Logger.LogInformation(AbstractionsResources.Log_StoppedAdapter, Descriptor.Id);
+                        LogAdapterStopped(_logger, Descriptor.Id);
 
                         _isRunning = false;
                         _stopTokenSource.Cancel();
@@ -734,6 +799,14 @@ namespace DataCore.Adapter {
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _properties.Clear();
+            
+            if (LoggerFactory is ScopedLoggerFactory scopedLoggerFactory) {
+                scopedLoggerFactory.Dispose();
+            }
+
+            if (_logger is ScopedLogger scopedLogger) {
+                scopedLogger.Dispose();
+            }
         }
 
         #endregion
