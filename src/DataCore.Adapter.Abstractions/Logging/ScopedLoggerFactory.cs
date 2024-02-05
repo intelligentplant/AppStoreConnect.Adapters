@@ -91,6 +91,7 @@ namespace DataCore.Adapter.Logging {
             }
 
             _loggers.Clear();
+            _disposed = true;
         }
 
     }
