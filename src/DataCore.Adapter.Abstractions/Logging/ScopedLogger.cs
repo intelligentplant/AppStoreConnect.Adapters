@@ -24,6 +24,11 @@ namespace DataCore.Adapter.Logging {
         /// </summary>
         private readonly IDisposable? _scope;
 
+        /// <summary>
+        /// Invoked when the logger is disposed.
+        /// </summary>
+        private readonly Action _onDisposed;
+
 
         /// <summary>
         /// Creates a new <see cref="ScopedLogger"/> instance.
@@ -34,9 +39,13 @@ namespace DataCore.Adapter.Logging {
         /// <param name="scope">
         ///   The scope data to add to each log message.
         /// </param>
-        internal ScopedLogger(ILogger logger, object scope) {
+        /// <param name="onDisposed">
+        ///   Invoked when the logger is disposed.
+        /// </param>
+        internal ScopedLogger(ILogger logger, object scope, Action onDisposed) {
             _logger = logger;
             _scope = _logger.BeginScope(scope);
+            _onDisposed = onDisposed;
         }
 
 
@@ -65,6 +74,8 @@ namespace DataCore.Adapter.Logging {
             }
 
             _scope?.Dispose();
+            _onDisposed.Invoke();
+
             _disposed = true;
         }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Microsoft.Extensions.Logging;
 
@@ -29,9 +29,9 @@ namespace DataCore.Adapter.Logging {
         private readonly object _scope;
 
         /// <summary>
-        /// The list of loggers created by the factory.
+        /// The loggers created by the factory.
         /// </summary>
-        private readonly List<ScopedLogger> _loggers = new List<ScopedLogger>();
+        private readonly ConcurrentDictionary<string, ScopedLogger> _loggers = new ConcurrentDictionary<string, ScopedLogger>(StringComparer.Ordinal);
 
 
         /// <summary>
@@ -51,18 +51,11 @@ namespace DataCore.Adapter.Logging {
 
         /// <inheritdoc/>
         public ILogger CreateLogger(string categoryName) {
-            lock (_loggers) {
-                if (_disposed) {
-                    throw new ObjectDisposedException(GetType().FullName);
-                }
-
-                var logger = _loggerFactory.CreateLogger(categoryName);
-            
-                var wrapper = new ScopedLogger(logger, _scope);
-                _loggers.Add(wrapper);
-
-                return wrapper;
+            if (_disposed) {
+                throw new ObjectDisposedException(GetType().FullName);
             }
+
+            return _loggers.GetOrAdd(categoryName, name => new ScopedLogger(_loggerFactory.CreateLogger(name), _scope, () => RemoveLogger(name)));
         }
 
 
@@ -76,19 +69,28 @@ namespace DataCore.Adapter.Logging {
         }
 
 
+        /// <summary>
+        /// Removes a logger from the cache.
+        /// </summary>
+        /// <param name="categoryName">
+        ///   The logger category name.
+        /// </param>
+        private void RemoveLogger(string categoryName) {
+            _loggers.TryRemove(categoryName, out _);
+        }
+
+
         /// <inheritdoc/>
         public void Dispose() {
             if (_disposed) {
                 return;
             }
 
-            lock (_loggers) {
-                foreach (var logger in _loggers) {
-                    logger.Dispose();
-                }
-                _loggers.Clear();
-                _disposed = true;
+            foreach (var item in _loggers.Values) {
+                item.Dispose();
             }
+
+            _loggers.Clear();
         }
 
     }
