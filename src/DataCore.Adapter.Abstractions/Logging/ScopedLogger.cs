@@ -27,7 +27,7 @@ namespace DataCore.Adapter.Logging {
         /// <summary>
         /// Invoked when the logger is disposed.
         /// </summary>
-        private readonly Action _onDisposed;
+        private readonly Action? _onDisposed;
 
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace DataCore.Adapter.Logging {
         /// <param name="onDisposed">
         ///   Invoked when the logger is disposed.
         /// </param>
-        internal ScopedLogger(ILogger logger, object scope, Action onDisposed) {
+        internal ScopedLogger(ILogger logger, object scope, Action? onDisposed) {
             _logger = logger;
             _scope = _logger.BeginScope(scope);
             _onDisposed = onDisposed;
@@ -74,7 +74,7 @@ namespace DataCore.Adapter.Logging {
             }
 
             _scope?.Dispose();
-            _onDisposed.Invoke();
+            _onDisposed?.Invoke();
 
             _disposed = true;
         }
