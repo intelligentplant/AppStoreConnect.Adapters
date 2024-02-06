@@ -6,11 +6,20 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+using Serilog;
+
 [assembly: DataCore.Adapter.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com")]
 
 const string AdapterId = "$default";
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) => {
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 // Parent PID. If specified, we will gracefully shut down if the parent process exits.
 var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
