@@ -7,6 +7,7 @@ abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.AllowRawWrites.get
 abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
 abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.AdapterCore.AdapterCore(DataCore.Adapter.Common.AdapterDescriptor! descriptor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
+DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger) -> System.IDisposable?
 DataCore.Adapter.AdapterCore.LoggerFactory.get -> Microsoft.Extensions.Logging.ILoggerFactory!
 DataCore.Adapter.Common.AdapterDescriptorBuilder
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> void
@@ -101,6 +102,7 @@ DataCore.Adapter.Services.RawKeyValueStore<TOptions>.RawKeyValueStore(TOptions? 
 override DataCore.Adapter.Services.KVKey.ToString() -> string!
 override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
 override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger, string! adapterId) -> System.IDisposable?
 static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptorBuilder(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 static DataCore.Adapter.Services.JsonKeyValueStoreSerializer.Default.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
 static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.IO.Stream! stream) -> bool

@@ -121,6 +121,8 @@ namespace DataCore.Adapter.Diagnostics {
         ///   A task that will complete when the cancellation token fires.
         /// </returns>
         private async Task ProcessRecomputeHealthChannelAsync(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (await _recomputeHealthChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!_recomputeHealthChannel.Reader.TryRead(out var val) || !val) {
                     continue;
@@ -319,6 +321,9 @@ namespace DataCore.Adapter.Diagnostics {
             _subscriptions.Clear();
             _isDisposed = true;
         }
+
+
+        private IDisposable? BeginLoggerScope() => AdapterCore.BeginLoggerScope(_logger, _adapter);
 
 
         [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
