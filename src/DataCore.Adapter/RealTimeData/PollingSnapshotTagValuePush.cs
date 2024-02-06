@@ -128,6 +128,8 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will run the polling loop.
         /// </returns>
         private async Task RunSnapshotPollingLoop(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             try {
                 while (!cancellationToken.IsCancellationRequested) {
                     await Task.Delay(_pollingInterval, cancellationToken).ConfigureAwait(false);

@@ -663,6 +663,8 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A long-running task.
         /// </returns>
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

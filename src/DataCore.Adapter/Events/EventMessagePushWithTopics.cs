@@ -408,6 +408,8 @@ namespace DataCore.Adapter.Events {
         ///   A long-running task.
         /// </returns>
         private async Task ProcessTopicSubscriptionChangesChannel(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {

@@ -508,6 +508,8 @@ namespace DataCore.Adapter {
         ///   A task that will complete when the cancellation token fires.
         /// </returns>
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -551,6 +553,18 @@ namespace DataCore.Adapter {
                 }
             }
         }
+
+
+        /// <summary>
+        /// Begins a logger scope for the subscription manager.
+        /// </summary>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that will end the logger scope when disposed.
+        /// </returns>
+        /// <remarks>
+        ///   The scope will include the subscription manager ID.
+        /// </remarks>
+        protected IDisposable? BeginLoggerScope() => AdapterCore.BeginLoggerScope(Logger, Id);
 
 
         [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
