@@ -85,7 +85,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationStarted(string operationName) {
             Diagnostics.Telemetry.EventSource.AdapterOperationStarted(Adapter.Descriptor.Id, GetOperationId(operationName));
-            LogOperationStarted(operationName);
+            LogOperationStarted();
         }
 
 
@@ -100,7 +100,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationCompleted(string operationName, double elapsedMilliseconds) {
             Diagnostics.Telemetry.EventSource.AdapterOperationCompleted(Adapter.Descriptor.Id, GetOperationId(operationName), elapsedMilliseconds);
-            LogOperationCompleted(operationName, elapsedMilliseconds);
+            LogOperationCompleted(elapsedMilliseconds);
         }
 
 
@@ -118,7 +118,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationFaulted(string operationName, double elapsedMilliseconds, Exception error) {
             Diagnostics.Telemetry.EventSource.AdapterOperationFaulted(Adapter.Descriptor.Id, GetOperationId(operationName), elapsedMilliseconds, error.Message);
-            LogOperationFaulted(error, operationName, elapsedMilliseconds);
+            LogOperationFaulted(error, elapsedMilliseconds);
         }
 
 
@@ -219,7 +219,7 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
-            using var adapterScope = Adapter.BeginLoggerScope();
+            using var loggerScope = BeginLoggerScope(operationName);
 
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
@@ -280,7 +280,7 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
-            using var adapterScope = Adapter.BeginLoggerScope();
+            using var loggerScope = BeginLoggerScope(operationName);
 
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
@@ -340,22 +340,24 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
-            using var adapterScope = Adapter.BeginLoggerScope();
 
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
-            OnOperationStarted(operationName);
 
-            try {
-                if (context.ShouldValidateRequests()) {
-                    Adapter.ValidateInvocation(context, request!);
+            using (BeginLoggerScope(operationName)) {
+                OnOperationStarted(operationName);
+
+                try {
+                    if (context.ShouldValidateRequests()) {
+                        Adapter.ValidateInvocation(context, request!);
+                    }
+                    else {
+                        Adapter.ValidateInvocation(context);
+                    }
                 }
-                else {
-                    Adapter.ValidateInvocation(context);
+                catch (Exception e) {
+                    OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                    throw;
                 }
-            }
-            catch (Exception e) {
-                OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
-                throw;
             }
 
             SetActivityTags(activity, request);
@@ -377,20 +379,26 @@ namespace DataCore.Adapter {
 
                         // Cancellation was not requested by the caller, so consider this a faulted
                         // operation.
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
                     catch (Exception e) {
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
 
-                    yield return enumerator.Current;
                     OnStreamItemOut(operationName);
+                    yield return enumerator.Current;
                 }
             }
 
-            OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            using (BeginLoggerScope(operationName)) {
+                OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            }
         }
 
 
@@ -421,17 +429,18 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
-            using var adapterScope = Adapter.BeginLoggerScope();
 
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
-            OnOperationStarted(operationName);
 
-            try {
-                Adapter.ValidateInvocation(context);
-            }
-            catch (Exception e) {
-                OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
-                throw;
+            using (BeginLoggerScope(operationName)) {
+                OnOperationStarted(operationName);
+                try {
+                    Adapter.ValidateInvocation(context);
+                }
+                catch (Exception e) {
+                    OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                    throw;
+                }
             }
 
             using (var ctSource = Adapter.CreateCancellationTokenSource(cancellationToken))
@@ -451,20 +460,26 @@ namespace DataCore.Adapter {
 
                         // Cancellation was not requested by the caller, so consider this a faulted
                         // operation.
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {    
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
                     catch (Exception e) {
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
 
-                    yield return enumerator.Current;
                     OnStreamItemOut(operationName);
+                    yield return enumerator.Current;
                 }
             }
 
-            OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            using (BeginLoggerScope(operationName)) {
+                OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            }
         }
 
 
@@ -507,22 +522,24 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
-            using var adapterScope = Adapter.BeginLoggerScope();
 
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
-            OnOperationStarted(operationName);
 
-            try {
-                if (context.ShouldValidateRequests()) {
-                    Adapter.ValidateInvocation(context, request!, inStream);
+            using (BeginLoggerScope(operationName)) {
+                OnOperationStarted(operationName);
+
+                try {
+                    if (context.ShouldValidateRequests()) {
+                        Adapter.ValidateInvocation(context, request!, inStream);
+                    }
+                    else {
+                        Adapter.ValidateInvocation(context, inStream);
+                    }
                 }
-                else {
-                    Adapter.ValidateInvocation(context, inStream);
+                catch (Exception e) {
+                    OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                    throw;
                 }
-            }
-            catch (Exception e) {
-                OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
-                throw;
             }
 
             SetActivityTags(activity, request);
@@ -544,20 +561,26 @@ namespace DataCore.Adapter {
 
                         // Cancellation was not requested by the caller, so consider this a faulted
                         // operation.
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
                     catch (Exception e) {
-                        OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        using (BeginLoggerScope(operationName)) {
+                            OnOperationFaulted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds, e);
+                        }
                         throw;
                     }
 
-                    yield return enumerator.Current;
                     OnStreamItemOut(operationName);
+                    yield return enumerator.Current;
                 }
             }
 
-            OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            using (BeginLoggerScope(operationName)) {
+                OnOperationCompleted(operationName, stopwatch.GetElapsedTime().TotalMilliseconds);
+            }
         }
 
 
@@ -588,14 +611,22 @@ namespace DataCore.Adapter {
         }
 
 
-        [LoggerMessage(1, LogLevel.Debug, "Operation started: '{name}'")]
-        partial void LogOperationStarted(string name);
+        private IDisposable? BeginLoggerScope(string operationName) {
+            return _logger.BeginScope(new Dictionary<string, object?>() {
+                ["AdapterId"] = Adapter.Descriptor.Id,
+                ["OperationName"] = operationName
+            });
+        }
 
-        [LoggerMessage(2, LogLevel.Debug, "Operation completed: '{name}'. Duration: {elapsed} ms")]
-        partial void LogOperationCompleted(string name, double elapsed);
 
-        [LoggerMessage(3, LogLevel.Debug, "Operation faulted: '{name}'. Duration: {elapsed} ms")] // Debug because the exception is not suppressed in this class.
-        partial void LogOperationFaulted(Exception e, string name, double elapsed);
+        [LoggerMessage(1, LogLevel.Debug, "Operation started.")]
+        partial void LogOperationStarted();
+
+        [LoggerMessage(2, LogLevel.Debug, "Operation completed. Duration: {elapsed} ms")]
+        partial void LogOperationCompleted(double elapsed);
+
+        [LoggerMessage(3, LogLevel.Debug, "Operation faulted. Duration: {elapsed} ms")] // Debug because the exception is not suppressed in this class.
+        partial void LogOperationFaulted(Exception e, double elapsed);
 
     }
 }
