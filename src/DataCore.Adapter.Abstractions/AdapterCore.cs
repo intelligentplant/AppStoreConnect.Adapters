@@ -195,7 +195,7 @@ namespace DataCore.Adapter {
             
             LoggerFactory = new WrapperLoggerFactory(new ScopedLogger(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, new Dictionary<string, object?>() {
                 ["AdapterId"] = Descriptor.Id
-            }));
+            }, null));
 
             _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
