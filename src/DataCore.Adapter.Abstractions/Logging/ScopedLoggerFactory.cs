@@ -19,6 +19,11 @@ namespace DataCore.Adapter.Logging {
         private bool _disposed;
 
         /// <summary>
+        /// Specifies if the factory is currently being disposed.
+        /// </summary>
+        private bool _disposing;
+
+        /// <summary>
         /// The underlying logger factory.
         /// </summary>
         private readonly ILoggerFactory _loggerFactory;
@@ -44,7 +49,7 @@ namespace DataCore.Adapter.Logging {
         ///   The scope data to add to each logger.
         /// </param>
         public ScopedLoggerFactory(ILoggerFactory loggerFactory, object scope) {
-            _loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
         }
 
@@ -53,6 +58,9 @@ namespace DataCore.Adapter.Logging {
         public ILogger CreateLogger(string categoryName) {
             if (_disposed) {
                 throw new ObjectDisposedException(GetType().FullName);
+            }
+            if (categoryName == null) {
+                throw new ArgumentNullException(nameof(categoryName));
             }
 
             return _loggers.GetOrAdd(categoryName, name => new ScopedLogger(_loggerFactory.CreateLogger(name), _scope, () => RemoveLogger(name)));
@@ -63,6 +71,9 @@ namespace DataCore.Adapter.Logging {
         public void AddProvider(ILoggerProvider provider) {
             if (_disposed) {
                 throw new ObjectDisposedException(GetType().FullName);
+            }
+            if (provider == null) {
+                throw new ArgumentNullException(nameof(provider));
             }
 
             _loggerFactory.AddProvider(provider);
@@ -76,6 +87,9 @@ namespace DataCore.Adapter.Logging {
         ///   The logger category name.
         /// </param>
         private void RemoveLogger(string categoryName) {
+            if (_disposing || _disposed) {
+                return;
+            }
             _loggers.TryRemove(categoryName, out _);
         }
 
@@ -86,12 +100,16 @@ namespace DataCore.Adapter.Logging {
                 return;
             }
 
+            _disposing = true;
+
             foreach (var item in _loggers.Values) {
                 item.Dispose();
             }
 
             _loggers.Clear();
+
             _disposed = true;
+            _disposing = false;
         }
 
     }
