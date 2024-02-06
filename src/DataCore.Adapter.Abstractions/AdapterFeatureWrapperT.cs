@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace DataCore.Adapter {
 
     /// <summary>
@@ -15,7 +17,12 @@ namespace DataCore.Adapter {
     /// <typeparam name="TFeature">
     ///   The interface for the wrapped feature.
     /// </typeparam>
-    public abstract class AdapterFeatureWrapper<TFeature> : AdapterFeatureWrapper where TFeature : IAdapterFeature {
+    public abstract partial class AdapterFeatureWrapper<TFeature> : AdapterFeatureWrapper where TFeature : IAdapterFeature {
+
+        /// <summary>
+        /// Logging.
+        /// </summary>
+        private readonly ILogger _logger;
 
         /// <summary>
         /// The <typeparamref name="TFeature"/> that is wrapped by the <see cref="AdapterFeatureWrapper{TFeature}"/>.
@@ -38,8 +45,9 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="innerFeature"/> is <see langword="null"/>.
         /// </exception>
-        internal AdapterFeatureWrapper(AdapterCore adapter, TFeature innerFeature) 
-            : base(adapter, innerFeature) { }
+        internal AdapterFeatureWrapper(AdapterCore adapter, TFeature innerFeature) : base(adapter, innerFeature) { 
+            _logger = adapter.LoggerFactory.CreateLogger<TFeature>();
+        }
 
 
         /// <summary>
@@ -77,6 +85,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationStarted(string operationName) {
             Diagnostics.Telemetry.EventSource.AdapterOperationStarted(Adapter.Descriptor.Id, GetOperationId(operationName));
+            LogOperationStarted(operationName);
         }
 
 
@@ -91,6 +100,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationCompleted(string operationName, double elapsedMilliseconds) {
             Diagnostics.Telemetry.EventSource.AdapterOperationCompleted(Adapter.Descriptor.Id, GetOperationId(operationName), elapsedMilliseconds);
+            LogOperationCompleted(operationName, elapsedMilliseconds);
         }
 
 
@@ -108,6 +118,7 @@ namespace DataCore.Adapter {
         /// </param>
         private void OnOperationFaulted(string operationName, double elapsedMilliseconds, Exception error) {
             Diagnostics.Telemetry.EventSource.AdapterOperationFaulted(Adapter.Descriptor.Id, GetOperationId(operationName), elapsedMilliseconds, error.Message);
+            LogOperationFaulted(error, operationName, elapsedMilliseconds);
         }
 
 
@@ -208,6 +219,8 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
+            using var adapterScope = Adapter.BeginLoggerScope();
+
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
 
@@ -267,6 +280,8 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
+            using var adapterScope = Adapter.BeginLoggerScope();
+
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
 
@@ -325,6 +340,8 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
+            using var adapterScope = Adapter.BeginLoggerScope();
+
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
 
@@ -404,6 +421,8 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
+            using var adapterScope = Adapter.BeginLoggerScope();
+
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
 
@@ -488,6 +507,8 @@ namespace DataCore.Adapter {
             Adapter.CheckStarted();
 
             using var activity = StartActivity(operationName);
+            using var adapterScope = Adapter.BeginLoggerScope();
+
             var stopwatch = Diagnostics.ValueStopwatch.StartNew();
             OnOperationStarted(operationName);
 
@@ -565,6 +586,16 @@ namespace DataCore.Adapter {
                 OnStreamItemIn(operationName);
             }
         }
+
+
+        [LoggerMessage(1, LogLevel.Debug, "Operation started: '{name}'")]
+        partial void LogOperationStarted(string name);
+
+        [LoggerMessage(2, LogLevel.Debug, "Operation completed: '{name}'. Duration: {elapsed} ms")]
+        partial void LogOperationCompleted(string name, double elapsed);
+
+        [LoggerMessage(3, LogLevel.Debug, "Operation faulted: '{name}'. Duration: {elapsed} ms")] // Debug because the exception is not suppressed in this class.
+        partial void LogOperationFaulted(Exception e, string name, double elapsed);
 
     }
 }

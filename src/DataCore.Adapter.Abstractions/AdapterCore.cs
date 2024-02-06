@@ -150,11 +150,7 @@ namespace DataCore.Adapter {
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
 
-            LoggerFactory = loggerFactory == null
-                ? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance
-                : new ScopedLoggerFactory(loggerFactory, new Dictionary<string, object?>() {
-                    ["AdapterId"] = Descriptor.Id
-                });
+            LoggerFactory = loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
 
             _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
@@ -192,11 +188,8 @@ namespace DataCore.Adapter {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
-            
-            LoggerFactory = new WrapperLoggerFactory(new ScopedLogger(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, new Dictionary<string, object?>() {
-                ["AdapterId"] = Descriptor.Id
-            }, null));
 
+            LoggerFactory = new WrapperLoggerFactory(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
             _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
@@ -209,8 +202,113 @@ namespace DataCore.Adapter {
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 
+        /// <summary>
+        /// Creates an object to use as the state for a logger scope.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   An object to use as the state for a logger scope.
+        /// </returns>
+        private static object CreateLoggerState(string adapterId) {
+            return new Dictionary<string, object?>() {
+                ["AdapterId"] = adapterId
+            };
+        }
+
+
+        /// <summary>
+        /// Creates an object to use as the state for a logger scope.
+        /// </summary>
+        /// <returns>
+        ///   An object to use as the state for a logger scope.
+        /// </returns>
+        private object CreateLoggerState() => CreateLoggerState(Descriptor.Id);
+
+
+        /// <summary>
+        /// Begins a logger scope for an adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public static IDisposable? BeginLoggerScope(ILogger logger, string adapterId) {
+            if (logger == null) {
+                throw new ArgumentNullException(nameof(logger));
+            }
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentOutOfRangeException(nameof(adapterId));
+            }
+
+            return logger.BeginScope(CreateLoggerState(adapterId));
+        }
+
+
+        /// <summary>
+        /// Begins a logger scope for an adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        internal static IDisposable? BeginLoggerScope(ILogger logger, IAdapter adapter) => BeginLoggerScope(logger, adapter?.Descriptor.Id ?? throw new ArgumentNullException(nameof(adapter)));
+
+
+        /// <summary>
+        /// Begins a logger scope for the adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   The state for the scope is an object that specifies the adapter ID.
+        /// </remarks>
+        protected internal IDisposable? BeginLoggerScope(ILogger logger) => BeginLoggerScope(logger, this);
+
+
+        /// <summary>
+        /// Begins a logger scope for the adapter's default logger.
+        /// </summary>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        internal IDisposable? BeginLoggerScope() => BeginLoggerScope(_logger);
+
+
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
+            using var scope = BeginLoggerScope();
+
             _hasStartBeenCalled = true;
 
             if (!IsEnabled) {
@@ -219,6 +317,7 @@ namespace DataCore.Adapter {
             }
 
             CheckDisposed();
+
             using (await _startupLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
                 await _shutdownInProgress.WaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -257,7 +356,10 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
+            using var scope = BeginLoggerScope();
+
             CheckDisposed();
+
             using (await _shutdownLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!IsStarting && !IsRunning) {
                     return;
@@ -799,14 +901,6 @@ namespace DataCore.Adapter {
             _stopTokenSource?.Cancel();
             _stopTokenSource?.Dispose();
             _properties.Clear();
-            
-            if (LoggerFactory is ScopedLoggerFactory scopedLoggerFactory) {
-                scopedLoggerFactory.Dispose();
-            }
-
-            if (_logger is ScopedLogger scopedLogger) {
-                scopedLogger.Dispose();
-            }
         }
 
         #endregion

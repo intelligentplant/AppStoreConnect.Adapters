@@ -174,7 +174,10 @@ namespace DataCore.Adapter {
         ///   An implementation of <typeparamref name="TFeature"/> has already been registered.
         /// </exception>
         public void AddFeature<TFeature>(TFeature feature) where TFeature : IAdapterFeature {
+            using var loggerScope = BeginLoggerScope();
+
             CheckDisposed();
+
             if (!typeof(TFeature).IsAdapterFeature()) {
 #pragma warning disable CS0618 // Type or member is obsolete
                 throw new ArgumentException(string.Format(
@@ -218,6 +221,8 @@ namespace DataCore.Adapter {
         ///   An implementation of <paramref name="featureType"/> has already been registered.
         /// </exception>
         public void AddFeature(Type featureType, IAdapterFeature feature) {
+            using var loggerScope = BeginLoggerScope();
+
             CheckDisposed();
 
             if (featureType == null) {
@@ -264,6 +269,8 @@ namespace DataCore.Adapter {
         ///   <paramref name="addExtensionFeatures"/> constraints).
         /// </remarks>
         public void AddFeatures(object provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) {
+            using var loggerScope = BeginLoggerScope();
+
             CheckDisposed();
 
             if (provider == null) {
@@ -424,6 +431,8 @@ namespace DataCore.Adapter {
         ///   <see cref="IDisposable"/> will be disposed in a background task.
         /// </remarks>
         private void DisposeFeatures() {
+            using var loggerScope = BeginLoggerScope();
+
             var features = _featureLookup.Values.ToArray();
             _featureLookup.Clear();
 
@@ -461,6 +470,8 @@ namespace DataCore.Adapter {
             if (asyncDisposableItems.Count > 0) {
                 // Dispose of IAsyncDisposable items in a background task.
                 _ = Task.Run(async () => {
+                    using var loggerScope = BeginLoggerScope();
+
                     foreach (var item in asyncDisposableItems) {
                         try {
                             await item.DisposeAsync().ConfigureAwait(false);
@@ -479,6 +490,8 @@ namespace DataCore.Adapter {
         /// or <see cref="IAsyncDisposable"/>.
         /// </summary>
         private async ValueTask DisposeFeaturesAsync() {
+            using var loggerScope = BeginLoggerScope();
+
             var features = _featureLookup.Values.ToArray();
             _featureLookup.Clear();
 
