@@ -392,7 +392,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 );
             }
 
-            // Option 7: if we have any two values after the sample time (regardless of quality),
+            // Option 6: if we have any two values after the sample time (regardless of quality),
             // extrapolate backwards using those values.
 
             boundaryValues = values
