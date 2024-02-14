@@ -1105,6 +1105,108 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
+        public async Task StepInterpolateShouldCalculateValue() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Double
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-64)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.StepInterpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+            Assert.AreEqual(start, val.Value.UtcSampleTime);
+            Assert.AreEqual(rawValues[0].Value, val.Value.Value);
+            Assert.AreEqual(rawValues[0].Status, val.Value.Status);
+
+            val = values.Last();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+            Assert.AreEqual(end, val.Value.UtcSampleTime);
+            Assert.AreEqual(rawValues[1].Value, val.Value.Value);
+            Assert.AreEqual(rawValues[1].Status, val.Value.Status);
+        }
+
+
+        [TestMethod]
+        public async Task StepInterpolateShouldBeUsedForNonFloatingPointTags() {
+            var aggregationHelper = new AggregationHelper();
+
+            var tag = new TagSummary(
+                TestContext.TestName,
+                TestContext.TestName,
+                null,
+                null,
+                VariantType.Int32
+            );
+
+            var end = DateTime.UtcNow;
+            var start = end.AddSeconds(-60);
+            var interval = TimeSpan.FromSeconds(60);
+
+            var rawValues = new[] {
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-64)).WithValue(70).Build(),
+                new TagValueBuilder().WithUtcSampleTime(end.AddSeconds(-50)).WithValue(100).Build()
+            };
+
+            var rawData = rawValues.Select(x => TagValueQueryResult.Create(tag.Id, tag.Name, x)).ToArray();
+
+            var values = await aggregationHelper.GetAggregatedValues(
+                tag,
+                new[] { DefaultDataFunctions.Interpolate.Id },
+                start,
+                end,
+                interval,
+                rawData
+            ).ToEnumerable();
+
+            // Values expected at start time and end time.
+            Assert.AreEqual(2, values.Count());
+
+            var val = values.First();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+            Assert.AreEqual(start, val.Value.UtcSampleTime);
+            Assert.AreEqual(rawValues[0].Value, val.Value.Value);
+            Assert.AreEqual(rawValues[0].Status, val.Value.Status);
+
+            val = values.Last();
+            Assert.AreEqual(tag.Id, val.TagId);
+            Assert.AreEqual(tag.Name, val.TagName);
+            Assert.AreEqual(end, val.Value.UtcSampleTime);
+            Assert.AreEqual(rawValues[1].Value, val.Value.Value);
+            Assert.AreEqual(rawValues[1].Status, val.Value.Status);
+        }
+
+
+        [TestMethod]
         public async Task TimeAverageShouldCalculatePartialValue() {
             var aggregationHelper = new AggregationHelper();
 

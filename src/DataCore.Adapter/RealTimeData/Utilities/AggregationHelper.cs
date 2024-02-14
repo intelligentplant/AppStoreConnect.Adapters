@@ -64,6 +64,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             { DefaultDataFunctions.PercentGood.Id, CalculatePercentGood },
             { DefaultDataFunctions.Range.Id, CalculateRange },
             { DefaultDataFunctions.StandardDeviation.Id, CalculateStandardDeviation },
+            { DefaultDataFunctions.StepInterpolate.Id, CalculateStepInterpolated },
             { DefaultDataFunctions.TimeAverage.Id, CalculateTimeAverage },
             { DefaultDataFunctions.Variance.Id, CalculateVariance }
         };
@@ -153,6 +154,90 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     tag,
                     bucket.UtcQueryEnd,
                     combinedInputValues
+                );
+
+                if (result == null) {
+                    result = CreateErrorTagValue(
+                        bucket,
+                        bucket.UtcQueryEnd,
+                        Resources.TagValue_ProcessedValue_NoData
+                    );
+                }
+
+                yield return result;
+            }
+        }
+
+        #endregion
+
+        #region [ StepInterpolate ]
+
+        /// <summary>
+        /// Calculates the step interpolated value at the start time of the provided bucket.
+        /// </summary>
+        /// <param name="tag">
+        ///   The tag definition.
+        /// </param>
+        /// <param name="bucket">
+        ///   The values for the current bucket.
+        /// </param>
+        /// <returns>
+        ///   The calculated tag value.
+        /// </returns>
+        private static IEnumerable<TagValueExtended> CalculateStepInterpolated(TagSummary tag, TagValueBucket bucket) {
+            if (bucket.UtcBucketEnd < bucket.UtcQueryStart) {
+                // Entire bucket is before the query start time and can be skipped.
+                yield break;
+            }
+
+            // Our data set for interpolation consists of all of the raw samples inside the bucket
+            // plus the samples before the start boundary and after the end boundary.
+            var combinedInputValues = bucket
+                .BeforeStartBoundary.GetBoundarySamples()
+                .Concat(bucket.RawSamples)
+                .Concat(bucket.AfterEndBoundary.GetBoundarySamples())
+                .ToArray();
+
+            TagValueExtended? result;
+
+            if (bucket.UtcQueryStart >= bucket.UtcBucketStart && bucket.UtcQueryStart < bucket.UtcBucketEnd) {
+                // Query start time lies inside this bucket; interpolate a value at the query
+                // start time.
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcQueryStart,
+                    combinedInputValues,
+                    true
+                );
+            }
+            else {
+                // Interpolate a value at the bucket start time.
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcBucketStart,
+                    combinedInputValues,
+                    true
+                );
+            }
+
+            if (result == null) {
+                result = CreateErrorTagValue(
+                    bucket,
+                    bucket.UtcBucketStart,
+                    Resources.TagValue_ProcessedValue_NoData
+                );
+            }
+
+            yield return result;
+
+            // If query end time lies inside the bucket time range, we also interpolate a value at
+            // the query end time.
+            if (bucket.UtcBucketEnd >= bucket.UtcQueryEnd) {
+                result = InterpolationHelper.GetInterpolatedValueAtSampleTime(
+                    tag,
+                    bucket.UtcQueryEnd,
+                    combinedInputValues,
+                    true
                 );
 
                 if (result == null) {

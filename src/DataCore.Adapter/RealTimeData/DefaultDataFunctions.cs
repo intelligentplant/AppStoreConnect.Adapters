@@ -25,24 +25,9 @@ namespace DataCore.Adapter.RealTimeData {
             public const string FunctionIdAverage = "AVG";
 
             /// <summary>
-            /// Minimum data function ID.
-            /// </summary>
-            public const string FunctionIdMinimum = "MIN";
-
-            /// <summary>
-            /// Maximum data function ID.
-            /// </summary>
-            public const string FunctionIdMaximum = "MAX";
-
-            /// <summary>
             /// Count data function ID.
             /// </summary>
             public const string FunctionIdCount = "COUNT";
-
-            /// <summary>
-            /// Range data function ID.
-            /// </summary>
-            public const string FunctionIdRange = "RANGE";
 
             /// <summary>
             /// Delta data function ID.
@@ -50,14 +35,39 @@ namespace DataCore.Adapter.RealTimeData {
             public const string FunctionIdDelta = "DELTA";
 
             /// <summary>
-            /// Percent good function ID.
+            /// Maximum data function ID.
             /// </summary>
-            public const string FunctionIdPercentGood = "PERCENTGOOD";
+            public const string FunctionIdMaximum = "MAX";
+
+            /// <summary>
+            /// Minimum data function ID.
+            /// </summary>
+            public const string FunctionIdMinimum = "MIN";
 
             /// <summary>
             /// Percent bad function ID.
             /// </summary>
             public const string FunctionIdPercentBad = "PERCENTBAD";
+
+            /// <summary>
+            /// Percent good function ID.
+            /// </summary>
+            public const string FunctionIdPercentGood = "PERCENTGOOD";
+
+            /// <summary>
+            /// Range data function ID.
+            /// </summary>
+            public const string FunctionIdRange = "RANGE";
+
+            /// <summary>
+            /// Standard deviation function ID.
+            /// </summary>
+            public const string FunctionIdStandardDeviation = "STDDEV";
+
+            /// <summary>
+            /// Step interpolated data function ID.
+            /// </summary>
+            public const string FunctionIdStepInterpolate = "STEPINTERPOLATE";
 
             /// <summary>
             /// Time-weighted average function ID.
@@ -69,17 +79,12 @@ namespace DataCore.Adapter.RealTimeData {
             /// </summary>
             public const string FunctionIdVariance = "VARIANCE";
 
-            /// <summary>
-            /// Standard deviation function ID.
-            /// </summary>
-            public const string FunctionIdStandardDeviation = "STDDEV";
-
         }
 
-        
+
 
         /// <summary>
-        /// Interpolation between samples.
+        /// Computes a value at each sample interval using linear interpolation.
         /// </summary>
         public static DataFunctionDescriptor Interpolate { get; } = DataFunctionDescriptor.Create(
             Constants.FunctionIdInterpolate,
@@ -88,6 +93,19 @@ namespace DataCore.Adapter.RealTimeData {
             DataFunctionSampleTimeType.StartTime,
             DataFunctionStatusType.WorstCase
         );
+
+        /// <summary>
+        /// Computes a value at each sample interval by repeating the last-known value at or 
+        /// before the sample time.
+        /// </summary>
+        public static DataFunctionDescriptor StepInterpolate { get; } = DataFunctionDescriptor.Create(
+            Constants.FunctionIdStepInterpolate,
+            Resources.DataFunction_StepInterp_Name,
+            Resources.DataFunction_StepInterp_Description,
+            DataFunctionSampleTimeType.StartTime,
+            DataFunctionStatusType.Raw
+        );
+
 
         /// <summary>
         /// Average value over a time period.
@@ -291,18 +309,19 @@ namespace DataCore.Adapter.RealTimeData {
         /// Collection of all default data functions, used by <see cref="FindById"/>.
         /// </summary>
         private static readonly DataFunctionDescriptor[] s_defaultDataFunctions = { 
-            Interpolate,
             Average,
-            TimeAverage,
-            Minimum,
-            Maximum,
             Count,
-            Range,
             Delta,
-            PercentGood,
+            Interpolate,
+            Maximum,
+            Minimum,
             PercentBad,
-            Variance,
-            StandardDeviation
+            PercentGood,
+            Range,
+            StandardDeviation,
+            StepInterpolate,
+            TimeAverage,
+            Variance
         };
 
 
