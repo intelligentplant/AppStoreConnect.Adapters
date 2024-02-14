@@ -124,7 +124,7 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval..
+        ///   Looks up a localized string similar to Uses linear interpolation to compute a value at each sample interval based on the raw values on either side of the sample time for the interval. Step interpolation will be used for non-floating-point tags..
         /// </summary>
         internal static string DataFunction_Interp_Description {
             get {
@@ -327,6 +327,24 @@ namespace DataCore.Adapter {
         internal static string DataFunction_StandardDeviation_Name {
             get {
                 return ResourceManager.GetString("DataFunction_StandardDeviation_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolates a value at each sample interval by repeating the value of the raw sample at or immediately before the sample time..
+        /// </summary>
+        internal static string DataFunction_StepInterp_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_StepInterp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step Interpolated.
+        /// </summary>
+        internal static string DataFunction_StepInterp_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_StepInterp_Name", resourceCulture);
             }
         }
         
