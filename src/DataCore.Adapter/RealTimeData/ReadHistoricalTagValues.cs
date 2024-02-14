@@ -338,7 +338,7 @@ namespace DataCore.Adapter.RealTimeData {
                 // boundary type for every requested sample time (in case the sample times 
                 // span a huge number of raw samples). We then write the values received 
                 // from the resulting channel into a master raw data channel, which is used 
-                // by the InterpolationHelper to calcukate the required values.
+                // by the InterpolationHelper to calculate the required values.
 
                 var rawValuesChannel = ChannelExtensions.CreateTagValueChannel();
 
@@ -358,7 +358,7 @@ namespace DataCore.Adapter.RealTimeData {
                     }
                 }, true, BackgroundTaskService, cancellationToken);
 
-                var resultValuesReader = InterpolationHelper.GetPreviousValuesAtSampleTimes(tag, request.UtcSampleTimes, rawValuesChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken);
+                var resultValuesReader = InterpolationHelper.GetStepInterpolatedValuesAsync(tag, request.UtcSampleTimes, rawValuesChannel.Reader.ReadAllAsync(cancellationToken), cancellationToken);
                 await foreach (var val in resultValuesReader.ConfigureAwait(false)) {
                     if (val == null) {
                         continue;
