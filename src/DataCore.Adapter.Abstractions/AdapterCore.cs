@@ -78,6 +78,11 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
+        /// Fires when <see cref="Dispose()"/> or <see cref="DisposeAsync"/> are called.
+        /// </summary>
+        private readonly CancellationToken _disposedToken;
+
+        /// <summary>
         /// Adapter properties.
         /// </summary>
         private readonly ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
@@ -121,7 +126,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        public CancellationToken StopToken => _stopTokenSource.Token;
+        public CancellationToken StopToken { get; private set; }
 
         /// <inheritdoc/>
         public event Func<IAdapter, Task>? Started;
@@ -148,7 +153,8 @@ namespace DataCore.Adapter {
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService, ILoggerFactory? loggerFactory) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
+            _disposedToken = _disposedTokenSource.Token;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
 
             LoggerFactory = loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
 
@@ -156,8 +162,8 @@ namespace DataCore.Adapter {
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
             // initially in a cancelled state.
-            _stopTokenSource = new CancellationTokenSource();
-            _stopTokenSource.Cancel();
+            CreateStopToken();
+            _stopTokenSource!.Cancel();
 
             Enable();
         }
@@ -187,15 +193,16 @@ namespace DataCore.Adapter {
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
             TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
+            _disposedToken = _disposedTokenSource.Token;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
 
             LoggerFactory = new WrapperLoggerFactory(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
             _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
             // initially in a cancelled state.
-            _stopTokenSource = new CancellationTokenSource();
-            _stopTokenSource.Cancel();
+            CreateStopToken();
+            _stopTokenSource!.Cancel();
 
             Enable();
         }
@@ -305,6 +312,18 @@ namespace DataCore.Adapter {
         internal IDisposable? BeginLoggerScope() => BeginLoggerScope(_logger);
 
 
+        /// <summary>
+        /// Creates a new <see cref="CancellationTokenSource"/> that will cancel when the adapter 
+        /// is stopped or disposed.
+        /// </summary>
+        private void CreateStopToken() {
+            _stopTokenSource?.Cancel();
+            _stopTokenSource?.Dispose();
+            _stopTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_disposedToken);
+            StopToken = _stopTokenSource.Token;
+        }
+
+
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
             using var scope = BeginLoggerScope();
@@ -318,23 +337,24 @@ namespace DataCore.Adapter {
 
             CheckDisposed();
 
-            using (await _startupLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
-                await _shutdownInProgress.WaitAsync(cancellationToken).ConfigureAwait(false);
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedToken))
+            using (await _startupLock.LockAsync(ctSource.Token).ConfigureAwait(false)) {
+                await _shutdownInProgress.WaitAsync(ctSource.Token).ConfigureAwait(false);
 
                 if (IsRunning) {
                     return;
                 }
 
                 if (StopToken.IsCancellationRequested) {
-                    _stopTokenSource = new CancellationTokenSource();
+                    CreateStopToken();
                 }
 
                 using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
                     LogAdapterStarting(_logger, Descriptor.Id);
                     IsStarting = true;
                     try {
-                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
-                            await StartAsyncCore(ctSource.Token).ConfigureAwait(false);
+                        using (var ctSource2 = CancellationTokenSource.CreateLinkedTokenSource(ctSource.Token, StopToken)) {
+                            await StartAsyncCore(ctSource2.Token).ConfigureAwait(false);
                             _isRunning = true;
                         }
                     }
@@ -365,7 +385,7 @@ namespace DataCore.Adapter {
                     return;
                 }
 
-                using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
+                using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StopAsync)))) {
                     _shutdownInProgress.Reset();
 
                     try {
@@ -622,7 +642,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public CancellationTokenSource CreateCancellationTokenSource(params CancellationToken[] additionalTokens) {
             CheckDisposed();
-            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken, _disposedTokenSource.Token }.ToArray());
+            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken }.ToArray());
         }
 
         #endregion
