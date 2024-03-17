@@ -267,10 +267,8 @@ DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.CreateEventMe
 DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.Topics.get -> System.Collections.Generic.IEnumerable<string!>!
 DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.Topics.set -> void
 DataCore.Adapter.Events.EventMessage
-DataCore.Adapter.Events.EventMessage.EventMessage(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
 DataCore.Adapter.Events.EventMessageBase
 DataCore.Adapter.Events.EventMessageBase.Category.get -> string?
-DataCore.Adapter.Events.EventMessageBase.EventMessageBase(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
 DataCore.Adapter.Events.EventMessageBase.Id.get -> string!
 DataCore.Adapter.Events.EventMessageBase.Message.get -> string?
 DataCore.Adapter.Events.EventMessageBase.Priority.get -> DataCore.Adapter.Events.EventPriority
@@ -288,7 +286,6 @@ DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Topics.get -> System.Coll
 DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Topics.set -> void
 DataCore.Adapter.Events.EventMessageWithCursorPosition
 DataCore.Adapter.Events.EventMessageWithCursorPosition.CursorPosition.get -> string!
-DataCore.Adapter.Events.EventMessageWithCursorPosition.EventMessageWithCursorPosition(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, string! cursorPosition) -> void
 DataCore.Adapter.Events.EventPriority
 DataCore.Adapter.Events.EventPriority.Critical = 4 -> DataCore.Adapter.Events.EventPriority
 DataCore.Adapter.Events.EventPriority.High = 3 -> DataCore.Adapter.Events.EventPriority
@@ -860,8 +857,6 @@ static DataCore.Adapter.Diagnostics.HealthCheckResult.Degraded(string? displayNa
 static DataCore.Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthStatus>! statuses) -> DataCore.Adapter.Diagnostics.HealthStatus
 static DataCore.Adapter.Diagnostics.HealthCheckResult.Healthy(string? displayName, string? description = null, System.Collections.Generic.IDictionary<string!, string!>? data = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
 static DataCore.Adapter.Diagnostics.HealthCheckResult.Unhealthy(string? displayName, string? description = null, string? error = null, System.Collections.Generic.IDictionary<string!, string!>? data = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
-static DataCore.Adapter.Events.EventMessage.Create(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.Events.EventMessage!
-static DataCore.Adapter.Events.EventMessageWithCursorPosition.Create(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, string! cursorPosition) -> DataCore.Adapter.Events.EventMessageWithCursorPosition!
 static DataCore.Adapter.Events.WriteEventMessageResult.Create(string? correlationId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.Events.WriteEventMessageResult!
 static DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Create<TBody>(System.Uri! id, TBody? body, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Extensions.CustomFunctionInvocationRequest!
 static DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Create<TBody>(System.Uri! id, TBody? body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody>! jsonTypeInfo) -> DataCore.Adapter.Extensions.CustomFunctionInvocationRequest!

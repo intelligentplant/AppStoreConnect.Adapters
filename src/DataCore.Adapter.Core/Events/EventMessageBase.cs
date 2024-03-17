@@ -43,6 +43,11 @@ namespace DataCore.Adapter.Events {
         public string? Category { get; }
 
         /// <summary>
+        /// The event type.
+        /// </summary>
+        public string? Type { get; }
+
+        /// <summary>
         /// The event message.
         /// </summary>
         public string? Message { get; }
@@ -71,18 +76,22 @@ namespace DataCore.Adapter.Events {
         /// <param name="category">
         ///   The event category.
         /// </param>
+        /// <param name="type">
+        ///   The event type.
+        /// </param>
         /// <param name="message">
         ///   The event message.
         /// </param>
         /// <param name="properties">
         ///   The event properties.
         /// </param>
-        protected EventMessageBase(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? message, IEnumerable<AdapterProperty>? properties) {
+        protected EventMessageBase(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? type, string? message, IEnumerable<AdapterProperty>? properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Topic = topic;
             UtcEventTime = utcEventTime;
             Priority = priority;
             Category = category;
+            Type = type;
             Message = message;
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
         }
