@@ -664,6 +664,7 @@ namespace DataCore.Adapter.Tests {
                 DateTime.UtcNow,
                 EventPriority.Medium,
                 "Category",
+                "Type",
                 "Message",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),
@@ -701,6 +702,7 @@ namespace DataCore.Adapter.Tests {
                 DateTime.UtcNow,
                 EventPriority.Medium,
                 "Category",
+                "Type",
                 "Message",
                 new[] {
                     AdapterProperty.Create("Prop1", 100),

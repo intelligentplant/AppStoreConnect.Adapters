@@ -1,1 +1,4 @@
 ﻿#nullable enable
+const DataCore.Adapter.Grpc.EventMessage.TypeFieldNumber = 8 -> int
+~DataCore.Adapter.Grpc.EventMessage.Type.get -> string
+~DataCore.Adapter.Grpc.EventMessage.Type.set -> void

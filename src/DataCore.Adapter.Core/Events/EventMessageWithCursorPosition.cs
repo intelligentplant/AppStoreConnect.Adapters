@@ -38,6 +38,9 @@ namespace DataCore.Adapter.Events {
         /// <param name="category">
         ///   The event category.
         /// </param>
+        /// <param name="type">
+        ///   The event type.
+        /// </param>
         /// <param name="message">
         ///   The event message.
         /// </param>
@@ -57,46 +60,12 @@ namespace DataCore.Adapter.Events {
             DateTime utcEventTime, 
             EventPriority priority, 
             string? category, 
+            string? type,
             string? message, 
             IEnumerable<AdapterProperty>? properties, 
             string cursorPosition
-        ) : base(id, topic, utcEventTime, priority, category, message, properties) {
+        ) : base(id, topic, utcEventTime, priority, category, type, message, properties) {
             CursorPosition = cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition));
-        }
-
-
-        /// <summary>
-        /// Creates a new <see cref="EventMessageWithCursorPosition"/> object.
-        /// </summary>
-        /// <param name="id">
-        ///   The unique identifier for the event message.
-        /// </param>
-        /// <param name="topic">
-        ///   The event message topic e.g. the MQTT channel that emitted the message.
-        /// </param>
-        /// <param name="utcEventTime">
-        ///   The UTC timestamp of the event.
-        /// </param>
-        /// <param name="priority">
-        ///   The event priority.
-        /// </param>
-        /// <param name="category">
-        ///   The event category.
-        /// </param>
-        /// <param name="message">
-        ///   The event message.
-        /// </param>
-        /// <param name="properties">
-        ///   Additional event properties.
-        /// </param>
-        /// <param name="cursorPosition">
-        ///   The cursor position for the event message.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
-        /// </exception>
-        public static EventMessageWithCursorPosition Create(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? message, IEnumerable<AdapterProperty>? properties, string cursorPosition) {
-            return new EventMessageWithCursorPosition(id, topic, utcEventTime, priority, category, message, properties, cursorPosition);
         }
 
     }
