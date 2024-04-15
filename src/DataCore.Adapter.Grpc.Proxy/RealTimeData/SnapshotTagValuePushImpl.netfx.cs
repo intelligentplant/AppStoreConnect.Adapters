@@ -138,6 +138,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            if (GrpcAdapterProxy.IsGrpcClientFullySupported()) {
+                // Bidirectional streaming is fully supported.
+                await foreach (var item in SubscribeCoreAsync(context, request, channel, cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
+            }
+
+            // Bidirectional streaming is not supported.
+
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             
             using var handler = CreateInnerHandler(context, client, request, cancellationToken);

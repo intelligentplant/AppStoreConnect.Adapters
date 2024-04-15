@@ -17,6 +17,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            if (GrpcAdapterProxy.IsGrpcClientFullySupported()) {
+                // Bidrectional streaming is fully supported.
+                await foreach (var item in WriteEventMessagesCoreAsync(context, request, channel, cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
+            }
+
+            // Bidirectional streaming is not supported.
+
             var client = CreateClient<EventsService.EventsServiceClient>();
 
             var callOptions = GetCallOptions(context, cancellationToken);
