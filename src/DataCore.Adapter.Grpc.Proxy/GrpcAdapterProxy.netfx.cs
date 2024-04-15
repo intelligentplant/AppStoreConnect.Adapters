@@ -96,7 +96,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <summary>
         /// Describes a Windows product type.
         /// </summary>
-        public enum PRODUCT_TYPE {
+        internal enum PRODUCT_TYPE {
             VER_NT_WORKSTATION = 0x0000001,
             VER_NT_DOMAIN_CONTROLLER = 0x0000002,
             VER_NT_SERVER = 0x0000003
@@ -104,7 +104,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        struct OSVERSIONINFOEXW {
+        internal struct OSVERSIONINFOEXW {
             public int dwOSVersionInfoSize;
             public int dwMajorVersion;
             public int dwMinorVersion;
