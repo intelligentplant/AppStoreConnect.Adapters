@@ -44,7 +44,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <summary>
         /// Bespoke tag value properties.
         /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
+        private readonly Dictionary<string, AdapterProperty> _properties = new Dictionary<string, AdapterProperty>(StringComparer.OrdinalIgnoreCase);
 
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public TagValueExtended Build() {
-            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, _properties);
+            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, _properties.Values.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase));
         }
 
 
@@ -172,9 +172,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithValue(Variant value, string? displayValue = null) {
             _value = value;
-            var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.DisplayValue, StringComparison.OrdinalIgnoreCase));
+            _properties.Remove(WellKnownProperties.TagValue.DisplayValue);
             if (displayValue != null) {
-                return WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
+                return this.WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
             }
             return this;
         }
@@ -271,50 +271,17 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <summary>
-        /// Specifies if a tag value represents a stepped value transition (such as a discrete 
-        /// value change on a digital tag or an analogue process limit). 
-        /// </summary>
-        /// <param name="stepped">
-        ///   <see langword="true"/> if the tag value represents a stepped value transition, or 
-        ///   <see langword="false"/> otherwise.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        /// <remarks>
-        /// 
-        /// <para>
-        ///   Calling <see cref="WithSteppedTransition"/> sets the <see cref="WellKnownProperties.TagValue.Stepped"/> 
-        ///   property on the tag value.
-        /// </para>
-        /// 
-        /// <para>
-        ///   Consuming applications can use this property as a hint regarding how the time series 
-        ///   data should be visualized.
-        /// </para>
-        /// 
-        /// </remarks>
-        public TagValueBuilder WithSteppedTransition(bool stepped) {
-            var _ = _properties.RemoveAll(x => x.Name.Equals(WellKnownProperties.TagValue.Stepped, StringComparison.OrdinalIgnoreCase));
-            return WithProperty(string.Intern(WellKnownProperties.TagValue.Stepped), stepped);
-        }
-
-
-        /// <summary>
         /// Adds a property to the tag value.
         /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
+        /// <param name="property">
+        ///   The property.
         /// </param>
         /// <returns>
         ///   The updated <see cref="TagValueBuilder"/>.
         /// </returns>
-        public TagValueBuilder WithProperty(string name, object value) {
-            if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value));
+        public TagValueBuilder WithProperty(AdapterProperty property) {
+            if (property != null) {
+                _properties[property.Name] = property;
             }
             return this;
         }
@@ -345,29 +312,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
             if (properties != null) {
-                _properties.AddRange(properties.Where(x => x != null));
+                foreach (var property in properties) {
+                    WithProperty(property);
+                }
             }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the tag value being calculated from a bucket.
-        /// </summary>
-        /// <param name="bucket">
-        ///   The bucket.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        internal TagValueBuilder WithBucketProperties(TagValueBucket bucket) {
-            if (bucket != null) {
-                return WithProperties(
-                    AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.BucketStart), bucket.UtcBucketStart),
-                    AdapterProperty.Create(string.Intern(CommonTagValuePropertyNames.BucketEnd), bucket.UtcBucketEnd)
-                );
-            }
-
             return this;
         }
 

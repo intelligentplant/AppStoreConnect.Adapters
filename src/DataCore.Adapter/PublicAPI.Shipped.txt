@@ -341,7 +341,6 @@ DataCore.Adapter.RealTimeData.TagValueBuilder.WithError(string? error) -> DataCo
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithNotes(string? notes) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
-DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperty(string! name, object! value) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithStatus(DataCore.Adapter.RealTimeData.TagValueStatus status) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithUnits(string? units) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithUtcSampleTime(System.DateTime utcSampleTime) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
