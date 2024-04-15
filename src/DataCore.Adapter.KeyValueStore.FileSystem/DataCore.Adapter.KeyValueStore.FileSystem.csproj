@@ -4,6 +4,7 @@
     <TargetFrameworks>net48;netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.KeyValueStore.FileSystem</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.KeyValueStore.FileSystem</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>File system-based key-value store for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -30,6 +31,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

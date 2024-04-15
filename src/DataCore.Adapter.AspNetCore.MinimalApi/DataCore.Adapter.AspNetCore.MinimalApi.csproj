@@ -4,6 +4,7 @@
     <TargetFrameworks>net8.0;net7.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.MinimalApi</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>ASP.NET Core types for hosting App Store Connect adapter APIs.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -35,6 +36,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

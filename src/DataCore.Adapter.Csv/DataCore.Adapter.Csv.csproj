@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.Csv</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>App Store Connect adapter that serves data from CSV files.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -33,6 +34,10 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\VendorInfo.cs" Link="VendorInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

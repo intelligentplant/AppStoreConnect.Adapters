@@ -4,6 +4,7 @@
     <TargetFrameworks>net8.0;net7.0;net6.0</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.AspNetCore</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.SignalR</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>ASP.NET Core SignalR hubs for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -26,6 +27,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

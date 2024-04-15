@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.Grpc.Client</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>gRPC client for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -29,6 +30,10 @@
 
   <ItemGroup>
     <Compile Include="..\DataCore.Adapter.AspNetCore.Grpc\GrpcExtensions.cs" Link="GrpcExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
   
 </Project>
