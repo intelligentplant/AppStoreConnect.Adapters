@@ -5,6 +5,7 @@
     <LangVersion>9.0</LangVersion>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.Core</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>Base types for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -33,6 +34,10 @@
       <LastGenOutput>SharedResources.Designer.cs</LastGenOutput>
       <CustomToolNamespace>DataCore.Adapter</CustomToolNamespace>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

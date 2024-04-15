@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>$(PackagePrefix).Adapter.Templates</PackageId>
     <PackageType>Template</PackageType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <DefaultNetCoreTargetFramework>net6.0</DefaultNetCoreTargetFramework>
     <Title>App Store Connect Adapter Templates</Title>
     <Description>Templates to use when creating an adapter for Intelligent Plant App Store Connect.</Description>
@@ -64,5 +65,9 @@
     <!-- Ensure that the example hosted adapter project specifies the package versions defined by Central Package Management. -->
     <Exec Command="$(_PowerShellExe) -NoLogo -NonInteractive $(_ExecutionPolicy) -File &quot;$(_PowerShellScriptPath)&quot; -ProjectFile &quot;$(_ProjectFilePath)&quot; -PackageVersionsFile &quot;$(_PackageVersionsFile)&quot; -DefaultPackageVersion &quot;$(_DefaultPackageVersion)&quot;" />
   </Target>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
+  </ItemGroup>
 
 </Project>

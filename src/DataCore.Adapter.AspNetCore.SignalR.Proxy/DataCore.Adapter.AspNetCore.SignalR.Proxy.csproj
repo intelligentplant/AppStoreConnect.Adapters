@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.AspNetCore.SignalR.Proxy</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>App Store Connect adapter proxy using ASP.NET Core SignalR.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -31,6 +32,10 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\VendorInfo.cs" Link="VendorInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>
