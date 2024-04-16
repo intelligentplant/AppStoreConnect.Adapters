@@ -91,7 +91,17 @@ namespace DataCore.Adapter {
         public AdapterDescriptor Descriptor { get; private set; }
 
         /// <inheritdoc/>
-        public AdapterTypeDescriptor TypeDescriptor { get; }
+        public AdapterTypeDescriptor TypeDescriptor => GetAdapterTypeDescriptor() ?? DefaultTypeDescriptor;
+
+        /// <summary>
+        /// The default adapter type descriptor generated from the adapter type.
+        /// </summary>
+        private AdapterTypeDescriptor DefaultTypeDescriptor => _defaultTypeDescriptor ??= GetType().CreateAdapterTypeDescriptor()!;
+
+        /// <summary>
+        /// The default adapter type descriptor generated from the adapter type.
+        /// </summary>
+        private AdapterTypeDescriptor? _defaultTypeDescriptor;
 
         /// <inheritdoc/>
         public IAdapterFeaturesCollection Features => this;
@@ -152,7 +162,6 @@ namespace DataCore.Adapter {
         /// </exception>
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService, ILoggerFactory? loggerFactory) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-            TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             _disposedToken = _disposedTokenSource.Token;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
 
@@ -192,7 +201,6 @@ namespace DataCore.Adapter {
         [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-            TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
             _disposedToken = _disposedTokenSource.Token;
             BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
 
@@ -207,6 +215,18 @@ namespace DataCore.Adapter {
             Enable();
         }
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+
+        /// <summary>
+        /// Gets the type descriptor for the adapter.
+        /// </summary>
+        /// <returns>
+        ///   The type descriptor for the adapter, or <see langword="null"/> if a type descriptor 
+        ///   should be inferred from the adapter type.
+        /// </returns>
+        protected virtual AdapterTypeDescriptor? GetAdapterTypeDescriptor() {
+            return null;
+        }
 
 
         /// <summary>
