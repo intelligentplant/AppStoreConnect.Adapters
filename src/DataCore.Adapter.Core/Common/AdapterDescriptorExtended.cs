@@ -19,6 +19,7 @@ namespace DataCore.Adapter.Common {
         /// <summary>
         /// The names of the implemented extension adapter features.
         /// </summary>
+        [Obsolete(Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage, Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError)]
         public IEnumerable<string> Extensions { get; }
 
         /// <summary>
@@ -76,7 +77,9 @@ namespace DataCore.Adapter.Common {
         ) : base(id, name, description) {
             
             Features = features?.ToArray() ?? Array.Empty<string>();
+#pragma warning disable CS0618 // Type or member is obsolete
             Extensions = extensions?.ToArray() ?? Array.Empty<string>();
+#pragma warning restore CS0618 // Type or member is obsolete
             Properties = properties?.ToArray() ?? Array.Empty<AdapterProperty>();
             TypeDescriptor = typeDescriptor;
         }

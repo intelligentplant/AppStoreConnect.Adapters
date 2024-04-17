@@ -21,7 +21,7 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
     /// <summary>
     /// <see cref="IKeyValueStore"/> implementation that persists files to disk.
     /// </summary>
-    public class FileSystemKeyValueStore : KeyValueStore<FileSystemKeyValueStoreOptions>, IDisposable {
+    public sealed partial class FileSystemKeyValueStore : KeyValueStore<FileSystemKeyValueStoreOptions>, IDisposable {
 
         /// <summary>
         /// SHA256 for creating distinct, fixed-length file names.
@@ -39,16 +39,6 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         private bool _disposed;
 
         /// <summary>
-        /// Cancellation token source that fires when the store is disposed.
-        /// </summary>
-        private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// Cancellation token from <see cref="_disposedTokenSource"/>.
-        /// </summary>
-        private readonly CancellationToken _disposedToken;
-
-        /// <summary>
         /// The base directory for the persisted files.
         /// </summary>
         private readonly DirectoryInfo _baseDirectory;
@@ -59,9 +49,9 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         private readonly int _hashBuckets;
 
         /// <summary>
-        /// Holds read/write locks for each individual key (file).
+        /// Lock for the store.
         /// </summary>
-        private readonly ConcurrentDictionary<string, AsyncReaderWriterLock> _fileLocks = new ConcurrentDictionary<string, AsyncReaderWriterLock>();
+        private readonly AsyncReaderWriterLock _lock = new AsyncReaderWriterLock();
 
         /// <summary>
         /// Lookup from key to file name.
@@ -74,14 +64,14 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         private readonly Lazy<Task> _indexLoader;
 
         /// <summary>
-        /// Indicates if an index save is pending.
+        /// Write buffer for the store, if configured.
         /// </summary>
-        private int _indexSavePending;
+        private readonly KeyValueStoreWriteBuffer? _writeBuffer;
 
         /// <summary>
-        /// Indicates if an index save is in progress.
+        /// Specifies if the store uses a write buffer.
         /// </summary>
-        private readonly ManualResetEventSlim _indexSaveInProgress = new ManualResetEventSlim();
+        private bool UseWriteBuffer => _writeBuffer != null;
 
 
         /// <summary>
@@ -96,13 +86,11 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public FileSystemKeyValueStore(FileSystemKeyValueStoreOptions options, ILogger<FileSystemKeyValueStore>? logger = null) : base(options, logger) {
+        public FileSystemKeyValueStore(FileSystemKeyValueStoreOptions options, ILoggerFactory? logger = null) : base(options, logger?.CreateLogger<FileSystemKeyValueStore>()) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _disposedToken = _disposedTokenSource.Token;
-            
             var path = string.IsNullOrWhiteSpace(options.Path)
                 ? FileSystemKeyValueStoreOptions.DefaultPath
                 : options.Path;
@@ -121,31 +109,27 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
             _indexLoader = new Lazy<Task>(async () => {
                 await LoadIndexAsync().ConfigureAwait(false);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
+
+            if (Options.WriteBuffer?.Enabled ?? false) {
+                _writeBuffer = new KeyValueStoreWriteBuffer(options.WriteBuffer, OnFlushAsync, logger?.CreateLogger<KeyValueStoreWriteBuffer>());
+            }
+            else {
+                LogFlushDisabled(Logger);
+            }
         }
 
 
         /// <summary>
-        /// Gets the <see cref="AsyncReaderWriterLock"/> for the specified file name.
+        /// Converts the specified bytes to base64url encoding.
         /// </summary>
-        /// <param name="fileName">
-        ///   The file name.
+        /// <param name="bytes">
+        ///   The bytes.
         /// </param>
         /// <returns>
-        ///   The associated lock.
+        ///   The base64url representation of the bytes.
         /// </returns>
-        private AsyncReaderWriterLock GetOrAddLockForFile(string fileName) {
-            return _fileLocks.GetOrAdd(fileName, _ = new AsyncReaderWriterLock());
-        }
-
-
-        /// <summary>
-        /// Removes the <see cref="AsyncReaderWriterLock"/> for the specified file name.
-        /// </summary>
-        /// <param name="fileName">
-        ///   The file name.
-        /// </param>
-        private void RemoveLockForFile(string fileName) {
-            _fileLocks.TryRemove(fileName, out _);
+        private string ToBase64Url(byte[] bytes) {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('/', '_').Replace('+', '-');
         }
 
 
@@ -186,14 +170,13 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// </returns>
         private async ValueTask LoadIndexAsync() {
             try {
-                var readResult = await ReadFileAsync(IndexFileName).ConfigureAwait(false);
+                var index = await ReadFromFileAsync<IDictionary<string, string>>(IndexFileName).ConfigureAwait(false);
 
-                if (readResult == null || readResult.Length == 0) {
+                if (index == null || index.Count == 0) {
                     _fileIndex = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
                     return;
                 }
 
-                var index = JsonSerializer.Deserialize<Dictionary<string, string>>(readResult);
                 _fileIndex = new ConcurrentDictionary<string, string>(index, StringComparer.Ordinal);
             }
             catch (Exception e) {
@@ -206,47 +189,13 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <summary>
         /// Serializes the index and saves it to disk.
         /// </summary>
-        /// <param name="delay">
-        ///   The delay to apply before saving the index.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   The cancellation token that will cause the index to be saved immediately, event if 
-        ///   the delay has not completed.
-        /// </param>
         /// <returns>
         ///   A task that will save the index.
         /// </returns>
-        private async Task SaveIndexAsync(TimeSpan delay, CancellationToken cancellationToken) {
-            if (_disposed) {
-                return;
-            }
-
-            _indexSaveInProgress.Reset();
-
+        private async ValueTask SaveIndexAsync() {
             try {
-                // If the cancellation token fires before the delay has completed, we will save
-                // the index immediately, as this indicates that the store is being disposed.
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) { }
-
-            await SaveIndexCoreAsync().ConfigureAwait(false);
-            _indexSaveInProgress.Set();
-        }
-
-
-        /// <summary>
-        /// Serializes the index and saves it to disk.
-        /// </summary>
-        /// <returns>
-        ///   A task that will save the index.
-        /// </returns>
-        private async ValueTask SaveIndexCoreAsync() {
-            try {
-                var bytes = JsonSerializer.SerializeToUtf8Bytes(_fileIndex);
-
                 // Always use fastest possible compression for index.
-                await WriteFileAsync(IndexFileName, bytes, CompressionLevel.Fastest).ConfigureAwait(false);
+                await WriteToFileAsync(IndexFileName, _fileIndex, CompressionLevel.Fastest).ConfigureAwait(false);
             }
             catch (Exception e) {
                 Logger.LogError(e, Resources.Log_ErrorDuringIndexSave);
@@ -254,60 +203,120 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         }
 
 
-        /// <summary>
-        /// Converts the specified bytes to base64url encoding.
-        /// </summary>
-        /// <param name="bytes">
-        ///   The bytes.
-        /// </param>
-        /// <returns>
-        ///   The base64url representation of the bytes.
-        /// </returns>
-        private string ToBase64Url(byte[] bytes) {
-            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('/', '_').Replace('+', '-');
+        private async Task OnFlushAsync(IEnumerable<KeyValuePair<KVKey, byte[]?>> changes) {
+            await _indexLoader.Value.ConfigureAwait(false);
+
+            var indexModified = false;
+
+            using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                try {
+                    foreach (var change in changes) {
+                        if (change.Value == null) {
+                            if (TryRemoveKeyFromIndex(change.Key, out var fileName)) {
+                                indexModified = true;
+                                DeleteFile(fileName!);
+                            }
+                        }
+                        else {
+                            if (TryAddKeyToIndex(change.Key, out var fileName)) {
+                                indexModified = true;
+                            }
+                            await WriteBytesToFileAsync(fileName, change.Value).ConfigureAwait(false);
+                        }
+                    }
+                }
+                finally {
+                    if (indexModified) {
+                        await SaveIndexAsync().ConfigureAwait(false);
+                    }
+                }
+            }
         }
 
 
-        /// <summary>
-        /// Gets the file name to use for the specified key.
-        /// </summary>
-        /// <param name="key">
-        ///   The key.
-        /// </param>
-        /// <returns>
-        ///   A <see cref="ValueTask{TResult}"/> that will return the name of the file for the key 
-        ///   (relative to the base directory).
-        /// </returns>
-        private async ValueTask<string> GetFileNameForKeyAsync(KVKey key) {
-            await _indexLoader.Value.ConfigureAwait(false);
+        private bool TryGetFileNameForKey(KVKey key, out string? fileName) {
+            var keyAsHex = ConvertBytesToHexString(key);
+            return _fileIndex.TryGetValue(keyAsHex, out fileName);
+        }
+
+
+        private bool TryAddKeyToIndex(KVKey key, out string fileName) {
             var keyAsHex = ConvertBytesToHexString(key);
 
             var dirty = false;
-            var result = _fileIndex.GetOrAdd(keyAsHex, _ => {
+            fileName = _fileIndex.GetOrAdd(keyAsHex, _ => {
                 dirty = true;
                 lock (s_hash) {
                     return Path.Combine(
-                        Math.Abs((keyAsHex.GetHashCode() % _hashBuckets)).ToString("X"), 
+                        Math.Abs((keyAsHex.GetHashCode() % _hashBuckets)).ToString("X"),
                         string.Concat(
-                            ToBase64Url(s_hash.ComputeHash(key)), 
+                            ToBase64Url(s_hash.ComputeHash(key)),
                             ".data"
                         )
                     );
                 }
             });
 
-            if (dirty && Interlocked.CompareExchange(ref _indexSavePending, 1, 0) == 0) {
-                _ = Task.Run(async () => {
-                    try {
-                        await SaveIndexAsync(TimeSpan.FromSeconds(1), _disposedToken).ConfigureAwait(false);
-                    }
-                    finally {
-                        _indexSavePending = 0;
-                    }
-                });
+            return dirty;
+        }
+
+
+        private bool TryRemoveKeyFromIndex(KVKey key, out string? fileName) {
+            var keyAsHex = ConvertBytesToHexString(key);
+            return _fileIndex.TryRemove(keyAsHex, out fileName);
+        }
+
+
+        private string GetFullPathForDataFileName(string fileName) {
+            return Path.Combine(_baseDirectory.FullName, fileName);
+        }
+
+
+        private async ValueTask WriteToFileCoreAsync(string fileName, Func<FileInfo, ValueTask> callback) {
+            var file = new FileInfo(GetFullPathForDataFileName(fileName));
+
+            // Ensure that containing directory exists.
+            file.Directory.Create();
+
+            if (!file.Exists) {
+                // Fast path when file does not exist yet.
+                await callback(file).ConfigureAwait(false);
+                return;
             }
 
-            return result;
+            // File already exists.
+
+            // Save the data to a temporary file.
+            var tempFile = new FileInfo(GetFullPathForDataFileName(string.Concat("~", Guid.NewGuid().ToString(), ".tmp")));
+            await callback(tempFile).ConfigureAwait(false);
+
+            // We will create a backup of the original file prior to writing to it in case
+            // something goes wrong.
+            var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                // On Windows, we can use FileInfo.Replace to replace the original file with
+                // the temporary file, creating a backup of the original file in the process.
+                tempFile.Replace(file.FullName, backupFile.FullName, true);
+            }
+            else {
+                // FileInfo.Replace throws PlatformNotSupportedException on non-Windows platforms,
+                // so we have to perform a similar process ourselves.
+
+                // Create a backup copy of the original file.
+                file.CopyTo(backupFile.FullName, true);
+
+                // Replace the original file with the temporary file.
+                tempFile.CopyTo(file.FullName, true);
+
+                // Delete the temporary file.
+                tempFile.Refresh();
+                tempFile.Delete();
+            }
+
+            // We can now safely delete the backup copy.
+            backupFile.Refresh();
+            backupFile.Delete();
         }
 
 
@@ -326,80 +335,48 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   The operation status.
         /// </returns>
-        private async ValueTask WriteFileAsync(string fileName, byte[] value, CompressionLevel compressionLevel) {
-            var @lock = GetOrAddLockForFile(fileName);
-            using (await @lock.WriterLockAsync().ConfigureAwait(false)) {
-                var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
-
-                // Ensure that containing directory exists.
-                file.Directory.Create();
-
-                if (!file.Exists) {
-                    // Fast path when file does not exist yet.
-                    await WriteFileAsync(file, value, compressionLevel).ConfigureAwait(false);
-                    return;
+        private async ValueTask WriteToFileAsync<T>(string fileName, T value, CompressionLevel? compressionLevel = null) {
+            await WriteToFileCoreAsync(fileName, async file => {
+                using (var stream = file.OpenWrite()) {
+                    await SerializeToStreamAsync(stream, value, compressionLevel: compressionLevel).ConfigureAwait(false);
                 }
-
-                // File already exists.
-
-                // Save the data to a temporary file.
-                var tempFile = new FileInfo(Path.Combine(_baseDirectory.FullName, string.Concat("~", Guid.NewGuid().ToString(), ".tmp")));
-                await WriteFileAsync(tempFile, value, compressionLevel).ConfigureAwait(false);
-
-                // We will create a backup of the original file prior to writing to it in case
-                // something goes wrong.
-                var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
-
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    // On Windows, we can use FileInfo.Replace to replace the original file with
-                    // the temporary file, creating a backup of the original file in the process.
-                    tempFile.Replace(file.FullName, backupFile.FullName, true);
-                }
-                else {
-                    // FileInfo.Replace throws PlatformNotSupportedException on non-Windows platforms,
-                    // so we have to perform a similar process ourselves.
-
-                    // Create a backup copy of the original file.
-                    file.CopyTo(backupFile.FullName, true);
-
-                    // Replace the original file with the temporary file.
-                    tempFile.CopyTo(file.FullName, true);
-
-                    // Delete the temporary file.
-                    tempFile.Refresh();
-                    tempFile.Delete();
-                }
-
-                // We can now safely delete the backup copy.
-                backupFile.Refresh();
-                backupFile.Delete();
-            }
+            });
         }
 
 
-        /// <summary>
-        /// Writes a file to disk.
-        /// </summary>
-        /// <param name="file">
-        ///   The file to write.
-        /// </param>
-        /// <param name="content">
-        ///   The content to write.
-        /// </param>
-        /// <param name="compressionLevel">
-        ///   The compression level.
-        /// </param>
-        /// <returns>
-        ///   A task that will perform the write.
-        /// </returns>
-        private async Task WriteFileAsync(FileInfo file, byte[] content, CompressionLevel compressionLevel) {
-            using (var stream = file.OpenWrite())
-            using (var gzStream = new GZipStream(stream, compressionLevel, true)) {
-                await gzStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
-                // Calling Flush/FlushAsync on GZipStream does not always seem to flush all
-                // pending data; calling Close does.
-                gzStream.Close();
+        private async ValueTask WriteBytesToFileAsync(string fileName, byte[] bytes) {
+            await WriteToFileCoreAsync(fileName, async file => {
+                using (var stream = file.OpenWrite()) {
+                    await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+                }
+            });
+        }
+
+
+        private bool DeleteFile(string fileName) {
+            var file = new FileInfo(GetFullPathForDataFileName(fileName));
+            var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
+            if (!file.Exists && !backupFile.Exists) {
+                return false;
             }
+
+            // The file might have been deleted while we were waiting for the lock.
+            file.Refresh();
+            backupFile.Refresh();
+
+            if (!file.Exists && !backupFile.Exists) {
+                return false;
+            }
+
+            if (file.Exists) {
+                file.Delete();
+            }
+
+            if (backupFile.Exists) {
+                backupFile.Delete();
+            }
+
+            return true;
         }
 
 
@@ -412,107 +389,99 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
         /// <returns>
         ///   The content of the file.
         /// </returns>
-        private async ValueTask<byte[]?> ReadFileAsync(string fileName) {
-            var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
+        private async ValueTask<T?> ReadFromFileAsync<T>(string fileName) {
+            var file = new FileInfo(GetFullPathForDataFileName(fileName));
             var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
 
             if (!file.Exists && !backupFile.Exists) {
-                return null;
+                return default;
             }
 
-            var @lock = GetOrAddLockForFile(fileName);
-            using (await @lock.ReaderLockAsync().ConfigureAwait(false)) {
-                // The file might have been deleted while we were waiting for the lock.
-                file.Refresh();
-                backupFile.Refresh();
+            // The file might have been deleted while we were waiting for the lock.
+            file.Refresh();
+            backupFile.Refresh();
 
-                if (!file.Exists && !backupFile.Exists) {
-                    return null;
-                }
-
-                // Use the backup file if the original file does not exist.
-                var f = file.Exists ? file : backupFile;
-                return await ReadFileAsync(f).ConfigureAwait(false);
+            if (!file.Exists && !backupFile.Exists) {
+                return default;
             }
-        }
 
-
-        /// <summary>
-        /// Reads a file from disk.
-        /// </summary>
-        /// <param name="file">
-        ///   The file to read.
-        /// </param>
-        /// <returns>
-        ///   The content of the file.
-        /// </returns>
-        private async Task<byte[]> ReadFileAsync(FileInfo file) {
-            using (var stream = file.OpenRead())
-            using (var gzStream = new GZipStream(stream, CompressionMode.Decompress, true))
-            using (var ms = new MemoryStream()) {
-                await gzStream.CopyToAsync(ms).ConfigureAwait(false);
-                return ms.ToArray();
+            // Use the backup file if the original file does not exist.
+            var f = file.Exists ? file : backupFile;
+            using (var stream = f.OpenRead()) {
+                return await DeserializeFromStreamAsync<T>(stream).ConfigureAwait(false);
             }
         }
 
 
         /// <inheritdoc/>
-        /// <remarks>
-        /// <see cref="FileSystemKeyValueStore"/> will always return <see cref="CompressionLevel.NoCompression"/>, 
-        /// as it can apply compression more efficiently when reading/writing files instead.
-        /// </remarks>
-        protected override CompressionLevel GetCompressionLevel() => CompressionLevel.NoCompression;
+        protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
+            if (UseWriteBuffer) {
+                await _writeBuffer!.WriteAsync(key, await SerializeToBytesAsync(value).ConfigureAwait(false)).ConfigureAwait(false);
+                return;
+            }
 
-
-        /// <inheritdoc/>
-        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
-            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
-            await WriteFileAsync(fileName, value, Options.CompressionLevel).ConfigureAwait(false);
-        }
-
-
-        /// <inheritdoc/>
-        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
             await _indexLoader.Value.ConfigureAwait(false);
-            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
-            return await ReadFileAsync(fileName).ConfigureAwait(false);
+            using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                if (TryAddKeyToIndex(key, out var fileName)) {
+                    await SaveIndexAsync();
+                }
+                await WriteToFileAsync(fileName, value, null).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T : default {
+            if (UseWriteBuffer) {
+                var readResult = await _writeBuffer!.ReadAsync(key).ConfigureAwait(false);
+                if (readResult.Found) {
+                    return readResult.Value == null
+                        ? default
+                        : await DeserializeFromBytesAsync<T>(readResult.Value).ConfigureAwait(false);
+                }
+            }
+
+            await _indexLoader.Value.ConfigureAwait(false);
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                if (!TryGetFileNameForKey(key, out var fileName)) {
+                    return default;
+                }
+                return await ReadFromFileAsync<T>(fileName!).ConfigureAwait(false);
+            }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<bool> ExistsAsync(KVKey key) {
+            if (UseWriteBuffer) {
+                var readResult = await _writeBuffer!.ReadAsync(key).ConfigureAwait(false);
+                if (readResult.Found) {
+                    return readResult.Value != null;
+                }
+            }
+
+            await _indexLoader.Value.ConfigureAwait(false);
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                return TryGetFileNameForKey(key, out _);
+            }
         }
 
 
         /// <inheritdoc/>
         protected override async ValueTask<bool> DeleteAsync(KVKey key) {
-            await _indexLoader.Value.ConfigureAwait(false);
-            var fileName = await GetFileNameForKeyAsync(key).ConfigureAwait(false);
-            var file = new FileInfo(Path.Combine(_baseDirectory.FullName, fileName));
-            var backupFile = new FileInfo(string.Concat(file.FullName, ".bak"));
-            if (!file.Exists && !backupFile.Exists) {
-                return false;
+            if (UseWriteBuffer) {
+                await _writeBuffer!.DeleteAsync(key).ConfigureAwait(false);
+                return true;
             }
 
-            var @lock = GetOrAddLockForFile(fileName);
-            using (await @lock.WriterLockAsync().ConfigureAwait(false)) {
-                // The file might have been deleted while we were waiting for the lock.
-                file.Refresh();
-                backupFile.Refresh();
-
-                if (!file.Exists && !backupFile.Exists) {
-                    return false;
+            await _indexLoader.Value.ConfigureAwait(false);
+            using (await _lock.WriterLockAsync().ConfigureAwait(false)) {
+                if (TryRemoveKeyFromIndex(key, out var fileName)) {
+                    await SaveIndexAsync();
+                    return DeleteFile(fileName!);
                 }
 
-                try {
-                    if (file.Exists) {
-                        file.Delete();
-                    }
-
-                    if (backupFile.Exists) {
-                        backupFile.Delete();
-                    }
-
-                    return true;
-                }
-                finally {
-                    RemoveLockForFile(fileName);
-                }
+                return false;
             }
         }
 
@@ -525,13 +494,52 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 ? null
                 : ConvertBytesToHexString(prefix.Value);
 
-            var keys = prefix == null || prefix.Value.Length == 0
-                ? _fileIndex.Keys
-                : _fileIndex.Keys.Where(x => x.StartsWith(prefixAsHex, StringComparison.Ordinal));
+            using (await _lock.ReaderLockAsync().ConfigureAwait(false)) {
+                var keys = prefix == null || prefix.Value.Length == 0
+                    ? _fileIndex.Keys
+                    : _fileIndex.Keys.Where(x => x.StartsWith(prefixAsHex, StringComparison.Ordinal));
 
-            foreach (var key in keys) {
-                yield return ConvertHexStringToBytes(key);
+                foreach (var key in keys) {
+                    yield return ConvertHexStringToBytes(key);
+                }
             }
+        }
+
+
+        /// <summary>
+        /// Flushes pending writes to the database.
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        /// <remarks>
+        ///   Calling <see cref="FlushAsync"/> has no effect if the store is not configured to use 
+        ///   a write buffer.
+        /// </remarks>
+        public async ValueTask FlushAsync() {
+            if (!UseWriteBuffer || _disposed) {
+                return;
+            }
+
+            await _writeBuffer!.FlushAsync().ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Waits until pending writes have been flushed to the database.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///   <see cref="WaitForNextFlushAsync"/> will return immediately if the store is not 
+        ///   configured to use a write buffer.
+        /// </remarks>
+        public async ValueTask WaitForNextFlushAsync(CancellationToken cancellationToken = default) {
+            if (!UseWriteBuffer || _disposed) {
+                return;
+            }
+
+            await _writeBuffer!.WaitForNextFlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -541,15 +549,14 @@ namespace DataCore.Adapter.KeyValueStore.FileSystem {
                 return;
             }
 
-            _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
-
-            // Wait for ongoing save to complete.
-            _indexSaveInProgress.Wait();
-            _indexSaveInProgress.Dispose();
+            _writeBuffer?.Dispose();
 
             _disposed = true;
         }
+
+
+        [LoggerMessage(100, LogLevel.Information, "Changes will be flushed to the file system immediately.")]
+        static partial void LogFlushDisabled(ILogger logger);
 
     }
 }

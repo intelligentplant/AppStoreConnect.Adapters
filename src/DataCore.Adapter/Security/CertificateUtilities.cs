@@ -8,8 +8,7 @@ using System.Text.RegularExpressions;
 namespace DataCore.Adapter.Security {
 
     /// <summary>
-    /// Utilities for working with certificates (e.g. to assist with loading PEM-encoded roots for 
-    /// use with gRPC clients that use Grpc.Core).
+    /// Utilities for working with certificates.
     /// </summary>
     public static class CertificateUtilities {
 
@@ -29,6 +28,11 @@ namespace DataCore.Adapter.Security {
         /// forward-slashes can be used as path separators.
         /// </summary>
         private static readonly Regex s_certPathWithThumbprintRegex = new Regex(@"^CERT\:(?:\\|/)(?<location>.+?)(?:\\|/)(?<store>.+)(?:\\|/)(?<thumbprint>.+)$", RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Regex for matching a hex-encoded certificate thumbprint.
+        /// </summary>
+        private static readonly Regex s_thumbprintMatcher = new Regex(@"^[0-9A-F]+$", RegexOptions.IgnoreCase);
 
 
         /// <summary>
@@ -206,41 +210,6 @@ namespace DataCore.Adapter.Security {
 
 
         /// <summary>
-        /// Loads certificates from the specified store that match the provided thumbprint or 
-        /// subject name.
-        /// </summary>
-        /// <param name="store">
-        ///   The certificate store.
-        /// </param>
-        /// <param name="thumbprintOrSubjectName">
-        ///   The thumbprint or subject name to match.
-        /// </param>
-        /// <param name="validOnly">
-        ///   Specifies if only valid certificates should be returned.
-        /// </param>
-        /// <returns>
-        ///   The matching certificates.
-        /// </returns>
-        private static IEnumerable<X509Certificate2> LoadCertificates(X509Store store, string thumbprintOrSubjectName, bool validOnly) {
-            var certificatesByThumbprint = store.Certificates.Find(
-                X509FindType.FindByThumbprint,
-                thumbprintOrSubjectName,
-                validOnly
-            );
-
-            var certificatesBySubjectName = store.Certificates.Find(
-                X509FindType.FindBySubjectName,
-                thumbprintOrSubjectName,
-                validOnly
-            );
-
-            return certificatesByThumbprint
-                .Cast<X509Certificate2>()
-                .Concat(certificatesBySubjectName.Cast<X509Certificate2>());
-        }
-
-
-        /// <summary>
         /// Selects an appropriate certificate from the provided collection.
         /// </summary>
         /// <param name="certificates">
@@ -283,6 +252,7 @@ namespace DataCore.Adapter.Security {
         /// </list>
         /// 
         /// </remarks>
+        [Obsolete("This method will be removed in a future release.", false)]
         public static X509Certificate2? SelectCertificate(IEnumerable<X509Certificate2>? certificates) {
             // Order certificates in descending order of expiry time.
             var certs = certificates
@@ -328,7 +298,8 @@ namespace DataCore.Adapter.Security {
         /// <see cref="StoreLocation"/>, store name, and thumbprint or subject.
         /// </summary>
         /// <param name="path">
-        ///   The certificate store path, in the format <c>cert:\{location}\{name}\{thumbprint_or_subject}</c>.
+        ///   The certificate store path, in the case-insensitive format <c>cert:\{location}\{name}\{certificate_identifier}</c> 
+        ///   or <c>cert:/{location}/{name}/{certificate_identifier}</c>.
         /// </param>
         /// <param name="location">
         ///   The store location.
@@ -360,7 +331,7 @@ namespace DataCore.Adapter.Security {
             }
             
             var loc = m.Groups["location"].Value;
-            if (!Enum.TryParse(loc, out location)) {
+            if (!Enum.TryParse(loc, true, out location)) {
                 location = default;
                 name = null!;
                 thumbprintOrSubjectName = null!;
@@ -377,7 +348,8 @@ namespace DataCore.Adapter.Security {
         /// Loads the certificate from the specified certificate store path.
         /// </summary>
         /// <param name="path">
-        ///   The certificate store path, in the format <c>cert:\{location}\{name}\{thumbprint_or_subject}</c>.
+        ///   The certificate store path, in the case-insensitive format <c>cert:\{location}\{name}\{certificate_identifier}</c> 
+        ///   or <c>cert:/{location}/{name}/{certificate_identifier}</c>.
         /// </param>
         /// <param name="certificate">
         ///   The matching certificate.
@@ -386,7 +358,67 @@ namespace DataCore.Adapter.Security {
         ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
         ///   otherwise.
         /// </returns>
+        /// <remarks>
+        ///   Calling <see cref="TryLoadCertificateFromStore(string, out X509Certificate2?)"/> is 
+        ///   equivalent to calling <see cref="TryLoadCertificateFromStore(string, bool, bool, out X509Certificate2?)"/> 
+        ///   with <see langword="false"/> specified for the <c>requirePrivateKey</c> and <c>allowInvalid</c> 
+        ///   parameters.
+        /// </remarks>
+        [Obsolete("Use " + nameof(TryLoadCertificateFromStore) + "(string, bool, bool, out X509Certificate2?) instead.", false)]
         public static bool TryLoadCertificateFromStore(string path, out X509Certificate2? certificate) {
+            return TryLoadCertificateFromStore(path, false, false, out certificate);
+        }
+
+
+        /// <summary>
+        /// Loads the certificate from the specified certificate store path.
+        /// </summary>
+        /// <param name="path">
+        ///   The certificate store path, in the case-insensitive format <c>cert:\{location}\{name}\{certificate_identifier}</c> 
+        ///   or <c>cert:/{location}/{name}/{certificate_identifier}</c>.
+        /// </param>
+        /// <param name="requirePrivateKey">
+        ///   <see langword="true"/> if the private key for the referenced certificate must be 
+        ///   available from the store, or <see langword="false"/> if only the public certificate 
+        ///   is required.
+        /// </param>
+        /// <param name="allowInvalid">
+        ///   <see langword="true"/> to allow invalid (e.g. expired or untrusted) certificates to 
+        ///   be returned, or <see langword="false"/> otherwise.
+        /// </param>
+        /// <param name="certificate">
+        ///   The matching certificate.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the certificate could be loaded, or <see langword="false"/> 
+        ///   otherwise.
+        /// </returns>
+        /// <remarks>
+        /// 
+        /// <para>
+        ///   The certificate identifier in the <paramref name="path"/> can be specified in one of the following ways:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     The hex-encoded thumbprint of the certificate (e.g. <c>cert:/CurrentUser/My/0123456789abcdef0123456789abcdef01234567</c>).
+        ///   </item>
+        ///   <item>
+        ///     The full distinguished name for the certificate subject (e.g. <c>cert:/LocalMachine/My/CN=Adapter A, O=Intelligent Plant</c>).
+        ///   </item>
+        ///   <item>
+        ///     A full or partial match for the simple name for the certificate subject (e.g. <c>cert:/LocalMachine/My/Adapter A</c>).
+        ///   </item>
+        /// </list>
+        /// 
+        /// <para>
+        ///   When the simple name for the certificate is specified, the first certificate that 
+        ///   exactly matches the simple name will be returned. If no exact match is found, the 
+        ///   best candidate certificate that partially matches the simple name will be returned.
+        /// </para>
+        /// 
+        /// </remarks>
+        public static bool TryLoadCertificateFromStore(string path, bool requirePrivateKey, bool allowInvalid, out X509Certificate2? certificate) {
             if (path == null) {
                 certificate = null;
                 return false;
@@ -399,9 +431,57 @@ namespace DataCore.Adapter.Security {
 
             using (var store = new X509Store(name, location)) {
                 store.Open(OpenFlags.ReadOnly);
-                var certs = LoadCertificates(store, thumbprintOrSubjectName, false);
-                certificate = SelectCertificate(certs);
-                return certificate != null;
+
+                if (s_thumbprintMatcher.IsMatch(thumbprintOrSubjectName)) {
+                    certificate = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprintOrSubjectName, !allowInvalid)
+                        .OfType<X509Certificate2>()
+                        .Where(x => !requirePrivateKey || x.HasPrivateKey)
+                        .OrderByDescending(x => x.NotAfter)
+                        .FirstOrDefault();
+
+                    if (certificate != null) {
+                        return true;
+                    }
+                }
+
+                X500DistinguishedName? distinguishedName = null;
+                try {
+                    distinguishedName = new X500DistinguishedName(thumbprintOrSubjectName);
+                }
+                catch { }
+
+                if (distinguishedName != null) {
+                    certificate = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, distinguishedName.Name, !allowInvalid)
+                        .OfType<X509Certificate2>()
+                        .Where(x => !requirePrivateKey || x.HasPrivateKey)
+                        .OrderByDescending(x => x.NotAfter)
+                        .FirstOrDefault();
+
+                    return certificate != null;
+                }
+                else {
+                    var certs = store.Certificates.Find(X509FindType.FindBySubjectName, thumbprintOrSubjectName, !allowInvalid)
+                        .OfType<X509Certificate2>()
+                        .Where(x => !requirePrivateKey || x.HasPrivateKey)
+                        .OrderByDescending(x => x.NotAfter);
+
+                    X509Certificate2? bestMatch = null;
+
+                    foreach (var cert in certs) {
+                        // The first certificate of all matching certificates will be returned unless
+                        // we find an exact match later in the collection.
+                        bestMatch ??= cert;
+
+                        if (cert.GetNameInfo(X509NameType.SimpleName, true).Equals(thumbprintOrSubjectName, StringComparison.OrdinalIgnoreCase)) {
+                            // Current certificate matches the requested subject name exactly.
+                            certificate = cert;
+                            return true;
+                        }
+                    }
+
+                    certificate = bestMatch;
+                    return certificate != null;
+                }
             }
         }
 

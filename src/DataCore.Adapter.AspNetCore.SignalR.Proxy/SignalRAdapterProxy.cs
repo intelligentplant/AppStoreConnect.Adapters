@@ -30,10 +30,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
     public class SignalRAdapterProxy : AdapterBase<SignalRAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
-        /// Gets the logger for the proxy.
+        /// Gets the logger factory for the proxy.
         /// </summary>
-        internal new ILogger Logger {
-            get { return base.Logger; }
+        internal new ILoggerFactory LoggerFactory {
+            get { return base.LoggerFactory; }
         }
 
         /// <summary>
@@ -141,20 +141,20 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
         ///   extension objects.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         public SignalRAdapterProxy(
             string id,
             SignalRAdapterProxyOptions options, 
             IBackgroundTaskService? backgroundTaskService,
             IEnumerable<IObjectEncoder> encoders,
-            ILogger<SignalRAdapterProxy>? logger
+            ILoggerFactory? loggerFactory
         ) : base(
             id,
             options, 
             backgroundTaskService, 
-            logger
+            loggerFactory
         ) {
 #pragma warning disable CS0618 // Type or member is obsolete
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
@@ -257,6 +257,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
             ProxyAdapterFeature.AddFeaturesToProxy(this, descriptor.Features);
 
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (var extensionFeature in descriptor.Extensions) {
                 if (string.IsNullOrWhiteSpace(extensionFeature)) {
                     continue;
@@ -270,12 +271,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                             continue;
                         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<SignalRAdapterProxy, SignalRAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
-#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -283,6 +282,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                     Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 // Adapter supports health check subscriptions.

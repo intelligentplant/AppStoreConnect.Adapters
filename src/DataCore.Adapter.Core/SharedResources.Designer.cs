@@ -133,6 +133,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum length of an entry in the collection is {0}..
+        /// </summary>
+        public static string Error_CollectionItemIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_CollectionItemIsTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a content type..
         /// </summary>
         public static string Error_ContentTypeIsRequired {
@@ -147,6 +156,15 @@ namespace DataCore.Adapter {
         public static string Error_DataFunctionCannotBeNull {
             get {
                 return ResourceManager.GetString("Error_DataFunctionCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum description length is {0}..
+        /// </summary>
+        public static string Error_DescriptionIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_DescriptionIsTooLong", resourceCulture);
             }
         }
         
@@ -192,6 +210,15 @@ namespace DataCore.Adapter {
         public static string Error_IdIsRequired {
             get {
                 return ResourceManager.GetString("Error_IdIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum ID length is {0}..
+        /// </summary>
+        public static string Error_IdIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_IdIsTooLong", resourceCulture);
             }
         }
         
@@ -277,11 +304,29 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum key length is {0}..
+        /// </summary>
+        public static string Error_KeyIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_KeyIsTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must specify a name..
         /// </summary>
         public static string Error_NameIsRequired {
             get {
                 return ResourceManager.GetString("Error_NameIsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum name length is {0}..
+        /// </summary>
+        public static string Error_NameIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_NameIsTooLong", resourceCulture);
             }
         }
         
@@ -385,6 +430,15 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum number of entries is {0}..
+        /// </summary>
+        public static string Error_TooManyEntries {
+            get {
+                return ResourceManager.GetString("Error_TooManyEntries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The type does not define a {0} attribute..
         /// </summary>
         public static string Error_TypeIdIsUndefined {
@@ -417,6 +471,24 @@ namespace DataCore.Adapter {
         public static string Error_UnableToResolveNameOrId {
             get {
                 return ResourceManager.GetString("Error_UnableToResolveNameOrId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum unit length is {0}..
+        /// </summary>
+        public static string Error_UnitIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_UnitIsTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum value length is {0}..
+        /// </summary>
+        public static string Error_ValueIsTooLong {
+            get {
+                return ResourceManager.GetString("Error_ValueIsTooLong", resourceCulture);
             }
         }
         

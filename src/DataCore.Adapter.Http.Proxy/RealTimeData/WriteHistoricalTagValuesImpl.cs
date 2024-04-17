@@ -12,7 +12,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
     /// <summary>
     /// Implements <see cref="IWriteHistoricalTagValues"/>.
     /// </summary>
-    internal class WriteHistoricalTagValuesImpl : ProxyAdapterFeature, IWriteHistoricalTagValues {
+    internal partial class WriteHistoricalTagValuesImpl : ProxyAdapterFeature, IWriteHistoricalTagValues {
 
         /// <summary>
         /// Creates a new <see cref="WriteHistoricalTagValuesImpl"/> object.
@@ -52,7 +52,7 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
                 const int maxItems = 5000;
                 var items = (await channel.ToEnumerable(maxItems, cancellationToken).ConfigureAwait(false)).ToArray();
                 if (items.Length >= maxItems) {
-                    Logger.LogInformation("The maximum number of items that can be written to the remote adapter ({MaxItems}) was read from the channel. Any remaining items will be ignored.", maxItems);
+                    LogMaxItemsReached(Logger, maxItems);
                 }
 
                 var req = new WriteTagValuesRequestExtended() {
@@ -69,5 +69,10 @@ namespace DataCore.Adapter.Http.Proxy.RealTimeData {
 
             }
         }
+
+
+        [LoggerMessage(1, LogLevel.Information, "The maximum number of items that can be written to the remote adapter ({maxItems}) was read from the channel. Any remaining items will be ignored.")]
+        static partial void LogMaxItemsReached(ILogger logger, int maxItems);
+
     }
 }

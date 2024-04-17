@@ -28,7 +28,8 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Internal {
 
         /// <inheritdoc/>
         public ApiDescriptor GetApiDescriptor() {
-            return new ApiDescriptor("SignalR", GetType().Assembly.GetName()?.Version?.ToString(3), _endpointDataSource.IsSignalRAdapterApiRegistered());
+            var asmName = GetType().Assembly.GetName();
+            return new ApiDescriptor("SignalR", asmName.Name, asmName.Version!.ToString(3), _endpointDataSource.IsSignalRAdapterApiRegistered());
         }
 
     }

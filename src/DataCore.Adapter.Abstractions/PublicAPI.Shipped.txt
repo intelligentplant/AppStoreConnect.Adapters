@@ -1,0 +1,612 @@
+﻿#nullable enable
+abstract DataCore.Adapter.AdapterCore.StartAsyncCore(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract DataCore.Adapter.AdapterCore.StopAsyncCore(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract DataCore.Adapter.Services.KeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+abstract DataCore.Adapter.Services.KeyValueStore.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
+abstract DataCore.Adapter.Services.KeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
+const DataCore.Adapter.AdapterCallContextExtensions.ValidateRequestsItemName = "adapter:validate-request-objects" -> string!
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterDisposed = 4 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterOperationCompleted = 6 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterOperationFaulted = 7 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterOperationStarted = 5 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStarted = 1 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStopped = 2 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItemIn = 9 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterStreamItemOut = 8 -> int
+const DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds.AdapterUpdated = 3 -> int
+const DataCore.Adapter.Diagnostics.Telemetry.DiagnosticSourceName = "IntelligentPlant.AppStoreConnect.Adapter" -> string!
+const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelBrowse = "asc:features/asset-model/browse/" -> string!
+const DataCore.Adapter.WellKnownFeatures.AssetModel.AssetModelSearch = "asc:features/asset-model/search/" -> string!
+const DataCore.Adapter.WellKnownFeatures.AssetModel.BaseUri = "asc:features/asset-model/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Diagnostics.BaseUri = "asc:features/diagnostics/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Diagnostics.ConfigurationChanges = "asc:features/diagnostics/configuration-changes/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Diagnostics.HealthCheck = "asc:features/diagnostics/health-check/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.BaseUri = "asc:features/events/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.EventMessagePush = "asc:features/events/push/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.EventMessagePushWithTopics = "asc:features/events/topics/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.ReadEventMessagesForTimeRange = "asc:features/events/read/time/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.ReadEventMessagesUsingCursor = "asc:features/events/read/cursor/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Events.WriteEventMessages = "asc:features/events/write/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Extensions.BaseUri = "asc:extensions/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Extensions.CustomFunctions = "asc:features/extensions/custom-functions/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.BaseUri = "asc:features/real-time-data/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadAnnotations = "asc:features/real-time-data/annotations/read/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadPlotTagValues = "asc:features/real-time-data/values/read/plot/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadProcessedTagValues = "asc:features/real-time-data/values/read/processed/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadRawTagValues = "asc:features/real-time-data/values/read/raw/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadSnapshotTagValues = "asc:features/real-time-data/values/read/snapshot/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.ReadTagValuesAtTimes = "asc:features/real-time-data/values/read/at-times/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.SnapshotTagValuePush = "asc:features/real-time-data/values/push/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.WriteAnnotations = "asc:features/real-time-data/annotations/write/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.WriteHistoricalTagValues = "asc:features/real-time-data/values/write/history/" -> string!
+const DataCore.Adapter.WellKnownFeatures.RealTimeData.WriteSnapshotTagValues = "asc:features/real-time-data/values/write/snapshot/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Tags.BaseUri = "asc:features/tags/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Tags.TagConfiguration = "asc:features/tags/configuration/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Tags.TagInfo = "asc:features/tags/info/" -> string!
+const DataCore.Adapter.WellKnownFeatures.Tags.TagSearch = "asc:features/tags/search/" -> string!
+DataCore.Adapter.AbstractionsResources
+DataCore.Adapter.AdapterCallContextExtensions
+DataCore.Adapter.AdapterCore
+DataCore.Adapter.AdapterCore.AdapterCore(DataCore.Adapter.Common.AdapterDescriptor! descriptor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
+DataCore.Adapter.AdapterCore.AddExtensionFeatures(object! provider) -> void
+DataCore.Adapter.AdapterCore.AddFeature(System.Type! featureType, DataCore.Adapter.IAdapterFeature! feature) -> void
+DataCore.Adapter.AdapterCore.AddFeature<TFeature>(TFeature feature) -> void
+DataCore.Adapter.AdapterCore.AddFeatures(object! provider, bool addStandardFeatures = true, bool addExtensionFeatures = true) -> void
+DataCore.Adapter.AdapterCore.AddProperty(string! key, object! value, string? description = null) -> void
+DataCore.Adapter.AdapterCore.AddStandardFeatures(object! provider) -> void
+DataCore.Adapter.AdapterCore.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
+DataCore.Adapter.AdapterCore.CheckDisposed() -> void
+DataCore.Adapter.AdapterCore.CheckStarted(bool allowStarting = false) -> void
+DataCore.Adapter.AdapterCore.CreateCancellationTokenSource(params System.Threading.CancellationToken[]! additionalTokens) -> System.Threading.CancellationTokenSource!
+DataCore.Adapter.AdapterCore.Descriptor.get -> DataCore.Adapter.Common.AdapterDescriptor!
+DataCore.Adapter.AdapterCore.Disable() -> bool
+DataCore.Adapter.AdapterCore.Dispose() -> void
+DataCore.Adapter.AdapterCore.DisposeAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.AdapterCore.Enable() -> bool
+DataCore.Adapter.AdapterCore.Features.get -> DataCore.Adapter.IAdapterFeaturesCollection!
+DataCore.Adapter.AdapterCore.IsEnabled.get -> bool
+DataCore.Adapter.AdapterCore.IsRunning.get -> bool
+DataCore.Adapter.AdapterCore.IsStarting.get -> bool
+DataCore.Adapter.AdapterCore.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+DataCore.Adapter.AdapterCore.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.AdapterCore.RemoveAllFeatures() -> void
+DataCore.Adapter.AdapterCore.RemoveAllProperties() -> void
+DataCore.Adapter.AdapterCore.RemoveFeature(string! uriString) -> bool
+DataCore.Adapter.AdapterCore.RemoveFeature(System.Uri! uri) -> bool
+DataCore.Adapter.AdapterCore.RemoveFeature<TFeature>() -> bool
+DataCore.Adapter.AdapterCore.RemoveProperty(string! key) -> bool
+DataCore.Adapter.AdapterCore.StartActivity(string! name) -> System.Diagnostics.Activity?
+DataCore.Adapter.AdapterCore.Started -> System.Func<DataCore.Adapter.IAdapter!, System.Threading.Tasks.Task!>?
+DataCore.Adapter.AdapterCore.Stopped -> System.Func<DataCore.Adapter.IAdapter!, System.Threading.Tasks.Task!>?
+DataCore.Adapter.AdapterCore.StopToken.get -> System.Threading.CancellationToken
+DataCore.Adapter.AdapterCore.TypeDescriptor.get -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+DataCore.Adapter.AdapterCore.UpdateDescriptor(string? name = null, string? description = null) -> void
+DataCore.Adapter.AdapterCore.~AdapterCore() -> void
+DataCore.Adapter.AdapterExtensions
+DataCore.Adapter.AdapterFeatureAttribute
+DataCore.Adapter.AdapterFeatureAttribute.AdapterFeatureAttribute(string! uriString) -> void
+DataCore.Adapter.AdapterFeatureAttribute.Category.get -> string?
+DataCore.Adapter.AdapterFeatureAttribute.Category.set -> void
+DataCore.Adapter.AdapterFeatureAttribute.Description.get -> string?
+DataCore.Adapter.AdapterFeatureAttribute.Description.set -> void
+DataCore.Adapter.AdapterFeatureAttribute.GetCategory() -> string?
+DataCore.Adapter.AdapterFeatureAttribute.GetDescription() -> string?
+DataCore.Adapter.AdapterFeatureAttribute.GetName() -> string?
+DataCore.Adapter.AdapterFeatureAttribute.Name.get -> string?
+DataCore.Adapter.AdapterFeatureAttribute.Name.set -> void
+DataCore.Adapter.AdapterFeatureAttribute.ResourceType.get -> System.Type?
+DataCore.Adapter.AdapterFeatureAttribute.ResourceType.set -> void
+DataCore.Adapter.AdapterFeatureAttribute.Uri.get -> System.Uri!
+DataCore.Adapter.AdapterFeatureExtensions
+DataCore.Adapter.AdapterFeaturesCollectionExtensions
+DataCore.Adapter.AdapterFeatureWrapper
+DataCore.Adapter.AdapterFeatureWrapper<TFeature>
+DataCore.Adapter.AdapterMetadataAttribute
+DataCore.Adapter.AdapterMetadataAttribute.AdapterMetadataAttribute(string! uriString) -> void
+DataCore.Adapter.AdapterMetadataAttribute.Description.get -> string?
+DataCore.Adapter.AdapterMetadataAttribute.Description.set -> void
+DataCore.Adapter.AdapterMetadataAttribute.GetDescription() -> string?
+DataCore.Adapter.AdapterMetadataAttribute.GetName() -> string?
+DataCore.Adapter.AdapterMetadataAttribute.HelpUrl.get -> string?
+DataCore.Adapter.AdapterMetadataAttribute.HelpUrl.set -> void
+DataCore.Adapter.AdapterMetadataAttribute.Name.get -> string?
+DataCore.Adapter.AdapterMetadataAttribute.Name.set -> void
+DataCore.Adapter.AdapterMetadataAttribute.ResourceType.get -> System.Type?
+DataCore.Adapter.AdapterMetadataAttribute.ResourceType.set -> void
+DataCore.Adapter.AdapterMetadataAttribute.Uri.get -> System.Uri!
+DataCore.Adapter.AssemblyExtensions
+DataCore.Adapter.AssetModel.IAssetModelBrowse
+DataCore.Adapter.AssetModel.IAssetModelBrowse.BrowseAssetModelNodes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
+DataCore.Adapter.AssetModel.IAssetModelBrowse.GetAssetModelNodes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.AssetModel.GetAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
+DataCore.Adapter.AssetModel.IAssetModelSearch
+DataCore.Adapter.AssetModel.IAssetModelSearch.FindAssetModelNodes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.AssetModel.FindAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
+DataCore.Adapter.Diagnostics.AdapterEventSource
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterDisposed(string! adapterId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterOperationCompleted(string! adapterId, string! operationId, double elapsed) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterOperationFaulted(string! adapterId, string! operationId, double elapsed, string! error) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterOperationStarted(string! adapterId, string! operationId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterStarted(string! adapterId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterStopped(string! adapterId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterStreamItemIn(string! adapterId, string! operationId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterStreamItemOut(string! adapterId, string! operationId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.AdapterUpdated(string! adapterId) -> void
+DataCore.Adapter.Diagnostics.AdapterEventSource.EventIds
+DataCore.Adapter.Diagnostics.IConfigurationChanges
+DataCore.Adapter.Diagnostics.IConfigurationChanges.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Diagnostics.ConfigurationChange!>!
+DataCore.Adapter.Diagnostics.IHealthCheck
+DataCore.Adapter.Diagnostics.IHealthCheck.CheckHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
+DataCore.Adapter.Diagnostics.IHealthCheck.Subscribe(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>!
+DataCore.Adapter.Diagnostics.Telemetry
+DataCore.Adapter.Diagnostics.ValueStopwatch
+DataCore.Adapter.Diagnostics.ValueStopwatch.GetElapsedTime() -> System.TimeSpan
+DataCore.Adapter.Diagnostics.ValueStopwatch.IsActive.get -> bool
+DataCore.Adapter.Diagnostics.ValueStopwatch.ValueStopwatch() -> void
+DataCore.Adapter.Events.IEventMessagePush
+DataCore.Adapter.Events.IEventMessagePush.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
+DataCore.Adapter.Events.IEventMessagePushWithTopics
+DataCore.Adapter.Events.IEventMessagePushWithTopics.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessageSubscriptionUpdate!>! subscriptionUpdates, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
+DataCore.Adapter.Events.IReadEventMessagesForTimeRange
+DataCore.Adapter.Events.IReadEventMessagesForTimeRange.ReadEventMessagesForTimeRange(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessage!>!
+DataCore.Adapter.Events.IReadEventMessagesUsingCursor
+DataCore.Adapter.Events.IReadEventMessagesUsingCursor.ReadEventMessagesUsingCursor(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.EventMessageWithCursorPosition!>!
+DataCore.Adapter.Events.IWriteEventMessages
+DataCore.Adapter.Events.IWriteEventMessages.WriteEventMessages(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Events.WriteEventMessagesRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.WriteEventMessageItem!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Events.WriteEventMessageResult!>!
+DataCore.Adapter.Extensions.CustomFunctionsExtensions
+DataCore.Adapter.Extensions.ExtensionFeatureAttribute
+DataCore.Adapter.Extensions.ExtensionFeatureAttribute.ExtensionFeatureAttribute(string! uriString) -> void
+DataCore.Adapter.Extensions.ExtensionFeatureDataTypeAttribute
+DataCore.Adapter.Extensions.ExtensionFeatureDataTypeAttribute.ExtensionFeatureDataTypeAttribute(System.Type! featureType, string! relativeTypeId) -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationAttribute
+DataCore.Adapter.Extensions.ExtensionFeatureOperationAttribute.CreateDescriptor() -> DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationAttribute.ExtensionFeatureOperationAttribute(System.Type! providerType, string! methodName) -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Description.get -> string?
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Description.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.ExtensionFeatureOperationDescriptorPartial() -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Inputs.get -> DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor![]!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Inputs.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Name.get -> string?
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Name.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Outputs.get -> DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor![]!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial.Outputs.set -> void
+DataCore.Adapter.Extensions.IAdapterExtensionFeature
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.DuplexStream(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.DuplexStreamInvocationRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Extensions.InvocationStreamItem!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Extensions.InvocationResponse!>!
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.Encoders.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>!
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.GetDescriptor(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.FeatureDescriptor?>!
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.GetOperations(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor!>!>!
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.Invoke(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.InvocationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Extensions.InvocationResponse!>!
+DataCore.Adapter.Extensions.IAdapterExtensionFeature.Stream(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.InvocationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Extensions.InvocationResponse!>!
+DataCore.Adapter.Extensions.ICustomFunctions
+DataCore.Adapter.Extensions.ICustomFunctions.GetFunctionAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.GetCustomFunctionRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended?>!
+DataCore.Adapter.Extensions.ICustomFunctions.GetFunctionsAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.GetCustomFunctionsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Extensions.CustomFunctionDescriptor!>!>!
+DataCore.Adapter.Extensions.ICustomFunctions.InvokeFunctionAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Extensions.CustomFunctionInvocationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Extensions.CustomFunctionInvocationResponse!>!
+DataCore.Adapter.Extensions.PartialOperationDescriptorFactory
+DataCore.Adapter.IAdapter
+DataCore.Adapter.IAdapter.Descriptor.get -> DataCore.Adapter.Common.AdapterDescriptor!
+DataCore.Adapter.IAdapter.Features.get -> DataCore.Adapter.IAdapterFeaturesCollection!
+DataCore.Adapter.IAdapter.IsEnabled.get -> bool
+DataCore.Adapter.IAdapter.IsRunning.get -> bool
+DataCore.Adapter.IAdapter.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.IAdapter.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.IAdapter.Started -> System.Func<DataCore.Adapter.IAdapter!, System.Threading.Tasks.Task!>?
+DataCore.Adapter.IAdapter.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.IAdapter.Stopped -> System.Func<DataCore.Adapter.IAdapter!, System.Threading.Tasks.Task!>?
+DataCore.Adapter.IAdapter.TypeDescriptor.get -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+DataCore.Adapter.IAdapterAccessor
+DataCore.Adapter.IAdapterAccessor.AuthorizationService.get -> DataCore.Adapter.IAdapterAuthorizationService!
+DataCore.Adapter.IAdapterAccessor.FindAdapters(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Common.FindAdaptersRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.IAdapter!>!
+DataCore.Adapter.IAdapterAccessor.GetAdapter(DataCore.Adapter.IAdapterCallContext! context, string! adapterId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.IAdapter?>!
+DataCore.Adapter.IAdapterAuthorizationService
+DataCore.Adapter.IAdapterAuthorizationService.AuthorizeAdapter(DataCore.Adapter.IAdapter! adapter, DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+DataCore.Adapter.IAdapterAuthorizationService.AuthorizeAdapterFeature(DataCore.Adapter.IAdapter! adapter, DataCore.Adapter.IAdapterCallContext! context, System.Uri! featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+DataCore.Adapter.IAdapterCallContext
+DataCore.Adapter.IAdapterCallContext.ConnectionId.get -> string!
+DataCore.Adapter.IAdapterCallContext.CorrelationId.get -> string!
+DataCore.Adapter.IAdapterCallContext.CultureInfo.get -> System.Globalization.CultureInfo!
+DataCore.Adapter.IAdapterCallContext.Items.get -> System.Collections.Generic.IDictionary<object!, object?>!
+DataCore.Adapter.IAdapterCallContext.User.get -> System.Security.Claims.ClaimsPrincipal?
+DataCore.Adapter.IAdapterCallContext<T>
+DataCore.Adapter.IAdapterCallContext<T>.Provider.get -> T
+DataCore.Adapter.IAdapterFeature
+DataCore.Adapter.IAdapterFeaturesCollection
+DataCore.Adapter.IAdapterFeaturesCollection.Keys.get -> System.Collections.Generic.IEnumerable<System.Uri!>!
+DataCore.Adapter.IAdapterFeaturesCollection.this[System.Uri! key].get -> DataCore.Adapter.IAdapterFeature?
+DataCore.Adapter.IAdapterProxy
+DataCore.Adapter.IAdapterProxy.RemoteDescriptor.get -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+DataCore.Adapter.IAdapterProxy.RemoteHostInfo.get -> DataCore.Adapter.Common.HostInfo!
+DataCore.Adapter.IBackgroundTaskServiceProvider
+DataCore.Adapter.IBackgroundTaskServiceProvider.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
+DataCore.Adapter.MethodInfoUtil
+DataCore.Adapter.RealTimeData.IReadPlotTagValues
+DataCore.Adapter.RealTimeData.IReadPlotTagValues.ReadPlotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.IReadProcessedTagValues
+DataCore.Adapter.RealTimeData.IReadProcessedTagValues.GetSupportedDataFunctions(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.GetSupportedDataFunctionsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.DataFunctionDescriptor!>!
+DataCore.Adapter.RealTimeData.IReadProcessedTagValues.ReadProcessedTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.IReadRawTagValues
+DataCore.Adapter.RealTimeData.IReadRawTagValues.ReadRawTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.IReadSnapshotTagValues
+DataCore.Adapter.RealTimeData.IReadSnapshotTagValues.ReadSnapshotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.IReadTagValueAnnotations
+DataCore.Adapter.RealTimeData.IReadTagValueAnnotations.ReadAnnotation(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadAnnotationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.RealTimeData.TagValueAnnotationExtended?>!
+DataCore.Adapter.RealTimeData.IReadTagValueAnnotations.ReadAnnotations(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadAnnotationsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult!>!
+DataCore.Adapter.RealTimeData.IReadTagValuesAtTimes
+DataCore.Adapter.RealTimeData.IReadTagValuesAtTimes.ReadTagValuesAtTimes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.ISnapshotTagValuePush
+DataCore.Adapter.RealTimeData.ISnapshotTagValuePush.Subscribe(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate!>! subscriptionUpdates, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+DataCore.Adapter.RealTimeData.IWriteHistoricalTagValues
+DataCore.Adapter.RealTimeData.IWriteHistoricalTagValues.WriteHistoricalTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.WriteTagValuesRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueItem!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueResult!>!
+DataCore.Adapter.RealTimeData.IWriteSnapshotTagValues
+DataCore.Adapter.RealTimeData.IWriteSnapshotTagValues.WriteSnapshotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.WriteTagValuesRequest! request, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueItem!>! channel, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.WriteTagValueResult!>!
+DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations
+DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations.CreateAnnotation(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.CreateAnnotationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult!>!
+DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations.DeleteAnnotation(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.DeleteAnnotationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult!>!
+DataCore.Adapter.RealTimeData.IWriteTagValueAnnotations.UpdateAnnotation(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.UpdateAnnotationRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult!>!
+DataCore.Adapter.Services.IKeyValueStore
+DataCore.Adapter.Services.IKeyValueStore.DeleteAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+DataCore.Adapter.Services.IKeyValueStore.GetKeysAsync(DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Services.KVKey>!
+DataCore.Adapter.Services.InMemoryKeyValueStore
+DataCore.Adapter.Services.InMemoryKeyValueStore.Dispose() -> void
+DataCore.Adapter.Services.KeyValueStore
+DataCore.Adapter.Services.KeyValueStore.ConvertBytesToHexString(byte[]! bytes) -> string!
+DataCore.Adapter.Services.KeyValueStore.ConvertHexStringToBytes(string! hexString) -> byte[]!
+DataCore.Adapter.Services.KeyValueStore.KeyValueStore(Microsoft.Extensions.Logging.ILogger? logger = null) -> void
+DataCore.Adapter.Services.KeyValueStore.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+DataCore.Adapter.Services.KeyValueStore<TOptions>
+DataCore.Adapter.Services.KeyValueStore<TOptions>.KeyValueStore(TOptions? options, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
+DataCore.Adapter.Services.KeyValueStore<TOptions>.Options.get -> TOptions!
+DataCore.Adapter.Services.KeyValueStoreExtensions
+DataCore.Adapter.Services.KeyValueStoreOptions
+DataCore.Adapter.Services.KeyValueStoreOptions.CompressionLevel.get -> System.IO.Compression.CompressionLevel
+DataCore.Adapter.Services.KeyValueStoreOptions.CompressionLevel.set -> void
+DataCore.Adapter.Services.KeyValueStoreOptions.KeyValueStoreOptions() -> void
+DataCore.Adapter.Services.KVKey
+DataCore.Adapter.Services.KVKey.Equals(DataCore.Adapter.Services.KVKey other) -> bool
+DataCore.Adapter.Services.KVKey.KVKey() -> void
+DataCore.Adapter.Services.KVKey.KVKey(byte[]? value) -> void
+DataCore.Adapter.Services.KVKey.Length.get -> int
+DataCore.Adapter.Services.KVKey.Value.get -> byte[]!
+DataCore.Adapter.Tags.ITagConfiguration
+DataCore.Adapter.Tags.ITagConfiguration.CreateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.CreateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Tags.ITagConfiguration.DeleteTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.DeleteTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+DataCore.Adapter.Tags.ITagConfiguration.GetTagSchemaAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagSchemaRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Text.Json.JsonElement>!
+DataCore.Adapter.Tags.ITagConfiguration.UpdateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.UpdateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Tags.ITagInfo
+DataCore.Adapter.Tags.ITagInfo.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Tags.ITagInfo.GetTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Tags.ITagSearch
+DataCore.Adapter.Tags.ITagSearch.FindTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.FindTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.TypeExtensions
+DataCore.Adapter.UriExtensions
+DataCore.Adapter.VendorInfoAttribute
+DataCore.Adapter.VendorInfoAttribute.CreateVendorInfo() -> DataCore.Adapter.Common.VendorInfo!
+DataCore.Adapter.VendorInfoAttribute.Name.get -> string!
+DataCore.Adapter.VendorInfoAttribute.Url.get -> System.Uri?
+DataCore.Adapter.VendorInfoAttribute.VendorInfoAttribute(string! name, string? urlString) -> void
+DataCore.Adapter.WellKnownFeatures
+DataCore.Adapter.WellKnownFeatures.AssetModel
+DataCore.Adapter.WellKnownFeatures.Diagnostics
+DataCore.Adapter.WellKnownFeatures.Events
+DataCore.Adapter.WellKnownFeatures.Extensions
+DataCore.Adapter.WellKnownFeatures.RealTimeData
+DataCore.Adapter.WellKnownFeatures.Tags
+override DataCore.Adapter.Services.KVKey.Equals(object! obj) -> bool
+override DataCore.Adapter.Services.KVKey.GetHashCode() -> int
+static DataCore.Adapter.AdapterCallContextExtensions.SetItem<TKey, TValue>(this DataCore.Adapter.IAdapterCallContext! context, TKey key, TValue? value) -> void
+static DataCore.Adapter.AdapterCallContextExtensions.TryGetItem<TKey, TValue>(this DataCore.Adapter.IAdapterCallContext! context, TKey key, out TValue? value) -> bool
+static DataCore.Adapter.AdapterCallContextExtensions.TryUseRequestValidation(this DataCore.Adapter.IAdapterCallContext! context, bool enabled) -> bool
+static DataCore.Adapter.AdapterCallContextExtensions.UseRequestValidation(this DataCore.Adapter.IAdapterCallContext! context, bool enabled) -> void
+static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptor(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+static DataCore.Adapter.AdapterExtensions.CreateTypeDescriptor(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+static DataCore.Adapter.AdapterExtensions.GetDescription(this DataCore.Adapter.IAdapter! adapter) -> string?
+static DataCore.Adapter.AdapterExtensions.GetExtensionFeature(this DataCore.Adapter.IAdapter! adapter, string! uriString) -> DataCore.Adapter.Extensions.IAdapterExtensionFeature?
+static DataCore.Adapter.AdapterExtensions.GetExtensionFeature(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri) -> DataCore.Adapter.Extensions.IAdapterExtensionFeature?
+static DataCore.Adapter.AdapterExtensions.GetFeature(this DataCore.Adapter.IAdapter! adapter, string! uriString) -> DataCore.Adapter.IAdapterFeature?
+static DataCore.Adapter.AdapterExtensions.GetFeature(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri) -> DataCore.Adapter.IAdapterFeature?
+static DataCore.Adapter.AdapterExtensions.GetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter) -> TFeature?
+static DataCore.Adapter.AdapterExtensions.GetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter, string! uriString) -> TFeature?
+static DataCore.Adapter.AdapterExtensions.GetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri) -> TFeature?
+static DataCore.Adapter.AdapterExtensions.GetId(this DataCore.Adapter.IAdapter! adapter) -> string!
+static DataCore.Adapter.AdapterExtensions.GetName(this DataCore.Adapter.IAdapter! adapter) -> string!
+static DataCore.Adapter.AdapterExtensions.HasFeature(this DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor, string! uriString) -> bool
+static DataCore.Adapter.AdapterExtensions.HasFeature(this DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor, System.Uri! uri) -> bool
+static DataCore.Adapter.AdapterExtensions.HasFeature(this DataCore.Adapter.IAdapter! adapter, string! uriString) -> bool
+static DataCore.Adapter.AdapterExtensions.HasFeature(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri) -> bool
+static DataCore.Adapter.AdapterExtensions.HasFeature<TFeature>(this DataCore.Adapter.Common.AdapterDescriptorExtended! adapter) -> bool
+static DataCore.Adapter.AdapterExtensions.HasFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetExtensionFeature(this DataCore.Adapter.IAdapter! adapter, string! uriString, out DataCore.Adapter.Extensions.IAdapterExtensionFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetExtensionFeature(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri, out DataCore.Adapter.Extensions.IAdapterExtensionFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetFeature(this DataCore.Adapter.IAdapter! adapter, string! uriString, out DataCore.Adapter.IAdapterFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetFeature(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri, out DataCore.Adapter.IAdapterFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter, string! uriString, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterExtensions.TryGetFeature<TFeature>(this DataCore.Adapter.IAdapter! adapter, System.Uri! uri, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeatureExtensions.Unwrap<TFeature>(this TFeature? feature) -> TFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Contains(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Contains(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Contains<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Get(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString) -> DataCore.Adapter.IAdapterFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Get(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri) -> DataCore.Adapter.IAdapterFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Get<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features) -> TFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Get<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString) -> TFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.Get<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri) -> TFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.GetExtension(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString) -> DataCore.Adapter.Extensions.IAdapterExtensionFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.GetExtension(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri) -> DataCore.Adapter.Extensions.IAdapterExtensionFeature?
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGet(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString, out DataCore.Adapter.IAdapterFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGet(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri, out DataCore.Adapter.IAdapterFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGet<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGet<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGet<TFeature>(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri, out TFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGetExtension(this DataCore.Adapter.IAdapterFeaturesCollection! features, string! uriString, out DataCore.Adapter.Extensions.IAdapterExtensionFeature? feature) -> bool
+static DataCore.Adapter.AdapterFeaturesCollectionExtensions.TryGetExtension(this DataCore.Adapter.IAdapterFeaturesCollection! features, System.Uri! uri, out DataCore.Adapter.Extensions.IAdapterExtensionFeature? feature) -> bool
+static DataCore.Adapter.AssemblyExtensions.GetInformationalVersion(this System.Reflection.Assembly! assembly) -> string?
+static DataCore.Adapter.Diagnostics.AdapterEventSource.Log.get -> DataCore.Adapter.Diagnostics.AdapterEventSource!
+static DataCore.Adapter.Diagnostics.Telemetry.ActivitySource.get -> System.Diagnostics.ActivitySource!
+static DataCore.Adapter.Diagnostics.Telemetry.EventSource.get -> DataCore.Adapter.Diagnostics.AdapterEventSource!
+static DataCore.Adapter.Diagnostics.Telemetry.Meter.get -> System.Diagnostics.Metrics.Meter!
+static DataCore.Adapter.Diagnostics.ValueStopwatch.StartNew() -> DataCore.Adapter.Diagnostics.ValueStopwatch
+static DataCore.Adapter.Extensions.CustomFunctionsExtensions.InvokeFunctionAsync<TRequest, TResponse>(this DataCore.Adapter.Extensions.ICustomFunctions! customFunctions, DataCore.Adapter.IAdapterCallContext! context, System.Uri! functionId, TRequest request, System.Text.Json.JsonSerializerOptions? jsonOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse?>!
+static DataCore.Adapter.Extensions.CustomFunctionsExtensions.InvokeFunctionAsync<TRequest, TResponse>(this DataCore.Adapter.Extensions.ICustomFunctions! customFunctions, DataCore.Adapter.IAdapterCallContext! context, System.Uri! functionId, TRequest request, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TRequest>! requestTypeInfo, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TResponse>! responseTypeInfo, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse?>!
+static DataCore.Adapter.Extensions.ExtensionFeatureOperationAttribute.CreateDescriptor(System.Reflection.MethodInfo? methodInfo) -> DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo(System.Action! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo(System.Delegate! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7, T8, T9>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8, T9>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7, T8, T9>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8, T9>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7, T8>(System.Action<T1, T2, T3, T4, T5, T6, T7, T8>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7, T8>(System.Func<T1, T2, T3, T4, T5, T6, T7, T8>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7>(System.Action<T1, T2, T3, T4, T5, T6, T7>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6, T7>(System.Func<T1, T2, T3, T4, T5, T6, T7>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6>(System.Action<T1, T2, T3, T4, T5, T6>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5, T6>(System.Func<T1, T2, T3, T4, T5, T6>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5>(System.Action<T1, T2, T3, T4, T5>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4, T5>(System.Func<T1, T2, T3, T4, T5>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4>(System.Action<T1, T2, T3, T4>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3, T4>(System.Func<T1, T2, T3, T4>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3>(System.Action<T1, T2, T3>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2, T3>(System.Func<T1, T2, T3>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2>(System.Action<T1, T2>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T1, T2>(System.Func<T1, T2>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Action<T>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.GetMethodInfo<T>(System.Func<T>! func) -> System.Reflection.MethodInfo?
+static DataCore.Adapter.MethodInfoUtil.TryGetInterfaceMethodDeclaration(System.Reflection.MethodInfo? method, out System.Reflection.MethodInfo? interfaceMethod) -> bool
+static DataCore.Adapter.Services.KeyValueStore.AddPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KeyValueStore.RemovePrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KeyValueStore.StartsWithPrefix(DataCore.Adapter.Services.KVKey prefix, DataCore.Adapter.Services.KVKey key) -> bool
+static DataCore.Adapter.Services.KeyValueStoreExtensions.CreateScopedStore(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey prefix) -> DataCore.Adapter.Services.IKeyValueStore!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStrings(this DataCore.Adapter.Services.IKeyValueStore! store) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStrings(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.ReadJsonAsync<TValue>(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey key, System.Text.Json.JsonSerializerOptions? options = null) -> System.Threading.Tasks.ValueTask<TValue?>
+static DataCore.Adapter.Services.KeyValueStoreExtensions.ReadJsonAsync<TValue>(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey key, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TValue>! jsonTypeInfo) -> System.Threading.Tasks.ValueTask<TValue?>
+static DataCore.Adapter.Services.KeyValueStoreExtensions.WriteJsonAsync<TValue>(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey key, TValue value, System.Text.Json.JsonSerializerOptions? options = null) -> System.Threading.Tasks.ValueTask
+static DataCore.Adapter.Services.KeyValueStoreExtensions.WriteJsonAsync<TValue>(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey key, TValue value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TValue>! jsonTypeInfo) -> System.Threading.Tasks.ValueTask
+static DataCore.Adapter.Services.KVKey.Empty.get -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator byte[]!(DataCore.Adapter.Services.KVKey value) -> byte[]!
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(bool value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(byte value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(byte[]! value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(char value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(double value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(float value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(int value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(long value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(short value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(string? value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(System.DateTime value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(System.TimeSpan value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(uint value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(ulong value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.implicit operator DataCore.Adapter.Services.KVKey(ushort value) -> DataCore.Adapter.Services.KVKey
+static DataCore.Adapter.Services.KVKey.operator !=(DataCore.Adapter.Services.KVKey left, DataCore.Adapter.Services.KVKey right) -> bool
+static DataCore.Adapter.Services.KVKey.operator ==(DataCore.Adapter.Services.KVKey left, DataCore.Adapter.Services.KVKey right) -> bool
+static DataCore.Adapter.TypeExtensions.CreateAdapterTypeDescriptor(this System.Type! type) -> DataCore.Adapter.Common.AdapterTypeDescriptor?
+static DataCore.Adapter.TypeExtensions.CreateFeatureDescriptor(this System.Type! type) -> DataCore.Adapter.Common.FeatureDescriptor?
+static DataCore.Adapter.TypeExtensions.CreateFeatureDescriptor<TFeature>(this TFeature feature) -> DataCore.Adapter.Common.FeatureDescriptor?
+static DataCore.Adapter.TypeExtensions.GetAdapterFeatureTypes(this System.Type! type) -> System.Collections.Generic.IEnumerable<System.Type!>!
+static DataCore.Adapter.TypeExtensions.GetAdapterFeatureUri(this System.Type! type) -> System.Uri?
+static DataCore.Adapter.TypeExtensions.GetAdapterFeatureUris(this System.Type! type) -> System.Collections.Generic.IEnumerable<System.Uri!>!
+static DataCore.Adapter.TypeExtensions.GetStandardAdapterFeatureTypes() -> System.Type![]!
+static DataCore.Adapter.TypeExtensions.HasAdapterFeatureUri(this System.Type! type, string! uriString) -> bool
+static DataCore.Adapter.TypeExtensions.HasAdapterFeatureUri(this System.Type! type, System.Uri! uri) -> bool
+static DataCore.Adapter.TypeExtensions.IsAdapterFeature(this System.Type! type) -> bool
+static DataCore.Adapter.TypeExtensions.IsConcreteClass(this System.Type! type) -> bool
+static DataCore.Adapter.TypeExtensions.IsConcreteExtensionAdapterFeature(this System.Type! type) -> bool
+static DataCore.Adapter.TypeExtensions.IsExtensionAdapterFeature(this System.Type! type) -> bool
+static DataCore.Adapter.TypeExtensions.IsStandardAdapterFeature(this System.Type! type) -> bool
+static DataCore.Adapter.UriExtensions.IsExtensionFeatureUri(this string! uriString) -> bool
+static DataCore.Adapter.UriExtensions.IsExtensionFeatureUri(this System.Uri! uri) -> bool
+static DataCore.Adapter.UriExtensions.IsStandardFeatureUri(this System.Uri! uri) -> bool
+static DataCore.Adapter.WellKnownFeatures.GetOrCreateFeatureUri(string! uriString) -> System.Uri!
+static DataCore.Adapter.WellKnownFeatures.TryGetFeatureDescriptor(string! featureUri, out DataCore.Adapter.Common.FeatureDescriptor? descriptor) -> bool
+static DataCore.Adapter.WellKnownFeatures.TryGetFeatureDescriptor(System.Uri! featureUri, out DataCore.Adapter.Common.FeatureDescriptor? descriptor) -> bool
+virtual DataCore.Adapter.AdapterCore.Dispose(bool disposing) -> void
+virtual DataCore.Adapter.AdapterCore.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+virtual DataCore.Adapter.AdapterCore.OnStartedAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.AdapterCore.ValidateContext(DataCore.Adapter.IAdapterCallContext! context) -> void
+virtual DataCore.Adapter.AdapterCore.ValidateInvocation(DataCore.Adapter.IAdapterCallContext! context, params object![]! invocationParameters) -> void
+virtual DataCore.Adapter.AdapterCore.ValidateInvocationParameter(object! parameter) -> void
+~static DataCore.Adapter.AbstractionsResources.Category_AssetModel.get -> string
+~static DataCore.Adapter.AbstractionsResources.Category_Diagnostics.get -> string
+~static DataCore.Adapter.AbstractionsResources.Category_Events.get -> string
+~static DataCore.Adapter.AbstractionsResources.Category_Extensions.get -> string
+~static DataCore.Adapter.AbstractionsResources.Category_RealTimeData.get -> string
+~static DataCore.Adapter.AbstractionsResources.Category_Tags.get -> string
+~static DataCore.Adapter.AbstractionsResources.Culture.get -> System.Globalization.CultureInfo
+~static DataCore.Adapter.AbstractionsResources.Culture.set -> void
+~static DataCore.Adapter.AbstractionsResources.Description_AssetModelBrowse.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_AssetModelSearch.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ConfigurationChanges.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_CustomFunctions.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_EventMessagePush.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_EventMessagePushWithTopics.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_HealthCheck.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadEventMessagesForTimeRange.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadEventMessagesUsingCursor.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadPlotTagVaues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadProcessedTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadRawTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadSnapshotTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadTagValueAnnotations.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_ReadTagValuesAtTimes.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_SnapshotTagValuePush.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_TagConfiguration.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_TagInfo.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_TagSearch.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_WriteEventMessages.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_WriteHistoricalTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_WriteSnapshotTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.Description_WriteTagValueAnnotations.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_AssetModelBrowse.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_AssetModelSearch.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ConfigurationChanges.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_CustomFunctions.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_EventMessagePush.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_EventMessagePushWithTopics.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_HealthCheck.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadEventMessagesForTimeRange.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadEventMessagesUsingCursor.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadPlotTagVaues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadProcessedTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadRawTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadSnapshotTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadTagValueAnnotations.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_ReadTagValuesAtTimes.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_SnapshotTagValuePush.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_TagConfiguration.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_TagInfo.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_TagSearch.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_WriteEventMessages.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_WriteHistoricalTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_WriteSnapshotTagValues.get -> string
+~static DataCore.Adapter.AbstractionsResources.DisplayName_WriteTagValueAnnotations.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_AdapterIsNotStarted.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_FeatureIsAlreadyRegistered.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_KeyValueStore_InvalidKey.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_MissingAdapterFeature.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_NotAFeatureImplementation.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_NotAnAdapterFeature.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_RelativeUrisAreNotSupported.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_UnableToResolveCustomFunction.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_UnableToResolveMethod.get -> string
+~static DataCore.Adapter.AbstractionsResources.Error_ValueStopwatch_NotInitialised.get -> string
+~static DataCore.Adapter.AbstractionsResources.LocalizableString_LocalizationFailed.get -> string
+~static DataCore.Adapter.AbstractionsResources.ResourceManager.get -> System.Resources.ResourceManager
+abstract DataCore.Adapter.Services.KeyValueStore.ExistsAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+abstract DataCore.Adapter.Services.KeyValueStore.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+abstract DataCore.Adapter.Services.KeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+abstract DataCore.Adapter.Services.KeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.AllowRawWrites.get -> bool
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.AdapterCore.AdapterCore(DataCore.Adapter.Common.AdapterDescriptor! descriptor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
+DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger) -> System.IDisposable?
+DataCore.Adapter.AdapterCore.LoggerFactory.get -> Microsoft.Extensions.Logging.ILoggerFactory!
+DataCore.Adapter.Common.AdapterDescriptorBuilder
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id, string! name) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearProperties() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<string!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<System.Uri!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithId(string! id) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithName(string! name) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithTypeDescriptor(DataCore.Adapter.Common.AdapterTypeDescriptor? typeDescriptor) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(DataCore.Adapter.Common.AdapterTypeDescriptor! descriptor) -> void
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(System.Uri! id) -> void
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(string? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(System.Uri? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithId(System.Uri! id) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithName(string? name) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.HostInfoBuilder
+DataCore.Adapter.Common.HostInfoBuilder.Build() -> DataCore.Adapter.Common.HostInfo!
+DataCore.Adapter.Common.HostInfoBuilder.ClearProperties() -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder() -> void
+DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder(DataCore.Adapter.Common.HostInfo! hostInfo) -> void
+DataCore.Adapter.Common.HostInfoBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithName(string? name) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.IAdapterCallContext.Services.get -> System.IServiceProvider!
+DataCore.Adapter.Services.IKeyValueStore.ExistsAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+DataCore.Adapter.Services.IKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.IKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.IKeyValueStoreSerializer
+DataCore.Adapter.Services.IKeyValueStoreSerializer.DeserializeAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.IKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.InMemoryKeyValueStore.InMemoryKeyValueStore() -> void
+DataCore.Adapter.Services.IRawKeyValueStore
+DataCore.Adapter.Services.IRawKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
+DataCore.Adapter.Services.IRawKeyValueStore.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.DeserializeAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.JsonKeyValueStoreSerializer(System.Text.Json.JsonSerializerOptions? jsonOptions) -> void
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromBytesAsync<T>(byte[]! data) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamCoreAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.SerializeToBytesAsync<T>(T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+DataCore.Adapter.Services.KeyValueStore.SerializeToStreamCoreAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer?
+DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.DeleteAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.Dispose() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.KeyValueStoreWriteBuffer(DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions! options, System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<DataCore.Adapter.Services.KVKey, byte[]?>>!, System.Threading.Tasks.Task!>! callback, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Services.KeyValueStoreWriteBuffer!>? logger = null) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult>
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Found.get -> bool
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult(bool found, byte[]? value) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Value.get -> byte[]?
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.get -> System.TimeSpan
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyValueStoreWriteBufferOptions() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.set -> void
+DataCore.Adapter.Services.RawKeyValueStore<TOptions>
+DataCore.Adapter.Services.RawKeyValueStore<TOptions>.RawKeyValueStore(TOptions? options, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
+override DataCore.Adapter.Services.KVKey.ToString() -> string!
+override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
+override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger, string! adapterId) -> System.IDisposable?
+static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptorBuilder(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+static DataCore.Adapter.Services.JsonKeyValueStoreSerializer.Default.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.IO.Stream! stream) -> bool
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.Span<byte> data) -> bool
+static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyToAsync(this DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, System.Collections.Generic.IEnumerable<DataCore.Adapter.Services.KVKey>! keys, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyToAsync(this DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.IRawKeyValueStore! destination, System.Collections.Generic.IEnumerable<DataCore.Adapter.Services.KVKey>! keys, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KVKey.implicit operator string?(DataCore.Adapter.Services.KVKey value) -> string?
+virtual DataCore.Adapter.AdapterCore.GetAdapterTypeDescriptor() -> DataCore.Adapter.Common.AdapterTypeDescriptor?
+virtual DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+virtual DataCore.Adapter.Services.KeyValueStore.SerializeToStreamAsync<T>(System.IO.Stream! stream, T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.CompressRawBytesAsync(byte[]! data, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.DecompressRawBytesAsync(byte[]! data) -> System.Threading.Tasks.ValueTask<byte[]!>
+~static DataCore.Adapter.AbstractionsResources.Error_KeyValueStore_RawWritesDisabled.get -> string

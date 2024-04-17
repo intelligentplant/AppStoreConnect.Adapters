@@ -1,0 +1,11 @@
+﻿#nullable enable
+abstract DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.GetDescriptorFromRemoteAdapter(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.FeatureDescriptor?>!
+abstract DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.GetOperationsFromRemoteAdapter(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor!>!>!
+DataCore.Adapter.Proxy.ExtensionFeatureFactory<TProxy>
+DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>
+DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.ExtensionFeatureProxyBase(TProxy! proxy, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders) -> void
+DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.Proxy.get -> TProxy!
+DataCore.Adapter.Proxy.ExtensionFeatureProxyGenerator
+override sealed DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.GetDescriptorInternal(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Common.FeatureDescriptor?>!
+override sealed DataCore.Adapter.Proxy.ExtensionFeatureProxyBase<TProxy, TAdapterOptions>.GetOperationsInternal(DataCore.Adapter.IAdapterCallContext! context, System.Uri? featureUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor!>!>!
+static DataCore.Adapter.Proxy.ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<TProxy, TAdapterOptions, TImpl>(TProxy! proxy, System.Uri! featureUri) -> DataCore.Adapter.Extensions.IAdapterExtensionFeature!

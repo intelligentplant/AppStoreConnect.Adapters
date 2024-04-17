@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.HealthChecks" />
+    <!--#if (UseMinimalApi) -->
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.MinimalApi" />
+    <!--#else -->
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" />
+    <!--#endif -->
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry" />
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Api" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Expressions" />
+  </ItemGroup>
+
+</Project>

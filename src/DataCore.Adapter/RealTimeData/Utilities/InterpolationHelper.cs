@@ -146,9 +146,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
         /// </param>
         /// <param name="interpolationType">
-        ///   The type of calculation type to perform when calculating the value. Specify 
-        ///   <see cref="InterpolationCalculationType.UsePreviousValue"/> for non-numeric or state-based 
-        ///   tags and <see cref="InterpolationCalculationType.Interpolate"/> for numeric tags.
+        ///   The type of calculation type to perform when calculating the value.
         /// </param>
         /// <param name="forceUncertainStatus">
         ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
@@ -162,7 +160,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="tag"/> is <see langword="null"/>.
         /// </exception>
-        private static TagValueExtended? GetValueAtTime(
+        private static TagValueExtended? InterpolateValueAtTime(
             TagSummary tag, 
             DateTime utcSampleTime, 
             TagValueExtended? valueBefore, 
@@ -173,47 +171,54 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
             }
+
             if (valueBefore == null && valueAfter == null) {
-                return null;
-            }
-
-            if (interpolationType == InterpolationCalculationType.UsePreviousValue || !tag.DataType.IsNumericType()) {
-                // We've been asked to repeat the previous value, or this is not a numeric tag, so 
-                // we can't interpolate between two values.
-
-                if (valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime) {
-                    var status = forceUncertainStatus 
-                        ? TagValueStatus.Uncertain 
-                        : valueBefore.Status;
-
-                    return new TagValueBuilder(valueBefore)
-                        .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status)
-                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
-                        .Build();
-                }
-                if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime) {
-                    var status = forceUncertainStatus
-                        ? TagValueStatus.Uncertain
-                        : valueAfter.Status;
-
-                    return new TagValueBuilder(valueAfter)
-                        .WithUtcSampleTime(utcSampleTime)
-                        .WithStatus(status)
-                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
-                        .Build();
-                }
-
                 return null;
             }
 
             // If either of the provided samples matches the sample time we are interpolating at, 
             // re-use that sample.
+            
             if (valueBefore != null && valueBefore.UtcSampleTime == utcSampleTime) {
-                return valueBefore;
+                return new TagValueBuilder(valueBefore)
+                    .WithStatus(forceUncertainStatus ? TagValueStatus.Uncertain : valueBefore.Status)
+                    .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                    .Build();
             }
             if (valueAfter != null && valueAfter.UtcSampleTime == utcSampleTime) {
-                return valueAfter;
+                return new TagValueBuilder(valueAfter)
+                    .WithStatus(forceUncertainStatus ? TagValueStatus.Uncertain : valueAfter.Status)
+                    .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                    .Build();
+            }
+
+            if (interpolationType == InterpolationCalculationType.StepInterpolate || !tag.DataType.IsFloatingPointNumericType()) {
+                // Step interpolation has been explicitly requested, or we are not working with
+                // floating-point data.
+
+                // We will use the later of valueBefore and valueAfter that is still before or at
+                // the sample time we are interpolating at.
+                var stepInterpSample = valueBefore != null && valueBefore.UtcSampleTime <= utcSampleTime
+                    ? valueBefore
+                    : null;
+
+                if (valueAfter != null && valueAfter.UtcSampleTime <= utcSampleTime && (stepInterpSample == null || valueAfter.UtcSampleTime > stepInterpSample.UtcSampleTime)) {
+                    stepInterpSample = valueAfter;
+                }
+
+                if (stepInterpSample != null && stepInterpSample.UtcSampleTime <= utcSampleTime) {
+                    var status = forceUncertainStatus 
+                        ? TagValueStatus.Uncertain 
+                        : stepInterpSample.Status;
+
+                    return new TagValueBuilder(stepInterpSample)
+                        .WithUtcSampleTime(utcSampleTime)
+                        .WithStatus(status)
+                        .WithProperties(AggregationHelper.CreateXPoweredByProperty())
+                        .Build();
+                }
+
+                return null;
             }
 
             // We need to interpolate. We can only do this if both samples were provided.
@@ -222,9 +227,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             }
 
             if (valueBefore.UtcSampleTime > valueAfter.UtcSampleTime) {
-                var tmp = valueBefore;
-                valueBefore = valueAfter;
-                valueAfter = tmp;
+                (valueAfter, valueBefore) = (valueBefore, valueAfter);
             }
 
             return InterpolateSample(utcSampleTime, valueBefore, valueAfter, forceUncertainStatus);
@@ -240,95 +243,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <param name="utcSampleTime">
         ///   The UTC sample time for the calculated sample.
         /// </param>
-        /// <param name="valueBefore">
-        ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
-        /// </param>
-        /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
-        ///   status, even if <paramref name="valueBefore"/> has <see cref="TagValueStatus.Good"/> 
-        ///   status.
-        /// </param>
-        /// <returns>
-        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
-        ///   calculated.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueExtended? GetPreviousValueAtSampleTime(
-            TagSummary tag,
-            DateTime utcSampleTime,
-            TagValueExtended valueBefore,
-            bool forceUncertainStatus = false
-        ) {
-            return GetValueAtTime(
-                tag,
-                utcSampleTime,
-                valueBefore,
-                null,
-                InterpolationCalculationType.UsePreviousValue,
-                forceUncertainStatus
-            );
-        }
-
-
-        /// <summary>
-        /// Calculates a tag value at the specified time stamp.
-        /// </summary>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcSampleTime">
-        ///   The UTC sample time for the calculated sample.
-        /// </param>
-        /// <param name="valueBefore">
-        ///   The raw sample immediately before <paramref name="utcSampleTime"/>.
-        /// </param>
-        /// <param name="valueAfter">
-        ///   The raw sample immediately after <paramref name="utcSampleTime"/>.
-        /// </param>
-        /// <param name="forceUncertainStatus">
-        ///   When <see langword="true"/>, the resulting value will have <see cref="TagValueStatus.Uncertain"/> 
-        ///   status, even if <paramref name="valueBefore"/> and <paramref name="valueAfter"/> 
-        ///   have <see cref="TagValueStatus.Good"/> status.
-        /// </param>
-        /// <returns>
-        ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
-        ///   calculated.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="tag"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueExtended? GetInterpolatedValueAtSampleTime(
-            TagSummary tag,
-            DateTime utcSampleTime,
-            TagValueExtended valueBefore,
-            TagValueExtended valueAfter,
-            bool forceUncertainStatus = false
-        ) {
-            return GetValueAtTime(
-                tag, 
-                utcSampleTime, 
-                valueBefore, 
-                valueAfter, 
-                InterpolationCalculationType.Interpolate, 
-                forceUncertainStatus
-            );
-        }
-
-
-        /// <summary>
-        /// Calculates a tag value at the specified time stamp.
-        /// </summary>
-        /// <param name="tag">
-        ///   The tag definition.
-        /// </param>
-        /// <param name="utcSampleTime">
-        ///   The UTC sample time for the calculated sample.
-        /// </param>
         /// <param name="values">
         ///   The raw samples that the samples for interpolation will be selected from.
         /// </param>
+        /// <param name="forceStepInterpolation">
+        ///   When <see langword="true"/>, step interpolation will be used, even if <paramref name="tag"/> 
+        ///   has a floating-point data type. Step interpolation is always used for non-floating-point 
+        ///   data types.
+        /// </param>
         /// <returns>
         ///   The calculated <see cref="TagValueExtended"/>, or <see langword="null"/> if a value cannot be 
         ///   calculated.
@@ -339,7 +261,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         public static TagValueExtended? GetInterpolatedValueAtSampleTime(
             TagSummary tag,
             DateTime utcSampleTime,
-            IEnumerable<TagValueExtended> values
+            IEnumerable<TagValueExtended> values,
+            bool forceStepInterpolation = false
         ) {
             if (tag == null) {
                 throw new ArgumentNullException(nameof(tag));
@@ -347,6 +270,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
             if (values == null || !values.Any()) {
                 return null;
             }
+
+            var interpType = forceStepInterpolation 
+                ? InterpolationCalculationType.StepInterpolate 
+                : tag.DataType.IsFloatingPointNumericType() 
+                    ? InterpolationCalculationType.Interpolate 
+                    : InterpolationCalculationType.StepInterpolate;
 
             // Option 1: if we have a value exactly at the sample time, use that value.
 
@@ -357,7 +286,8 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .Build();
             }
 
-            // Option 2: if we have boundary values around the sample time, use those values.
+            // Option 2: if we have boundary values around the sample time, interpolate using
+            // those values.
 
             var boundaryStartClosest = values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime);
             var boundaryStartBest = boundaryStartClosest == null || boundaryStartClosest.Status == TagValueStatus.Good
@@ -371,20 +301,27 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
             if (boundaryStartBest != null && boundaryEndBest != null) {
                 // We have a boundary value before and after the sample time.
-                return GetValueAtTime(
+                return InterpolateValueAtTime(
                     tag,
                     utcSampleTime,
-                    boundaryStartBest,
-                    boundaryEndBest,
-                    InterpolationCalculationType.Interpolate,
-                    boundaryStartBest != boundaryStartClosest || boundaryEndBest != boundaryEndClosest
+                    // For linear interpolation, we want to use the closest good quality values
+                    // before and after the sample time. For step interpolation, we don't care
+                    // about the quality since we will just be repeating the closest value.
+                    interpType == InterpolationCalculationType.Interpolate 
+                        ? boundaryStartBest 
+                        : boundaryStartClosest,
+                    interpType == InterpolationCalculationType.Interpolate
+                        ? boundaryEndBest
+                        : boundaryEndClosest,
+                    interpType,
+                    interpType == InterpolationCalculationType.Interpolate && (boundaryStartBest != boundaryStartClosest || boundaryEndBest != boundaryEndClosest)
                         ? true
                         : false
                 );
             }
 
             // Option 3: if we have two good-quality values before the sample time, extrapolate 
-            // using those values.
+            // forwards using those values.
 
             var boundaryValues = values
                 .Where(x => x != null)
@@ -396,64 +333,20 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .ToArray();
 
             if (boundaryValues.Length == 2) {
-                return GetValueAtTime(
+                return InterpolateValueAtTime(
                     tag,
                     utcSampleTime,
                     boundaryValues[0],
                     boundaryValues[1],
-                    InterpolationCalculationType.Interpolate,
-                    // Use uncertain status because we are extrapolating instead of interpolating.
-                    true
+                    interpType,
+                    // Use uncertain status for linear interpolation because we are extrapolating
+                    // forwards instead of interpolating.
+                    interpType == InterpolationCalculationType.Interpolate
                 );
             }
 
-            // Option 4: if we have two good-quality values after the sample time, extrapolated 
-            // using those values.
-
-            boundaryValues = values
-                .Where(x => x != null)
-                .Where(x => x.Status == TagValueStatus.Good)
-                .Where(x => x.UtcSampleTime > utcSampleTime)
-                .Take(2)
-                .ToArray();
-
-            if (boundaryValues.Length == 2) {
-                return GetValueAtTime(
-                    tag,
-                    utcSampleTime,
-                    boundaryValues[0],
-                    boundaryValues[1],
-                    InterpolationCalculationType.Interpolate,
-                    // Use uncertain status because we are extrapolating instead of interpolating.
-                    true
-                );
-            }
-
-            // Option 5: if we have any values on either side of the sample time, interpolate 
-            // using those values.
-
-            boundaryValues = new[] {
-                values.LastOrDefault(x => x != null && x.UtcSampleTime < utcSampleTime),
-                values.FirstOrDefault(x => x != null && x.UtcSampleTime > utcSampleTime)
-            }.Where(x => x != null).ToArray();
-
-            if (boundaryValues.Length == 2) {
-                return GetValueAtTime(
-                    tag,
-                    utcSampleTime,
-                    boundaryValues[0],
-                    boundaryValues[1],
-                    InterpolationCalculationType.Interpolate,
-                    // Use uncertain status because we are extrapolating instead of interpolating. 
-                    // This isn't technically required because the calculated status is guaranteed 
-                    // to be uncertain since we are not using two good quality values, 
-                    // but we will do so anyway for correctness.
-                    true
-                );
-            }
-
-            // Option 6: if we have two values before the sample time, extrapolate using those 
-            // values.
+            // Option 4: if we have any two values before the sample time (regardless of quality),
+            // extrapolate forwards using those values.
 
             boundaryValues = values
                 .Where(x => x != null)
@@ -464,22 +357,43 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .ToArray();
 
             if (boundaryValues.Length == 2) {
-                return GetValueAtTime(
+                return InterpolateValueAtTime(
                     tag,
                     utcSampleTime,
                     boundaryValues[0],
                     boundaryValues[1],
-                    InterpolationCalculationType.Interpolate,
-                    // Use uncertain status because we are extrapolating instead of interpolating. 
-                    // This isn't technically required because the calculated status is guaranteed 
-                    // to be uncertain since we are not using two good quality values, 
-                    // but we will do so anyway for correctness.
+                    interpType,
+                    // Force uncertain status for linear interpolation because we are extrapolating
+                    // forwards instead of interpolating.
+                    interpType == InterpolationCalculationType.Interpolate
+                );
+            }
+
+            // Option 5: if we have two good-quality values after the sample time, extrapolate 
+            // backwards using those values.
+
+            boundaryValues = values
+                .Where(x => x != null)
+                .Where(x => x.Status == TagValueStatus.Good)
+                .Where(x => x.UtcSampleTime > utcSampleTime)
+                .Take(2)
+                .ToArray();
+
+            if (boundaryValues.Length == 2) {
+                return InterpolateValueAtTime(
+                    tag,
+                    utcSampleTime,
+                    boundaryValues[0],
+                    boundaryValues[1],
+                    interpType,
+                    // Force uncertain status for both linear interpolation and step interpolation
+                    // because we are extrapolating backwards in both cases.
                     true
                 );
             }
 
-            // Option 7: if we have two values after the sample time, extrapolate using those 
-            // values.
+            // Option 6: if we have any two values after the sample time (regardless of quality),
+            // extrapolate backwards using those values.
 
             boundaryValues = values
                 .Where(x => x != null)
@@ -488,16 +402,14 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 .ToArray();
 
             if (boundaryValues.Length == 2) {
-                return GetValueAtTime(
+                return InterpolateValueAtTime(
                     tag,
                     utcSampleTime,
                     boundaryValues[0],
                     boundaryValues[1],
-                    InterpolationCalculationType.Interpolate,
-                    // Use uncertain status because we are extrapolating instead of interpolating. 
-                    // This isn't technically required because the calculated status is guaranteed 
-                    // to be uncertain since we are not using two good quality values, 
-                    // but we will do so anyway for correctness.
+                    interpType,
+                    // Force uncertain status for both linear interpolation and step interpolation
+                    // because we are extrapolating backwards in both cases.
                     true
                 );
             }
@@ -507,7 +419,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Gets tag values at the specified sample times.
+        /// Gets step interpolated tag values at the specified sample times.
         /// </summary>
         /// <param name="tag">
         ///   The tag.
@@ -524,7 +436,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   An <see cref="IAsyncEnumerable{T}"/> that will emit the calculated tag values.
         /// </returns>
-        public static IAsyncEnumerable<TagValueQueryResult> GetPreviousValuesAtSampleTimes(
+        public static IAsyncEnumerable<TagValueQueryResult> GetStepInterpolatedValuesAsync(
             TagSummary tag, 
             IEnumerable<DateTime> utcSampleTimes, 
             IAsyncEnumerable<TagValueQueryResult> rawData, 
@@ -540,12 +452,12 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                 throw new ArgumentNullException(nameof(rawData));
             }
 
-            return GetPreviousValuesAtTimes(tag, utcSampleTimes.OrderBy(x => x), rawData, cancellationToken);
+            return GetStepInterpolatedValuesCoreAsync(tag, utcSampleTimes.OrderBy(x => x), rawData, cancellationToken);
         }
 
 
         /// <summary>
-        /// Gets tag values at the specified sample times.
+        /// Gets step interpolated tag values at the specified sample times.
         /// </summary>
         /// <param name="tag">
         ///   The tag.
@@ -562,7 +474,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <returns>
         ///   An <see cref="IAsyncEnumerable{T}"/> that will return the results.
         /// </returns>
-        private static async IAsyncEnumerable<TagValueQueryResult> GetPreviousValuesAtTimes(
+        private static async IAsyncEnumerable<TagValueQueryResult> GetStepInterpolatedValuesCoreAsync(
             TagSummary tag, 
             IEnumerable<DateTime> utcSampleTimes, 
             IAsyncEnumerable<TagValueQueryResult> rawData,
@@ -590,7 +502,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
                     if (value0 != null) {
                         while (value1.UtcSampleTime > nextSampleTime && sampleTimesRemaining) {
-                            var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
+                            var interpolatedValue = InterpolateValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.StepInterpolate);
                             if (sampleTimesEnumerator.MoveNext()) {
                                 nextSampleTime = sampleTimesEnumerator.Current;
                             }
@@ -615,7 +527,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     value0 != null &&
                     value1 != null) {
 
-                    var interpolatedValue = GetValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.UsePreviousValue);
+                    var interpolatedValue = InterpolateValueAtTime(tag, nextSampleTime, value0, value1, InterpolationCalculationType.StepInterpolate);
                     
                     if (interpolatedValue != null) {
                         yield return TagValueQueryResult.Create(tag.Id, tag.Name, interpolatedValue);
@@ -642,10 +554,18 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         Interpolate,
 
         /// <summary>
+        /// The new value should repeat the value from the raw sample immediately before the 
+        /// timestamp. Recommended for non-numeric and state-based tag values, or for numeric tag 
+        /// values when linear interpolation is not desired.
+        /// </summary>
+        StepInterpolate,
+
+        /// <summary>
         /// The new value should repeat the value from the raw sample immediately before the timestamp 
         /// for the new value. Recommended for non-numeric and state-based tag values.
         /// </summary>
-        UsePreviousValue
+        [Obsolete("Use StepInterpolate instead.")]
+        UsePreviousValue = StepInterpolate
 
     }
 }

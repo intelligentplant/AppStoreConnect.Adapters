@@ -4,11 +4,13 @@
     <TargetFrameworks>netstandard2.1;netstandard2.0;net48</TargetFrameworks>
     <RootNamespace>DataCore.Adapter</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>Base implementations and utility classes for App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="JsonSchema.Net.Generation" />
     <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="System.Threading.Channels" />
@@ -19,6 +21,10 @@
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
+    <ProjectReference Include="..\DataCore.Adapter.Compatibility\DataCore.Adapter.Compatibility.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Update="AdapterOptionsResources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -41,6 +47,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

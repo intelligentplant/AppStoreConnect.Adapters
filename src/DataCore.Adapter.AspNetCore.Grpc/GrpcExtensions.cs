@@ -979,7 +979,7 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            return Common.AdapterDescriptor.Create(descriptor.Id, descriptor.Name, descriptor.Description);
+            return new Common.AdapterDescriptor(descriptor.Id, descriptor.Name, descriptor.Description);
         }
 
 
@@ -1115,6 +1115,7 @@ namespace DataCore.Adapter {
                 }
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             if (descriptor.Extensions != null) {
                 foreach (var item in descriptor.Extensions) {
                     if (item == null) {
@@ -1123,6 +1124,7 @@ namespace DataCore.Adapter {
                     result.Extensions.Add(item);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (descriptor.Properties != null) {
                 foreach (var item in descriptor.Properties) {
@@ -1498,12 +1500,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            return Events.EventMessage.Create(
+            return new Events.EventMessage(
                 message.Id,
                 message.Topic,
                 message.UtcEventTime.ToDateTime(),
                 message.Priority.ToAdapterEventPriority(),
                 message.Category,
+                message.Type,
                 message.Message,
                 message.Properties.Select(x => x.ToAdapterProperty()).ToArray()
             );
@@ -1528,6 +1531,7 @@ namespace DataCore.Adapter {
                 Category = message.Category ?? string.Empty,
                 Id = message.Id ?? string.Empty,
                 Topic = message.Topic ?? string.Empty,
+                Type = message.Type ?? string.Empty,
                 Message = message.Message ?? string.Empty,
                 Priority = message.Priority.ToGrpcEventPriority(),
                 UtcEventTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(message.UtcEventTime)
@@ -1560,12 +1564,13 @@ namespace DataCore.Adapter {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            return Events.EventMessageWithCursorPosition.Create(
+            return new Events.EventMessageWithCursorPosition(
                 message.EventMessage.Id,
                 message.EventMessage.Topic,
                 message.EventMessage.UtcEventTime.ToDateTime(),
                 message.EventMessage.Priority.ToAdapterEventPriority(),
                 message.EventMessage.Category,
+                message.EventMessage.Type,
                 message.EventMessage.Message,
                 message.EventMessage.Properties.Select(x => x.ToAdapterProperty()).ToArray(),
                 message.CursorPosition
@@ -1612,12 +1617,13 @@ namespace DataCore.Adapter {
 
             return new Events.WriteEventMessageItem() {
                 CorrelationId = writeRequest.CorrelationId,
-                EventMessage = Events.EventMessage.Create(
+                EventMessage = new Events.EventMessage(
                     writeRequest.Message?.Id ?? Guid.NewGuid().ToString(),
                     writeRequest.Message?.Topic,
                     writeRequest.Message?.UtcEventTime?.ToDateTime() ?? DateTime.MinValue,
                     writeRequest.Message?.Priority.ToAdapterEventPriority() ?? Events.EventPriority.Unknown,
                     writeRequest.Message?.Category,
+                    writeRequest.Message?.Type,
                     writeRequest.Message?.Message,
                     writeRequest.Message?.Properties.Select(x => x.ToAdapterProperty())
                 )

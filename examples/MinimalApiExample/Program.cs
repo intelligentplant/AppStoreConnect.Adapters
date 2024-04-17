@@ -1,8 +1,12 @@
 ﻿using DataCore.Adapter.WaveGenerator;
 
-using OpenTelemetry;
+using Microsoft.AspNetCore.Http.Json;
+
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+using Serilog;
 
 [assembly: DataCore.Adapter.VendorInfo("Intelligent Plant", "https://appstore.intelligentplant.com")]
 
@@ -10,24 +14,37 @@ const string AdapterId = "$default";
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, services, configuration) => {
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
+
+// Parent PID. If specified, we will gracefully shut down if the parent process exits.
+var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
+if (pid > 0) {
+    builder.Services.AddDependentProcessWatcher(pid);
+}
+
 builder.Services
-    .AddLocalization();
+    .AddLocalization()
+    .AddProblemDetails();
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
+    .AddDataCoreAdapterApiServices()
     .AddHostInfo(
         name: "ASP.NET Core Minimal API Example",
         description: "Example ASP.NET Core adapter host using minimal API syntax"
      )
-    .AddServices(svc => svc.Configure<WaveGeneratorAdapterOptions>(
-        builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")
-     ))
-    .AddAdapter(sp => ActivatorUtilities.CreateInstance<WaveGeneratorAdapter>(sp, AdapterId));
+    .AddAdapterOptions<WaveGeneratorAdapterOptions>(options => options.Bind(builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings")))
+    .AddAdapter<WaveGeneratorAdapter>(AdapterId);
 
-builder.Services
-    .AddMvc()
-    .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true)
-    .AddDataCoreAdapterMvc();
+// Pretty-print JSON responses when running in development mode.
+if (builder.Environment.IsDevelopment()) {
+    builder.Services.Configure<JsonOptions>(options => options.SerializerOptions.WriteIndented = true);
+}
 
 builder.Services
     .AddSignalR()
@@ -43,15 +60,21 @@ builder.Services
 
 builder.Services
     .AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService())
     .WithTracing(otel => otel
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
         .AddAspNetCoreInstrumentation()
         .AddDataCoreAdapterInstrumentation()
-        .AddJaegerExporter()
-        .AddConsoleExporter())
-    .StartWithHost();
-
+        .AddOtlpExporter())
+    .WithMetrics(otel => otel
+        .AddRuntimeInstrumentation()
+        .AddAspNetCoreInstrumentation()
+        .AddDataCoreAdapterInstrumentation()
+        .AddPrometheusExporter());
+    
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();
@@ -65,10 +88,11 @@ else {
 app.UseHttpsRedirection();
 app.UseRequestLocalization();
 
-app.MapControllers();
+app.MapDataCoreAdapterApiRoutes();
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 app.MapFallback("/{*url}", context => {
     context.Response.Redirect($"/api/app-store-connect/v2.0/host-info/");

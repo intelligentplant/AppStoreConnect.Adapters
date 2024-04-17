@@ -19,7 +19,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Base <see cref="ISnapshotTagValuePush"/> implementation.
     /// </summary>
-    public abstract class SnapshotTagValuePushBase : SubscriptionManager<SnapshotTagValuePushOptions, TagIdentifier, TagValueQueryResult, TagValueSubscriptionChannel>, ISnapshotTagValuePush {
+    public abstract partial class SnapshotTagValuePushBase : SubscriptionManager<SnapshotTagValuePushOptions, TagIdentifier, TagValueQueryResult, TagValueSubscriptionChannel>, ISnapshotTagValuePush {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -58,7 +58,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
-        protected SnapshotTagValuePushBase(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
+        protected SnapshotTagValuePushBase(SnapshotTagValuePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger<SnapshotTagValuePushBase>? logger)
             : base(options, backgroundTaskService, logger) {
             BackgroundTaskService.QueueBackgroundWorkItem(
                 ProcessTagSubscriptionChangesChannel,
@@ -663,6 +663,8 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A long-running task.
         /// </returns>
         private async Task ProcessTagSubscriptionChangesChannel(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -694,14 +696,7 @@ namespace DataCore.Adapter.RealTimeData {
                             change.Processed.TrySetException(e);
                         }
 
-                        Logger.LogError(
-                            e,
-                            Resources.Log_ErrorWhileProcessingSnapshotSubscriptionChange,
-                            change.Topics.Count,
-                            change.Added
-                                ? SubscriptionUpdateAction.Subscribe
-                                : SubscriptionUpdateAction.Unsubscribe
-                        );
+                        LogSubscriptionChangeError(Logger, e, change.Topics.Count, change.Added ? SubscriptionUpdateAction.Subscribe : SubscriptionUpdateAction.Unsubscribe);
                     }
                 }
             }
@@ -816,6 +811,10 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         /// <seealso cref="RemoveCachedValuesIfNoSubscribersAsync"/>
         protected abstract ValueTask<bool> RemoveCachedValueAsync(TagIdentifier tag, CancellationToken cancellationToken);
+
+
+        [LoggerMessage(10, LogLevel.Error, "Error while processing a subscription change for {count} tags. Action: {action}")]
+        static partial void LogSubscriptionChangeError(ILogger logger, Exception e, int count, SubscriptionUpdateAction action);
 
     }
 

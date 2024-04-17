@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Logging;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -26,9 +27,24 @@ namespace DataCore.Adapter {
         private bool _disposed;
 
         /// <summary>
-        /// Logging.
+        /// The logger factory for the adapter.
         /// </summary>
-        protected internal ILogger Logger { get; }
+        /// <remarks>
+        ///   All <see cref="ILogger"/> instances created by the factory define a scope that 
+        ///   specifies the adapter's ID.
+        /// </remarks>
+        protected internal ILoggerFactory LoggerFactory { get; }
+
+        /// <summary>
+        /// The logger for the adapter.
+        /// </summary>
+        private readonly ILogger<AdapterCore> _logger;
+
+        /// <summary>
+        /// The logger for the adapter.
+        /// </summary>
+        [Obsolete("Use LoggerFactory to create ILogger instances instead.")]
+        protected internal ILogger Logger => _logger;
 
         /// <summary>
         /// Specifies if the adapter is currently running.
@@ -62,6 +78,11 @@ namespace DataCore.Adapter {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
+        /// Fires when <see cref="Dispose()"/> or <see cref="DisposeAsync"/> are called.
+        /// </summary>
+        private readonly CancellationToken _disposedToken;
+
+        /// <summary>
         /// Adapter properties.
         /// </summary>
         private readonly ConcurrentDictionary<string, AdapterProperty> _properties = new ConcurrentDictionary<string, AdapterProperty>();
@@ -70,7 +91,17 @@ namespace DataCore.Adapter {
         public AdapterDescriptor Descriptor { get; private set; }
 
         /// <inheritdoc/>
-        public AdapterTypeDescriptor TypeDescriptor { get; }
+        public AdapterTypeDescriptor TypeDescriptor => GetAdapterTypeDescriptor() ?? DefaultTypeDescriptor;
+
+        /// <summary>
+        /// The default adapter type descriptor generated from the adapter type.
+        /// </summary>
+        private AdapterTypeDescriptor DefaultTypeDescriptor => _defaultTypeDescriptor ??= GetType().CreateAdapterTypeDescriptor()!;
+
+        /// <summary>
+        /// The default adapter type descriptor generated from the adapter type.
+        /// </summary>
+        private AdapterTypeDescriptor? _defaultTypeDescriptor;
 
         /// <inheritdoc/>
         public IAdapterFeaturesCollection Features => this;
@@ -105,7 +136,7 @@ namespace DataCore.Adapter {
         /// <summary>
         /// Gets a cancellation token that will fire when the adapter is stopped.
         /// </summary>
-        public CancellationToken StopToken => _stopTokenSource.Token;
+        public CancellationToken StopToken { get; private set; }
 
         /// <inheritdoc/>
         public event Func<IAdapter, Task>? Started;
@@ -123,54 +154,227 @@ namespace DataCore.Adapter {
         /// <param name="backgroundTaskService">
         ///   The <see cref="IBackgroundTaskService"/> for the adapter.
         /// </param>
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> for the adapter.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="descriptor"/> is <see langword="null"/>.
+        /// </exception>
+        protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService, ILoggerFactory? loggerFactory) {
+            Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+            _disposedToken = _disposedTokenSource.Token;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
+
+            LoggerFactory = loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+
+            _logger = LoggerFactory.CreateLogger<AdapterCore>();
+
+            // Create initial stopped token source and cancel it immediately so that StopToken is
+            // initially in a cancelled state.
+            CreateStopToken();
+            _stopTokenSource!.Cancel();
+
+            Enable();
+        }
+
+
+        /// <summary>
+        /// Creates a new <see cref="AdapterCore"/> instance.
+        /// </summary>
+        /// <param name="descriptor">
+        ///   The descriptor for the adapter.
+        /// </param>
+        /// <param name="backgroundTaskService">
+        ///   The <see cref="IBackgroundTaskService"/> for the adapter.
+        /// </param>
         /// <param name="logger">
         ///   The <see cref="ILogger"/> for the adapter.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="descriptor"/> is <see langword="null"/>.
         /// </exception>
+        /// <remarks>
+        ///   Using this constructor overload will assign a <see cref="LoggerFactory"/> property 
+        ///   that always returns the specified <paramref name="logger"/>.
+        /// </remarks>
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        [Obsolete("Use an overload that accepts an ILoggerFactory instead.")]
         protected AdapterCore(AdapterDescriptor descriptor, IBackgroundTaskService? backgroundTaskService = null, ILogger? logger = null) {
             Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-            TypeDescriptor = GetType().CreateAdapterTypeDescriptor()!;
-            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedTokenSource.Token);
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            _disposedToken = _disposedTokenSource.Token;
+            BackgroundTaskService = new BackgroundTaskServiceWrapper(backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default, _disposedToken);
+
+            LoggerFactory = new WrapperLoggerFactory(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+            _logger = LoggerFactory.CreateLogger<AdapterCore>();
 
             // Create initial stopped token source and cancel it immediately so that StopToken is
             // initially in a cancelled state.
-            _stopTokenSource = new CancellationTokenSource();
-            _stopTokenSource.Cancel();
+            CreateStopToken();
+            _stopTokenSource!.Cancel();
 
             Enable();
+        }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+
+        /// <summary>
+        /// Gets the type descriptor for the adapter.
+        /// </summary>
+        /// <returns>
+        ///   The type descriptor for the adapter, or <see langword="null"/> if a type descriptor 
+        ///   should be inferred from the adapter type.
+        /// </returns>
+        protected virtual AdapterTypeDescriptor? GetAdapterTypeDescriptor() {
+            return null;
+        }
+
+
+        /// <summary>
+        /// Creates an object to use as the state for a logger scope.
+        /// </summary>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   An object to use as the state for a logger scope.
+        /// </returns>
+        private static object CreateLoggerState(string adapterId) {
+            return new Dictionary<string, object?>() {
+                ["AdapterId"] = adapterId
+            };
+        }
+
+
+        /// <summary>
+        /// Creates an object to use as the state for a logger scope.
+        /// </summary>
+        /// <returns>
+        ///   An object to use as the state for a logger scope.
+        /// </returns>
+        private object CreateLoggerState() => CreateLoggerState(Descriptor.Id);
+
+
+        /// <summary>
+        /// Begins a logger scope for an adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/> or white space.
+        /// </exception>
+        public static IDisposable? BeginLoggerScope(ILogger logger, string adapterId) {
+            if (logger == null) {
+                throw new ArgumentNullException(nameof(logger));
+            }
+            if (string.IsNullOrWhiteSpace(adapterId)) {
+                throw new ArgumentOutOfRangeException(nameof(adapterId));
+            }
+
+            return logger.BeginScope(CreateLoggerState(adapterId));
+        }
+
+
+        /// <summary>
+        /// Begins a logger scope for an adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <param name="adapter">
+        ///   The adapter.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapter"/> is <see langword="null"/>.
+        /// </exception>
+        internal static IDisposable? BeginLoggerScope(ILogger logger, IAdapter adapter) => BeginLoggerScope(logger, adapter?.Descriptor.Id ?? throw new ArgumentNullException(nameof(adapter)));
+
+
+        /// <summary>
+        /// Begins a logger scope for the adapter.
+        /// </summary>
+        /// <param name="logger">
+        ///   The logger to begin the scope for.
+        /// </param>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="logger"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   The state for the scope is an object that specifies the adapter ID.
+        /// </remarks>
+        protected internal IDisposable? BeginLoggerScope(ILogger logger) => BeginLoggerScope(logger, this);
+
+
+        /// <summary>
+        /// Begins a logger scope for the adapter's default logger.
+        /// </summary>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that ends the scope when disposed.
+        /// </returns>
+        internal IDisposable? BeginLoggerScope() => BeginLoggerScope(_logger);
+
+
+        /// <summary>
+        /// Creates a new <see cref="CancellationTokenSource"/> that will cancel when the adapter 
+        /// is stopped or disposed.
+        /// </summary>
+        private void CreateStopToken() {
+            _stopTokenSource?.Cancel();
+            _stopTokenSource?.Dispose();
+            _stopTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_disposedToken);
+            StopToken = _stopTokenSource.Token;
         }
 
 
         /// <inheritdoc/>
         async Task IAdapter.StartAsync(CancellationToken cancellationToken) {
+            using var scope = BeginLoggerScope();
+
             _hasStartBeenCalled = true;
 
             if (!IsEnabled) {
-                Logger.LogWarning(AbstractionsResources.Log_AdapterIsDisabled, Descriptor.Id);
+                LogAdapterDisabled(_logger, Descriptor.Id);
                 return;
             }
 
             CheckDisposed();
-            using (await _startupLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
-                await _shutdownInProgress.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedToken))
+            using (await _startupLock.LockAsync(ctSource.Token).ConfigureAwait(false)) {
+                await _shutdownInProgress.WaitAsync(ctSource.Token).ConfigureAwait(false);
 
                 if (IsRunning) {
                     return;
                 }
 
                 if (StopToken.IsCancellationRequested) {
-                    _stopTokenSource = new CancellationTokenSource();
+                    CreateStopToken();
                 }
 
                 using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
-                    Logger.LogInformation(AbstractionsResources.Log_StartingAdapter, Descriptor.Id);
+                    LogAdapterStarting(_logger, Descriptor.Id);
                     IsStarting = true;
                     try {
-                        using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, StopToken)) {
-                            await StartAsyncCore(ctSource.Token).ConfigureAwait(false);
+                        using (var ctSource2 = CancellationTokenSource.CreateLinkedTokenSource(ctSource.Token, StopToken)) {
+                            await StartAsyncCore(ctSource2.Token).ConfigureAwait(false);
                             _isRunning = true;
                         }
                     }
@@ -179,7 +383,7 @@ namespace DataCore.Adapter {
                     }
 
                     Telemetry.EventSource.AdapterStarted(Descriptor.Id);
-                    Logger.LogInformation(AbstractionsResources.Log_StartedAdapter, Descriptor.Id);
+                    LogAdapterStarted(_logger, Descriptor.Id);
 
                     BackgroundTaskService.QueueBackgroundWorkItem(OnStartedAsync, StopToken);
                     if (Started != null) {
@@ -192,20 +396,23 @@ namespace DataCore.Adapter {
 
         /// <inheritdoc/>
         async Task IAdapter.StopAsync(CancellationToken cancellationToken) {
+            using var scope = BeginLoggerScope();
+
             CheckDisposed();
+
             using (await _shutdownLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
                 if (!IsStarting && !IsRunning) {
                     return;
                 }
 
-                using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StartAsync)))) {
+                using (StartActivity(GetActivityName(nameof(IAdapter), nameof(IAdapter.StopAsync)))) {
                     _shutdownInProgress.Reset();
 
                     try {
-                        Logger.LogInformation(AbstractionsResources.Log_StoppingAdapter, Descriptor.Id);
+                        LogAdapterStopping(_logger, Descriptor.Id);
                         await StopAsyncCore(default).ConfigureAwait(false);
                         Telemetry.EventSource.AdapterStopped(Descriptor.Id);
-                        Logger.LogInformation(AbstractionsResources.Log_StoppedAdapter, Descriptor.Id);
+                        LogAdapterStopped(_logger, Descriptor.Id);
 
                         _isRunning = false;
                         _stopTokenSource.Cancel();
@@ -455,7 +662,7 @@ namespace DataCore.Adapter {
         /// </returns>
         public CancellationTokenSource CreateCancellationTokenSource(params CancellationToken[] additionalTokens) {
             CheckDisposed();
-            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken, _disposedTokenSource.Token }.ToArray());
+            return CancellationTokenSource.CreateLinkedTokenSource(new List<CancellationToken>(additionalTokens) { StopToken }.ToArray());
         }
 
         #endregion
@@ -686,8 +893,12 @@ namespace DataCore.Adapter {
             }
 
             if (disposing) {
-                DisposeCommon();
-                DisposeFeatures();
+                try {
+                    DisposeFeatures();
+                }
+                finally {
+                    DisposeCommon();
+                }
             }
 
             _disposed = true;
@@ -711,8 +922,12 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            DisposeCommon();
-            await DisposeFeaturesAsync().ConfigureAwait(false);
+            try {
+                await DisposeFeaturesAsync().ConfigureAwait(false);
+            }
+            finally {
+                DisposeCommon();
+            }
         }
 
 

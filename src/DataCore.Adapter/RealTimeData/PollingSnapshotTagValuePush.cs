@@ -18,7 +18,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// for an adapter that does not natively support tag value push by polling for new values on
     /// a periodic basis.
     /// </summary>
-    public class PollingSnapshotTagValuePush : SnapshotTagValuePush {
+    public partial class PollingSnapshotTagValuePush : SnapshotTagValuePush {
 
         /// <summary>
         /// The feature that provides the snapshot tag values.
@@ -66,7 +66,7 @@ namespace DataCore.Adapter.RealTimeData {
             IReadSnapshotTagValues readSnapshotFeature,
             PollingSnapshotTagValuePushOptions? options,
             IBackgroundTaskService? backgroundTaskService,
-            ILogger? logger
+            ILogger<PollingSnapshotTagValuePush>? logger
         ) : base(
             options, 
             backgroundTaskService,
@@ -128,6 +128,8 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A task that will run the polling loop.
         /// </returns>
         private async Task RunSnapshotPollingLoop(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             try {
                 while (!cancellationToken.IsCancellationRequested) {
                     await Task.Delay(_pollingInterval, cancellationToken).ConfigureAwait(false);
@@ -147,7 +149,7 @@ namespace DataCore.Adapter.RealTimeData {
                         // Cancellation token fired.
                     }
                     catch (Exception e) {
-                        Logger.LogError(e, Resources.Log_ErrorInSnapshotSubscriptionManagerPublishLoop);
+                        LogErrorInSnapshotPollingLoop(Logger, e);
                     }
                 }
             }
@@ -174,17 +176,30 @@ namespace DataCore.Adapter.RealTimeData {
                 return;
             }
 
-            await foreach (var val in _readSnapshotFeature.ReadSnapshotTagValues(
-                new DefaultAdapterCallContext(),
-                new ReadSnapshotTagValuesRequest() {
-                    Tags = tags
-                }, cancellationToken
-            ).ConfigureAwait(false)) {
-                if (val == null) {
-                    continue;
+            const int MaxTagsPerRequest = 100;
+            var page = 0;
+            var @continue = false;
+
+            do {
+                ++page;
+                var pageTags = tags.Skip((page - 1) * MaxTagsPerRequest).Take(MaxTagsPerRequest).ToArray();
+                if (pageTags.Length == 0) {
+                    break;
                 }
-                await ValueReceived(val, cancellationToken).ConfigureAwait(false);
-            }
+                @continue = pageTags.Length == MaxTagsPerRequest;
+
+                await foreach (var val in _readSnapshotFeature.ReadSnapshotTagValues(
+                    new DefaultAdapterCallContext(),
+                    new ReadSnapshotTagValuesRequest() {
+                        Tags = tags
+                    }, cancellationToken
+                ).ConfigureAwait(false)) {
+                    if (val == null) {
+                        continue;
+                    }
+                    await ValueReceived(val, cancellationToken).ConfigureAwait(false);
+                }
+            } while (@continue);
         }
 
 
@@ -195,6 +210,10 @@ namespace DataCore.Adapter.RealTimeData {
                 _subscribedTags.Clear();
             }
         }
+
+
+        [LoggerMessage(20, LogLevel.Error, "An error occurred while the snapshot subscription manager was polling for new values.")]
+        static partial void LogErrorInSnapshotPollingLoop(ILogger logger, Exception e);
 
     }
 

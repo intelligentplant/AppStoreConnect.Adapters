@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics.Metrics;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Services;
 
 using FASTER.core;
@@ -15,9 +18,89 @@ using Microsoft.Extensions.Logging;
 namespace DataCore.Adapter.KeyValueStore.FASTER {
 
     /// <summary>
-    /// Default <see cref="IKeyValueStore"/> implementation.
+    /// <see cref="IKeyValueStore"/> implementation that uses <a href="https://microsoft.github.io/FASTER/">Microsoft FASTER</a> as its backing store.
     /// </summary>
-    public class FasterKeyValueStore : KeyValueStore<FasterKeyValueStoreOptions>, IDisposable, IAsyncDisposable {
+    public sealed partial class FasterKeyValueStore : RawKeyValueStore<FasterKeyValueStoreOptions>, IAsyncDisposable {
+
+        /// <summary>
+        /// Active instances of <see cref="FasterKeyValueStore"/>. These are tracked to allow 
+        /// metrics to be reported for each instance.
+        /// </summary>
+        private static readonly List<FasterKeyValueStore> s_instances = new List<FasterKeyValueStore>();
+
+        /// <summary>
+        /// Lock for accessing <see cref="s_instances"/>.
+        /// </summary>
+        private static readonly Nito.AsyncEx.AsyncReaderWriterLock s_instancesLock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <summary>
+        /// Creates a metric tag that identifies the <see cref="FasterKeyValueStore"/> instance 
+        /// that a measurement was observed on.
+        /// </summary>
+        /// <param name="instance">
+        ///   The <see cref="FasterKeyValueStore"/> instance.
+        /// </param>
+        /// <returns>
+        ///   A new <see cref="KeyValuePair{TKey, TValue}"/> that can be added to the metric 
+        ///   measurement.
+        /// </returns>
+        private static KeyValuePair<string, object?> CreateInstanceIdTag(FasterKeyValueStore instance) => new KeyValuePair<string, object?>("data_core.instance_id", instance._instanceName);
+
+        /// <summary>
+        /// Instrument for observing the total in-memory footprint for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_totalSizeGauge = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Total",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetTotalSizeBytes(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Total size of the FASTER index, in-memory log and read cache.");
+
+        /// <summary>
+        /// Instrument for observing the size of the in-memory index for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_indexSizeGauge = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Index",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetIndexSizeBytes(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the FASTER index.");
+
+        /// <summary>
+        /// Instrument for observing the size of the in-memory log for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_logSize = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.Log",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetLogSizeBytes(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the in-memory portion of the FASTER log.");
+
+        /// <summary>
+        /// Instrument for observing the size of the reach cache for <see cref="FasterKeyValueStore"/> 
+        /// instances.
+        /// </summary>
+        private static readonly ObservableGauge<long> s_readCacheSize = Telemetry.Meter.CreateObservableGauge(
+            "KeyValueStore.FASTER.Size.ReadCache",
+            () => {
+                using (s_instancesLock.ReaderLock()) {
+                    return s_instances.Select(x => new Measurement<long>(x._sizeTracker.GetReadCacheSizeBytes(), CreateInstanceIdTag(x))).ToArray();
+                }
+            },
+            "By",
+            "Size of the FASTER read cache.");
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -31,14 +114,19 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         private readonly CancellationTokenSource _disposedTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// Indicates if trace logging can be performed.
+        /// The name of the store instance. This name is used in metrics.
         /// </summary>
-        private readonly bool _logTrace;
+        private readonly string _instanceName;
 
         /// <summary>
         /// The underlying FASTER store.
         /// </summary>
         private readonly FasterKV<SpanByte, SpanByte> _fasterKVStore;
+
+        /// <summary>
+        /// The size tracker for the im-memory portion and read cache for the FASTER store.
+        /// </summary>
+        private readonly CacheSizeTracker _sizeTracker;
 
         /// <summary>
         /// The FASTER device used to store the on-disk portion of the log.
@@ -70,7 +158,13 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// Flags if the periodic checkpoint loop should create a new checkpoint the next 
         /// time it runs.
         /// </summary>
-        private int _checkpointIsRequired;
+        private int _fullCheckpointIsRequired;
+
+        /// <summary>
+        /// Lock used to ensure that incremental and full checkpoints cannot be ongoing at the 
+        /// same time.
+        /// </summary>
+        private readonly Nito.AsyncEx.AsyncLock _checkpointLock = new Nito.AsyncEx.AsyncLock();
 
         /// <summary>
         /// The size (in bytes) that the read-only portion of the FASTER log must reach before 
@@ -93,6 +187,9 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// </summary>
         private const byte ConsecutiveCompactOperationsBeforeThresholdIncrease = 5;
 
+        /// <inheritdoc/>
+        protected override bool AllowRawWrites => Options.EnableRawWrites;
+
 
         /// <summary>
         /// Creates a new <see cref="FasterKeyValueStore"/> object.
@@ -100,18 +197,20 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         /// <param name="options">
         ///   The options for the store.
         /// </param>
-        /// <param name="logger">
-        ///   The <see cref="ILogger"/> for the store.
+        /// <param name="loggerFactory">
+        ///   The <see cref="ILoggerFactory"/> to use when creating loggers for the store.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="options"/> is <see langword="null"/>.
         /// </exception>
-        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILogger<FasterKeyValueStore>? logger = null) : base(options, logger) {
+        public FasterKeyValueStore(FasterKeyValueStoreOptions options, ILoggerFactory? loggerFactory = null) : base(options, loggerFactory?.CreateLogger<FasterKeyValueStore>()) {
             if (options == null) {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            _logTrace = Logger.IsEnabled(LogLevel.Trace);
+            _instanceName = string.IsNullOrWhiteSpace(options.Name)
+                ? "$default"
+                : options.Name!;
 
             var logSettings = CreateLogSettings(options);
 
@@ -119,18 +218,20 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             var checkpointManager = options.CheckpointManagerFactory?.Invoke();
             if (checkpointManager == null) {
-                Logger.LogWarning(Resources.Log_NoCheckpointManagerProvided);
+                LogCheckpointManagerIsDisabled(Logger);
             }
 
             _fasterKVStore = new FasterKV<SpanByte, SpanByte>(
                 options.IndexBucketCount,
                 logSettings,
-                checkpointManager == null ? null : new CheckpointSettings() { 
+                checkpointManager == null ? null : new CheckpointSettings() {
                     CheckpointManager = checkpointManager
-                }
+                },
+                logger: loggerFactory?.CreateLogger($"{typeof(FasterKV<SpanByte, SpanByte>).Namespace}.FasterKV")
             );
+            _sizeTracker = new CacheSizeTracker(_fasterKVStore);
 
-            _clientSessionBuilder = _fasterKVStore.For(new SpanByteFunctions<Empty>());
+            _clientSessionBuilder = _fasterKVStore.For(new SizeTrackingSpanByteFunctions(_sizeTracker));
             _readOnly = options.ReadOnly;
 
             if (checkpointManager != null) {
@@ -139,14 +240,19 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (FasterException e) {
                     // Exception will be thrown if there is not a checkpoint to recover from.
-                    Logger.LogWarning(e, Resources.Log_ErrorWhileRecoveringCheckpoint);
+                    LogErrorWhileRecoveringCheckpoint(Logger, e);
                 }
 
                 _canRecordCheckpoints = !_readOnly;
 
                 if (_canRecordCheckpoints && options.CheckpointInterval.HasValue && options.CheckpointInterval.Value > TimeSpan.Zero) {
-                    // Start periodic checkpoint task.
-                    _ = RunCheckpointCreationLoopAsync(options.CheckpointInterval.Value, _disposedTokenSource.Token);
+                    // Start periodic full checkpoint task.
+                    _ = RunFullCheckpointLoopAsync(options.CheckpointInterval.Value, _disposedTokenSource.Token);
+                }
+
+                if (_canRecordCheckpoints && options.IncrementalCheckpointInterval.HasValue && options.IncrementalCheckpointInterval.Value > TimeSpan.Zero) {
+                    // Start periodic incremental checkpoint task.
+                    _ = RunIncrementalCheckpointLoopAsync(options.IncrementalCheckpointInterval.Value, _disposedTokenSource.Token);
                 }
             }
 
@@ -155,6 +261,10 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     ? (long) Math.Pow(2, options.MemorySizeBits) * 2
                     : options.CompactionThresholdBytes;
                 _ = RunLogCompactionLoopAsync(options.CompactionInterval.Value, _disposedTokenSource.Token);
+            }
+
+            using (s_instancesLock.WriterLock()) {
+                s_instances.Add(this);
             }
         }
 
@@ -206,7 +316,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   A new <see cref="LogSettings"/> object.
         /// </returns>
         private static LogSettings CreateLogSettings(FasterKeyValueStoreOptions options) {
-            IDevice CreateDefaultDevice() {
+            static IDevice CreateDefaultDevice() {
                 return Devices.CreateLogDevice(
                     Path.Combine(Path.GetTempPath(), "FASTER", "hlog.log"),
                     preallocateFile: false,
@@ -241,7 +351,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   A <see cref="Task"/> that will create a snapshot of the FASTER log at the specified 
         ///   <paramref name="interval"/>.
         /// </returns>
-        private async Task RunCheckpointCreationLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
+        private async Task RunFullCheckpointLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
             while (!_disposed && !cancellationToken.IsCancellationRequested) {
                 try {
                     await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
@@ -249,14 +359,42 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
+                    LogErrorWhileCreatingFullCheckpoint(Logger, e);
                 }
             }
         }
 
 
         /// <summary>
-        /// Takes a full snapshot checkpoint.
+        /// Long-running task that will periodically take an incremental snapshot checkpoint of the FASTER 
+        /// log and persist it using the configured <see cref="ICheckpointManager"/>.
+        /// </summary>
+        /// <param name="interval">
+        ///   The snapshot interval.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task"/> that will create a snapshot of the FASTER log at the specified 
+        ///   <paramref name="interval"/>.
+        /// </returns>
+        private async Task RunIncrementalCheckpointLoopAsync(TimeSpan interval, CancellationToken cancellationToken) {
+            while (!_disposed && !cancellationToken.IsCancellationRequested) {
+                try {
+                    await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                    await TakeIncrementalCheckpointAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception e) {
+                    LogErrorWhileCreatingIncrementalCheckpoint(Logger, e);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Takes a full snapshot checkpoint of both the FASTER index and the log.
         /// </summary>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
@@ -277,18 +415,46 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 throw new InvalidOperationException(Resources.Error_CheckpointsAreDisabled);
             }
 
-            if (Interlocked.CompareExchange(ref _checkpointIsRequired, 0, 1) != 1) {
+            if (Interlocked.CompareExchange(ref _fullCheckpointIsRequired, 0, 1) != 1) {
                 // No checkpoint pending.
                 return false;
             }
 
-            try {
-                var (success, token) = await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
-                return success;
+            using (await _checkpointLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                try {
+                    var (success, token) = await _fasterKVStore.TakeFullCheckpointAsync(CheckpointType.Snapshot, cancellationToken).ConfigureAwait(false);
+                    return success;
+                }
+                catch {
+                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
+                    throw;
+                }
             }
-            catch {
-                Interlocked.Exchange(ref _checkpointIsRequired, 1);
-                throw;
+        }
+
+
+
+        /// <summary>
+        /// Takes an incremental checkpoint of the FASTER log.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will return a flag indicating if a 
+        ///   checkpoint was created.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///   Checkpoint management is disabled.
+        /// </exception>
+        public async ValueTask<bool> TakeIncrementalCheckpointAsync(CancellationToken cancellationToken = default) {
+            if (!_canRecordCheckpoints) {
+                throw new InvalidOperationException(Resources.Error_CheckpointsAreDisabled);
+            }
+
+            using (await _checkpointLock.LockAsync(cancellationToken).ConfigureAwait(false)) {
+                var(success, token) = await _fasterKVStore.TakeHybridLogCheckpointAsync(CheckpointType.Snapshot, tryIncremental: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+                return success;
             }
         }
 
@@ -316,13 +482,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     // (oldest entries here) BeginAddress <= HeadAddress (where the in-memory region begins) <= SafeReadOnlyAddress (entries between here and tail updated in-place) < TailAddress (entries added here)
                     var safeReadOnlyRegionByteSize = logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress;
                     if (safeReadOnlyRegionByteSize < _logCompactionThresholdBytes) {
-                        if (_logTrace) {
-                            Logger.LogTrace(
-                                Resources.Log_SkippingLogCompaction, 
-                                safeReadOnlyRegionByteSize, 
-                                _logCompactionThresholdBytes
-                            );
-                        }
+                        LogSkippingCompaction(Logger, safeReadOnlyRegionByteSize, _logCompactionThresholdBytes);
                         _numConsecutiveLogCompactions = 0;
                         continue;
                     }
@@ -332,38 +492,24 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                     try {
                         session.Compact(compactUntilAddress, CompactionType.Scan);
                         // Log has been modified; we need a new checkpoint to be created.
-                        Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                        Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
                     }
                     finally {
                         ReturnPooledSession(session);
                     }
 
                     _numConsecutiveLogCompactions++;
-
-                    if (_logTrace) {
-                        Logger.LogTrace(
-                            Resources.Log_LogCompacted,
-                            safeReadOnlyRegionByteSize,
-                            logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress,
-                            _numConsecutiveLogCompactions
-                        );
-                    }
+                    LogCompactionCompleted(Logger, safeReadOnlyRegionByteSize, logAccessor.SafeReadOnlyAddress - logAccessor.BeginAddress, _numConsecutiveLogCompactions);
 
                     if (_numConsecutiveLogCompactions >= ConsecutiveCompactOperationsBeforeThresholdIncrease) {
                         _logCompactionThresholdBytes *= 2;
-                        if (_logTrace) {
-                            Logger.LogTrace(
-                                Resources.Log_LogCompactionThresholdIncreased, 
-                                _logCompactionThresholdBytes / 2, 
-                                _logCompactionThresholdBytes
-                            );
-                        }
+                        LogCompactionThresholdIncreased(Logger, _logCompactionThresholdBytes / 2, _logCompactionThresholdBytes);
                         _numConsecutiveLogCompactions = 0;
                     }
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_CompactionError);
+                    LogCompactionError(Logger, e);
                 }
             }
         }
@@ -377,7 +523,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         ///   A session object that can be used to query or modify the FASTER log.
         /// </returns>
         private ClientSession<SpanByte, SpanByte, SpanByte, SpanByteAndMemory, Empty, SpanByteFunctions<Empty>> GetPooledSession() {
-            if (_sessionPool.TryDequeue(out ClientSession<SpanByte, SpanByte, SpanByte, SpanByteAndMemory, Empty, SpanByteFunctions<Empty>>? result)) {
+            if (_sessionPool.TryDequeue(out var result)) {
                 return result;
             }
 
@@ -428,14 +574,44 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        protected override async ValueTask WriteAsync(KVKey key, byte[] value) {
+        protected override async ValueTask WriteAsync<T>(KVKey key, T value) {
+            await WriteCoreAsync(key, await SerializeToBytesAsync(value).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask WriteRawAsync(KVKey key, byte[] value) {
+            await WriteCoreAsync(key, value).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Writes raw byte data to the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key.
+        /// </param>
+        /// <param name="value">
+        ///   The raw byte data.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask"/> that will process the operation.
+        /// </returns>
+        private async ValueTask WriteCoreAsync(byte[] key, byte[] value) {
             ThrowIfDisposed();
             ThrowIfReadOnly();
 
             var session = GetPooledSession();
+
+            // We need to pin the key and value bytes for the duration of the upsert, as required
+            // when using SpanByte: https://github.com/microsoft/FASTER/pull/349
+
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+            var valueHandle = GCHandle.Alloc(value, GCHandleType.Pinned);
+
             try {
-                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
-                var valueSpanByte = SpanByte.FromFixedSpan(value);
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
+                var valueSpanByte = new SpanByte(value.Length, valueHandle.AddrOfPinnedObject());
 
                 var result = await session.UpsertAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
 
@@ -444,24 +620,54 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 }
 
                 // Mark the cache as dirty.
-                Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
             }
             finally {
+                keyHandle.Free();
+                valueHandle.Free();
+
                 ReturnPooledSession(session);
             }
         }
 
 
         /// <inheritdoc/>
-        protected override async ValueTask<byte[]?> ReadAsync(KVKey key) {
+        protected override async ValueTask<T?> ReadAsync<T>(KVKey key) where T: default {
+            var data = await ReadCoreAsync(key).ConfigureAwait(false);
+            if (data == null) {
+                return default;
+            }
+
+            return await DeserializeFromBytesAsync<T>(data).ConfigureAwait(false);
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<byte[]?> ReadRawAsync(KVKey key) {
+            return await ReadCoreAsync(key).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Reads raw bytes from the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key.
+        /// </param>
+        /// <returns>
+        ///   The raw bytes, or <see langword="null"/> if the key does not exist.
+        /// </returns>
+        private async ValueTask<byte[]?> ReadCoreAsync(byte[] key) {
             ThrowIfDisposed();
 
             Status status;
             SpanByteAndMemory spanByteAndMemory;
 
             var session = GetPooledSession();
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+
             try {
-                var keySpanByte = SpanByte.FromFixedSpan((byte[]) key);
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
                 SpanByte valueSpanByte = default;
 
                 var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
@@ -469,6 +675,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
                 (status, spanByteAndMemory) = result.Complete();
             }
             finally {
+                keyHandle.Free();
                 ReturnPooledSession(session);
             }
 
@@ -479,6 +686,46 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
             using (spanByteAndMemory.Memory) {
                 return spanByteAndMemory.Memory.Memory.Slice(0, spanByteAndMemory.Length).ToArray();
             }
+        }
+
+
+        /// <inheritdoc/>
+        protected override async ValueTask<bool> ExistsAsync(KVKey key) {
+            return await ExistsCoreAsync(key).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Tests if a key exists in the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key to test.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the key exists; otherwise, <see langword="false"/>.
+        /// </returns>
+        private async ValueTask<bool> ExistsCoreAsync(byte[] key) {
+            ThrowIfDisposed();
+
+            Status status;
+
+            var session = GetPooledSession();
+            var keyHandle = GCHandle.Alloc(key, GCHandleType.Pinned);
+
+            try {
+                var keySpanByte = new SpanByte(key.Length, keyHandle.AddrOfPinnedObject());
+                SpanByte valueSpanByte = default;
+
+                var result = await session.ReadAsync(ref keySpanByte, ref valueSpanByte).ConfigureAwait(false);
+
+                (status, _) = result.Complete();
+            }
+            finally {
+                keyHandle.Free();
+                ReturnPooledSession(session);
+            }
+
+            return status.Found;
         }
 
 
@@ -499,7 +746,7 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
                 if (result.Status.Found) {
                     // Mark the cache as dirty.
-                    Interlocked.Exchange(ref _checkpointIsRequired, 1);
+                    Interlocked.Exchange(ref _fullCheckpointIsRequired, 1);
                 }
 
                 return result.Status.IsCompletedSuccessfully;
@@ -512,15 +759,55 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
         /// <inheritdoc/>
         protected override async IAsyncEnumerable<KVKey> GetKeysAsync(KVKey? prefix) {
-            await Task.Yield();
+            await foreach (var item in GetRecordsCoreAsync(prefix, false).ConfigureAwait(false)) {
+                yield return item.Key;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all keys and metadata in the FASTER KV store with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">
+        ///   The prefix to filter by.
+        /// </param>
+        /// <returns>
+        ///   A sequence of <see cref="FasterRecord"/> objects.
+        /// </returns>
+        /// <remarks>
+        ///   Note that calling <see cref="GetRecordsAsync"/> will iterate over every record in 
+        ///   the FASTER store. Use with caution!
+        /// </remarks>
+        public async IAsyncEnumerable<FasterRecord> GetRecordsAsync(KVKey? prefix = null) {
+            await foreach (var item in GetRecordsCoreAsync(prefix, true).ConfigureAwait(false)) {
+                yield return item;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets all keys and metadata in the FASTER KV store with the specified prefix.
+        /// </summary>
+        /// <param name="prefix">
+        ///   The prefix to filter by.
+        /// </param>
+        /// <param name="includeValues">
+        ///   Specifies if record values should be included in the <see cref="FasterRecord"/> instances.
+        /// </param>
+        /// <returns>
+        ///   A sequence of <see cref="FasterRecord"/> objects.
+        /// </returns>
+        private async IAsyncEnumerable<FasterRecord> GetRecordsCoreAsync(KVKey? prefix, bool includeValues) {
             var session = GetPooledSession();
             try {
-                using (var iterator = session.Iterate()) {
-                    while (iterator.GetNext(out var recordInfo)) {
-                        var key = iterator.GetKey().AsSpan().ToArray();
+                var funcs = new ScanIteratorFunctions(includeValues);
 
-                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, key)) {
-                            yield return key;
+                session.Iterate(ref funcs);
+
+                while (await funcs.Reader.WaitToReadAsync().ConfigureAwait(false)) {
+                    while (funcs.Reader.TryRead(out var item)) {
+                        if (prefix == null || prefix.Value.Length == 0 || StartsWithPrefix(prefix.Value, item.Key)) {
+                            yield return item;
                         }
                     }
                 }
@@ -532,25 +819,26 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
 
         /// <inheritdoc/>
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-
-        /// <inheritdoc/>
         public async ValueTask DisposeAsync() {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(false);
-        }
+            if (_disposed) {
+                return;
+            }
 
+            using (await s_instancesLock.WriterLockAsync().ConfigureAwait(false)) {
+                s_instances.Remove(this);
+            }
 
-        /// <summary>
-        /// Disposes of managed resources.
-        /// </summary>
-        private void DisposeCommon() {
             _disposedTokenSource.Cancel();
-            _disposedTokenSource.Dispose();
+
+            // Record final checkpoint.
+            if (_canRecordCheckpoints) {
+                try {
+                    await TakeFullCheckpointAsync(default).ConfigureAwait(false);
+                }
+                catch (Exception e) {
+                    LogErrorWhileCreatingFullCheckpoint(Logger, e);
+                }
+            }
 
             // Dispose of all sessions.
             while (_sessionPool.TryDequeue(out var session)) {
@@ -562,58 +850,36 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
 
             // Dispose of underlying log device.
             _logDevice.Dispose();
-        }
 
-
-        /// <summary>
-        /// Disposes of resources.
-        /// </summary>
-        /// <param name="disposing">
-        ///   <see langword="true"/> if the object is being disposed, or <see langword="false"/> 
-        ///   if it is being finalized.
-        /// </param>
-        protected virtual void Dispose(bool disposing) {
-            if (_disposed) {
-                return;
-            }
-
-            if (disposing) {
-                if (_canRecordCheckpoints) {
-                    using (var @lock = new ManualResetEventSlim()) {
-                        _ = Task.Run(async () => { 
-                            try {
-                                await TakeFullCheckpointAsync().ConfigureAwait(false);
-                            }
-                            catch (Exception e) {
-                                Logger.LogError(e, Resources.Log_ErrorWhileCreatingCheckpoint);
-                            }
-                            finally {
-                                @lock.Set();
-                            }
-                        });
-                        @lock.Wait();
-                    }
-                    
-                }
-                DisposeCommon();
-            }
+            _disposedTokenSource.Dispose();
 
             _disposed = true;
         }
 
 
-        /// <summary>
-        /// Asynchronously disposes of resources.
-        /// </summary>
-        /// <returns>
-        ///   A <see cref="ValueTask"/> that will asynchronously dispose of resources.
-        /// </returns>
-        protected virtual async ValueTask DisposeAsyncCore() {
-            if (_canRecordCheckpoints) {
-                await TakeFullCheckpointAsync(default).ConfigureAwait(false);
-            }
-            DisposeCommon();
-        }
+        [LoggerMessage(100, LogLevel.Information, "Checkpoint management is disabled; backup and restore of data will not be performed.")]
+        static partial void LogCheckpointManagerIsDisabled(ILogger logger);
+
+        [LoggerMessage(101, LogLevel.Warning, "Error while recovering the FASTER log from the latest checkpoint. This message can be ignored the first time the FASTER store is used as there will be no checkpoint available to recover from.")]
+        static partial void LogErrorWhileRecoveringCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(102, LogLevel.Error, "Error while creating an incremental recovery checkpoint for the FASTER log.")]
+        static partial void LogErrorWhileCreatingIncrementalCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(103, LogLevel.Error, "Error while creating a full recovery checkpoint for the FASTER log.")]
+        static partial void LogErrorWhileCreatingFullCheckpoint(ILogger logger, Exception e);
+
+        [LoggerMessage(104, LogLevel.Trace, "Skipping FASTER log compaction. Safe read-only region size: {safeReadOnlyRegionByteSize} bytes. Threshold: {logCompactionThresholdBytes} bytes.")]
+        static partial void LogSkippingCompaction(ILogger logger, long safeReadOnlyRegionByteSize, long logCompactionThresholdBytes);
+
+        [LoggerMessage(105, LogLevel.Trace, "FASTER log compaction completed. Safe read-only region size before: {sizeBeforeBytes} bytes. Size after: {sizeAfterBytes} bytes. Consecutive compactions: {consecutiveCompactions}")]
+        static partial void LogCompactionCompleted(ILogger logger, long sizeBeforeBytes, long sizeAfterBytes, byte consecutiveCompactions);
+
+        [LoggerMessage(106, LogLevel.Trace, "Increasing FASTER log compaction threshold. Previous threshold: {oldThresholdBytes} bytes. New threshold: {newThresholdBytes} bytes.")]
+        static partial void LogCompactionThresholdIncreased(ILogger logger, long oldThresholdBytes, long newThresholdBytes);
+
+        [LoggerMessage(107, LogLevel.Error, "Error while performing FASTER log compaction.")]
+        static partial void LogCompactionError(ILogger logger, Exception e);
 
     }
 }

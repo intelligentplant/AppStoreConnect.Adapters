@@ -1,0 +1,3 @@
+﻿#nullable enable
+static System.Threading.Channels.SystemThreadingChannelExtensions.ReadAllAsync<T>(this System.Threading.Channels.ChannelReader<T>! channel, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<T>!
+System.Threading.Channels.SystemThreadingChannelExtensions

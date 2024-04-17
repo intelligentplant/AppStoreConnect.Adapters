@@ -27,8 +27,8 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
         string id,
         IOptions<MyAdapterOptions> options,
         IBackgroundTaskService backgroundTaskService,
-        ILogger<MyAdapter> logger
-    ) : base(id, options, backgroundTaskService, logger) {
+        ILoggerFactory loggerFactory
+    ) : base(id, options, backgroundTaskService, loggerFactory) {
         // TODO: Implement the ITagInfo and IReadRawTagValues features or delegate them to external providers.
 
         AddFeatures(ReadHistoricalTagValues.ForAdapter(this));

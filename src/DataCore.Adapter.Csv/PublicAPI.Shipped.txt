@@ -1,0 +1,53 @@
+﻿#nullable enable
+const DataCore.Adapter.Csv.CsvAdapterOptions.DefaultSnapshotPushUpdateInterval = 30000 -> int
+DataCore.Adapter.Csv.CsvAdapter
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, DataCore.Adapter.Csv.CsvAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void
+DataCore.Adapter.Csv.CsvAdapter.AddTags(System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.TagDefinition!>! tags, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+DataCore.Adapter.Csv.CsvAdapter.FindTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.FindTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Csv.CsvAdapter.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Csv.CsvAdapter.GetTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Csv.CsvAdapterOptions
+DataCore.Adapter.Csv.CsvAdapterOptions.CsvAdapterOptions() -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.CsvFile.get -> string?
+DataCore.Adapter.Csv.CsvAdapterOptions.CsvFile.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.CultureInfo.get -> System.Globalization.CultureInfo?
+DataCore.Adapter.Csv.CsvAdapterOptions.CultureInfo.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.GetCsvStream.get -> System.Func<System.IO.Stream!>?
+DataCore.Adapter.Csv.CsvAdapterOptions.GetCsvStream.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.IsDataLoopingAllowed.get -> bool
+DataCore.Adapter.Csv.CsvAdapterOptions.IsDataLoopingAllowed.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.SnapshotPushUpdateInterval.get -> int
+DataCore.Adapter.Csv.CsvAdapterOptions.SnapshotPushUpdateInterval.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeStampFieldIndex.get -> int
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeStampFieldIndex.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeStampFormat.get -> string?
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeStampFormat.set -> void
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeZone.get -> string?
+DataCore.Adapter.Csv.CsvAdapterOptions.TimeZone.set -> void
+DataCore.Adapter.Csv.CsvDataSet
+DataCore.Adapter.Csv.CsvDataSet.CsvDataSet() -> void
+DataCore.Adapter.Csv.CsvDataSet.DataSetDuration.get -> System.TimeSpan
+DataCore.Adapter.Csv.CsvDataSet.IsDataLoopingAllowed.get -> bool
+DataCore.Adapter.Csv.CsvDataSet.RowsRead.get -> long
+DataCore.Adapter.Csv.CsvDataSet.RowsSkipped.get -> long
+DataCore.Adapter.Csv.CsvDataSet.TagCount.get -> int
+DataCore.Adapter.Csv.CsvDataSet.Tags.get -> System.Collections.Generic.IDictionary<string!, DataCore.Adapter.Tags.TagDefinition!>!
+DataCore.Adapter.Csv.CsvDataSet.UtcEarliestSampleTime.get -> System.DateTime
+DataCore.Adapter.Csv.CsvDataSet.UtcLatestSampleTime.get -> System.DateTime
+DataCore.Adapter.Csv.CsvDataSet.UtcSampleTimes.get -> System.Collections.Generic.IEnumerable<System.DateTime>!
+DataCore.Adapter.Csv.CsvDataSet.Values.get -> System.Collections.Generic.IDictionary<string!, System.Collections.Generic.SortedList<System.DateTime, DataCore.Adapter.RealTimeData.TagValueExtended!>!>!
+DataCore.Adapter.Csv.Resources
+override DataCore.Adapter.Csv.CsvAdapter.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override DataCore.Adapter.Csv.CsvAdapter.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static DataCore.Adapter.Csv.CsvAdapter.ReadCsvData(DataCore.Adapter.Csv.CsvAdapterOptions! options, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Csv.CsvDataSet!>!
+virtual DataCore.Adapter.Csv.CsvAdapter.ReadRawTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+virtual DataCore.Adapter.Csv.CsvAdapter.ReadSnapshotTagValues(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
+~static DataCore.Adapter.Csv.Resources.AdapterMetadata_Description.get -> string
+~static DataCore.Adapter.Csv.Resources.AdapterMetadata_DisplayName.get -> string
+~static DataCore.Adapter.Csv.Resources.Culture.get -> System.Globalization.CultureInfo
+~static DataCore.Adapter.Csv.Resources.Culture.set -> void
+~static DataCore.Adapter.Csv.Resources.Error_NoCsvFileDefined.get -> string
+~static DataCore.Adapter.Csv.Resources.Log_SnapshotPollingError.get -> string
+~static DataCore.Adapter.Csv.Resources.ResourceManager.get -> System.Resources.ResourceManager

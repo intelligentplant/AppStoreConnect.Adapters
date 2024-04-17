@@ -43,6 +43,9 @@ namespace DataCore.Adapter.AspNetCore {
             get { return _hubCallerContext.Items; }
         }
 
+        /// <inheritdoc/>
+        public IServiceProvider Services { get; }
+
 
         /// <summary>
         /// Creates a new <see cref="SignalRAdapterCallContext"/> object.
@@ -50,11 +53,18 @@ namespace DataCore.Adapter.AspNetCore {
         /// <param name="hubCallerContext">
         ///   The hub caller context.
         /// </param>
+        /// <param name="serviceProvider">
+        ///   The <see cref="IServiceProvider"/>.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="hubCallerContext"/> is <see langword="null"/>.
         /// </exception>
-        public SignalRAdapterCallContext(HubCallerContext hubCallerContext) {
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="serviceProvider"/> is <see langword="null"/>.
+        /// </exception>
+        public SignalRAdapterCallContext(HubCallerContext hubCallerContext, IServiceProvider serviceProvider) {
             _hubCallerContext = hubCallerContext ?? throw new ArgumentNullException(nameof(hubCallerContext));
+            Services = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
     }

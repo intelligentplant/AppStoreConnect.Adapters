@@ -10,6 +10,11 @@ namespace DataCore.Adapter {
     public static class PatternMatchingExtensions {
 
         /// <summary>
+        /// The wildcard characters that can be used in a pattern.
+        /// </summary>
+        private static readonly char[] s_wildcardChars = new char[] { '*', '?' };
+
+        /// <summary>
         /// Determines if the string matches the specified regular expression.
         /// </summary>
         /// <param name="s">
@@ -35,7 +40,7 @@ namespace DataCore.Adapter {
             }
 
             if (s == null) {
-                return expression.Match(string.Empty).Success;
+                return false;
             }
 
             return expression.Match(s).Success;
@@ -87,6 +92,14 @@ namespace DataCore.Adapter {
         public static bool Like(this string? s, string pattern) {
             if (pattern == null) {
                 throw new ArgumentNullException(nameof(pattern));
+            }
+
+            if (s == null) {
+                return false;
+            }
+
+            if (pattern.IndexOfAny(s_wildcardChars) < 0) {
+                return pattern.Equals(s, StringComparison.OrdinalIgnoreCase);
             }
 
             // Construct a regex that can be used to search the string using the specified pattern 

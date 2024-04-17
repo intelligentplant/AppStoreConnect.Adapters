@@ -4,17 +4,21 @@
     <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
     <RootNamespace>DataCore.Adapter.Diagnostics</RootNamespace>
     <PackageId>$(PackagePrefix).Adapter.OpenTelemetry</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>Helper classes for enabling OpenTelemetry instrumentation in App Store Connect adapters.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="OpenTelemetry" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter.Abstractions\DataCore.Adapter.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

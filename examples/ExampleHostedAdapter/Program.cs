@@ -2,10 +2,11 @@
 
 using ExampleHostedAdapter;
 
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+using Serilog;
 
 // The [VendorInfo] attribute is used to add vendor information to the adapters in this assembly,
 // as well as the host information for the application.
@@ -17,15 +18,37 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
+// Configure logging using Serilog. Additional logging destinations such as files can be added
+// using appsettings.json. See https://github.com/serilog/serilog-settings-configuration for more
+// information.
+builder.Host.UseSerilog((context, services, configuration) => {
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
+
+// Parent PID. If specified, we will gracefully shut down if the parent process exits.
+var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
+if (pid > 0) {
+    builder.Services.AddDependentProcessWatcher(pid);
+}
+
+// Host instance ID.
+var instanceId = builder.Configuration.GetValue<string>("AppStoreConnect:Adapter:Host:InstanceId");
+if (string.IsNullOrWhiteSpace(instanceId)) {
+    instanceId = Guid.NewGuid().ToString();
+}
+
 builder.Services
     .AddLocalization();
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
-    .AddHostInfo(
-        name: "ASP.NET Core Adapter Host",
-        description: "ASP.NET Core adapter host for My Adapter"
-     )
+    .AddHostInfo(hostInfo => hostInfo
+        .WithName("My Adapter Host")
+        .WithDescription("App Store Connect adapter host for My Adapter")
+        .WithInstanceId(instanceId))
     // Add a SQLite-based key-value store service. This can be used by our adapter to persist data
     // between restarts.
     //
@@ -48,8 +71,7 @@ builder.Services
         opts => opts
             .Bind(builder.Configuration.GetSection("AppStoreConnect:Adapter:Settings"))
             .ValidateDataAnnotations()
-            .ValidateOnStart()
-    )
+            .ValidateOnStart())
     // Register the adapter. We specify the adapter ID as an additional constructor parameter
     // since this will not be supplied by the service provider.
     .AddAdapter<MyAdapter>(Constants.AdapterId);
@@ -75,16 +97,11 @@ builder.Services
     .AddHealthChecks()
     .AddAdapterHealthChecks();
 
-// Resource builder for OpenTelemetry trace/metrics export. We will use the adapter ID as the
-// OpenTelemetry service instance ID for the host.
-var otelResourceBuilder = ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService(Constants.AdapterId);
-
 // Register OpenTelemetry services. This can be safely removed if not required.
 builder.Services
     .AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService(instanceId))
     .WithTracing(otel => otel
-        // Set the resource builder to identify where the traces are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Records incoming HTTP requests made to the adapter host.
         .AddAspNetCoreInstrumentation()
         // Records outgoing HTTP requests made by the adapter host.
@@ -95,11 +112,9 @@ builder.Services
         .AddSqlClientInstrumentation()
         // Records activities created by adapters and adapter hosting packages.
         .AddDataCoreAdapterInstrumentation()
-        // Exports traces to Jaeger (https://www.jaegertracing.io/) using default settings.
-        .AddJaegerExporter())
+        // Exports traces in OTLP format using default settings (i.e. http://localhost:4317 using OTLP/gRPC format).
+        .AddOtlpExporter())
     .WithMetrics(otel => otel
-        // Set the resource builder to identify where the metrics are coming from.
-        .SetResourceBuilder(otelResourceBuilder)
         // Observe instrumentation for the .NET runtime.
         .AddRuntimeInstrumentation()
         // Observe ASP.NET Core instrumentation.
@@ -110,8 +125,7 @@ builder.Services
         .AddDataCoreAdapterInstrumentation()
         // Exports metrics in Prometheus format using default settings. Prometheus metrics are
         // served via the scraping endpoint registered below.
-        .AddPrometheusExporter())
-    .StartWithHost();
+        .AddPrometheusExporter());
 
 // Build the app and the request pipeline.
 var app = builder.Build();

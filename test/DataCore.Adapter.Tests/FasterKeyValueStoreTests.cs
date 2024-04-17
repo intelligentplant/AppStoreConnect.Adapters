@@ -17,8 +17,12 @@ namespace DataCore.Adapter.Tests {
 
     [TestClass]
     public class FasterKeyValueStoreTests : KeyValueStoreTests<FasterKeyValueStore> {
-        protected override FasterKeyValueStore CreateStore(CompressionLevel compressionLevel) {
-            return new FasterKeyValueStore(new FasterKeyValueStoreOptions() { CompressionLevel = compressionLevel });
+        protected override FasterKeyValueStore CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false) {
+            return new FasterKeyValueStore(new FasterKeyValueStoreOptions() { 
+                Name = TestContext.TestName,
+                CompressionLevel = compressionLevel, 
+                EnableRawWrites = enableRawWrites 
+            });
         }
 
 
@@ -29,20 +33,20 @@ namespace DataCore.Adapter.Tests {
             try {
                 var now = DateTime.UtcNow;
 
-                using (var store1 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() { 
+                await using (var store1 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() { 
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    await store1.WriteJsonAsync(TestContext.TestName, now);
+                    await ((IKeyValueStore) store1).WriteAsync(TestContext.TestName, now);
                     
                     // Checkpoint should be created when we dispose because we have specified a
                     // checkpoint manager.
                 }
 
-                using (var store2 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store2 = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
-                    var readResult = await store2.ReadJsonAsync<DateTime>(TestContext.TestName);
+                    var readResult = await ((IKeyValueStore) store2).ReadAsync<DateTime>(TestContext.TestName);
                     Assert.AreEqual(now, readResult);
                 }
             }
@@ -57,11 +61,11 @@ namespace DataCore.Adapter.Tests {
             var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(FasterKeyValueStoreTests), Guid.NewGuid().ToString()));
 
             try {
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 })) {
 
-                    await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
+                    await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, DateTime.UtcNow);
                     
                     // Create checkpoint - should succeed
                     var cp1 = await store.TakeFullCheckpointAsync();
@@ -71,7 +75,7 @@ namespace DataCore.Adapter.Tests {
                     var cp2 = await store.TakeFullCheckpointAsync();
                     Assert.IsFalse(cp2);
 
-                    await store.WriteJsonAsync(TestContext.TestName, DateTime.UtcNow);
+                    await ((IKeyValueStore) store).WriteAsync(TestContext.TestName, DateTime.UtcNow);
                     
                     // Create a final checkpoint - should succeed
                     var cp3 = await store.TakeFullCheckpointAsync();

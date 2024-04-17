@@ -22,12 +22,12 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() { 
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
 
@@ -68,12 +68,12 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
 
@@ -114,23 +114,23 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
                 }
 
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     var valsActual = await stvm.ReadSnapshotTagValues(
                         new DefaultAdapterCallContext(),
                         new ReadSnapshotTagValuesRequest() {
@@ -168,23 +168,23 @@ namespace DataCore.Adapter.Tests {
                 var val1 = new TagValueBuilder().WithValue(99.999).Build();
                 var val2 = new TagValueBuilder().WithValue(Guid.NewGuid().ToString()).Build();
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
                 }
 
 
-                using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
                     AdapterId = TestContext.TestName
-                }, (ILogger) Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance)) {
+                })) {
                     var valsActual = await stvm.ReadSnapshotTagValues(
                         new DefaultAdapterCallContext(),
                         new ReadSnapshotTagValuesRequest() {

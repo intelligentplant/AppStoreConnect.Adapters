@@ -135,96 +135,6 @@
   <data name="Category_Tags" xml:space="preserve">
     <value>Tags</value>
   </data>
-  <data name="DataFunction_Avg_Description" xml:space="preserve">
-    <value>Average value calculated over sample interval.</value>
-  </data>
-  <data name="DataFunction_Avg_Name" xml:space="preserve">
-    <value>Average</value>
-  </data>
-  <data name="DataFunction_Count_Description" xml:space="preserve">
-    <value>The number of good-quality raw samples that have been recorded for the tag at each sample interval.</value>
-  </data>
-  <data name="DataFunction_Count_Name" xml:space="preserve">
-    <value>Count</value>
-  </data>
-  <data name="DataFunction_Delta_Description" xml:space="preserve">
-    <value>The signed difference between the earliest good-quality value and latest good-quality value in each sample interval.</value>
-  </data>
-  <data name="DataFunction_Delta_Name" xml:space="preserve">
-    <value>Delta</value>
-  </data>
-  <data name="DataFunction_Interp_Description" xml:space="preserve">
-    <value>Interpolates a value at each sample interval based on the raw values on either side of the sample time for the interval.</value>
-  </data>
-  <data name="DataFunction_Interp_Name" xml:space="preserve">
-    <value>Interpolated</value>
-  </data>
-  <data name="DataFunction_Max_Description" xml:space="preserve">
-    <value>Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.</value>
-  </data>
-  <data name="DataFunction_Max_Name" xml:space="preserve">
-    <value>Maximum</value>
-  </data>
-  <data name="DataFunction_Min_Description" xml:space="preserve">
-    <value>Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.</value>
-  </data>
-  <data name="DataFunction_Min_Name" xml:space="preserve">
-    <value>Minimum</value>
-  </data>
-  <data name="DataFunction_PercentBad_Description" xml:space="preserve">
-    <value>At each interval in a time range, calculates the percentage of raw samples in that interval that have bad-quality status.</value>
-  </data>
-  <data name="DataFunction_PercentBad_Name" xml:space="preserve">
-    <value>Percent Bad</value>
-  </data>
-  <data name="DataFunction_PercentGood_Description" xml:space="preserve">
-    <value>At each interval in a time range, calculates the percentage of raw samples in that interval that have good-quality status.</value>
-  </data>
-  <data name="DataFunction_PercentGood_Name" xml:space="preserve">
-    <value>Percent Good</value>
-  </data>
-  <data name="DataFunction_Property_StatusCalculation" xml:space="preserve">
-    <value>Status Calculation</value>
-  </data>
-  <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
-    <value>The method used to calculate the quality status for the function.</value>
-  </data>
-  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
-    <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
-  </data>
-  <data name="DataFunction_Property_StatusCalculation_ValueWorstCase" xml:space="preserve">
-    <value>Worst-case status of the samples used in the calculation.</value>
-  </data>
-  <data name="DataFunction_Property_TimestampCalculation" xml:space="preserve">
-    <value>Timestamp Calculation</value>
-  </data>
-  <data name="DataFunction_Property_TimestampCalculation_Description" xml:space="preserve">
-    <value>The method used to calculate the timestamp for the function.</value>
-  </data>
-  <data name="DataFunction_Property_TimestampCalculation_ValueMaximum" xml:space="preserve">
-    <value>Timestamp of maximum value</value>
-  </data>
-  <data name="DataFunction_Property_TimestampCalculation_ValueMinimum" xml:space="preserve">
-    <value>Timestamp of minimum value</value>
-  </data>
-  <data name="DataFunction_Range_Description" xml:space="preserve">
-    <value>The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
-  </data>
-  <data name="DataFunction_Range_Name" xml:space="preserve">
-    <value>Range</value>
-  </data>
-  <data name="DataFunction_StandardDeviation_Description" xml:space="preserve">
-    <value>The standard deviation of all good-quality values in each sample interval</value>
-  </data>
-  <data name="DataFunction_StandardDeviation_Name" xml:space="preserve">
-    <value>Standard Deviation</value>
-  </data>
-  <data name="DataFunction_Variance_Description" xml:space="preserve">
-    <value>The variance of all good-quality values in each sample interval</value>
-  </data>
-  <data name="DataFunction_Variance_Name" xml:space="preserve">
-    <value>Variance</value>
-  </data>
   <data name="Description_AssetModelBrowse" xml:space="preserve">
     <value>Allows browsing of an adapter's asset model hierarchy.</value>
   </data>
@@ -372,6 +282,9 @@
   <data name="Error_KeyValueStore_InvalidKey" xml:space="preserve">
     <value>Zero byte keys are not allowed.</value>
   </data>
+  <data name="Error_KeyValueStore_RawWritesDisabled" xml:space="preserve">
+    <value>Raw writes are not enabled for this store.</value>
+  </data>
   <data name="Error_MissingAdapterFeature" xml:space="preserve">
     <value>The {0} feature is not implemented by the adapter.</value>
     <comment>{0} - IAdapterFeature name</comment>
@@ -406,32 +319,5 @@
   </data>
   <data name="LocalizableString_LocalizationFailed" xml:space="preserve">
     <value>Cannot retrieve property '{0}' because localization failed.  Type '{1}' is not public or does not contain a public static string property with the name '{2}'.</value>
-  </data>
-  <data name="Log_AdapterIsDisabled" xml:space="preserve">
-    <value>Adapter '{AdapterId}' is disabled.</value>
-  </data>
-  <data name="Log_AdapterStartupError" xml:space="preserve">
-    <value>An error occurred while starting adapter '{adapterId}'.</value>
-  </data>
-  <data name="Log_AdapterStopError" xml:space="preserve">
-    <value>An error occurred while stopping adapter '{adapterId}'.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfFeature" xml:space="preserve">
-    <value>Error while disposing of feature '{feature}'.</value>
-  </data>
-  <data name="Log_StartedAdapter" xml:space="preserve">
-    <value>Started adapter '{adapterId}'.</value>
-  </data>
-  <data name="Log_StartingAdapter" xml:space="preserve">
-    <value>Starting adapter '{adapterId}'.</value>
-  </data>
-  <data name="Log_StoppedAdapter" xml:space="preserve">
-    <value>Stopped adapter '{adapterId}'.</value>
-  </data>
-  <data name="Log_StoppingAdapter" xml:space="preserve">
-    <value>Stopping adapter '{adapterId}' (disposing: false).</value>
-  </data>
-  <data name="Log_UnableToCreateFeatureWrapper" xml:space="preserve">
-    <value>Unable to create wrapper for feature type '{feature}'. Automatic validation and telemetry for this feature will not be available.</value>
   </data>
 </root>

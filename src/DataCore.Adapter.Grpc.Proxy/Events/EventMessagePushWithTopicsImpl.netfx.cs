@@ -11,6 +11,8 @@ using DataCore.Adapter.Events;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace DataCore.Adapter.Grpc.Proxy.Events {
 
     partial class EventMessagePushWithTopicsImpl {
@@ -50,7 +52,7 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
                 OnTopicSubscriptionsAdded = async (instance, topics, _) => await OnTagsAddedAsync(instance, context, client, topics, request, cancellationToken).ConfigureAwait(false),
                 OnTopicSubscriptionsRemoved = async (instance, topics, _) => await OnTagsRemovedAsync(instance, topics).ConfigureAwait(false)
             };
-            var result = new EventMessagePushWithTopics(options, BackgroundTaskService, Logger);
+            var result = new EventMessagePushWithTopics(options, BackgroundTaskService, Proxy.LoggerFactory.CreateLogger<EventMessagePushWithTopics>());
 
             return result;
         }
@@ -134,6 +136,16 @@ namespace DataCore.Adapter.Grpc.Proxy.Events {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            if (GrpcAdapterProxy.IsGrpcClientFullySupported()) {
+                // Bidirectional streaming is fully supported.
+                await foreach (var item in SubscribeCoreAsync(context, request, channel, cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
+            }
+
+            // Bidirectional streaming is not supported.
+
             var client = CreateClient<EventsService.EventsServiceClient>();
 
             using var handler = CreateInnerHandler(context, client, request, cancellationToken);

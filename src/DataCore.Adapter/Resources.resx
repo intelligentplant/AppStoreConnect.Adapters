@@ -120,6 +120,111 @@
   <data name="AdapterSubscription_AnonymousUserName" xml:space="preserve">
     <value>&lt;Anonymous&gt;</value>
   </data>
+  <data name="DataFunction_Avg_Description" xml:space="preserve">
+    <value>Average value calculated over sample interval.</value>
+  </data>
+  <data name="DataFunction_Avg_Name" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="DataFunction_Count_Description" xml:space="preserve">
+    <value>The number of good-quality raw samples that have been recorded for the tag at each sample interval.</value>
+  </data>
+  <data name="DataFunction_Count_Name" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="DataFunction_Delta_Description" xml:space="preserve">
+    <value>The signed difference between the earliest good-quality value and latest good-quality value in each sample interval.</value>
+  </data>
+  <data name="DataFunction_Delta_Name" xml:space="preserve">
+    <value>Delta</value>
+  </data>
+  <data name="DataFunction_Interp_Description" xml:space="preserve">
+    <value>Uses linear interpolation to compute a value at each sample interval based on the raw values on either side of the sample time for the interval. Step interpolation will be used for non-floating-point tags.</value>
+  </data>
+  <data name="DataFunction_Interp_Name" xml:space="preserve">
+    <value>Interpolated</value>
+  </data>
+  <data name="DataFunction_Max_Description" xml:space="preserve">
+    <value>Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at.</value>
+  </data>
+  <data name="DataFunction_Max_Name" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="DataFunction_Min_Description" xml:space="preserve">
+    <value>Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at.</value>
+  </data>
+  <data name="DataFunction_Min_Name" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="DataFunction_PercentBad_Description" xml:space="preserve">
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a bad-quality status.</value>
+  </data>
+  <data name="DataFunction_PercentBad_Name" xml:space="preserve">
+    <value>Percent Bad</value>
+  </data>
+  <data name="DataFunction_PercentGood_Description" xml:space="preserve">
+    <value>At each interval in a time range, calculates the percentage of time in the interval that the tag value had a good-quality status.</value>
+  </data>
+  <data name="DataFunction_PercentGood_Name" xml:space="preserve">
+    <value>Percent Good</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation" xml:space="preserve">
+    <value>Status Calculation</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_Description" xml:space="preserve">
+    <value>The method used to calculate the quality status for the function.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped" xml:space="preserve">
+    <value>"Uncertain" if any non-good quality or NaN values were present in the calculation interval, or if the value was calculated from a partial data set. Otherwise, the quality is "Good".</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped" xml:space="preserve">
+    <value>"Uncertain" if any non-good quality values were skipped, or "Good" otherwise.</value>
+  </data>
+  <data name="DataFunction_Property_StatusCalculation_ValueWorstCase" xml:space="preserve">
+    <value>Worst-case status of the samples used in the calculation.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation" xml:space="preserve">
+    <value>Timestamp Calculation</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_Description" xml:space="preserve">
+    <value>The method used to calculate the timestamp for the function.</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMaximum" xml:space="preserve">
+    <value>Timestamp of maximum value</value>
+  </data>
+  <data name="DataFunction_Property_TimestampCalculation_ValueMinimum" xml:space="preserve">
+    <value>Timestamp of minimum value</value>
+  </data>
+  <data name="DataFunction_Range_Description" xml:space="preserve">
+    <value>The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval.</value>
+  </data>
+  <data name="DataFunction_Range_Name" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="DataFunction_StandardDeviation_Description" xml:space="preserve">
+    <value>The standard deviation of all good-quality values in each sample interval</value>
+  </data>
+  <data name="DataFunction_StandardDeviation_Name" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
+  <data name="DataFunction_StepInterp_Description" xml:space="preserve">
+    <value>Interpolates a value at each sample interval by repeating the value of the raw sample at or immediately before the sample time.</value>
+  </data>
+  <data name="DataFunction_StepInterp_Name" xml:space="preserve">
+    <value>Step Interpolated</value>
+  </data>
+  <data name="DataFunction_TimeAvg_Description" xml:space="preserve">
+    <value>Time-weighted average value calculated over sample interval.</value>
+  </data>
+  <data name="DataFunction_TimeAvg_Name" xml:space="preserve">
+    <value>Time Average</value>
+  </data>
+  <data name="DataFunction_Variance_Description" xml:space="preserve">
+    <value>The variance of all good-quality values in each sample interval</value>
+  </data>
+  <data name="DataFunction_Variance_Name" xml:space="preserve">
+    <value>Variance</value>
+  </data>
   <data name="Error_AdapterDescriptionIsTooLong" xml:space="preserve">
     <value>Maximum adapter description length is {0}.</value>
   </data>
@@ -255,75 +360,6 @@
   </data>
   <data name="HealthChecks_DisplayName_OverallAdapterHealth" xml:space="preserve">
     <value>Adapter Health</value>
-  </data>
-  <data name="Log_AdapterIsDisabled" xml:space="preserve">
-    <value>Adapter '{AdapterId}' is disabled.</value>
-  </data>
-  <data name="Log_AdapterStartupError" xml:space="preserve">
-    <value>An error occurred while starting adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_AdapterStopError" xml:space="preserve">
-    <value>An error occurred while stopping adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_DisposingAdapter" xml:space="preserve">
-    <value>Stopping adapter '{AdapterId}' (disposing: true).</value>
-  </data>
-  <data name="Log_ErrorDuringSnapshotPushRefresh" xml:space="preserve">
-    <value>Error while refreshing subscribed snapshot tag values.</value>
-  </data>
-  <data name="Log_ErrorInBackgroundTask" xml:space="preserve">
-    <value>Error in background task '{WorkItem}'.</value>
-  </data>
-  <data name="Log_ErrorInEventSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the event subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotPollingUpdateLoop" xml:space="preserve">
-    <value>An error occurred while the snapshot subscription manager was polling for new values.</value>
-  </data>
-  <data name="Log_ErrorInSnapshotSubscriptionManagerPublishLoop" xml:space="preserve">
-    <value>An error occurred in the snapshot subscription manager publish loop.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfEventMessageSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of an event message subscription.</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfFeature" xml:space="preserve">
-    <value>Error while disposing feature: {feature}</value>
-  </data>
-  <data name="Log_ErrorWhileDisposingOfSnapshotSubscription" xml:space="preserve">
-    <value>An error occurred while disposing of a snapshot subscription.</value>
-  </data>
-  <data name="Log_ErrorWhileProcessingSnapshotSubscriptionChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change for {count} tags: Action = '{action}'</value>
-  </data>
-  <data name="Log_ErrorWhileProcessingSubscriptionTopicChange" xml:space="preserve">
-    <value>An error occurred while processing a subscription change for {count} topics: Action = '{action}'</value>
-  </data>
-  <data name="Log_InMemoryEventMessageManager_EvictedMessage" xml:space="preserve">
-    <value>Evicted event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
-  </data>
-  <data name="Log_InMemoryEventMessageManager_WroteMessage" xml:space="preserve">
-    <value>Wrote event message '{id}' with cursor position '{cursorPosition}' and timestamp '{timestamp}'.</value>
-  </data>
-  <data name="Log_InvalidAdapterOptionsUpdate" xml:space="preserve">
-    <value>Updated adapter options are not valid.</value>
-  </data>
-  <data name="Log_PublishToSubscriberThrewException" xml:space="preserve">
-    <value>Publish to subscriber with connection ID '{connectionId}' failed with error.</value>
-  </data>
-  <data name="Log_PublishToSubscriberWasUnsuccessful" xml:space="preserve">
-    <value>Publish to subscriber with connection ID '{connectionId}' failed.</value>
-  </data>
-  <data name="Log_StartedAdapter" xml:space="preserve">
-    <value>Started adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StartingAdapter" xml:space="preserve">
-    <value>Starting adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StoppedAdapter" xml:space="preserve">
-    <value>Stopped adapter '{AdapterId}'.</value>
-  </data>
-  <data name="Log_StoppingAdapter" xml:space="preserve">
-    <value>Stopping adapter '{AdapterId}' (disposing: false).</value>
   </data>
   <data name="TagValue_ProcessedValue_Error" xml:space="preserve">
     <value>ERROR</value>

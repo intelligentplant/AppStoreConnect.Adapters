@@ -38,10 +38,10 @@ namespace DataCore.Adapter.Example {
         ///   The <see cref="IExtensionObjectEncoder"/> instances that can be used when encoding 
         ///   or decoding <see cref="EncodedObject"/> instances.
         /// </param>
-        /// <param name="logger">
-        ///   The adapter logger.
+        /// <param name="loggerFactory">
+        ///   The adapter logger factory.
         /// </param>
-        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders, ILogger<ExampleAdapter> logger) : base(
+        public ExampleAdapter(IBackgroundTaskService backgroundTaskService, IEnumerable<IObjectEncoder> encoders, ILoggerFactory loggerFactory) : base(
             "wind-power",
             new Csv.CsvAdapterOptions() {
                 Name = "Wind Power Energy Company",
@@ -51,14 +51,16 @@ namespace DataCore.Adapter.Example {
                 GetCsvStream = () => typeof(ExampleAdapter).Assembly.GetManifestResourceStream(typeof(ExampleAdapter), CsvFile)
             },
             backgroundTaskService,
-            logger
+            loggerFactory
         ) {
             // Register additional features!
             _assetModelBrowser = new AssetModelManager(new InMemoryKeyValueStore(), BackgroundTaskService);
 
             AddFeatures(_assetModelBrowser);
-            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, Logger));
+            AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, LoggerFactory));
+#pragma warning disable CS0618 // Type or member is obsolete
             AddExtensionFeatures(new ExampleExtensionImpl(this, encoders));
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.Services;
@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Tests {
 
     public abstract class KeyValueStoreTests<T> : TestsBase where T : IKeyValueStore {
 
-        protected abstract T CreateStore(CompressionLevel compressionLevel);
+        protected abstract T CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false);
 
 
         [DataTestMethod]
@@ -28,10 +28,62 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldUpdateValue(CompressionLevel compressionLevel) {
+            var before = DateTime.UtcNow.AddDays(-1);
+            var after = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel);
+            try {
+                await store.WriteAsync(TestContext.TestName, before);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(before, value);
+
+                await store.WriteAsync(TestContext.TestName, after);
+                value = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(after, value);
             }
             finally {
                 if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task KeyShouldExistInStore() {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(CompressionLevel.NoCompression);
+            try {
+                await store.WriteAsync(TestContext.TestName, now);
+                Assert.IsTrue(await store.ExistsAsync(TestContext.TestName));
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -50,13 +102,16 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
                 
-                var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -75,19 +130,22 @@ namespace DataCore.Adapter.Tests {
 
             var store = CreateStore(compressionLevel);
             try {
-                await store.WriteJsonAsync(TestContext.TestName, now);
+                await store.WriteAsync(TestContext.TestName, now);
                 
-                var value = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
 
                 var delete = await store.DeleteAsync(TestContext.TestName);
                 Assert.IsTrue(delete);
 
-                var value2 = await store.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value2 = await store.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(default(DateTime), value2);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -104,10 +162,10 @@ namespace DataCore.Adapter.Tests {
         public async Task ShouldListKeys(CompressionLevel compressionLevel) {
             var store = CreateStore(compressionLevel);
             try {
-                var keys = Enumerable.Range(1, 10).Select(x => $"key:{x}").ToArray();
+                var keys = Enumerable.Range(1, 100).Select(x => $"key:{x}").ToArray();
 
                 foreach (var key in keys) {
-                    await store.WriteJsonAsync(key, 0);
+                    await store.WriteAsync(key, 0);
                 }
 
                 var keysActual = await store.GetKeysAsStrings().ToEnumerable();
@@ -118,7 +176,10 @@ namespace DataCore.Adapter.Tests {
                 }
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -141,16 +202,19 @@ namespace DataCore.Adapter.Tests {
                     .CreateScopedStore("INNER 1:")
                     .CreateScopedStore("INNER 2:");
 
-                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                await scopedStore.WriteAsync(TestContext.TestName, now);
                 
-                var value = await scopedStore.ReadJsonAsync<DateTime>(TestContext.TestName);
+                var value = await scopedStore.ReadAsync<DateTime>(TestContext.TestName);
                 Assert.AreEqual(now, value);
 
-                var value2 = await store.ReadJsonAsync<DateTime>("INNER 1:INNER 2:" + TestContext.TestName);
+                var value2 = await store.ReadAsync<DateTime>("INNER 1:INNER 2:" + TestContext.TestName);
                 Assert.AreEqual(now, value2);
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -171,13 +235,16 @@ namespace DataCore.Adapter.Tests {
             try {
                 var scopedStore = store.CreateScopedStore("INNER:");
 
-                await scopedStore.WriteJsonAsync(TestContext.TestName, now);
+                await scopedStore.WriteAsync(TestContext.TestName, now);
                 
                 var keys = await scopedStore.GetKeysAsStrings().ToEnumerable();
                 Assert.IsTrue(keys.Contains(TestContext.TestName));
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
@@ -217,10 +284,228 @@ namespace DataCore.Adapter.Tests {
                 }
             }
             finally {
-                if (store is IDisposable disposable) {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
                     disposable.Dispose();
                 }
             }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldWriteRawValueToStore(CompressionLevel compressionLevel) {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel, enableRawWrites: true);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await rawStore.WriteRawAsync(TestContext.TestName, raw);
+
+                var deserialized = await store.ReadAsync<DateTime>(TestContext.TestName);
+                Assert.AreEqual(now, deserialized);
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [DataTestMethod]
+        [DataRow(CompressionLevel.NoCompression)]
+        [DataRow(CompressionLevel.Fastest)]
+        [DataRow(CompressionLevel.Optimal)]
+#if NET6_0_OR_GREATER
+        [DataRow(CompressionLevel.SmallestSize)]
+#endif
+        public async Task ShouldReadRawValueFromStore(CompressionLevel compressionLevel) {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(compressionLevel, enableRawWrites: true);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await rawStore.WriteRawAsync(TestContext.TestName, raw);
+
+                var raw2 = await rawStore.ReadRawAsync(TestContext.TestName);
+                Assert.IsTrue(raw.SequenceEqual(raw2));
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task RawWriteShouldThrowException() {
+            var now = DateTime.UtcNow;
+
+            var store = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false);
+            if (store is not IRawKeyValueStore rawStore) {
+                Assert.Inconclusive("Store does not support raw values.");
+                return;
+            }
+
+            try {
+                var raw = JsonSerializer.SerializeToUtf8Bytes(now);
+                await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await rawStore.WriteRawAsync(TestContext.TestName, raw));
+            }
+            finally {
+                if (store is IAsyncDisposable asyncDisposable) {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (store is IDisposable disposable) {
+                    disposable.Dispose();
+                }
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyAllKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName, now);
+            var count = await store1.BulkCopyToAsync(store2);
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyAllKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName, now);
+            var count = await store1.BulkCopyFromAsync(store2);
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyFilteredKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName + ":1:Value", now);
+            await store1.WriteAsync(TestContext.TestName + ":2:Value", now);
+            var count = await store1.BulkCopyToAsync(store2, TestContext.TestName + ":1");
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName + ":1:Value");
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopyFilteredKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName + ":1:Value", now);
+            await store2.WriteAsync(TestContext.TestName + ":2:Value", now);
+            var count = await store1.BulkCopyFromAsync(store2, TestContext.TestName + ":1");
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName + ":1:Value");
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopySpecifiedKeysToAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store1.WriteAsync(TestContext.TestName, now);
+            var count = await store1.CopyToAsync(store2, new KVKey[] { TestContext.TestName });
+            Assert.AreEqual(1, count);
+
+            var readResult = await store2.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
+        }
+
+
+        [TestMethod]
+        public async Task ShouldCopySpecifiedKeysFromAnotherStore() {
+            var now = DateTime.UtcNow;
+
+            var store1 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: true) as IRawKeyValueStore;
+            var store2 = CreateStore(CompressionLevel.NoCompression, enableRawWrites: false) as IRawKeyValueStore;
+
+            if (store1 == null || store2 == null) {
+                Assert.Inconclusive("Source or destination store does not support raw writes");
+            }
+
+            await store2.WriteAsync(TestContext.TestName, now);
+            var count = await store1.CopyFromAsync(store2, new KVKey[] { TestContext.TestName });
+            Assert.AreEqual(1, count);
+
+            var readResult = await store1.ReadAsync<DateTime>(TestContext.TestName);
+            Assert.AreEqual(now, readResult);
         }
 
     }

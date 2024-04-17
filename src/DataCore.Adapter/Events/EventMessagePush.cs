@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
-        public EventMessagePush(EventMessagePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger) 
+        public EventMessagePush(EventMessagePushOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger<EventMessagePush>? logger) 
             : base(options, backgroundTaskService, logger) { }
 
 

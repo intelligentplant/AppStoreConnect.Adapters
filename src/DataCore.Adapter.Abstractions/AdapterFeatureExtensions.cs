@@ -17,11 +17,9 @@ namespace DataCore.Adapter {
         ///   The adapter feature.
         /// </param>
         /// <returns>
-        ///   The unwrapped feature.
+        ///   The unwrapped feature, or the originally-specified feature if <paramref name="feature"/> 
+        ///   is not an instance of <see cref="AdapterFeatureWrapper{TFeature}"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="feature"/> is <see langword="null"/>.
-        /// </exception>
         /// <remarks>
         /// 
         /// <para>
@@ -39,9 +37,9 @@ namespace DataCore.Adapter {
         /// </para>
         /// 
         /// </remarks>
-        public static TFeature Unwrap<TFeature>(this TFeature feature) where TFeature : IAdapterFeature {
+        public static TFeature? Unwrap<TFeature>(this TFeature? feature) where TFeature : IAdapterFeature {
             if (feature == null) {
-                throw new ArgumentNullException(nameof(feature));
+                return default;
             }
 
             if (feature is AdapterFeatureWrapper<TFeature> wrapper) {

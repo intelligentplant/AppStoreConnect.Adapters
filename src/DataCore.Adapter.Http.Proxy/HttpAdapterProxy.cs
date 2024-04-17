@@ -38,7 +38,7 @@ namespace DataCore.Adapter.Http.Proxy {
         Description = nameof(Resources.AdapterMetadata_Description),
         HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.Http.Proxy"
     )]
-    public class HttpAdapterProxy : AdapterBase<HttpAdapterProxyOptions>, IAdapterProxy {
+    public partial class HttpAdapterProxy : AdapterBase<HttpAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
         /// The ID of the remote adapter.
@@ -77,10 +77,10 @@ namespace DataCore.Adapter.Http.Proxy {
         private readonly ConcurrentDictionary<string, SignalRClientWrapper> _signalRClients = new ConcurrentDictionary<string, SignalRClientWrapper>(StringComparer.Ordinal);
 
         /// <summary>
-        /// The proxy's logger.
+        /// The proxy's logger factory.
         /// </summary>
-        protected internal new ILogger Logger {
-            get { return base.Logger; }
+        internal new ILoggerFactory LoggerFactory {
+            get { return base.LoggerFactory; }
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Http.Proxy {
 #pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
-        /// The client used in standard adapter queries.
+        /// The adapter HTTP client for the proxy.
         /// </summary>
         private readonly AdapterHttpClient _client;
 
@@ -161,8 +161,8 @@ namespace DataCore.Adapter.Http.Proxy {
         ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
         ///   extension objects.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         public HttpAdapterProxy(
             string id,
@@ -170,12 +170,12 @@ namespace DataCore.Adapter.Http.Proxy {
             HttpAdapterProxyOptions options, 
             IBackgroundTaskService? taskScheduler,
             IEnumerable<IObjectEncoder> encoders,
-            ILogger<HttpAdapterProxy>? logger
+            ILoggerFactory? loggerFactory
         ) : base(
             id,
             options, 
             taskScheduler, 
-            logger
+            loggerFactory
         ) {
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Http.Proxy {
             return _signalRClients.GetOrAdd(key, k => {
                 var client = new SignalRClientWrapper(
                     k,
-                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context)),
+                    new AspNetCore.SignalR.Client.AdapterSignalRClient(Options.SignalROptions!.ConnectionFactory.Invoke(new Uri(_client.HttpClient.BaseAddress, AspNetCore.SignalR.Client.AdapterSignalRClient.DefaultHubRoute), context), true),
                     Options.SignalROptions.TimeToLive <= TimeSpan.Zero
                         ? TimeSpan.FromSeconds(30)
                         : Options.SignalROptions.TimeToLive
@@ -342,11 +342,12 @@ namespace DataCore.Adapter.Http.Proxy {
                         TagResolver = Adapter.RealTimeData.SnapshotTagValuePush.CreateTagResolverFromAdapter(this)
                     },
                     BackgroundTaskService,
-                    Logger
+                    LoggerFactory.CreateLogger<Adapter.RealTimeData.PollingSnapshotTagValuePush>()
                 );
                 AddFeature(typeof(Adapter.RealTimeData.ISnapshotTagValuePush), simulatedPush);
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             foreach (var extensionFeature in descriptor.Extensions) {
                 try {
                     var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
@@ -356,12 +357,10 @@ namespace DataCore.Adapter.Http.Proxy {
                             continue;
                         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
                         impl = ExtensionFeatureProxyGenerator.CreateExtensionFeatureProxy<HttpAdapterProxy, HttpAdapterProxyOptions, Extensions.AdapterExtensionFeatureImpl>(
                             this,
                             featureUri!
                         );
-#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     AddFeatures(impl, addStandardFeatures: false);
                 }
@@ -369,6 +368,7 @@ namespace DataCore.Adapter.Http.Proxy {
                     Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (RemoteDescriptor.HasFeature<IHealthCheck>()) {
                 if (CanUseSignalR) {

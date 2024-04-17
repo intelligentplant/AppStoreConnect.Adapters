@@ -6,6 +6,7 @@ using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using MQTTnet;
@@ -27,6 +28,8 @@ namespace MqttAdapter {
 
         private static readonly System.Diagnostics.Metrics.Counter<int> s_messagesReceived = Telemetry.Meter.CreateCounter<int>("mqtt.messages_received", "{messages}", "Count of messages received from the MQTT broker");
 
+        private readonly ILogger<MyAdapter> _logger;
+
         private readonly TagManager _tagManager;
 
         private readonly SnapshotTagValueManager _snapshotManager;
@@ -44,11 +47,13 @@ namespace MqttAdapter {
             string id,
             IOptionsMonitor<MyAdapterOptions> options,
             IBackgroundTaskService backgroundTaskService,
-            ILogger<MyAdapter> logger
-        ) : base(id, options, backgroundTaskService, logger) {
+            ILoggerFactory loggerFactory
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
+            _logger = loggerFactory.CreateLogger<MyAdapter>();
+
             _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
                 Id = id
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
             AddFeatures(_configurationChanges);
 
@@ -60,7 +65,8 @@ namespace MqttAdapter {
                 null,
                 BackgroundTaskService,
                 new[] { s_tagCreatedAtPropertyDefinition },
-                _configurationChanges.NotifyAsync
+                _configurationChanges.NotifyAsync,
+                LoggerFactory.CreateLogger<TagManager>()
             );
 
             AddFeatures(_tagManager);
@@ -68,7 +74,7 @@ namespace MqttAdapter {
             _snapshotManager = new SnapshotTagValueManager(new SnapshotTagValueManagerOptions() {
                 Id = id,
                 TagResolver = SnapshotTagValueManager.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, null, Logger);
+            }, BackgroundTaskService, null, LoggerFactory.CreateLogger<SnapshotTagValueManager>());
 
             AddFeatures(_snapshotManager);
         }
@@ -137,10 +143,10 @@ namespace MqttAdapter {
             }
 
             if (_mqttClient == null) {
-                Logger.LogWarning("Initialising MQTT client.");
+                LogInitialisingClient();
             }
             else {
-                Logger.LogWarning("Re-initialising MQTT client.");
+                LogReinitialisingClient();
             }
 
             _mqttClient = _factory.CreateManagedMqttClient();
@@ -169,42 +175,49 @@ namespace MqttAdapter {
 
 
         private Task OnConnectedAsync(MqttClientConnectedEventArgs args) {
-            Logger.LogWarning("Connected to MQTT server.");
+            LogOnConnected(Options.Hostname);
             OnHealthStatusChanged();
             return Task.CompletedTask;
         }
 
 
         private Task OnDisconnectedAsync(MqttClientDisconnectedEventArgs args) {
-            Logger.LogWarning("Disconnected from MQTT server.");
+            LogOnDisconnected(Options.Hostname);
             OnHealthStatusChanged();
             return Task.CompletedTask;
         }
 
 
         private async Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs args) {
-            s_messagesReceived.Add(1, new KeyValuePair<string, object?>("adapter_id", Descriptor.Id));
+            try {
+                LogMessageReceived(args.ApplicationMessage.Topic, args.ApplicationMessage.ContentType ?? "(null)", args.ApplicationMessage.PayloadFormatIndicator, args.ApplicationMessage.PayloadSegment.Count);
+            
+                s_messagesReceived.Add(1, new KeyValuePair<string, object?>("adapter_id", Descriptor.Id));
 
-            var topic = args.ApplicationMessage.Topic;
-            var payload = args.ApplicationMessage.ConvertPayloadToString();
+                var topic = args.ApplicationMessage.Topic;
+                var payload = args.ApplicationMessage.ConvertPayloadToString();
 
-            var dataValue = new TagValueBuilder()
-                .WithUtcSampleTime(DateTime.UtcNow)
-                .WithValue(double.TryParse(payload, out var numericValue) ? numericValue : payload)
-                .Build();
-
-            var tag = await _tagManager.GetTagAsync(topic, StopToken);
-            if (tag == null) {
-                tag = new TagDefinitionBuilder(topic)
-                    .WithDataType(dataValue.Value.Type)
-                    .WithSupportsReadSnapshotValues()
-                    .WithSupportsSnapshotValuePush()
-                    .WithProperty(s_tagCreatedAtPropertyDefinition.Name, dataValue.UtcSampleTime)
+                var dataValue = new TagValueBuilder()
+                    .WithUtcSampleTime(DateTime.UtcNow)
+                    .WithValue(double.TryParse(payload, out var numericValue) ? numericValue : payload)
                     .Build();
-                await _tagManager.AddOrUpdateTagAsync(tag, StopToken);
-            }
 
-            await _snapshotManager.ValueReceived(new TagValueQueryResult(tag.Id, tag.Name, dataValue), StopToken);
+                var tag = await _tagManager.GetTagAsync(topic, StopToken);
+                if (tag == null) {
+                    tag = new TagDefinitionBuilder(topic)
+                        .WithDataType(dataValue.Value.Type)
+                        .WithSupportsReadSnapshotValues()
+                        .WithSupportsSnapshotValuePush()
+                        .WithProperty(s_tagCreatedAtPropertyDefinition.Name, dataValue.UtcSampleTime)
+                        .Build();
+                    await _tagManager.AddOrUpdateTagAsync(tag, StopToken);
+                }
+
+                await _snapshotManager.ValueReceived(new TagValueQueryResult(tag.Id, tag.Name, dataValue), StopToken);
+            }
+            catch (Exception e) {
+                LogMessageProcessingError(e, args.ApplicationMessage.Topic);
+            }
         }
 
 
@@ -223,6 +236,25 @@ namespace MqttAdapter {
                 _mqttClient?.Dispose();
             }
         }
+
+
+        [LoggerMessage(1, LogLevel.Information, "Initialising MQTT client.")]
+        partial void LogInitialisingClient();
+
+        [LoggerMessage(2, LogLevel.Information, "Reinitialising MQTT client.")]
+        partial void LogReinitialisingClient();
+
+        [LoggerMessage(3, LogLevel.Information, "Connected to MQTT server {hostname}.")]
+        partial void LogOnConnected(string hostname);
+
+        [LoggerMessage(4, LogLevel.Information, "Disconnected from MQTT server {hostname}.")]
+        partial void LogOnDisconnected(string hostname);
+
+        [LoggerMessage(5, LogLevel.Debug, "Received message for topic '{topic}': ContentType='{contentType}', PayloadFormatIndicator='{payloadFormatIndicator}', Length={payloadLength}")]
+        partial void LogMessageReceived(string topic, string contentType, MqttPayloadFormatIndicator payloadFormatIndicator, int payloadLength);
+
+        [LoggerMessage(6, LogLevel.Error, "Error processing message for topic '{topic}'.")]
+        partial void LogMessageProcessingError(Exception exception, string topic);
 
     }
 }

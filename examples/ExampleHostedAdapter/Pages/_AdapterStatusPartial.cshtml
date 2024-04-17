@@ -3,38 +3,32 @@
 
 @{
   string cardColourModifier;
-  string cardTextModifier;
   string statusIcon;
   string statusText;
 
   switch (Model.State) {
     case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Disabled:
       cardColourModifier = "danger";
-      cardTextModifier = "text-white";
       statusIcon = "fa-circle-stop";
       statusText = "Disabled";
       break;
     case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Enabled:
       cardColourModifier = "warning";
-      cardTextModifier = "";
       statusIcon = "fa-circle-half-stroke";
       statusText = "Enabled";
       break;
     case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Running:
       cardColourModifier = "success";
-      cardTextModifier = "text-white";
       statusIcon = "fa-circle-play";
       statusText = "Running";
       break;
     case ExampleHostedAdapter.Pages.IndexModel.AdapterState.RunningWithWarning:
       cardColourModifier = "warning";
-      cardTextModifier = "";
       statusIcon = "fa-circle-exclamation";
       statusText = "Running (Unhealthy)";
       break;
     default:
       cardColourModifier = "light";
-      cardTextModifier = "";
       statusIcon = "fa-circle-question";
       statusText = "Unknown Status";
       break;
@@ -69,17 +63,37 @@
 
 <div class="w-100">
   <div class="card border-@cardColourModifier">
-    <div class="card-header @cardTextModifier bg-@cardColourModifier">
+    <div class="card-header text-bg-@cardColourModifier">
       <i class="fa-solid fa-puzzle-piece fa-fw"></i>
-      Adapter Status
+      Adapter Status: @statusText
     </div>
     <div class="card-body">
 
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-fingerprint fa-fw" title="Adapter ID"></i>
-            ID
+            <span class="adapter-status-heading">
+              <i class="fa-solid fa-network-wired fa-fw"></i>
+              Host Instance ID
+              <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The instance ID of the adapter host. This is used to uniquely identify this adapter host in distributed tracing systems."></i>
+            </span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="pb-3">
+            @Model.GetHostId()
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-lg-2">
+          <div class="pb-1">
+            <span class="adapter-status-heading">
+              <i class="fa-solid fa-fingerprint fa-fw"></i>
+              Adapter ID
+              <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The identifier for the adapter. Use this value when configuring the App Store Connect connection to your adapter."></i>
+            </span>
           </div>
         </div>
         <div class="col">
@@ -95,8 +109,11 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-id-badge fa-fw" title="Adapter name"></i>
-            Name
+            <span class="adapter-status-heading">
+              <i class="fa-solid fa-id-badge fa-fw"></i>
+              Name
+              <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The display name for the adapter."></i>
+            </span>
           </div>
         </div>
         <div class="col">
@@ -107,8 +124,11 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-circle-info fa-fw" title="Adapter description"></i>
-            Description
+            <span class="adapter-status-heading">
+              <i class="fa-solid fa-circle-info fa-fw"></i>
+              Description
+              <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The adapter description."></i>
+            </span>
           </div>
         </div>
         <div class="col">
@@ -119,8 +139,11 @@
       <div class="row">
         <div class="col-12 col-lg-2">
           <div class="pb-1">
-            <i class="fa-solid fa-code fa-fw" title="Adapter driver"></i>
-            Driver
+            <span class="adapter-status-heading">
+              <i class="fa-solid fa-code fa-fw"></i>
+              Driver
+              <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Information about the adapter driver and vendor."></i>
+            </span>
           </div>
         </div>
         <div class="col">
@@ -143,14 +166,17 @@
           <div class="row">
             <div class="col-12 col-lg-2 d-none d-lg-block">
               <div class="pb-1">
-                <i class="fa-solid fa-microchip fa-fw" title="Adapter features"></i>
-                Features
+                <span class="adapter-status-heading">
+                  <i class="fa-solid fa-microchip fa-fw"></i>
+                  Features
+                  <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The features that the adapter supports."></i>
+                </span>
               </div>
             </div>
             <div class="col">
               <div class="pb-1">
                 @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), ExampleHostedAdapter.FeatureCategoryComparer.Instance).ThenBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
-                  <div class="pb-2">
+                  <div class="pb-2 adapter-status-heading">
                     <i class="fa-solid @GetFeatureIcon(featureGroup.First()!) fa-fw" title="Adapter features: @featureGroup.Key"></i>
                     <span class="d-lg-none">Features: </span>
                     @featureGroup.Key
@@ -160,14 +186,14 @@
                       <div class="col pb-2">
                         <div class="card w-100 h-100 small">
                           <div class="card-body p-2">
-                            <p class="card-title">
+                            <p class="card-title adapter-status-heading">
                               @feature!.DisplayName
                             </p>
                             <p class="card-subtitle">
                               <code>@feature!.Uri</code>
                             </p>
                             @if (!string.IsNullOrWhiteSpace(feature?.Description)) {
-                              <p class="card-text text-muted">
+                              <p class="card-text text-secondary-emphasis">
                                 @feature.Description
                               </p>
                             }
@@ -185,15 +211,23 @@
         <div class="row">
           <div class="col-12 col-lg-2">
             <div class="pb-1">
-              <i class="fa-solid fa-circle-nodes fa-fw" title="APIs"></i>
-              Enabled APIs
+              <span class="adapter-status-heading">
+                <i class="fa-solid fa-circle-nodes fa-fw"></i>
+                Enabled APIs
+                <i class="adapter-status-heading-info small fa-solid fa-info-circle fa-fw" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="The APIs that can be used to query the adapter."></i>
+              </span>
             </div>
           </div>
           <div class="col">
             <div class="pb-3">
               @if (Model.ApiIsEnabled) {
                 foreach (var api in Model.AvailableApis.Where(x => x.Enabled)) {
-                  <div>@(string.IsNullOrWhiteSpace(api.Version) ? api.Name : $"{api.Name} v{api.Version}")</div>
+                  if (string.IsNullOrWhiteSpace(api.Provider)){
+                    <div>@api.Name</div>
+                  }
+                  else {
+                    <div>@api.Name <span class="small text-secondary-emphasis">(provider: @(string.IsNullOrWhiteSpace(api.Version) ? api.Provider : $"{api.Provider} v{api.Version}"))</span></div>
+                  }
                 }
               }
               else {
@@ -210,7 +244,7 @@
     </div>
 
     <div class="card-footer">
-      <div class="small text-muted">
+      <div class="small text-secondary-emphasis">
         <div class="d-flex justify-content-between">
           <div>
             <i class="fa-solid @statusIcon fa-fw"></i>

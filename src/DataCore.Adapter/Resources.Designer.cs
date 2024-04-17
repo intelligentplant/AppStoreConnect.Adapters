@@ -70,6 +70,321 @@ namespace DataCore.Adapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average value calculated over sample interval..
+        /// </summary>
+        internal static string DataFunction_Avg_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Avg_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average.
+        /// </summary>
+        internal static string DataFunction_Avg_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Avg_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of good-quality raw samples that have been recorded for the tag at each sample interval..
+        /// </summary>
+        internal static string DataFunction_Count_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Count_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        internal static string DataFunction_Count_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Count_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The signed difference between the earliest good-quality value and latest good-quality value in each sample interval..
+        /// </summary>
+        internal static string DataFunction_Delta_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Delta_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delta.
+        /// </summary>
+        internal static string DataFunction_Delta_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Delta_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uses linear interpolation to compute a value at each sample interval based on the raw values on either side of the sample time for the interval. Step interpolation will be used for non-floating-point tags..
+        /// </summary>
+        internal static string DataFunction_Interp_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Interp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated.
+        /// </summary>
+        internal static string DataFunction_Interp_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Interp_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the maximum value occurred at..
+        /// </summary>
+        internal static string DataFunction_Max_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Max_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum.
+        /// </summary>
+        internal static string DataFunction_Max_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Max_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum good-quality value calculated over a fixed sample interval. The calculated value contains the actual timestamp that the minimum value occurred at..
+        /// </summary>
+        internal static string DataFunction_Min_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Min_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum.
+        /// </summary>
+        internal static string DataFunction_Min_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Min_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of time in the interval that the tag value had a bad-quality status..
+        /// </summary>
+        internal static string DataFunction_PercentBad_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentBad_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percent Bad.
+        /// </summary>
+        internal static string DataFunction_PercentBad_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentBad_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At each interval in a time range, calculates the percentage of time in the interval that the tag value had a good-quality status..
+        /// </summary>
+        internal static string DataFunction_PercentGood_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentGood_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percent Good.
+        /// </summary>
+        internal static string DataFunction_PercentGood_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_PercentGood_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status Calculation.
+        /// </summary>
+        internal static string DataFunction_Property_StatusCalculation {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method used to calculate the quality status for the function..
+        /// </summary>
+        internal static string DataFunction_Property_StatusCalculation_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality or NaN values were present in the calculation interval, or if the value was calculated from a partial data set. Otherwise, the quality is &quot;Good&quot;..
+        /// </summary>
+        internal static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodOrNaNSkipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Uncertain&quot; if any non-good quality values were skipped, or &quot;Good&quot; otherwise..
+        /// </summary>
+        internal static string DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueGoodUnlessNonGoodSkipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Worst-case status of the samples used in the calculation..
+        /// </summary>
+        internal static string DataFunction_Property_StatusCalculation_ValueWorstCase {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_StatusCalculation_ValueWorstCase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp Calculation.
+        /// </summary>
+        internal static string DataFunction_Property_TimestampCalculation {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_TimestampCalculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method used to calculate the timestamp for the function..
+        /// </summary>
+        internal static string DataFunction_Property_TimestampCalculation_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of maximum value.
+        /// </summary>
+        internal static string DataFunction_Property_TimestampCalculation_ValueMaximum {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_ValueMaximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp of minimum value.
+        /// </summary>
+        internal static string DataFunction_Property_TimestampCalculation_ValueMinimum {
+            get {
+                return ResourceManager.GetString("DataFunction_Property_TimestampCalculation_ValueMinimum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The absolute difference between the minimum good-quality value and maximum good-quality value in each sample interval..
+        /// </summary>
+        internal static string DataFunction_Range_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Range_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Range.
+        /// </summary>
+        internal static string DataFunction_Range_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Range_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The standard deviation of all good-quality values in each sample interval.
+        /// </summary>
+        internal static string DataFunction_StandardDeviation_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_StandardDeviation_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Deviation.
+        /// </summary>
+        internal static string DataFunction_StandardDeviation_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_StandardDeviation_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolates a value at each sample interval by repeating the value of the raw sample at or immediately before the sample time..
+        /// </summary>
+        internal static string DataFunction_StepInterp_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_StepInterp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step Interpolated.
+        /// </summary>
+        internal static string DataFunction_StepInterp_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_StepInterp_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time-weighted average value calculated over sample interval..
+        /// </summary>
+        internal static string DataFunction_TimeAvg_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_TimeAvg_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time Average.
+        /// </summary>
+        internal static string DataFunction_TimeAvg_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_TimeAvg_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The variance of all good-quality values in each sample interval.
+        /// </summary>
+        internal static string DataFunction_Variance_Description {
+            get {
+                return ResourceManager.GetString("DataFunction_Variance_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variance.
+        /// </summary>
+        internal static string DataFunction_Variance_Name {
+            get {
+                return ResourceManager.GetString("DataFunction_Variance_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum adapter description length is {0}..
         /// </summary>
         internal static string Error_AdapterDescriptionIsTooLong {
@@ -426,213 +741,6 @@ namespace DataCore.Adapter {
         internal static string HealthChecks_DisplayName_OverallAdapterHealth {
             get {
                 return ResourceManager.GetString("HealthChecks_DisplayName_OverallAdapterHealth", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Adapter &apos;{AdapterId}&apos; is disabled..
-        /// </summary>
-        internal static string Log_AdapterIsDisabled {
-            get {
-                return ResourceManager.GetString("Log_AdapterIsDisabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while starting adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_AdapterStartupError {
-            get {
-                return ResourceManager.GetString("Log_AdapterStartupError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while stopping adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_AdapterStopError {
-            get {
-                return ResourceManager.GetString("Log_AdapterStopError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterId}&apos; (disposing: true)..
-        /// </summary>
-        internal static string Log_DisposingAdapter {
-            get {
-                return ResourceManager.GetString("Log_DisposingAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while refreshing subscribed snapshot tag values..
-        /// </summary>
-        internal static string Log_ErrorDuringSnapshotPushRefresh {
-            get {
-                return ResourceManager.GetString("Log_ErrorDuringSnapshotPushRefresh", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error in background task &apos;{WorkItem}&apos;..
-        /// </summary>
-        internal static string Log_ErrorInBackgroundTask {
-            get {
-                return ResourceManager.GetString("Log_ErrorInBackgroundTask", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred in the event subscription manager publish loop..
-        /// </summary>
-        internal static string Log_ErrorInEventSubscriptionManagerPublishLoop {
-            get {
-                return ResourceManager.GetString("Log_ErrorInEventSubscriptionManagerPublishLoop", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while the snapshot subscription manager was polling for new values..
-        /// </summary>
-        internal static string Log_ErrorInSnapshotPollingUpdateLoop {
-            get {
-                return ResourceManager.GetString("Log_ErrorInSnapshotPollingUpdateLoop", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred in the snapshot subscription manager publish loop..
-        /// </summary>
-        internal static string Log_ErrorInSnapshotSubscriptionManagerPublishLoop {
-            get {
-                return ResourceManager.GetString("Log_ErrorInSnapshotSubscriptionManagerPublishLoop", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while disposing of an event message subscription..
-        /// </summary>
-        internal static string Log_ErrorWhileDisposingOfEventMessageSubscription {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileDisposingOfEventMessageSubscription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error while disposing feature: {feature}.
-        /// </summary>
-        internal static string Log_ErrorWhileDisposingOfFeature {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileDisposingOfFeature", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while disposing of a snapshot subscription..
-        /// </summary>
-        internal static string Log_ErrorWhileDisposingOfSnapshotSubscription {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileDisposingOfSnapshotSubscription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change for {count} tags: Action = &apos;{action}&apos;.
-        /// </summary>
-        internal static string Log_ErrorWhileProcessingSnapshotSubscriptionChange {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileProcessingSnapshotSubscriptionChange", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while processing a subscription change for {count} topics: Action = &apos;{action}&apos;.
-        /// </summary>
-        internal static string Log_ErrorWhileProcessingSubscriptionTopicChange {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileProcessingSubscriptionTopicChange", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Evicted event message &apos;{id}&apos; with cursor position &apos;{cursorPosition}&apos; and timestamp &apos;{timestamp}&apos;..
-        /// </summary>
-        internal static string Log_InMemoryEventMessageManager_EvictedMessage {
-            get {
-                return ResourceManager.GetString("Log_InMemoryEventMessageManager_EvictedMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Wrote event message &apos;{id}&apos; with cursor position &apos;{cursorPosition}&apos; and timestamp &apos;{timestamp}&apos;..
-        /// </summary>
-        internal static string Log_InMemoryEventMessageManager_WroteMessage {
-            get {
-                return ResourceManager.GetString("Log_InMemoryEventMessageManager_WroteMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Updated adapter options are not valid..
-        /// </summary>
-        internal static string Log_InvalidAdapterOptionsUpdate {
-            get {
-                return ResourceManager.GetString("Log_InvalidAdapterOptionsUpdate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Publish to subscriber with connection ID &apos;{connectionId}&apos; failed with error..
-        /// </summary>
-        internal static string Log_PublishToSubscriberThrewException {
-            get {
-                return ResourceManager.GetString("Log_PublishToSubscriberThrewException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Publish to subscriber with connection ID &apos;{connectionId}&apos; failed..
-        /// </summary>
-        internal static string Log_PublishToSubscriberWasUnsuccessful {
-            get {
-                return ResourceManager.GetString("Log_PublishToSubscriberWasUnsuccessful", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Started adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StartedAdapter {
-            get {
-                return ResourceManager.GetString("Log_StartedAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Starting adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StartingAdapter {
-            get {
-                return ResourceManager.GetString("Log_StartingAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Stopped adapter &apos;{AdapterId}&apos;..
-        /// </summary>
-        internal static string Log_StoppedAdapter {
-            get {
-                return ResourceManager.GetString("Log_StoppedAdapter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Stopping adapter &apos;{AdapterId}&apos; (disposing: false)..
-        /// </summary>
-        internal static string Log_StoppingAdapter {
-            get {
-                return ResourceManager.GetString("Log_StoppingAdapter", resourceCulture);
             }
         }
         

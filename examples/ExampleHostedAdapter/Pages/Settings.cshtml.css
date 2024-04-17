@@ -1,0 +1,3 @@
+﻿::deep .form-label, .form-check {
+    color: var(--bs-emphasis-color);
+}

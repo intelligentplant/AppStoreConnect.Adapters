@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Grpc.Client.Authentication {
             _rawCertificate = Convert.ToBase64String(certBytes);
             _key = string.IsNullOrWhiteSpace(key)
                 ? DefaultKey
-                : key;
+                : key!;
         }
 
 

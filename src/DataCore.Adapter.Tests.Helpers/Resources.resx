@@ -269,6 +269,9 @@
 {1} - tag ID
 {2} - collection name</comment>
   </data>
+  <data name="TagSearchReturnedZeroResults" xml:space="preserve">
+    <value>Tag search did not return any results.</value>
+  </data>
   <data name="TimestampWasReceivedMultipleTimes" xml:space="preserve">
     <value>Sample time {0:dd-MMM-yyyy HH:mm:ss.fffffff}Z was not found in the expected sample times list. This indicates that multiple values were received with this timestamp for tag '{1}'.</value>
     <comment>{0} - timestamp

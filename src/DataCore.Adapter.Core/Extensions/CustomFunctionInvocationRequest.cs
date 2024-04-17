@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 using DataCore.Adapter.Common;
+using DataCore.Adapter.DataValidation;
 
 namespace DataCore.Adapter.Extensions {
 
@@ -26,6 +27,7 @@ namespace DataCore.Adapter.Extensions {
         ///   to an adapter-defined base URI.
         /// </remarks>
         [Required]
+        [MaxUriLength(500)]
         public Uri Id { get; set; } = default!;
 
         /// <summary>
@@ -63,9 +65,11 @@ namespace DataCore.Adapter.Extensions {
 
             return new CustomFunctionInvocationRequest() { 
                 Id = id,
-                Body = body == null 
-                    ? null 
-                    : JsonSerializer.SerializeToElement(body, options)
+                Body = body is JsonElement json
+                    ? json
+                    : body == null 
+                        ? null 
+                        : JsonSerializer.SerializeToElement(body, options)
             };
         }
 
@@ -95,7 +99,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
         /// </exception>
-        public static CustomFunctionInvocationRequest Create<TBody>(Uri id, TBody body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody> jsonTypeInfo) {
+        public static CustomFunctionInvocationRequest Create<TBody>(Uri id, TBody? body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody> jsonTypeInfo) {
             if (id == null) {
                 throw new ArgumentNullException(nameof(id));
             }
@@ -105,7 +109,11 @@ namespace DataCore.Adapter.Extensions {
 
             return new CustomFunctionInvocationRequest() {
                 Id = id,
-                Body = JsonSerializer.SerializeToElement(body, jsonTypeInfo)
+                Body = body is JsonElement json
+                    ? json
+                    : body == null
+                        ? null
+                        : JsonSerializer.SerializeToElement(body, jsonTypeInfo)
             };
         }
 

@@ -190,3 +190,7 @@ csharp_space_between_parentheses = false
 csharp_prefer_braces = true:silent
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
+
+# Microsoft.CodeAnalysis.PublicApiAnalyzers generates RS0041 warnings for generated resource code files 
+[*.Designer.cs]
+dotnet_diagnostic.RS0041.severity = none

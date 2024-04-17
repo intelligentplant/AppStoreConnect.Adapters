@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,7 +80,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
                 PageSize = pageSize,
                 Page = page
             };
-
+            Validator.ValidateObject(request, new ValidationContext(request));
             return FindAdapters(request, cancellationToken);
         }
 
@@ -102,11 +103,6 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         [ProducesResponseType(typeof(IAsyncEnumerable<AdapterDescriptor>), 200)]
         public IActionResult FindAdapters(FindAdaptersRequest request, CancellationToken cancellationToken = default) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            if (request.PageSize > 100) {
-                // Don't allow arbitrarily large queries!
-                request.PageSize = 100;
-            }
-
             var adapters = _adapterAccessor.FindAdapters(callContext, request, cancellationToken);
             return Util.StreamResults(adapters, x => x.Descriptor);
         }
@@ -126,16 +122,16 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   requested adapter.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}")]
+        [Route("{adapterId:maxlength(200)}")]
         [ProducesResponseType(typeof(AdapterDescriptorExtended), 200)]
         public async Task<IActionResult> GetAdapterById(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);
-            var adapter = await _adapterAccessor.GetAdapter(callContext, adapterId, cancellationToken).ConfigureAwait(false);
-            if (adapter == null) {
+            var descriptor = await _adapterAccessor.GetAdapterDescriptorAsync(callContext, adapterId, cancellationToken).ConfigureAwait(false);
+            if (descriptor == null) {
                 return BadRequest(string.Format(callContext.CultureInfo, Resources.Error_CannotResolveAdapterId, adapterId)); // 400
             }
 
-            return Ok(adapter.CreateExtendedAdapterDescriptor()); // 200
+            return Ok(descriptor); // 200
         }
 
 
@@ -153,7 +149,7 @@ namespace DataCore.Adapter.AspNetCore.Controllers {
         ///   adapter.
         /// </returns>
         [HttpGet]
-        [Route("{adapterId}/health-status")]
+        [Route("{adapterId:maxlength(200)}/health-status")]
         [ProducesResponseType(typeof(HealthCheckResult), 200)]
         public async Task<IActionResult> CheckAdapterHealth(string adapterId, CancellationToken cancellationToken) {
             var callContext = new HttpAdapterCallContext(HttpContext);

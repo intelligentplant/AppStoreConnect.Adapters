@@ -66,7 +66,7 @@ namespace DataCore.Adapter.AspNetCoreExample {
 
                     // Add in-memory event message management
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILogger<Csv.CsvAdapter>>())    
+                        ActivatorUtilities.CreateInstance<Events.InMemoryEventMessageStore>(sp, sp.GetService<ILoggerFactory>())    
                     );
 
                     return adapter;
@@ -100,56 +100,55 @@ namespace DataCore.Adapter.AspNetCoreExample {
             // Add OpenTelemetry tracing
             services
                 .AddOpenTelemetry()
+                .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService())
                 .WithTracing(builder => builder
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddDataCoreAdapterApiService())
                     .AddAspNetCoreInstrumentation()
                     .AddDataCoreAdapterInstrumentation()
-                    .AddJaegerExporter())
-                .StartWithHost();
+                    .AddOtlpExporter());
 
-            services.AddOpenApiDocument(options => {
-                options.DocumentName = "v2.0";
-                options.Title = "App Store Connect Adapters";
-                options.Description = "HTTP API for querying an App Store Connect adapters host.";
-                options.Version = "2.0.0";
-                options.AddOperationFilter(context => {
-                    // Don't include the legacy routes.
-                    return !context.OperationDescription.Path.StartsWith("/api/data-core/");
-                });
-                options.OperationProcessors.Add(new NSwag.Generation.Processors.OperationProcessor(context => { 
-                    string RemoveWhiteSpace(string s) {
-                        return s.Replace("\n", "").Trim();
-                    }
+            //services.AddOpenApiDocument(options => {
+            //    options.DocumentName = "v2.0";
+            //    options.Title = "App Store Connect Adapters";
+            //    options.Description = "HTTP API for querying an App Store Connect adapters host.";
+            //    options.Version = "2.0.0";
+            //    options.AddOperationFilter(context => {
+            //        // Don't include the legacy routes.
+            //        return !context.OperationDescription.Path.StartsWith("/api/data-core/");
+            //    });
+            //    options.OperationProcessors.Add(new NSwag.Generation.Processors.OperationProcessor(context => { 
+            //        string RemoveWhiteSpace(string s) {
+            //            return s.Replace("\n", "").Trim();
+            //        }
 
-                    if (context.OperationDescription.Operation.Summary != null) {
-                        context.OperationDescription.Operation.Summary = RemoveWhiteSpace(context.OperationDescription.Operation.Summary);
-                    }
+            //        if (context.OperationDescription.Operation.Summary != null) {
+            //            context.OperationDescription.Operation.Summary = RemoveWhiteSpace(context.OperationDescription.Operation.Summary);
+            //        }
 
-                    if (context.OperationDescription.Operation.Description != null) {
-                        context.OperationDescription.Operation.Description = RemoveWhiteSpace(context.OperationDescription.Operation.Description);
-                    }
+            //        if (context.OperationDescription.Operation.Description != null) {
+            //            context.OperationDescription.Operation.Description = RemoveWhiteSpace(context.OperationDescription.Operation.Description);
+            //        }
 
-                    foreach (var parameter in context.OperationDescription.Operation.Parameters) {
-                        if (parameter.Description == null) {
-                            continue;
-                        }
-                        parameter.Description = RemoveWhiteSpace(parameter.Description);
-                    }
+            //        foreach (var parameter in context.OperationDescription.Operation.Parameters) {
+            //            if (parameter.Description == null) {
+            //                continue;
+            //            }
+            //            parameter.Description = RemoveWhiteSpace(parameter.Description);
+            //        }
 
-                    if (context.OperationDescription.Operation.RequestBody?.Description != null) {
-                        context.OperationDescription.Operation.RequestBody.Description = RemoveWhiteSpace(context.OperationDescription.Operation.RequestBody.Description);
-                    }
+            //        if (context.OperationDescription.Operation.RequestBody?.Description != null) {
+            //            context.OperationDescription.Operation.RequestBody.Description = RemoveWhiteSpace(context.OperationDescription.Operation.RequestBody.Description);
+            //        }
 
-                    foreach (var response in context.OperationDescription.Operation.Responses.Values) {
-                        if (response.Description == null) {
-                            continue;
-                        }
-                        response.Description = RemoveWhiteSpace(response.Description);
-                    }
+            //        foreach (var response in context.OperationDescription.Operation.Responses.Values) {
+            //            if (response.Description == null) {
+            //                continue;
+            //            }
+            //            response.Description = RemoveWhiteSpace(response.Description);
+            //        }
 
-                    return true;
-                }));
-            });
+            //        return true;
+            //    }));
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -163,8 +162,8 @@ namespace DataCore.Adapter.AspNetCoreExample {
             }
 
             app.UseHttpsRedirection();
-            app.UseOpenApi();
-            app.UseSwaggerUi3();
+            //app.UseOpenApi();
+            //app.UseSwaggerUi3();
 
             app.UseRequestLocalization();
             app.UseRouting();

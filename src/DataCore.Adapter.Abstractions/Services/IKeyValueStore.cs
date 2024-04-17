@@ -15,12 +15,13 @@ namespace DataCore.Adapter.Services {
     /// </para>  
     /// 
     /// <para>
-    ///   Implementations should extend <see cref="KeyValueStore"/> rather than implementing 
-    ///   <see cref="IKeyValueStore"/> directly.
+    ///   Implementations should extend <see cref="KeyValueStore"/> or <see cref="KeyValueStore{TOptions}"/> 
+    ///   rather than implementing <see cref="IKeyValueStore"/> directly.
     /// </para>
     /// 
     /// </remarks>
     /// <seealso cref="KeyValueStore"/>
+    /// <seealso cref="KeyValueStore{TOptions}"/>
     /// <seealso cref="InMemoryKeyValueStore"/>
     /// <seealso cref="ScopedKeyValueStore"/>
     /// <seealso cref="KeyValueStoreExtensions"/>
@@ -29,6 +30,9 @@ namespace DataCore.Adapter.Services {
         /// <summary>
         /// Writes a value to the store.
         /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value
+        /// </typeparam>
         /// <param name="key">
         ///   The key for the value.
         /// </param>
@@ -38,12 +42,15 @@ namespace DataCore.Adapter.Services {
         /// <returns>
         ///   A <see cref="ValueTask"/> that will process the operation.
         /// </returns>
-        ValueTask WriteAsync(KVKey key, byte[] value);
+        ValueTask WriteAsync<T>(KVKey key, T value);
 
 
         /// <summary>
         /// Reads a value from the store.
         /// </summary>
+        /// <typeparam name="T">
+        ///   The type of the value.
+        /// </typeparam>
         /// <param name="key">
         ///   The key for the value.
         /// </param>
@@ -51,7 +58,19 @@ namespace DataCore.Adapter.Services {
         ///   A <see cref="ValueTask{TResult}"/> that will return the value of the key, or 
         ///   <see langword="null"/> if the key does not exist.
         /// </returns>
-        ValueTask<byte[]?> ReadAsync(KVKey key);
+        ValueTask<T?> ReadAsync<T>(KVKey key);
+
+
+        /// <summary>
+        /// Tests if a key exists in the store.
+        /// </summary>
+        /// <param name="key">
+        ///   The key to test.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the key exists; otherwise, <see langword="false"/>.
+        /// </returns>
+        ValueTask<bool> ExistsAsync(KVKey key);
 
 
         /// <summary>

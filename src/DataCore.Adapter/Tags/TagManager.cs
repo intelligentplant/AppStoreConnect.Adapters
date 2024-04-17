@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +11,8 @@ using DataCore.Adapter.Diagnostics;
 using DataCore.Adapter.Services;
 
 using IntelligentPlant.BackgroundTasks;
+
+using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Tags {
 
@@ -23,12 +24,17 @@ namespace DataCore.Adapter.Tags {
     ///   The <see cref="TagManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
+    public partial class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
         
         /// <summary>
         /// Indicates if the object has been disposed.
         /// </summary>
         private bool _disposed;
+
+        /// <summary>
+        /// The logger for the tag manager.
+        /// </summary>
+        private readonly ILogger<TagManager> _logger;
 
         /// <summary>
         /// Holds the in-memory tag definitions indexed by ID.
@@ -49,11 +55,6 @@ namespace DataCore.Adapter.Tags {
         /// The <see cref="IKeyValueStore"/> where the tag definitions are persisted.
         /// </summary>
         private readonly IKeyValueStore? _keyValueStore;
-
-        /// <summary>
-        /// Options for serializing/deserializing tags.
-        /// </summary>
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions();
 
         /// <summary>
         /// Flags if the class has been initialised.
@@ -101,12 +102,17 @@ namespace DataCore.Adapter.Tags {
         /// <param name="onConfigurationChange">
         ///   An optional callback that will be invoked when a tag is added, updated, or deleted.
         /// </param>
+        /// <param name="logger">
+        ///   The logger for the tag manager.
+        /// </param>
         public TagManager(
             IKeyValueStore? keyValueStore = null, 
             IBackgroundTaskService? backgroundTaskService = null, 
             IEnumerable<AdapterProperty>? tagPropertyDefinitions = null,
-            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null
+            Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
+            ILogger<TagManager>? logger = null
         ) {
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TagManager>.Instance;
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
             _keyValueStore = keyValueStore?.CreateScopedStore("tag-manager:");
@@ -194,7 +200,7 @@ namespace DataCore.Adapter.Tags {
             _tagsByName.Clear();
 
             // "tags" key contains an array of the defined tag IDs.
-            var readResult = await _keyValueStore.ReadJsonAsync<string[]>("tags", _jsonOptions).ConfigureAwait(false);
+            var readResult = await _keyValueStore.ReadAsync<string[]>("tags").ConfigureAwait(false);
             if (cancellationToken.IsCancellationRequested) {
                 return;
             }
@@ -212,7 +218,7 @@ namespace DataCore.Adapter.Tags {
                     }
 
                     // "tags:{id}" key contains the the definition with ID {id}.
-                    var tagReadResult = await _keyValueStore.ReadJsonAsync<TagDefinition>(string.Concat("tags:", tagId), _jsonOptions).ConfigureAwait(false);
+                    var tagReadResult = await _keyValueStore.ReadAsync<TagDefinition>(string.Concat("tags:", tagId)).ConfigureAwait(false);
                     if (tagReadResult == null) {
                         continue;
                     }
@@ -345,7 +351,7 @@ namespace DataCore.Adapter.Tags {
 
             if (_keyValueStore != null) {
                 // "tags:{id}" key contains the the definition with ID {id}.
-                await _keyValueStore.WriteJsonAsync(string.Concat("tags:", tag.Id), tag, _jsonOptions).ConfigureAwait(false);
+                await _keyValueStore.WriteAsync(string.Concat("tags:", tag.Id), tag).ConfigureAwait(false);
             }
 
             // Check if we are renaming the tag.
@@ -371,13 +377,15 @@ namespace DataCore.Adapter.Tags {
             _tagsByName[tag.Name] = tag;
 
             if (indexHasChanged) {
+                LogCreatedTag(tag.Id, tag.Name);
                 if (_keyValueStore != null) {
                     // "tags" key contains an array of the defined tag IDs.
-                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
                 }
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Created, cancellationToken).ConfigureAwait(false);
             }
             else {
+                LogUpdatedTag(tag.Id, tag.Name);
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Updated, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -426,11 +434,12 @@ namespace DataCore.Adapter.Tags {
                 _tagsById.TryRemove(tag.Id, out _);
                 _tagsByName.TryRemove(tag.Name, out _);
 
+                LogDeletedTag(tag.Id, tag.Name);
                 await OnConfigurationChangeAsync(tag, ConfigurationChangeType.Deleted, cancellationToken).ConfigureAwait(false);
 
                 if (_keyValueStore != null) {
                     // "tags" key contains an array of the defined tag IDs.
-                    await _keyValueStore.WriteJsonAsync("tags", _tagsById.Keys.ToArray(), _jsonOptions).ConfigureAwait(false);
+                    await _keyValueStore.WriteAsync("tags", _tagsById.Keys.ToArray()).ConfigureAwait(false);
                 }
             }
 
@@ -549,6 +558,16 @@ namespace DataCore.Adapter.Tags {
 
             GC.SuppressFinalize(this);
         }
+
+
+        [LoggerMessage(1, LogLevel.Debug, "Created tag '{name}' (ID: '{id}')")]
+        partial void LogCreatedTag(string id, string name);
+
+        [LoggerMessage(2, LogLevel.Debug, "Updated tag '{name}' (ID: '{id}')")]
+        partial void LogUpdatedTag(string id, string name);
+
+        [LoggerMessage(3, LogLevel.Debug, "Deleted tag '{name}' (ID: '{id}')")]
+        partial void LogDeletedTag(string id, string name);
 
     }
 }

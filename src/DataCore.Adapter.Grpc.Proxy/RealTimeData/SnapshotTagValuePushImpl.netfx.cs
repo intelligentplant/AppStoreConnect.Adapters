@@ -11,6 +11,8 @@ using DataCore.Adapter.RealTimeData;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
+
 
 namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
     partial class SnapshotTagValuePushImpl {
@@ -51,7 +53,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 OnTagSubscriptionsRemoved = async (instance, tags, _) => await OnTagsRemovedAsync((SnapshotTagValuePush) instance, tags).ConfigureAwait(false),
                 IsTopicMatch = (subscribed, actual, ct) => new ValueTask<bool>(subscribed.Id.Equals(actual.Id, StringComparison.OrdinalIgnoreCase) || subscribed.Name.Equals(actual.Name, StringComparison.OrdinalIgnoreCase))
             };
-            var result = new SnapshotTagValuePush(options, BackgroundTaskService, Logger);
+            var result = new SnapshotTagValuePush(options, BackgroundTaskService, Proxy.LoggerFactory.CreateLogger<SnapshotTagValuePush>());
 
             return result;
         }
@@ -136,6 +138,16 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             [EnumeratorCancellation]
             CancellationToken cancellationToken
         ) {
+            if (GrpcAdapterProxy.IsGrpcClientFullySupported()) {
+                // Bidirectional streaming is fully supported.
+                await foreach (var item in SubscribeCoreAsync(context, request, channel, cancellationToken).ConfigureAwait(false)) {
+                    yield return item;
+                }
+                yield break;
+            }
+
+            // Bidirectional streaming is not supported.
+
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             
             using var handler = CreateInnerHandler(context, client, request, cancellationToken);

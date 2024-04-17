@@ -27,7 +27,7 @@
     building via build.ps1 or build.sh. It is defined here to allow Visual Studio to build with 
     the solution with the correct version number.
     -->
-    <Version>3.0.0</Version>
+    <Version>4.0.0</Version>
   </PropertyGroup>
 
   <Choose>
@@ -42,6 +42,11 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
+  <!-- In a CI build, make sure we've not left any compiled warnings unhandled. -->
+  <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 
   <!-- Extension point to allow Continuous Integration systems to inject their own configuration. -->
   <Import Project="CI.props" Condition="Exists('CI.props')" />

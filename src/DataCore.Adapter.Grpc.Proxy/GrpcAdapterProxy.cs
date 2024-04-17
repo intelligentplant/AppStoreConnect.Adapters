@@ -31,13 +31,18 @@ namespace DataCore.Adapter.Grpc.Proxy {
         Description = nameof(Resources.AdapterMetadata_Description),
         HelpUrl = "https://github.com/intelligentplant/AppStoreConnect.Adapters/tree/main/src/DataCore.Adapter.Grpc.Proxy"
     )]
-    public class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
+    public partial class GrpcAdapterProxy : AdapterBase<GrpcAdapterProxyOptions>, IAdapterProxy {
 
         /// <summary>
-        /// Gets the logger for the proxy.
+        /// Logging.
         /// </summary>
-        internal new ILogger Logger {
-            get { return base.Logger; }
+        private readonly ILogger<GrpcAdapterProxy> _logger;
+
+        /// <summary>
+        /// Gets the logger factory for the proxy.
+        /// </summary>
+        internal new ILoggerFactory LoggerFactory {
+            get { return base.LoggerFactory; }
         }
 
         /// <summary>
@@ -149,8 +154,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
         ///   The <see cref="IObjectEncoder"/> instances to use when sending or receiving 
         ///   extension objects.
         /// </param>
-        /// <param name="logger">
-        ///   The logger for the proxy.
+        /// <param name="loggerFactory">
+        ///   The logger factory for the proxy.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="channel"/> is <see langword="null"/>.
@@ -164,16 +169,17 @@ namespace DataCore.Adapter.Grpc.Proxy {
             GrpcAdapterProxyOptions options, 
             IBackgroundTaskService? taskScheduler, 
             IEnumerable<IObjectEncoder> encoders,
-            ILogger<GrpcAdapterProxy>? logger
+            ILoggerFactory? loggerFactory
         ) : base(
             id,
             options, 
             taskScheduler, 
-            logger
+            loggerFactory
         ) {
             Encoders = encoders?.ToArray() ?? throw new ArgumentNullException(nameof(encoders));
             _remoteAdapterId = Options?.RemoteId ?? throw new ArgumentException(Resources.Error_AdapterIdIsRequired, nameof(options));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _logger = LoggerFactory.CreateLogger<GrpcAdapterProxy>();
             _getCallCredentials = Options?.GetCallCredentials;
 #pragma warning disable CS0618 // Type or member is obsolete
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
@@ -247,7 +253,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     var impl = _extensionFeatureFactory?.Invoke(extensionFeature, this);
                     if (impl == null) {
                         if (!extensionFeature.TryCreateUriWithTrailingSlash(out var featureUri)) {
-                            Logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
+                            // Don't bother with a source-generated logger message here - extension features are deprecated anyway.
+                            _logger.LogWarning(Resources.Log_NoExtensionImplementationAvailable, extensionFeature);
                             continue;
                         }
 
@@ -261,7 +268,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     AddFeatures(impl, addStandardFeatures: false);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
+                    // Don't bother with a source-generated logger message here - extension features are deprecated anyway.
+                    _logger.LogError(e, Resources.Log_ExtensionFeatureRegistrationError, extensionFeature);
                 }
             }
 
@@ -292,10 +300,8 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     try {
                         await _channel.ShutdownAsync().ConfigureAwait(false);
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e) {
-#pragma warning restore CA1031 // Do not catch general exception types
-                        Logger.LogError(e, Resources.Log_ChannelShutdownError);
+                        LogChannelShutdownError(e);
                     }
                 }).GetAwaiter().GetResult();
             }
@@ -310,7 +316,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
                     await _channel.ShutdownAsync().ConfigureAwait(false);
                 }
                 catch (Exception e) {
-                    Logger.LogError(e, Resources.Log_ChannelShutdownError);
+                    LogChannelShutdownError(e);
                 }
             }
         }
@@ -359,9 +365,9 @@ namespace DataCore.Adapter.Grpc.Proxy {
             var client = CreateClient<AdaptersService.AdaptersServiceClient>();
             var callOptions = GetCallOptions(new DefaultAdapterCallContext(), cancellationToken);
 
-            while (!cancellationToken.IsCancellationRequested) {
-                var raiseStatusChangeOnError = true;
+            var raiseStatusChangeOnError = true;
 
+            while (!cancellationToken.IsCancellationRequested) {
                 try {
                     var healthCheckStream = client.CreateAdapterHealthPushChannel(new CreateAdapterHealthPushChannelRequest() {
                         AdapterId = _remoteAdapterId
@@ -528,6 +534,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
                 credentials.CopyToMetadataCollection(metadata);
             }));
         }
+
+
+        [LoggerMessage(1, LogLevel.Error, "Error while shutting down the gRPC channel.")]
+        partial void LogChannelShutdownError(Exception error);
 
     }
 }

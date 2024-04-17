@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Tests {
 
         private class TestAdapter : AdapterBase {
 
-            internal TestAdapter(string id) : base(id, null, null, null, null) { }
+            internal TestAdapter(string id) : base(id, null, null, null, (Microsoft.Extensions.Logging.ILoggerFactory) null) { }
 
 
             protected override Task StartAsync(CancellationToken cancellationToken) {

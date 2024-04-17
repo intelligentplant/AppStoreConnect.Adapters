@@ -42,6 +42,14 @@ namespace DataCore.Adapter.Http.Client {
         public CompatibilityVersion CompatibilityVersion { get; set; } = CompatibilityVersion.Latest;
 
         /// <summary>
+        /// The base path to use when constructing URLs.
+        /// </summary>
+        /// <remarks>
+        ///   This property should only be set for testing purposes.
+        /// </remarks>
+        internal string? BasePath { get; set; }
+
+        /// <summary>
         /// The client for querying the remote host about available adapters.
         /// </summary>
         public AdaptersClient Adapters { get; }
@@ -182,9 +190,11 @@ namespace DataCore.Adapter.Http.Client {
         ///   The base relative API path for the client.
         /// </returns>
         internal string GetBaseUrl() {
-            return CompatibilityVersion == CompatibilityVersion.Version_1_0
-                ? "api/data-core/v1.0"
-                : "api/app-store-connect/v2.0";
+            return BasePath != null 
+                ? BasePath 
+                : CompatibilityVersion == CompatibilityVersion.Version_1_0
+                    ? "api/data-core/v1.0"
+                    : "api/app-store-connect/v2.0";
         }
 
 

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>$(PackagePrefix).Adapter.DependencyInjection</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Description>App Store Connect types for use with Microsoft.Extensions.DependencyInjection.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -14,6 +15,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataCore.Adapter\DataCore.Adapter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
   
 </Project>

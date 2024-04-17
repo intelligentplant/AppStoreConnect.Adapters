@@ -14,8 +14,6 @@ using DataCore.Adapter.Extensions;
 using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
-using Json.Schema;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -68,7 +66,7 @@ namespace DataCore.Adapter.Tests {
         /// </returns>
         protected virtual IAdapterCallContext CreateCallContext(TestContext context) {
             var identity = new ClaimsIdentity(GetType().FullName, ClaimTypes.Name, ClaimTypes.Role);
-            identity.AddClaim(new Claim(ClaimTypes.Name, context!.TestName));
+            identity.AddClaim(new Claim(ClaimTypes.Name, context.TestName!));
 
             var principal = new ClaimsPrincipal(identity);
 
@@ -198,7 +196,7 @@ namespace DataCore.Adapter.Tests {
         ///   The method that must be overridden.
         /// </param>
         private void AssertInconclusiveDueToMissingTestInput<TFeature>(string methodName) {
-            Assert.Inconclusive(FormatMessage(Resources.MissingTestInput, typeof(TFeature).Name, methodName, TestContext.TestName));
+            Assert.Inconclusive(FormatMessage(Resources.MissingTestInput, typeof(TFeature).Name, methodName, TestContext.TestName!));
         }
 
 
@@ -830,6 +828,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -876,6 +875,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.BasicInformation;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
@@ -934,6 +934,7 @@ namespace DataCore.Adapter.Tests {
 
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
+                Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
                 Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {

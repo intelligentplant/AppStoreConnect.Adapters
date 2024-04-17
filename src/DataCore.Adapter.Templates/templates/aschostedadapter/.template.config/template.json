@@ -27,10 +27,22 @@
         {
           "choice": "net7.0",
           "description": ".NET 7.0"
+        },
+        {
+          "choice": "net8.0",
+          "description": ".NET 8.0"
         }
       ],
-      "defaultValue": "net6.0",
+      "defaultValue": "net8.0",
       "replaces": "net6.0"
+    },
+    "IsNet7OrLater": {
+      "type": "computed",
+      "value": "(Framework != \"net6.0\")"
+    },
+    "UseMinimalApi": {
+      "type": "computed",
+      "value": "(IsNet7OrLater)"
     },
     "AdapterOptionsName": {
       "type": "derived",

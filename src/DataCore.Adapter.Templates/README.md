@@ -12,7 +12,7 @@ You can install the [App Store Connect adapter templates](https://www.nuget.org/
 **Latest Version:**
 
 ```
-dotnet new --install IntelligentPlant.AppStoreConnect.Adapter.Templates
+dotnet new install IntelligentPlant.AppStoreConnect.Adapter.Templates
 ```
 
 > To install a pre-release version, follow the *Specific Version* instructions below.
@@ -20,15 +20,15 @@ dotnet new --install IntelligentPlant.AppStoreConnect.Adapter.Templates
 **Specific Version:**
 
 ```
-dotnet new --install IntelligentPlant.AppStoreConnect.Adapter.Templates::1.2.3
+dotnet new install IntelligentPlant.AppStoreConnect.Adapter.Templates::1.2.3
 ```
 
 **From Source:**
 
-Alternatively, you can install the template from source by checking out this repository, [building the solution](/build.cake), navigating to the [root templates folder](/src/DataCore.Adapter.Templates) from the command line, and running the following command:
+Alternatively, you can install the template from source by checking out this repository, [building the solution](../../build.cake), navigating to the [root templates folder](./) from the command line, and running the following command:
 
 ```
-dotnet new --install .\
+dotnet new install .\
 ```
 
 # Creating an Adapter and Host using Visual Studio

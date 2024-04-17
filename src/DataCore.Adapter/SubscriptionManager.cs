@@ -29,7 +29,7 @@ namespace DataCore.Adapter {
     /// <typeparam name="TSubscription">
     ///   The subscription type.
     /// </typeparam>
-    public abstract class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
+    public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
         : IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable 
         where TOptions : SubscriptionManagerOptions, new() 
         where TSubscription : SubscriptionChannel<TTopic, TValue> {
@@ -404,8 +404,10 @@ namespace DataCore.Adapter {
 
             try {
                 using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _disposedTokenSource.Token)) {
-                    await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false);
-                    return _masterChannel.Writer.TryWrite((message, subscribers));
+                    if (await _masterChannel.Writer.WaitToWriteAsync(ctSource.Token).ConfigureAwait(false)) {
+                        return _masterChannel.Writer.TryWrite((message, subscribers));
+                    }
+                    return false;
                 }
             }
             catch (OperationCanceledException) {
@@ -506,6 +508,8 @@ namespace DataCore.Adapter {
         ///   A task that will complete when the cancellation token fires.
         /// </returns>
         private async Task PublishToSubscribers(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _masterChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -535,18 +539,45 @@ namespace DataCore.Adapter {
                         }
 
                         try {
-                            var success = subscriber.Publish(item.Value);
-                            if (!success) {
-                                Logger.LogTrace(Resources.Log_PublishToSubscriberWasUnsuccessful, subscriber.Context?.ConnectionId);
+                            if (subscriber.Publish(item.Value)) {
+                                LogPublishToSubscriberSucceeded(Logger, subscriber.Context?.ConnectionId);
+                            }
+                            else {
+                                LogPublishToSubscriberFailed(Logger, subscriber.Context?.ConnectionId);
                             }
                         }
                         catch (Exception e) {
-                            Logger.LogError(e, Resources.Log_PublishToSubscriberThrewException, subscriber.Context?.ConnectionId);
+                            LogPublishToSubscriberFaulted(Logger, e, subscriber.Context?.ConnectionId);
                         }
                     }
                 }
             }
         }
+
+
+        /// <summary>
+        /// Begins a logger scope for the subscription manager.
+        /// </summary>
+        /// <returns>
+        ///   An <see cref="IDisposable"/> that will end the logger scope when disposed.
+        /// </returns>
+        /// <remarks>
+        ///   The scope will include the subscription manager ID.
+        /// </remarks>
+        protected IDisposable? BeginLoggerScope() => AdapterCore.BeginLoggerScope(Logger, Id);
+
+
+        [LoggerMessage(1, LogLevel.Trace, "Publish to subscriber '{subscriberId}' succeeded.")]
+        static partial void LogPublishToSubscriberSucceeded(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(2, LogLevel.Trace, "Publish to subscriber '{subscriberId}' failed.")]
+        static partial void LogPublishToSubscriberFailed(ILogger logger, string? subscriberId);
+
+
+        [LoggerMessage(3, LogLevel.Error, "Publish to subscriber '{subscriberId}' faulted.")]
+        static partial void LogPublishToSubscriberFaulted(ILogger logger, Exception e, string? subscriberId);
+
     }
 
 
@@ -585,7 +616,7 @@ namespace DataCore.Adapter {
         /// capacity, attempts to write additional values into the channel will fail. A value 
         /// less than one indicates no limit.
         /// </summary>
-        public int ChannelCapacity { get; set; } = 100;
+        public int ChannelCapacity { get; set; } = 10000;
 
     }
 

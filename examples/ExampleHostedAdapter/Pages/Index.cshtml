@@ -26,7 +26,21 @@
     $(() => {
         let updateInProgress = false;
 
+        const tooltips = [];
+        const enableTooltips = () =>  {
+            tooltips.forEach(x => x.dispose());
+            while (tooltips.length > 0) {
+                tooltips.pop();
+            }
+            $('[data-bs-toggle="popover"]').each((i, el) => tooltips.push(new bootstrap.Popover(el)));
+        }
+
         const setLastUpdatedTime = () => $('#last-updated').text('Last Updated: ' + new Date().toLocaleString());
+
+        const onStatusUpdated = () => {
+            enableTooltips();
+            setLastUpdatedTime();
+        };
 
         const updateStatus = async () => {
             if (updateInProgress) {
@@ -37,14 +51,14 @@
             try {
                 const response = await $.get('@Url.Page("Index", "Status")');
                 $('#adapter-status').html(response);
-                setLastUpdatedTime();
+                onStatusUpdated();
             }
             finally {
                 updateInProgress = false;
             }
         };
 
-        setLastUpdatedTime();
+        onStatusUpdated();
 
         setInterval(async () => {
             await updateStatus();

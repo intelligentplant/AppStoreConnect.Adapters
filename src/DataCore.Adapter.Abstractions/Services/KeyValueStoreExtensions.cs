@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataCore.Adapter.Services {
+
     /// <summary>
     /// Extensions for <see cref="IKeyValueStore"/>.
     /// </summary>
@@ -47,12 +49,8 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentException(AbstractionsResources.Error_KeyValueStore_InvalidKey, nameof(prefix));
             }
 
-            if (store is ScopedKeyValueStore scoped) {
-                // This store is already an instance of ScopedKeyValueStore. Instead of wrapping
-                // the scoped store and recursively applying key prefixes in every operation, we
-                // will wrap the inner store and concatenate the prefix for this store with the
-                // prefix passed to this method.
-                return new ScopedKeyValueStore(KeyValueStore.AddPrefix(scoped.Prefix, prefix), scoped.Inner);
+            if (store is IRawKeyValueStore raw) {
+                return new ScopedRawKeyValueStore(prefix, raw);
             }
 
             return new ScopedKeyValueStore(prefix, store);
@@ -80,22 +78,43 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static async IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) {
+        public static async IAsyncEnumerable<string> GetKeysAsStringsAsync(this IKeyValueStore store, KVKey? prefix) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
             await foreach (var key in store.GetKeysAsync(prefix).ConfigureAwait(false)) {
-                string result;
-                try {
-                    result = Encoding.UTF8.GetString(key);
+                if (key.Length == 0) {
+                    continue;
                 }
-                catch {
-                    result = BitConverter.ToString(key);
-                }
-                yield return result;
+                yield return key.ToString();
             }
         }
+
+
+        /// <summary>
+        /// Gets the keys that are defined in the store, converted to <see cref="string"/>.
+        /// </summary>
+        /// <param name="store">
+        ///   The <see cref="IKeyValueStore"/>.
+        /// </param>
+        /// <param name="prefix">
+        ///   Only keys with this prefix will be returned.
+        /// </param>
+        /// <returns>
+        ///   The keys, converted to strings.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Each key is converted to a string by calling <see cref="Encoding.GetString(byte[])"/> 
+        ///   on <see cref="Encoding.UTF8"/>. If an exception is thrown during this conversion, the 
+        ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
+        ///   instead.
+        /// </remarks>
+        [Obsolete("Use GetKeysAsStringsAsync instead.", false)]
+        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store, KVKey? prefix) => store.GetKeysAsStringsAsync(prefix);
 
 
         /// <summary>
@@ -116,9 +135,29 @@ namespace DataCore.Adapter.Services {
         ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
         ///   instead.
         /// </remarks>
-        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) {
-            return store.GetKeysAsStrings(default);
-        }
+        public static IAsyncEnumerable<string> GetKeysAsStringsAsync(this IKeyValueStore store) => store.GetKeysAsStringsAsync(default);
+
+
+        /// <summary>
+        /// Gets the keys that are defined in the store, converted to <see cref="string"/>.
+        /// </summary>
+        /// <param name="store">
+        ///   The <see cref="IKeyValueStore"/>.
+        /// </param>
+        /// <returns>
+        ///   The keys, converted to strings.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="store"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Each key is converted to a string by calling <see cref="Encoding.GetString(byte[])"/> 
+        ///   on <see cref="Encoding.UTF8"/>. If an exception is thrown during this conversion, the 
+        ///   key will be converted to a string using <see cref="BitConverter.ToString(byte[])"/> 
+        ///   instead.
+        /// </remarks>
+        [Obsolete("Use GetKeysAsStringsAsync instead.", false)]
+        public static IAsyncEnumerable<string> GetKeysAsStrings(this IKeyValueStore store) => store.GetKeysAsStringsAsync(default);
 
 
         /// <summary>
@@ -145,12 +184,13 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.WriteAsync<T> instead.", false)]
         public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, options)).ConfigureAwait(false);
+            await store.WriteAsync(key, value).ConfigureAwait(false);
         }
 
 
@@ -181,6 +221,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.WriteAsync<T> instead.", false)]
         public static async ValueTask WriteJsonAsync<TValue>(this IKeyValueStore store, KVKey key, TValue value, JsonTypeInfo<TValue> jsonTypeInfo) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
@@ -189,7 +230,7 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(jsonTypeInfo));
             }
 
-            await store.WriteAsync(key, JsonSerializer.SerializeToUtf8Bytes(value, jsonTypeInfo)).ConfigureAwait(false);
+            await store.WriteAsync(key, value).ConfigureAwait(false);
         }
 
 
@@ -214,15 +255,13 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="store"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.ReadAsync<T> instead.", false)]
         public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonSerializerOptions? options = null) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            var result = await store.ReadAsync(key).ConfigureAwait(false);
-            return result == null
-                ? default
-                : JsonSerializer.Deserialize<TValue>(result, options);
+            return await store.ReadAsync<TValue>(key).ConfigureAwait(false);
         }
 
 
@@ -250,6 +289,7 @@ namespace DataCore.Adapter.Services {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="jsonTypeInfo"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use IKeyValueStore.ReadAsync<T> instead.", false)]
         public static async ValueTask<TValue?> ReadJsonAsync<TValue>(this IKeyValueStore store, KVKey key, JsonTypeInfo<TValue> jsonTypeInfo) {
             if (store == null) {
                 throw new ArgumentNullException(nameof(store));
@@ -258,11 +298,198 @@ namespace DataCore.Adapter.Services {
                 throw new ArgumentNullException(nameof(jsonTypeInfo));
             }
 
-            var result = await store.ReadAsync(key).ConfigureAwait(false);
-            return result == null
-                ? default
-                : JsonSerializer.Deserialize(result, jsonTypeInfo);
+            return await store.ReadAsync<TValue>(key).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Copies all keys and values matching the specified prefix to another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keyPrefix">
+        ///   The filter to apply to keys read from the source store.
+        /// </param>
+        /// <param name="overwrite">
+        ///   Specifies if existing keys in the destination store should be overwritten.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> BulkCopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, KVKey? keyPrefix = null, bool overwrite = false, CancellationToken cancellationToken = default) {
+            if (source == null) {
+                throw new ArgumentNullException(nameof(source));
+            }
+            if (destination == null) {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            var count = 0;
+
+            await foreach (var key in source.GetKeysAsync(keyPrefix).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var value = await source.ReadRawAsync(key).ConfigureAwait(false);
+                if (value == null) {
+                    continue;
+                }
+
+                if (!overwrite) {
+                    var exists = await destination.ExistsAsync(key).ConfigureAwait(false);
+                    if (exists) {
+                        continue;
+                    }
+                }
+
+                await destination.WriteRawAsync(key, value).ConfigureAwait(false);
+                count++;
+            }
+
+            return count;
+        }
+
+
+        /// <summary>
+        /// Copies all keys and values matching the specified prefix from another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keyPrefix">
+        ///   The filter to apply to keys read from the source store.
+        /// </param>
+        /// <param name="overwrite">
+        ///   Specifies if existing keys in the destination store should be overwritten.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<int> BulkCopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, KVKey? keyPrefix = null, bool overwrite = false, CancellationToken cancellationToken = default) {
+            return await source.BulkCopyToAsync(destination, keyPrefix, overwrite, cancellationToken).ConfigureAwait(false);
+        }
+
+
+        /// <summary>
+        /// Copies the specified keys and values to another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keys">
+        ///   The keys to copy.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="keys"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Unlike <see cref="BulkCopyToAsync"/>, <see cref="CopyToAsync"/> will always 
+        ///   overwrite keys in the destination store.
+        /// </remarks>
+        public static async Task<int> CopyToAsync(this IRawKeyValueStore source, IRawKeyValueStore destination, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
+            if (source == null) {
+                throw new ArgumentNullException(nameof(source));
+            }
+            if (destination == null) {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            var count = 0;
+
+            foreach (var key in keys) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (key.Length == 0) {
+                    continue;
+                }
+
+                var value = await source.ReadRawAsync(key).ConfigureAwait(false);
+                if (value == null) {
+                    continue;
+                }
+
+                await destination.WriteRawAsync(key, value).ConfigureAwait(false);
+                count++;
+            }
+
+            return count;
+        }
+
+
+        /// <summary>
+        /// Copies the specified keys and values from another <see cref="IRawKeyValueStore"/>.
+        /// </summary>
+        /// <param name="destination">
+        ///   The destination <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="source">
+        ///   The source <see cref="IRawKeyValueStore"/>.
+        /// </param>
+        /// <param name="keys">
+        ///   The keys to copy.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The number of keys copied.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="source"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="destination"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="keys"/> is <see langword="null"/>.
+        /// </exception>
+        /// <remarks>
+        ///   Unlike <see cref="BulkCopyFromAsync"/>, <see cref="CopyFromAsync"/> will always 
+        ///   overwrite keys in the destination store.
+        /// </remarks>
+        public static async Task<int> CopyFromAsync(this IRawKeyValueStore destination, IRawKeyValueStore source, IEnumerable<KVKey> keys, CancellationToken cancellationToken = default) {
+           return await source.CopyToAsync(destination, keys, cancellationToken).ConfigureAwait(false);
         }
 
     }
+
 }

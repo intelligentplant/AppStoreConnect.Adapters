@@ -38,11 +38,7 @@ namespace DataCore.Adapter.Services {
 
         /// <inheritdoc/>
         public override int GetHashCode() {
-#if NETSTANDARD2_0 || NETFRAMEWORK
-            return HashGenerator.Combine(Value);
-#else
             return HashCode.Combine(Value);
-#endif
         }
 
 
@@ -81,6 +77,21 @@ namespace DataCore.Adapter.Services {
             return true;
         }
 
+
+        /// <inheritdoc/>
+        public override string ToString() {
+            if (Length == 0) {
+                return string.Empty;
+            }
+
+            try {
+                return Encoding.UTF8.GetString(Value);
+            }
+            catch {
+                return BitConverter.ToString(Value);
+            }
+        }
+
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
         public static bool operator ==(KVKey left, KVKey right) => left.Equals(right);
@@ -102,6 +113,7 @@ namespace DataCore.Adapter.Services {
         public static implicit operator KVKey(uint value) => new KVKey(BitConverter.GetBytes(value));
         public static implicit operator KVKey(ulong value) => new KVKey(BitConverter.GetBytes(value));
         public static implicit operator byte[](KVKey value) => value.Value;
+        public static implicit operator string?(KVKey value) => value.Length == 0 ? null : value.ToString();
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 

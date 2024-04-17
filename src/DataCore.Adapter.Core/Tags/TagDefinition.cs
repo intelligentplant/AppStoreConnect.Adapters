@@ -65,11 +65,11 @@ namespace DataCore.Adapter.Tags {
         /// <param name="labels">
         ///   Labels associated with the tag.
         /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="id"/> is <see langword="null"/>.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="id"/> is <see langword="null"/> or white space.
         /// </exception>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         [JsonConstructor]
         public TagDefinition(

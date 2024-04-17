@@ -1,0 +1,1040 @@
+﻿#nullable enable
+abstract DataCore.Adapter.Common.ObjectEncoder.Decode(byte[]? encodedData, System.Type! type) -> object?
+abstract DataCore.Adapter.Common.ObjectEncoder.Encode(object? value, System.Type! type) -> byte[]?
+abstract DataCore.Adapter.Common.ObjectEncoder.EncodingType.get -> string!
+const DataCore.Adapter.Common.FeatureDescriptor.MaxCategoryLength = 100 -> int
+const DataCore.Adapter.Common.FeatureDescriptor.MaxDescriptionLength = 500 -> int
+const DataCore.Adapter.Common.FeatureDescriptor.MaxDisplayNameLength = 100 -> int
+const DataCore.Adapter.Common.Variant.DefaultDateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ" -> string!
+const DataCore.Adapter.Common.Variant.DefaultDoubleFormat = "G17" -> string!
+const DataCore.Adapter.Common.Variant.DefaultFloatFormat = "G9" -> string!
+const DataCore.Adapter.Common.Variant.DefaultIntegralFormat = "G" -> string!
+const DataCore.Adapter.Diagnostics.ConfigurationChangeItemTypes.AssetModelNode = "AssetModelNode" -> string!
+const DataCore.Adapter.Diagnostics.ConfigurationChangeItemTypes.Tag = "Tag" -> string!
+const DataCore.Adapter.Extensions.ExtensionFeatureConstants.ObsoleteError = false -> bool
+const DataCore.Adapter.Extensions.ExtensionFeatureConstants.ObsoleteMessage = "Extension features are deprecated and will be removed in a future release. Use custom functions instead." -> string!
+const DataCore.Adapter.WellKnownProperties.TagValue.DisplayValue = "Display-Value" -> string!
+DataCore.Adapter.AssetModel.AssetModelNode
+DataCore.Adapter.AssetModel.AssetModelNode.AssetModelNode(string! id, string! name, DataCore.Adapter.AssetModel.NodeType nodeType, string? nodeSubType, string? description, string? parent, bool hasChildren, DataCore.Adapter.AssetModel.DataReference? dataReference, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.AssetModel.AssetModelNode.AssetModelNode(string! id, string! name, DataCore.Adapter.AssetModel.NodeType nodeType, string? nodeSubType, string? description, string? parent, bool hasChildren, System.Collections.Generic.IEnumerable<DataCore.Adapter.AssetModel.DataReference!>? dataReferences, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.AssetModel.AssetModelNode.DataReference.get -> DataCore.Adapter.AssetModel.DataReference?
+DataCore.Adapter.AssetModel.AssetModelNode.DataReferences.get -> DataCore.Adapter.AssetModel.DataReference![]?
+DataCore.Adapter.AssetModel.AssetModelNode.Description.get -> string?
+DataCore.Adapter.AssetModel.AssetModelNode.HasChildren.get -> bool
+DataCore.Adapter.AssetModel.AssetModelNode.Id.get -> string!
+DataCore.Adapter.AssetModel.AssetModelNode.Name.get -> string!
+DataCore.Adapter.AssetModel.AssetModelNode.NodeSubType.get -> string?
+DataCore.Adapter.AssetModel.AssetModelNode.NodeType.get -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.AssetModelNode.Parent.get -> string?
+DataCore.Adapter.AssetModel.AssetModelNode.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.BrowseAssetModelNodesRequest() -> void
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.ParentId.get -> string?
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.ParentId.set -> void
+DataCore.Adapter.AssetModel.DataReference
+DataCore.Adapter.AssetModel.DataReference.AdapterId.get -> string!
+DataCore.Adapter.AssetModel.DataReference.DataReference(string! adapterId, string! tag) -> void
+DataCore.Adapter.AssetModel.DataReference.DataReference(string! adapterId, string! tag, string? name) -> void
+DataCore.Adapter.AssetModel.DataReference.Name.get -> string?
+DataCore.Adapter.AssetModel.DataReference.Tag.get -> string!
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Description.get -> string?
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Description.set -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.FindAssetModelNodesRequest() -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Name.get -> string?
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Name.set -> void
+DataCore.Adapter.AssetModel.GetAssetModelNodesRequest
+DataCore.Adapter.AssetModel.GetAssetModelNodesRequest.GetAssetModelNodesRequest() -> void
+DataCore.Adapter.AssetModel.GetAssetModelNodesRequest.Nodes.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.AssetModel.GetAssetModelNodesRequest.Nodes.set -> void
+DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.Object = 1 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.ObjectType = 3 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.Other = 5 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.Unknown = 0 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.Variable = 2 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.AssetModel.NodeType.VariableType = 4 -> DataCore.Adapter.AssetModel.NodeType
+DataCore.Adapter.Common.AdapterDescriptor
+DataCore.Adapter.Common.AdapterDescriptor.AdapterDescriptor(string! id, string! name, string? description) -> void
+DataCore.Adapter.Common.AdapterDescriptor.Description.get -> string?
+DataCore.Adapter.Common.AdapterDescriptor.Id.get -> string!
+DataCore.Adapter.Common.AdapterDescriptor.Name.get -> string!
+DataCore.Adapter.Common.AdapterDescriptorExtended
+DataCore.Adapter.Common.AdapterDescriptorExtended.AdapterDescriptorExtended(string! id, string! name, string? description, System.Collections.Generic.IEnumerable<string!>? features, System.Collections.Generic.IEnumerable<string!>? extensions, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, DataCore.Adapter.Common.AdapterTypeDescriptor? typeDescriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorExtended.Extensions.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Common.AdapterDescriptorExtended.Features.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Common.AdapterDescriptorExtended.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Common.AdapterDescriptorExtended.TypeDescriptor.get -> DataCore.Adapter.Common.AdapterTypeDescriptor?
+DataCore.Adapter.Common.AdapterProperty
+DataCore.Adapter.Common.AdapterProperty.AdapterProperty(string! name, DataCore.Adapter.Common.Variant value, string? description = null) -> void
+DataCore.Adapter.Common.AdapterProperty.Description.get -> string?
+DataCore.Adapter.Common.AdapterProperty.Name.get -> string!
+DataCore.Adapter.Common.AdapterProperty.Value.get -> DataCore.Adapter.Common.Variant
+DataCore.Adapter.Common.AdapterRequest
+DataCore.Adapter.Common.AdapterRequest.AdapterRequest() -> void
+DataCore.Adapter.Common.AdapterRequest.Properties.get -> System.Collections.Generic.IDictionary<string!, string!>?
+DataCore.Adapter.Common.AdapterRequest.Properties.set -> void
+DataCore.Adapter.Common.AdapterRequestExtensions
+DataCore.Adapter.Common.AdapterTypeDescriptor
+DataCore.Adapter.Common.AdapterTypeDescriptor.AdapterTypeDescriptor(System.Uri! id, string? name, string? description, string? version, DataCore.Adapter.Common.VendorInfo? vendor, string? helpUrl) -> void
+DataCore.Adapter.Common.AdapterTypeDescriptor.Description.get -> string?
+DataCore.Adapter.Common.AdapterTypeDescriptor.HelpUrl.get -> string?
+DataCore.Adapter.Common.AdapterTypeDescriptor.Id.get -> System.Uri!
+DataCore.Adapter.Common.AdapterTypeDescriptor.Name.get -> string?
+DataCore.Adapter.Common.AdapterTypeDescriptor.Vendor.get -> DataCore.Adapter.Common.VendorInfo?
+DataCore.Adapter.Common.AdapterTypeDescriptor.Version.get -> string?
+DataCore.Adapter.Common.ApiDescriptor
+DataCore.Adapter.Common.ApiDescriptor.ApiDescriptor() -> void
+DataCore.Adapter.Common.ApiDescriptor.ApiDescriptor(string! name, string? provider, string? version, bool enabled) -> void
+DataCore.Adapter.Common.ApiDescriptor.Enabled.get -> bool
+DataCore.Adapter.Common.ApiDescriptor.Name.get -> string!
+DataCore.Adapter.Common.ApiDescriptor.Provider.get -> string?
+DataCore.Adapter.Common.ApiDescriptor.Version.get -> string?
+DataCore.Adapter.Common.DataTypeIdAttribute
+DataCore.Adapter.Common.DataTypeIdAttribute.DataTypeId.get -> System.Uri!
+DataCore.Adapter.Common.DataTypeIdAttribute.DataTypeIdAttribute(string! uriString) -> void
+DataCore.Adapter.Common.EncodedObject
+DataCore.Adapter.Common.EncodedObject.EncodedBody.get -> string!
+DataCore.Adapter.Common.EncodedObject.EncodedObject(System.Uri! typeId, string! encoding, string! encodedBody) -> void
+DataCore.Adapter.Common.EncodedObject.Encoding.get -> string!
+DataCore.Adapter.Common.EncodedObject.Equals(DataCore.Adapter.Common.EncodedObject! other) -> bool
+DataCore.Adapter.Common.EncodedObject.ToByteArray() -> byte[]!
+DataCore.Adapter.Common.EncodedObject.TypeId.get -> System.Uri!
+DataCore.Adapter.Common.FeatureDescriptor
+DataCore.Adapter.Common.FeatureDescriptor.Category.get -> string?
+DataCore.Adapter.Common.FeatureDescriptor.Category.set -> void
+DataCore.Adapter.Common.FeatureDescriptor.Description.get -> string?
+DataCore.Adapter.Common.FeatureDescriptor.Description.set -> void
+DataCore.Adapter.Common.FeatureDescriptor.DisplayName.get -> string!
+DataCore.Adapter.Common.FeatureDescriptor.DisplayName.set -> void
+DataCore.Adapter.Common.FeatureDescriptor.FeatureDescriptor() -> void
+DataCore.Adapter.Common.FeatureDescriptor.Uri.get -> System.Uri!
+DataCore.Adapter.Common.FeatureDescriptor.Uri.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest
+DataCore.Adapter.Common.FindAdaptersRequest.Description.get -> string?
+DataCore.Adapter.Common.FindAdaptersRequest.Description.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.Features.get -> System.Collections.Generic.IEnumerable<string!>?
+DataCore.Adapter.Common.FindAdaptersRequest.Features.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.FindAdaptersRequest() -> void
+DataCore.Adapter.Common.FindAdaptersRequest.Id.get -> string?
+DataCore.Adapter.Common.FindAdaptersRequest.Id.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.Name.get -> string?
+DataCore.Adapter.Common.FindAdaptersRequest.Name.set -> void
+DataCore.Adapter.Common.HostInfo
+DataCore.Adapter.Common.HostInfo.Description.get -> string?
+DataCore.Adapter.Common.HostInfo.HostInfo(string? name, string? description, string? version, DataCore.Adapter.Common.VendorInfo? vendor, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Common.HostInfo.Name.get -> string?
+DataCore.Adapter.Common.HostInfo.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Common.HostInfo.Vendor.get -> DataCore.Adapter.Common.VendorInfo?
+DataCore.Adapter.Common.HostInfo.Version.get -> string!
+DataCore.Adapter.Common.IObjectEncoder
+DataCore.Adapter.Common.IObjectEncoder.CanDecode(System.Type! type) -> bool
+DataCore.Adapter.Common.IObjectEncoder.CanEncode(System.Type! type) -> bool
+DataCore.Adapter.Common.IObjectEncoder.Decode(System.Type! type, byte[]? encoded) -> object?
+DataCore.Adapter.Common.IObjectEncoder.Encode(System.Type! type, object? value) -> byte[]?
+DataCore.Adapter.Common.IObjectEncoder.EncodingType.get -> string!
+DataCore.Adapter.Common.IPageableAdapterRequest
+DataCore.Adapter.Common.IPageableAdapterRequest.Page.get -> int
+DataCore.Adapter.Common.IPageableAdapterRequest.Page.set -> void
+DataCore.Adapter.Common.IPageableAdapterRequest.PageSize.get -> int
+DataCore.Adapter.Common.IPageableAdapterRequest.PageSize.set -> void
+DataCore.Adapter.Common.ObjectEncoder
+DataCore.Adapter.Common.ObjectEncoder.ObjectEncoder() -> void
+DataCore.Adapter.Common.ObjectEncoderExtensions
+DataCore.Adapter.Common.PageableAdapterRequest
+DataCore.Adapter.Common.PageableAdapterRequest.Page.get -> int
+DataCore.Adapter.Common.PageableAdapterRequest.Page.set -> void
+DataCore.Adapter.Common.PageableAdapterRequest.PageableAdapterRequest() -> void
+DataCore.Adapter.Common.PageableAdapterRequest.PageSize.get -> int
+DataCore.Adapter.Common.PageableAdapterRequest.PageSize.set -> void
+DataCore.Adapter.Common.SubscriptionUpdateAction
+DataCore.Adapter.Common.SubscriptionUpdateAction.Subscribe = 0 -> DataCore.Adapter.Common.SubscriptionUpdateAction
+DataCore.Adapter.Common.SubscriptionUpdateAction.Unsubscribe = 1 -> DataCore.Adapter.Common.SubscriptionUpdateAction
+DataCore.Adapter.Common.TypeLibrary
+DataCore.Adapter.Common.Variant
+DataCore.Adapter.Common.Variant.ArrayDimensions.get -> int[]?
+DataCore.Adapter.Common.Variant.Equals(DataCore.Adapter.Common.Variant other) -> bool
+DataCore.Adapter.Common.Variant.ToString(string! format) -> string!
+DataCore.Adapter.Common.Variant.ToString(string? format, System.IFormatProvider? formatProvider) -> string!
+DataCore.Adapter.Common.Variant.Type.get -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.Variant.Value.get -> object?
+DataCore.Adapter.Common.Variant.Variant() -> void
+DataCore.Adapter.Common.Variant.Variant(bool value) -> void
+DataCore.Adapter.Common.Variant.Variant(bool[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(byte value) -> void
+DataCore.Adapter.Common.Variant.Variant(byte[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(DataCore.Adapter.Common.EncodedObject![]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(DataCore.Adapter.Common.EncodedObject? value) -> void
+DataCore.Adapter.Common.Variant.Variant(double value) -> void
+DataCore.Adapter.Common.Variant.Variant(double[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(float value) -> void
+DataCore.Adapter.Common.Variant.Variant(float[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(int value) -> void
+DataCore.Adapter.Common.Variant.Variant(int[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(long value) -> void
+DataCore.Adapter.Common.Variant.Variant(long[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(object? value) -> void
+DataCore.Adapter.Common.Variant.Variant(sbyte value) -> void
+DataCore.Adapter.Common.Variant.Variant(sbyte[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(short value) -> void
+DataCore.Adapter.Common.Variant.Variant(short[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(string![]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(string? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Array? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.DateTime value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.DateTime[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.TimeSpan value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.TimeSpan[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Uri![]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Uri? value) -> void
+DataCore.Adapter.Common.Variant.Variant(uint value) -> void
+DataCore.Adapter.Common.Variant.Variant(uint[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(ulong value) -> void
+DataCore.Adapter.Common.Variant.Variant(ulong[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(ushort value) -> void
+DataCore.Adapter.Common.Variant.Variant(ushort[]? value) -> void
+DataCore.Adapter.Common.VariantExtensions
+DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Boolean = 3 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Byte = 5 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.DateTime = 15 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Double = 13 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.ExtensionObject = 2 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Float = 12 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Int16 = 6 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Int32 = 8 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Int64 = 10 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Json = 18 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Null = 1 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.SByte = 4 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.String = 14 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.TimeSpan = 16 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.UInt16 = 7 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.UInt32 = 9 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.UInt64 = 11 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Unknown = 0 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VariantType.Url = 17 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Common.VendorInfo
+DataCore.Adapter.Common.VendorInfo.Name.get -> string?
+DataCore.Adapter.Common.VendorInfo.Url.get -> string?
+DataCore.Adapter.Common.VendorInfo.VendorInfo(string? name, string? url) -> void
+DataCore.Adapter.Common.WriteOperationResult
+DataCore.Adapter.Common.WriteOperationResult.Notes.get -> string?
+DataCore.Adapter.Common.WriteOperationResult.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Common.WriteOperationResult.Status.get -> DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Common.WriteOperationResult.WriteOperationResult(DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Common.WriteStatus.Fail = 2 -> DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Common.WriteStatus.Pending = 3 -> DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Common.WriteStatus.Success = 1 -> DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Common.WriteStatus.Unknown = 0 -> DataCore.Adapter.Common.WriteStatus
+DataCore.Adapter.Diagnostics.ConfigurationChange
+DataCore.Adapter.Diagnostics.ConfigurationChange.ChangeType.get -> DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.ConfigurationChange.ConfigurationChange(string! itemType, string! itemId, string! itemName, DataCore.Adapter.Diagnostics.ConfigurationChangeType changeType, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Diagnostics.ConfigurationChange.ItemId.get -> string!
+DataCore.Adapter.Diagnostics.ConfigurationChange.ItemName.get -> string!
+DataCore.Adapter.Diagnostics.ConfigurationChange.ItemType.get -> string!
+DataCore.Adapter.Diagnostics.ConfigurationChange.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Diagnostics.ConfigurationChangeItemTypes
+DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest
+DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest.ConfigurationChangesSubscriptionRequest() -> void
+DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest.ItemTypes.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest.ItemTypes.set -> void
+DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.ConfigurationChangeType.Created = 1 -> DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.ConfigurationChangeType.Deleted = 3 -> DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.ConfigurationChangeType.Unknown = 0 -> DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.ConfigurationChangeType.Updated = 2 -> DataCore.Adapter.Diagnostics.ConfigurationChangeType
+DataCore.Adapter.Diagnostics.HealthCheckResult
+DataCore.Adapter.Diagnostics.HealthCheckResult.Data.get -> System.Collections.Generic.IDictionary<string!, string!>!
+DataCore.Adapter.Diagnostics.HealthCheckResult.Description.get -> string?
+DataCore.Adapter.Diagnostics.HealthCheckResult.DisplayName.get -> string!
+DataCore.Adapter.Diagnostics.HealthCheckResult.Error.get -> string?
+DataCore.Adapter.Diagnostics.HealthCheckResult.HealthCheckResult() -> void
+DataCore.Adapter.Diagnostics.HealthCheckResult.HealthCheckResult(string? displayName, DataCore.Adapter.Diagnostics.HealthStatus status, string? description, string? error, System.Collections.Generic.IDictionary<string!, string!>? data, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults) -> void
+DataCore.Adapter.Diagnostics.HealthCheckResult.InnerResults.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>?
+DataCore.Adapter.Diagnostics.HealthCheckResult.Status.get -> DataCore.Adapter.Diagnostics.HealthStatus
+DataCore.Adapter.Diagnostics.HealthStatus
+DataCore.Adapter.Diagnostics.HealthStatus.Degraded = 1 -> DataCore.Adapter.Diagnostics.HealthStatus
+DataCore.Adapter.Diagnostics.HealthStatus.Healthy = 2 -> DataCore.Adapter.Diagnostics.HealthStatus
+DataCore.Adapter.Diagnostics.HealthStatus.Unhealthy = 0 -> DataCore.Adapter.Diagnostics.HealthStatus
+DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest
+DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest.CreateEventMessageSubscriptionRequest() -> void
+DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest.SubscriptionType.get -> DataCore.Adapter.Events.EventMessageSubscriptionType
+DataCore.Adapter.Events.CreateEventMessageSubscriptionRequest.SubscriptionType.set -> void
+DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest
+DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.CreateEventMessageTopicSubscriptionRequest() -> void
+DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.Topics.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.Topics.set -> void
+DataCore.Adapter.Events.EventMessage
+DataCore.Adapter.Events.EventMessageBase
+DataCore.Adapter.Events.EventMessageBase.Category.get -> string?
+DataCore.Adapter.Events.EventMessageBase.Id.get -> string!
+DataCore.Adapter.Events.EventMessageBase.Message.get -> string?
+DataCore.Adapter.Events.EventMessageBase.Priority.get -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventMessageBase.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Events.EventMessageBase.Topic.get -> string?
+DataCore.Adapter.Events.EventMessageBase.UtcEventTime.get -> System.DateTime
+DataCore.Adapter.Events.EventMessageSubscriptionType
+DataCore.Adapter.Events.EventMessageSubscriptionType.Active = 0 -> DataCore.Adapter.Events.EventMessageSubscriptionType
+DataCore.Adapter.Events.EventMessageSubscriptionType.Passive = 1 -> DataCore.Adapter.Events.EventMessageSubscriptionType
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Action.get -> DataCore.Adapter.Common.SubscriptionUpdateAction
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Action.set -> void
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate.EventMessageSubscriptionUpdate() -> void
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Topics.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Events.EventMessageSubscriptionUpdate.Topics.set -> void
+DataCore.Adapter.Events.EventMessageWithCursorPosition
+DataCore.Adapter.Events.EventMessageWithCursorPosition.CursorPosition.get -> string!
+DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventPriority.Critical = 4 -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventPriority.High = 3 -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventPriority.Low = 1 -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventPriority.Medium = 2 -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventPriority.Unknown = 0 -> DataCore.Adapter.Events.EventPriority
+DataCore.Adapter.Events.EventReadDirection
+DataCore.Adapter.Events.EventReadDirection.Backwards = 1 -> DataCore.Adapter.Events.EventReadDirection
+DataCore.Adapter.Events.EventReadDirection.Forwards = 0 -> DataCore.Adapter.Events.EventReadDirection
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.Page.get -> int
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.Page.set -> void
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.PageSize.get -> int
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.PageSize.set -> void
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.ReadEventMessagesForTimeRangeRequest() -> void
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.Topics.get -> System.Collections.Generic.IEnumerable<string!>?
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.Topics.set -> void
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.UtcEndTime.get -> System.DateTime
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.UtcEndTime.set -> void
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.UtcStartTime.get -> System.DateTime
+DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.UtcStartTime.set -> void
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.CursorPosition.get -> string?
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.CursorPosition.set -> void
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.PageSize.get -> int
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.PageSize.set -> void
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.ReadEventMessagesUsingCursorRequest() -> void
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.Topic.get -> string?
+DataCore.Adapter.Events.ReadEventMessagesUsingCursorRequest.Topic.set -> void
+DataCore.Adapter.Events.ReadHistoricalEventMessagesRequest
+DataCore.Adapter.Events.ReadHistoricalEventMessagesRequest.Direction.get -> DataCore.Adapter.Events.EventReadDirection
+DataCore.Adapter.Events.ReadHistoricalEventMessagesRequest.Direction.set -> void
+DataCore.Adapter.Events.ReadHistoricalEventMessagesRequest.ReadHistoricalEventMessagesRequest() -> void
+DataCore.Adapter.Events.WriteEventMessageItem
+DataCore.Adapter.Events.WriteEventMessageItem.CorrelationId.get -> string?
+DataCore.Adapter.Events.WriteEventMessageItem.CorrelationId.set -> void
+DataCore.Adapter.Events.WriteEventMessageItem.EventMessage.get -> DataCore.Adapter.Events.EventMessage!
+DataCore.Adapter.Events.WriteEventMessageItem.EventMessage.set -> void
+DataCore.Adapter.Events.WriteEventMessageItem.WriteEventMessageItem() -> void
+DataCore.Adapter.Events.WriteEventMessageResult
+DataCore.Adapter.Events.WriteEventMessageResult.CorrelationId.get -> string?
+DataCore.Adapter.Events.WriteEventMessageResult.WriteEventMessageResult(string? correlationId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Events.WriteEventMessagesRequest
+DataCore.Adapter.Events.WriteEventMessagesRequest.WriteEventMessagesRequest() -> void
+DataCore.Adapter.Events.WriteEventMessagesRequestExtended
+DataCore.Adapter.Events.WriteEventMessagesRequestExtended.Events.get -> DataCore.Adapter.Events.WriteEventMessageItem![]!
+DataCore.Adapter.Events.WriteEventMessagesRequestExtended.Events.set -> void
+DataCore.Adapter.Events.WriteEventMessagesRequestExtended.WriteEventMessagesRequestExtended() -> void
+DataCore.Adapter.Extensions.CustomFunctionDescriptor
+DataCore.Adapter.Extensions.CustomFunctionDescriptor.CustomFunctionDescriptor(System.Uri! id, string! name, string? description) -> void
+DataCore.Adapter.Extensions.CustomFunctionDescriptor.Description.get -> string?
+DataCore.Adapter.Extensions.CustomFunctionDescriptor.Id.get -> System.Uri!
+DataCore.Adapter.Extensions.CustomFunctionDescriptor.Name.get -> string!
+DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended
+DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended.CustomFunctionDescriptorExtended(System.Uri! id, string! name, string? description, System.Text.Json.JsonElement? requestSchema, System.Text.Json.JsonElement? responseSchema) -> void
+DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended.RequestSchema.get -> System.Text.Json.JsonElement?
+DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended.ResponseSchema.get -> System.Text.Json.JsonElement?
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Body.get -> System.Text.Json.JsonElement?
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Body.set -> void
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.CustomFunctionInvocationRequest() -> void
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Id.get -> System.Uri!
+DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Id.set -> void
+DataCore.Adapter.Extensions.CustomFunctionInvocationResponse
+DataCore.Adapter.Extensions.CustomFunctionInvocationResponse.Body.get -> System.Text.Json.JsonElement?
+DataCore.Adapter.Extensions.CustomFunctionInvocationResponse.Body.set -> void
+DataCore.Adapter.Extensions.CustomFunctionInvocationResponse.CustomFunctionInvocationResponse() -> void
+DataCore.Adapter.Extensions.DuplexStreamInvocationRequest
+DataCore.Adapter.Extensions.DuplexStreamInvocationRequest.DuplexStreamInvocationRequest() -> void
+DataCore.Adapter.Extensions.DuplexStreamInvocationRequest.OperationId.get -> System.Uri!
+DataCore.Adapter.Extensions.DuplexStreamInvocationRequest.OperationId.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureConstants
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Description.get -> string?
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Description.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.ExtensionFeatureOperationDescriptor() -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Inputs.get -> DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor![]!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Inputs.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Name.get -> string!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Name.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.OperationId.get -> System.Uri!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.OperationId.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.OperationType.get -> DataCore.Adapter.Extensions.ExtensionFeatureOperationType
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.OperationType.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Outputs.get -> DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor![]!
+DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptor.Outputs.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.ArrayRank.get -> int
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.ArrayRank.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.Description.get -> string?
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.Description.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.ExtensionFeatureOperationParameterDescriptor() -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.Ordinal.get -> int
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.Ordinal.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.TypeId.get -> System.Uri?
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.TypeId.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.VariantType.get -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Extensions.ExtensionFeatureOperationParameterDescriptor.VariantType.set -> void
+DataCore.Adapter.Extensions.ExtensionFeatureOperationType
+DataCore.Adapter.Extensions.ExtensionFeatureOperationType.DuplexStream = 2 -> DataCore.Adapter.Extensions.ExtensionFeatureOperationType
+DataCore.Adapter.Extensions.ExtensionFeatureOperationType.Invoke = 0 -> DataCore.Adapter.Extensions.ExtensionFeatureOperationType
+DataCore.Adapter.Extensions.ExtensionFeatureOperationType.Stream = 1 -> DataCore.Adapter.Extensions.ExtensionFeatureOperationType
+DataCore.Adapter.Extensions.GetCustomFunctionRequest
+DataCore.Adapter.Extensions.GetCustomFunctionRequest.GetCustomFunctionRequest() -> void
+DataCore.Adapter.Extensions.GetCustomFunctionRequest.Id.get -> System.Uri!
+DataCore.Adapter.Extensions.GetCustomFunctionRequest.Id.set -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Description.get -> string?
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Description.set -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.GetCustomFunctionsRequest() -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Id.get -> string?
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Id.set -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Name.get -> string?
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Name.set -> void
+DataCore.Adapter.Extensions.InvocationRequest
+DataCore.Adapter.Extensions.InvocationRequest.Arguments.get -> DataCore.Adapter.Common.Variant[]!
+DataCore.Adapter.Extensions.InvocationRequest.Arguments.set -> void
+DataCore.Adapter.Extensions.InvocationRequest.InvocationRequest() -> void
+DataCore.Adapter.Extensions.InvocationRequest.OperationId.get -> System.Uri!
+DataCore.Adapter.Extensions.InvocationRequest.OperationId.set -> void
+DataCore.Adapter.Extensions.InvocationResponse
+DataCore.Adapter.Extensions.InvocationResponse.InvocationResponse() -> void
+DataCore.Adapter.Extensions.InvocationResponse.Results.get -> DataCore.Adapter.Common.Variant[]!
+DataCore.Adapter.Extensions.InvocationResponse.Results.set -> void
+DataCore.Adapter.Extensions.InvocationStreamItem
+DataCore.Adapter.Extensions.InvocationStreamItem.Arguments.get -> DataCore.Adapter.Common.Variant[]!
+DataCore.Adapter.Extensions.InvocationStreamItem.Arguments.set -> void
+DataCore.Adapter.Extensions.InvocationStreamItem.InvocationStreamItem() -> void
+DataCore.Adapter.Json.JsonExtensions
+DataCore.Adapter.Json.JsonObjectEncoder
+DataCore.Adapter.Json.JsonObjectEncoder.JsonObjectEncoder(System.Text.Json.JsonSerializerOptions? options = null) -> void
+DataCore.Adapter.RealTimeData.AnnotationType
+DataCore.Adapter.RealTimeData.AnnotationType.Instantaneous = 1 -> DataCore.Adapter.RealTimeData.AnnotationType
+DataCore.Adapter.RealTimeData.AnnotationType.TimeRange = 2 -> DataCore.Adapter.RealTimeData.AnnotationType
+DataCore.Adapter.RealTimeData.AnnotationType.Unknown = 0 -> DataCore.Adapter.RealTimeData.AnnotationType
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest.Annotation.get -> DataCore.Adapter.RealTimeData.TagValueAnnotation!
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest.Annotation.set -> void
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest.CreateAnnotationRequest() -> void
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest.Tag.get -> string!
+DataCore.Adapter.RealTimeData.CreateAnnotationRequest.Tag.set -> void
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.CreateSnapshotTagValueSubscriptionRequest() -> void
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.PublishInterval.get -> System.TimeSpan
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.PublishInterval.set -> void
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.Tags.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.Tags.set -> void
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Aliases.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.DataFunctionDescriptor(string! id, string! name, string? description, DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType sampleTime = DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.Unspecified, DataCore.Adapter.RealTimeData.DataFunctionStatusType status = DataCore.Adapter.RealTimeData.DataFunctionStatusType.Unspecified, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties = null, System.Collections.Generic.IEnumerable<string!>? aliases = null) -> void
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Description.get -> string?
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Equals(DataCore.Adapter.RealTimeData.DataFunctionDescriptor? other) -> bool
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Id.get -> string!
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Name.get -> string!
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.SampleTime.get -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Status.get -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionDescriptorExtensions
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.Custom = 4 -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.EndTime = 2 -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.Raw = 3 -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.StartTime = 1 -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.Unspecified = 0 -> DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.AlwaysGood = 6 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.Custom = 4 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.PercentTime = 3 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.PercentValues = 2 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.Raw = 5 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.Unspecified = 1 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DataFunctionStatusType.WorstCase = 7 -> DataCore.Adapter.RealTimeData.DataFunctionStatusType
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest.AnnotationId.get -> string!
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest.AnnotationId.set -> void
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest.DeleteAnnotationRequest() -> void
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest.Tag.get -> string!
+DataCore.Adapter.RealTimeData.DeleteAnnotationRequest.Tag.set -> void
+DataCore.Adapter.RealTimeData.GetSupportedDataFunctionsRequest
+DataCore.Adapter.RealTimeData.GetSupportedDataFunctionsRequest.GetSupportedDataFunctionsRequest() -> void
+DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult
+DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult.DataFunction.get -> string!
+DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult.DataFunction.set -> void
+DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult.ProcessedTagValueQueryResult(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueExtended! value, string! dataFunction) -> void
+DataCore.Adapter.RealTimeData.RawDataBoundaryType
+DataCore.Adapter.RealTimeData.RawDataBoundaryType.Inside = 0 -> DataCore.Adapter.RealTimeData.RawDataBoundaryType
+DataCore.Adapter.RealTimeData.RawDataBoundaryType.Outside = 1 -> DataCore.Adapter.RealTimeData.RawDataBoundaryType
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest.AnnotationId.get -> string!
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest.AnnotationId.set -> void
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest.ReadAnnotationRequest() -> void
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest.Tag.get -> string!
+DataCore.Adapter.RealTimeData.ReadAnnotationRequest.Tag.set -> void
+DataCore.Adapter.RealTimeData.ReadAnnotationsRequest
+DataCore.Adapter.RealTimeData.ReadAnnotationsRequest.AnnotationCount.get -> int
+DataCore.Adapter.RealTimeData.ReadAnnotationsRequest.AnnotationCount.set -> void
+DataCore.Adapter.RealTimeData.ReadAnnotationsRequest.ReadAnnotationsRequest() -> void
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.ReadHistoricalTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.UtcEndTime.get -> System.DateTime
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.UtcEndTime.set -> void
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.UtcStartTime.get -> System.DateTime
+DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.UtcStartTime.set -> void
+DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest
+DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest.Intervals.get -> int
+DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest.Intervals.set -> void
+DataCore.Adapter.RealTimeData.ReadPlotTagValuesRequest.ReadPlotTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest.DataFunctions.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest.DataFunctions.set -> void
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest.ReadProcessedTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest.SampleInterval.get -> System.TimeSpan
+DataCore.Adapter.RealTimeData.ReadProcessedTagValuesRequest.SampleInterval.set -> void
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest.BoundaryType.get -> DataCore.Adapter.RealTimeData.RawDataBoundaryType
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest.BoundaryType.set -> void
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest.ReadRawTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest.SampleCount.get -> int
+DataCore.Adapter.RealTimeData.ReadRawTagValuesRequest.SampleCount.set -> void
+DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest
+DataCore.Adapter.RealTimeData.ReadSnapshotTagValuesRequest.ReadSnapshotTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadTagDataRequest
+DataCore.Adapter.RealTimeData.ReadTagDataRequest.ReadTagDataRequest() -> void
+DataCore.Adapter.RealTimeData.ReadTagDataRequest.Tags.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.RealTimeData.ReadTagDataRequest.Tags.set -> void
+DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest
+DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest.ReadTagValuesAtTimesRequest() -> void
+DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest.UtcSampleTimes.get -> System.Collections.Generic.IEnumerable<System.DateTime>!
+DataCore.Adapter.RealTimeData.ReadTagValuesAtTimesRequest.UtcSampleTimes.set -> void
+DataCore.Adapter.RealTimeData.TagDataContainer
+DataCore.Adapter.RealTimeData.TagDataContainer.TagDataContainer(string! tagId, string! tagName) -> void
+DataCore.Adapter.RealTimeData.TagDataContainer.TagId.get -> string!
+DataCore.Adapter.RealTimeData.TagDataContainer.TagName.get -> string!
+DataCore.Adapter.RealTimeData.TagValue
+DataCore.Adapter.RealTimeData.TagValue.Status.get -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.TagValue.TagValue(System.DateTime utcSampleTime, DataCore.Adapter.Common.Variant value, DataCore.Adapter.RealTimeData.TagValueStatus status, string? units) -> void
+DataCore.Adapter.RealTimeData.TagValue.ToString(string? format) -> string!
+DataCore.Adapter.RealTimeData.TagValue.ToString(string? format, System.IFormatProvider? formatProvider) -> string!
+DataCore.Adapter.RealTimeData.TagValue.Units.get -> string?
+DataCore.Adapter.RealTimeData.TagValue.UtcSampleTime.get -> System.DateTime
+DataCore.Adapter.RealTimeData.TagValue.Value.get -> DataCore.Adapter.Common.Variant
+DataCore.Adapter.RealTimeData.TagValueAnnotation
+DataCore.Adapter.RealTimeData.TagValueAnnotation.AnnotationType.get -> DataCore.Adapter.RealTimeData.AnnotationType
+DataCore.Adapter.RealTimeData.TagValueAnnotation.Description.get -> string?
+DataCore.Adapter.RealTimeData.TagValueAnnotation.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.RealTimeData.TagValueAnnotation.TagValueAnnotation(DataCore.Adapter.RealTimeData.AnnotationType annotationType, System.DateTime utcStartTime, System.DateTime? utcEndTime, string? value, string? description, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.RealTimeData.TagValueAnnotation.UtcEndTime.get -> System.DateTime?
+DataCore.Adapter.RealTimeData.TagValueAnnotation.UtcStartTime.get -> System.DateTime
+DataCore.Adapter.RealTimeData.TagValueAnnotation.Value.get -> string?
+DataCore.Adapter.RealTimeData.TagValueAnnotationExtended
+DataCore.Adapter.RealTimeData.TagValueAnnotationExtended.Id.get -> string!
+DataCore.Adapter.RealTimeData.TagValueAnnotationExtended.TagValueAnnotationExtended(string! id, DataCore.Adapter.RealTimeData.AnnotationType annotationType, System.DateTime utcStartTime, System.DateTime? utcEndTime, string? value, string? description, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult
+DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult.Annotation.get -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
+DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult.TagValueAnnotationQueryResult(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueAnnotationExtended! annotation) -> void
+DataCore.Adapter.RealTimeData.TagValueExtended
+DataCore.Adapter.RealTimeData.TagValueExtended.Error.get -> string?
+DataCore.Adapter.RealTimeData.TagValueExtended.Error.set -> void
+DataCore.Adapter.RealTimeData.TagValueExtended.Notes.get -> string?
+DataCore.Adapter.RealTimeData.TagValueExtended.Notes.set -> void
+DataCore.Adapter.RealTimeData.TagValueExtended.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.RealTimeData.TagValueExtended.Properties.set -> void
+DataCore.Adapter.RealTimeData.TagValueExtended.TagValueExtended(System.DateTime utcSampleTime, DataCore.Adapter.Common.Variant value, DataCore.Adapter.RealTimeData.TagValueStatus status, string? units, string? notes, string? error, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.RealTimeData.TagValueExtensions
+DataCore.Adapter.RealTimeData.TagValueQueryResult
+DataCore.Adapter.RealTimeData.TagValueQueryResult.TagValueQueryResult(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueExtended! value) -> void
+DataCore.Adapter.RealTimeData.TagValueQueryResult.Value.get -> DataCore.Adapter.RealTimeData.TagValueExtended!
+DataCore.Adapter.RealTimeData.TagValueQueryResult.Value.set -> void
+DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.TagValueStatus.Bad = 0 -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.TagValueStatus.Good = 192 -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.TagValueStatus.Uncertain = 64 -> DataCore.Adapter.RealTimeData.TagValueStatus
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate.Action.get -> DataCore.Adapter.Common.SubscriptionUpdateAction
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate.Action.set -> void
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate.Tags.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate.Tags.set -> void
+DataCore.Adapter.RealTimeData.TagValueSubscriptionUpdate.TagValueSubscriptionUpdate() -> void
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.Annotation.get -> DataCore.Adapter.RealTimeData.TagValueAnnotation!
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.Annotation.set -> void
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.AnnotationId.get -> string!
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.AnnotationId.set -> void
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.Tag.get -> string!
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.Tag.set -> void
+DataCore.Adapter.RealTimeData.UpdateAnnotationRequest.UpdateAnnotationRequest() -> void
+DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult
+DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult.AnnotationId.get -> string!
+DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult.TagId.get -> string!
+DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult.WriteTagValueAnnotationResult(string! tagId, string! annotationId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.RealTimeData.WriteTagValueItem
+DataCore.Adapter.RealTimeData.WriteTagValueItem.CorrelationId.get -> string?
+DataCore.Adapter.RealTimeData.WriteTagValueItem.CorrelationId.set -> void
+DataCore.Adapter.RealTimeData.WriteTagValueItem.TagId.get -> string!
+DataCore.Adapter.RealTimeData.WriteTagValueItem.TagId.set -> void
+DataCore.Adapter.RealTimeData.WriteTagValueItem.Value.get -> DataCore.Adapter.RealTimeData.TagValue!
+DataCore.Adapter.RealTimeData.WriteTagValueItem.Value.set -> void
+DataCore.Adapter.RealTimeData.WriteTagValueItem.WriteTagValueItem() -> void
+DataCore.Adapter.RealTimeData.WriteTagValueResult
+DataCore.Adapter.RealTimeData.WriteTagValueResult.CorrelationId.get -> string?
+DataCore.Adapter.RealTimeData.WriteTagValueResult.TagId.get -> string!
+DataCore.Adapter.RealTimeData.WriteTagValueResult.WriteTagValueResult(string? correlationId, string! tagId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.RealTimeData.WriteTagValuesRequest
+DataCore.Adapter.RealTimeData.WriteTagValuesRequest.WriteTagValuesRequest() -> void
+DataCore.Adapter.RealTimeData.WriteTagValuesRequestExtended
+DataCore.Adapter.RealTimeData.WriteTagValuesRequestExtended.Values.get -> DataCore.Adapter.RealTimeData.WriteTagValueItem![]!
+DataCore.Adapter.RealTimeData.WriteTagValuesRequestExtended.Values.set -> void
+DataCore.Adapter.RealTimeData.WriteTagValuesRequestExtended.WriteTagValuesRequestExtended() -> void
+DataCore.Adapter.SharedResources
+DataCore.Adapter.Tags.CreateTagRequest
+DataCore.Adapter.Tags.CreateTagRequest.Body.get -> System.Text.Json.JsonElement
+DataCore.Adapter.Tags.CreateTagRequest.Body.set -> void
+DataCore.Adapter.Tags.CreateTagRequest.CreateTagRequest() -> void
+DataCore.Adapter.Tags.DeleteTagRequest
+DataCore.Adapter.Tags.DeleteTagRequest.DeleteTagRequest() -> void
+DataCore.Adapter.Tags.DeleteTagRequest.Tag.get -> string!
+DataCore.Adapter.Tags.DeleteTagRequest.Tag.set -> void
+DataCore.Adapter.Tags.DigitalState
+DataCore.Adapter.Tags.DigitalState.DigitalState(string! name, int value) -> void
+DataCore.Adapter.Tags.DigitalState.Name.get -> string!
+DataCore.Adapter.Tags.DigitalState.Value.get -> int
+DataCore.Adapter.Tags.DigitalStateSet
+DataCore.Adapter.Tags.DigitalStateSet.DigitalStateSet(string! id, string! name, System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.DigitalState!>? states) -> void
+DataCore.Adapter.Tags.DigitalStateSet.Id.get -> string!
+DataCore.Adapter.Tags.DigitalStateSet.Name.get -> string!
+DataCore.Adapter.Tags.DigitalStateSet.States.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.DigitalState!>!
+DataCore.Adapter.Tags.FindTagsRequest
+DataCore.Adapter.Tags.FindTagsRequest.Description.get -> string?
+DataCore.Adapter.Tags.FindTagsRequest.Description.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.FindTagsRequest() -> void
+DataCore.Adapter.Tags.FindTagsRequest.Label.get -> string?
+DataCore.Adapter.Tags.FindTagsRequest.Label.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.Name.get -> string?
+DataCore.Adapter.Tags.FindTagsRequest.Name.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.Other.get -> System.Collections.Generic.IDictionary<string!, string!>?
+DataCore.Adapter.Tags.FindTagsRequest.Other.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.ResultFields.get -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.FindTagsRequest.ResultFields.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.Units.get -> string?
+DataCore.Adapter.Tags.FindTagsRequest.Units.set -> void
+DataCore.Adapter.Tags.GetTagPropertiesRequest
+DataCore.Adapter.Tags.GetTagPropertiesRequest.GetTagPropertiesRequest() -> void
+DataCore.Adapter.Tags.GetTagSchemaRequest
+DataCore.Adapter.Tags.GetTagSchemaRequest.GetTagSchemaRequest() -> void
+DataCore.Adapter.Tags.GetTagsRequest
+DataCore.Adapter.Tags.GetTagsRequest.GetTagsRequest() -> void
+DataCore.Adapter.Tags.GetTagsRequest.Tags.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Tags.GetTagsRequest.Tags.set -> void
+DataCore.Adapter.Tags.TagDefinition
+DataCore.Adapter.Tags.TagDefinition.Labels.get -> System.Collections.Generic.IEnumerable<string!>!
+DataCore.Adapter.Tags.TagDefinition.Properties.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
+DataCore.Adapter.Tags.TagDefinition.States.get -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.DigitalState!>!
+DataCore.Adapter.Tags.TagDefinition.SupportedFeatures.get -> System.Collections.Generic.IEnumerable<System.Uri!>!
+DataCore.Adapter.Tags.TagDefinition.TagDefinition(string! id, string! name, string? description, string? units, DataCore.Adapter.Common.VariantType dataType, System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.DigitalState!>? states, System.Collections.Generic.IEnumerable<System.Uri!>? supportedFeatures, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, System.Collections.Generic.IEnumerable<string!>? labels) -> void
+DataCore.Adapter.Tags.TagDefinitionExtensions
+DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.All = DataCore.Adapter.Tags.TagDefinitionFields.DigitalStates | DataCore.Adapter.Tags.TagDefinitionFields.Properties | DataCore.Adapter.Tags.TagDefinitionFields.Labels | DataCore.Adapter.Tags.TagDefinitionFields.SupportedFeatures -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.BasicInformation = 0 -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.DigitalStates = 1 -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.Labels = 4 -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.Properties = 2 -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagDefinitionFields.SupportedFeatures = 8 -> DataCore.Adapter.Tags.TagDefinitionFields
+DataCore.Adapter.Tags.TagIdentifier
+DataCore.Adapter.Tags.TagIdentifier.Equals(DataCore.Adapter.Tags.TagIdentifier? other) -> bool
+DataCore.Adapter.Tags.TagIdentifier.Id.get -> string!
+DataCore.Adapter.Tags.TagIdentifier.Name.get -> string!
+DataCore.Adapter.Tags.TagIdentifier.TagIdentifier(string! id, string! name) -> void
+DataCore.Adapter.Tags.TagIdentifierComparer
+DataCore.Adapter.Tags.TagIdentifierComparer.Equals(DataCore.Adapter.Tags.TagIdentifier? x, DataCore.Adapter.Tags.TagIdentifier? y) -> bool
+DataCore.Adapter.Tags.TagIdentifierComparer.GetHashCode(DataCore.Adapter.Tags.TagIdentifier! obj) -> int
+DataCore.Adapter.Tags.TagSummary
+DataCore.Adapter.Tags.TagSummary.DataType.get -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.Tags.TagSummary.Description.get -> string?
+DataCore.Adapter.Tags.TagSummary.TagSummary(string! id, string! name, string? description, string? units, DataCore.Adapter.Common.VariantType dataType) -> void
+DataCore.Adapter.Tags.TagSummary.Units.get -> string?
+DataCore.Adapter.Tags.UpdateTagRequest
+DataCore.Adapter.Tags.UpdateTagRequest.Body.get -> System.Text.Json.JsonElement
+DataCore.Adapter.Tags.UpdateTagRequest.Body.set -> void
+DataCore.Adapter.Tags.UpdateTagRequest.Tag.get -> string!
+DataCore.Adapter.Tags.UpdateTagRequest.Tag.set -> void
+DataCore.Adapter.Tags.UpdateTagRequest.UpdateTagRequest() -> void
+DataCore.Adapter.UriExtensions
+DataCore.Adapter.WellKnownProperties
+DataCore.Adapter.WellKnownProperties.TagValue
+override DataCore.Adapter.Common.EncodedObject.Equals(object! obj) -> bool
+override DataCore.Adapter.Common.EncodedObject.GetHashCode() -> int
+override DataCore.Adapter.Common.Variant.Equals(object? obj) -> bool
+override DataCore.Adapter.Common.Variant.GetHashCode() -> int
+override DataCore.Adapter.Common.Variant.ToString() -> string!
+override DataCore.Adapter.Diagnostics.ConfigurationChangesSubscriptionRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.Events.CreateEventMessageTopicSubscriptionRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.Events.ReadEventMessagesForTimeRangeRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.Json.JsonObjectEncoder.Decode(byte[]? encodedData, System.Type! type) -> object?
+override DataCore.Adapter.Json.JsonObjectEncoder.Encode(object? value, System.Type! type) -> byte[]!
+override DataCore.Adapter.Json.JsonObjectEncoder.EncodingType.get -> string!
+override DataCore.Adapter.RealTimeData.CreateSnapshotTagValueSubscriptionRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Equals(object? obj) -> bool
+override DataCore.Adapter.RealTimeData.DataFunctionDescriptor.GetHashCode() -> int
+override DataCore.Adapter.RealTimeData.ReadHistoricalTagValuesRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.RealTimeData.ReadTagDataRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.RealTimeData.TagValue.ToString() -> string!
+override DataCore.Adapter.Tags.TagIdentifier.Equals(object? obj) -> bool
+override DataCore.Adapter.Tags.TagIdentifier.GetHashCode() -> int
+static DataCore.Adapter.Common.AdapterDescriptor.Create(string! id) -> DataCore.Adapter.Common.AdapterDescriptor!
+static DataCore.Adapter.Common.AdapterDescriptor.Create(string! id, string! name) -> DataCore.Adapter.Common.AdapterDescriptor!
+static DataCore.Adapter.Common.AdapterDescriptor.Create(string! id, string! name, string? description) -> DataCore.Adapter.Common.AdapterDescriptor!
+static DataCore.Adapter.Common.AdapterDescriptor.FromExisting(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> DataCore.Adapter.Common.AdapterDescriptor!
+static DataCore.Adapter.Common.AdapterDescriptorExtended.Create(string! id, string! name, string? description, System.Collections.Generic.IEnumerable<string!>? features, System.Collections.Generic.IEnumerable<string!>? extensions, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, DataCore.Adapter.Common.AdapterTypeDescriptor? typeDescriptor) -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+static DataCore.Adapter.Common.AdapterProperty.Create(string! name, DataCore.Adapter.Common.Variant value, string? description = null) -> DataCore.Adapter.Common.AdapterProperty!
+static DataCore.Adapter.Common.AdapterProperty.Create(string! name, object! value, string? description = null) -> DataCore.Adapter.Common.AdapterProperty!
+static DataCore.Adapter.Common.AdapterProperty.FromExisting(DataCore.Adapter.Common.AdapterProperty! property) -> DataCore.Adapter.Common.AdapterProperty!
+static DataCore.Adapter.Common.AdapterRequestExtensions.TryGetProperty<T>(this DataCore.Adapter.Common.AdapterRequest! request, string! key, out T value) -> bool
+static DataCore.Adapter.Common.AdapterRequestExtensions.TryGetProperty<T>(this DataCore.Adapter.Common.AdapterRequest! request, string! key, System.IFormatProvider? formatProvider, out T value) -> bool
+static DataCore.Adapter.Common.EncodedObject.Create(System.Uri! typeId, string! encoding, byte[]? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.EncodedObject.Create<T>(System.Uri! typeId, T? value, DataCore.Adapter.Common.IObjectEncoder! encoder) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.EncodedObject.Create<T>(T? value, DataCore.Adapter.Common.IObjectEncoder! encoder) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.HostInfo.Create(string? name, string? description, string? version, DataCore.Adapter.Common.VendorInfo? vendor, params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.HostInfo!
+static DataCore.Adapter.Common.HostInfo.Create(string? name, string? description, string? version, DataCore.Adapter.Common.VendorInfo? vendor, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.Common.HostInfo!
+static DataCore.Adapter.Common.HostInfo.FromExisting(DataCore.Adapter.Common.HostInfo! hostInfo) -> DataCore.Adapter.Common.HostInfo!
+static DataCore.Adapter.Common.HostInfo.Unspecified.get -> DataCore.Adapter.Common.HostInfo!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.CanDecode(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Type! type, string! encoding) -> bool
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Type! type, DataCore.Adapter.Common.EncodedObject? extensionObject) -> object?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Type! type, System.Array? source) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Type! type, DataCore.Adapter.Common.EncodedObject? extensionObject) -> object?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Type! type, System.Array? source) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, DataCore.Adapter.Common.EncodedObject![,,]? source) -> T[,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, DataCore.Adapter.Common.EncodedObject![,]? source) -> T[,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, DataCore.Adapter.Common.EncodedObject![]? source) -> T[]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, DataCore.Adapter.Common.EncodedObject? extensionObject) -> T?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, DataCore.Adapter.Common.Variant variant) -> T?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Array? source) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, DataCore.Adapter.Common.EncodedObject![,,]? source) -> T[,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, DataCore.Adapter.Common.EncodedObject![,]? source) -> T[,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, DataCore.Adapter.Common.EncodedObject![]? source) -> T[]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, DataCore.Adapter.Common.EncodedObject? extensionObject) -> T?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, DataCore.Adapter.Common.Variant variant) -> T?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Decode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Array? source) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Array? value) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Uri! typeId, System.Array? value) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Array? value) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Uri! typeId, System.Array? value) -> System.Array?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, string! typeId, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Uri! typeId, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Uri! typeId, T[,,]? value) -> DataCore.Adapter.Common.EncodedObject![,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Uri! typeId, T[,]? value) -> DataCore.Adapter.Common.EncodedObject![,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, System.Uri! typeId, T[]? value) -> DataCore.Adapter.Common.EncodedObject![]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, T[,,]? value) -> DataCore.Adapter.Common.EncodedObject![,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, T[,]? value) -> DataCore.Adapter.Common.EncodedObject![,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this DataCore.Adapter.Common.IObjectEncoder! encoder, T[]? value) -> DataCore.Adapter.Common.EncodedObject![]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, string! typeId, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Uri! typeId, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Uri! typeId, T[,,]? value) -> DataCore.Adapter.Common.EncodedObject![,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Uri! typeId, T[,]? value) -> DataCore.Adapter.Common.EncodedObject![,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Uri! typeId, T[]? value) -> DataCore.Adapter.Common.EncodedObject![]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, T? value) -> DataCore.Adapter.Common.EncodedObject!
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, T[,,]? value) -> DataCore.Adapter.Common.EncodedObject![,,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, T[,]? value) -> DataCore.Adapter.Common.EncodedObject![,]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.Encode<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, T[]? value) -> DataCore.Adapter.Common.EncodedObject![]?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.GetCompatibleDecoder(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Type! type, string! encoding) -> DataCore.Adapter.Common.IObjectEncoder?
+static DataCore.Adapter.Common.ObjectEncoderExtensions.GetCompatibleEncoder(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, System.Type! type) -> DataCore.Adapter.Common.IObjectEncoder?
+static DataCore.Adapter.Common.TypeLibrary.AddTypes(System.Reflection.Assembly! assembly) -> int
+static DataCore.Adapter.Common.TypeLibrary.GetRegisteredTypes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<System.Uri!, System.Type!>>!
+static DataCore.Adapter.Common.TypeLibrary.GetTypeId(System.Type! type) -> System.Uri?
+static DataCore.Adapter.Common.TypeLibrary.GetTypeId<T>() -> System.Uri?
+static DataCore.Adapter.Common.TypeLibrary.TryAdd(System.Type! type) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryAdd(System.Type! type, System.Uri! typeId) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryAdd<T>() -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryAdd<T>(System.Uri! typeId) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryGetType(System.Uri! typeId, out System.Type! type) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryGetTypeId(System.Type! type, out System.Uri? typeId) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryGetTypeId<T>(out System.Uri? typeId) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryRemove(System.Type! type) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryRemove(System.Uri! typeId) -> bool
+static DataCore.Adapter.Common.TypeLibrary.TryRemove<T>() -> bool
+static DataCore.Adapter.Common.Variant.explicit operator bool(DataCore.Adapter.Common.Variant val) -> bool
+static DataCore.Adapter.Common.Variant.explicit operator bool[]?(DataCore.Adapter.Common.Variant val) -> bool[]?
+static DataCore.Adapter.Common.Variant.explicit operator byte(DataCore.Adapter.Common.Variant val) -> byte
+static DataCore.Adapter.Common.Variant.explicit operator byte[]?(DataCore.Adapter.Common.Variant val) -> byte[]?
+static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.EncodedObject![]?(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.EncodedObject![]?
+static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.EncodedObject?(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.EncodedObject?
+static DataCore.Adapter.Common.Variant.explicit operator double(DataCore.Adapter.Common.Variant val) -> double
+static DataCore.Adapter.Common.Variant.explicit operator double[]?(DataCore.Adapter.Common.Variant val) -> double[]?
+static DataCore.Adapter.Common.Variant.explicit operator float(DataCore.Adapter.Common.Variant val) -> float
+static DataCore.Adapter.Common.Variant.explicit operator float[]?(DataCore.Adapter.Common.Variant val) -> float[]?
+static DataCore.Adapter.Common.Variant.explicit operator int(DataCore.Adapter.Common.Variant val) -> int
+static DataCore.Adapter.Common.Variant.explicit operator int[]?(DataCore.Adapter.Common.Variant val) -> int[]?
+static DataCore.Adapter.Common.Variant.explicit operator long(DataCore.Adapter.Common.Variant val) -> long
+static DataCore.Adapter.Common.Variant.explicit operator long[]?(DataCore.Adapter.Common.Variant val) -> long[]?
+static DataCore.Adapter.Common.Variant.explicit operator sbyte(DataCore.Adapter.Common.Variant val) -> sbyte
+static DataCore.Adapter.Common.Variant.explicit operator sbyte[]?(DataCore.Adapter.Common.Variant val) -> sbyte[]?
+static DataCore.Adapter.Common.Variant.explicit operator short(DataCore.Adapter.Common.Variant val) -> short
+static DataCore.Adapter.Common.Variant.explicit operator short[]?(DataCore.Adapter.Common.Variant val) -> short[]?
+static DataCore.Adapter.Common.Variant.explicit operator string![]?(DataCore.Adapter.Common.Variant val) -> string![]?
+static DataCore.Adapter.Common.Variant.explicit operator string?(DataCore.Adapter.Common.Variant val) -> string?
+static DataCore.Adapter.Common.Variant.explicit operator System.DateTime(DataCore.Adapter.Common.Variant val) -> System.DateTime
+static DataCore.Adapter.Common.Variant.explicit operator System.DateTime[]?(DataCore.Adapter.Common.Variant val) -> System.DateTime[]?
+static DataCore.Adapter.Common.Variant.explicit operator System.Text.Json.JsonElement(DataCore.Adapter.Common.Variant val) -> System.Text.Json.JsonElement
+static DataCore.Adapter.Common.Variant.explicit operator System.Text.Json.JsonElement[]?(DataCore.Adapter.Common.Variant val) -> System.Text.Json.JsonElement[]?
+static DataCore.Adapter.Common.Variant.explicit operator System.TimeSpan(DataCore.Adapter.Common.Variant val) -> System.TimeSpan
+static DataCore.Adapter.Common.Variant.explicit operator System.TimeSpan[]?(DataCore.Adapter.Common.Variant val) -> System.TimeSpan[]?
+static DataCore.Adapter.Common.Variant.explicit operator System.Uri![]?(DataCore.Adapter.Common.Variant val) -> System.Uri![]?
+static DataCore.Adapter.Common.Variant.explicit operator System.Uri?(DataCore.Adapter.Common.Variant val) -> System.Uri?
+static DataCore.Adapter.Common.Variant.explicit operator uint(DataCore.Adapter.Common.Variant val) -> uint
+static DataCore.Adapter.Common.Variant.explicit operator uint[]?(DataCore.Adapter.Common.Variant val) -> uint[]?
+static DataCore.Adapter.Common.Variant.explicit operator ulong(DataCore.Adapter.Common.Variant val) -> ulong
+static DataCore.Adapter.Common.Variant.explicit operator ulong[]?(DataCore.Adapter.Common.Variant val) -> ulong[]?
+static DataCore.Adapter.Common.Variant.explicit operator ushort(DataCore.Adapter.Common.Variant val) -> ushort
+static DataCore.Adapter.Common.Variant.explicit operator ushort[]?(DataCore.Adapter.Common.Variant val) -> ushort[]?
+static DataCore.Adapter.Common.Variant.FromValue(object? value) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.GetDefaultFormat(DataCore.Adapter.Common.VariantType type) -> string!
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(bool val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(bool[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(byte val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(byte[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(DataCore.Adapter.Common.EncodedObject![]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(DataCore.Adapter.Common.EncodedObject? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(double val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(double[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(float val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(float[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(int val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(int[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(long val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(long[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(sbyte val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(sbyte[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(short val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(short[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(string![]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(string? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.DateTime val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.DateTime[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.Text.Json.JsonElement val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.Text.Json.JsonElement[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.TimeSpan val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.TimeSpan[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.Uri![]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(System.Uri? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(uint val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(uint[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(ulong val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(ulong[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(ushort val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(ushort[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.IsNull(DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.Common.Variant.IsSupportedValueType(System.Type! type) -> bool
+static DataCore.Adapter.Common.Variant.Null.get -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.operator !=(DataCore.Adapter.Common.Variant left, DataCore.Adapter.Common.Variant right) -> bool
+static DataCore.Adapter.Common.Variant.operator ==(DataCore.Adapter.Common.Variant left, DataCore.Adapter.Common.Variant right) -> bool
+static DataCore.Adapter.Common.Variant.TryGetVariantType(System.Type! type, out DataCore.Adapter.Common.VariantType variantType) -> bool
+static DataCore.Adapter.Common.Variant.VariantTypeMap.get -> System.Collections.Generic.IReadOnlyDictionary<System.Type!, DataCore.Adapter.Common.VariantType>!
+static DataCore.Adapter.Common.VariantExtensions.GetClrType(this DataCore.Adapter.Common.VariantType type) -> System.Type!
+static DataCore.Adapter.Common.VariantExtensions.GetValueOrDefault<T>(this DataCore.Adapter.Common.Variant variant) -> T?
+static DataCore.Adapter.Common.VariantExtensions.GetValueOrDefault<T>(this DataCore.Adapter.Common.Variant variant, T? defaultValue) -> T?
+static DataCore.Adapter.Common.VariantExtensions.GetValueOrDefault<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.Variant>! variant) -> T?
+static DataCore.Adapter.Common.VariantExtensions.GetValueOrDefault<T>(this System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.Variant>! variants, T? defaultValue) -> T?
+static DataCore.Adapter.Common.VariantExtensions.Is(this DataCore.Adapter.Common.Variant variant, DataCore.Adapter.Common.VariantType type) -> bool
+static DataCore.Adapter.Common.VariantExtensions.IsArray(this DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.Common.VariantExtensions.IsNull(this DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.Common.VariantExtensions.IsNumericType(this DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.Common.VariantExtensions.IsNumericType(this DataCore.Adapter.Common.VariantType variantType) -> bool
+static DataCore.Adapter.Common.VariantExtensions.TryGetValue<T>(this DataCore.Adapter.Common.Variant variant, out T? value) -> bool
+static DataCore.Adapter.Common.VendorInfo.Create(string? name, string? url) -> DataCore.Adapter.Common.VendorInfo!
+static DataCore.Adapter.Common.VendorInfo.FromExisting(DataCore.Adapter.Common.VendorInfo! vendorInfo) -> DataCore.Adapter.Common.VendorInfo!
+static DataCore.Adapter.Diagnostics.HealthCheckResult.Composite(string? displayName, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults, string? description = null, System.Collections.Generic.IDictionary<string!, string!>? data = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
+static DataCore.Adapter.Diagnostics.HealthCheckResult.Degraded(string? displayName, string? description = null, string? error = null, System.Collections.Generic.IDictionary<string!, string!>? data = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
+static DataCore.Adapter.Diagnostics.HealthCheckResult.GetAggregateHealthStatus(System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthStatus>! statuses) -> DataCore.Adapter.Diagnostics.HealthStatus
+static DataCore.Adapter.Diagnostics.HealthCheckResult.Healthy(string? displayName, string? description = null, System.Collections.Generic.IDictionary<string!, string!>? data = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
+static DataCore.Adapter.Diagnostics.HealthCheckResult.Unhealthy(string? displayName, string? description = null, string? error = null, System.Collections.Generic.IDictionary<string!, string!>? data = null, System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>? innerResults = null) -> DataCore.Adapter.Diagnostics.HealthCheckResult
+static DataCore.Adapter.Events.WriteEventMessageResult.Create(string? correlationId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.Events.WriteEventMessageResult!
+static DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Create<TBody>(System.Uri! id, TBody? body, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Extensions.CustomFunctionInvocationRequest!
+static DataCore.Adapter.Extensions.CustomFunctionInvocationRequest.Create<TBody>(System.Uri! id, TBody? body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody>! jsonTypeInfo) -> DataCore.Adapter.Extensions.CustomFunctionInvocationRequest!
+static DataCore.Adapter.Extensions.CustomFunctionInvocationResponse.Create<TBody>(TBody body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody>! jsonTypeInfo) -> DataCore.Adapter.Extensions.CustomFunctionInvocationResponse!
+static DataCore.Adapter.Extensions.CustomFunctionInvocationResponse.Create<TBody>(TBody? body, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Extensions.CustomFunctionInvocationResponse!
+static DataCore.Adapter.Json.JsonExtensions.ReadArray<T>(string! json, int[]! dimensions, System.Text.Json.JsonSerializerOptions? options = null) -> System.Array!
+static DataCore.Adapter.Json.JsonExtensions.ReadArray<T>(System.Text.Json.JsonElement element, int[]! dimensions, System.Text.Json.JsonSerializerOptions? options) -> System.Array!
+static DataCore.Adapter.Json.JsonExtensions.UseDataCoreAdapterDefaults(this System.Text.Json.JsonSerializerOptions! options) -> System.Text.Json.JsonSerializerOptions!
+static DataCore.Adapter.Json.JsonExtensions.WriteArray(System.Array! array, System.Text.Json.JsonSerializerOptions? options = null) -> byte[]!
+static DataCore.Adapter.Json.JsonObjectEncoder.Default.get -> DataCore.Adapter.Common.IObjectEncoder!
+static DataCore.Adapter.RealTimeData.DataFunctionDescriptor.Create(string! id, string? name = null, string? description = null, DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType sampleTime = DataCore.Adapter.RealTimeData.DataFunctionSampleTimeType.Unspecified, DataCore.Adapter.RealTimeData.DataFunctionStatusType status = DataCore.Adapter.RealTimeData.DataFunctionStatusType.Unspecified, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties = null, System.Collections.Generic.IEnumerable<string!>? aliases = null) -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
+static DataCore.Adapter.RealTimeData.DataFunctionDescriptorExtensions.GetIdentifiers(this DataCore.Adapter.RealTimeData.DataFunctionDescriptor! descriptor) -> System.Collections.Generic.IEnumerable<string!>!
+static DataCore.Adapter.RealTimeData.DataFunctionDescriptorExtensions.IsMatch(this DataCore.Adapter.RealTimeData.DataFunctionDescriptor! descriptor, DataCore.Adapter.RealTimeData.DataFunctionDescriptor! other) -> bool
+static DataCore.Adapter.RealTimeData.DataFunctionDescriptorExtensions.IsMatch(this DataCore.Adapter.RealTimeData.DataFunctionDescriptor! descriptor, string! idOrName) -> bool
+static DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult.Create(DataCore.Adapter.Tags.TagIdentifier! tagIdentifier, DataCore.Adapter.RealTimeData.TagValueExtended! value, string! dataFunction) -> DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult!
+static DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult.Create(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueExtended! value, string! dataFunction) -> DataCore.Adapter.RealTimeData.ProcessedTagValueQueryResult!
+static DataCore.Adapter.RealTimeData.TagValueAnnotation.Create(DataCore.Adapter.RealTimeData.AnnotationType annotationType, System.DateTime utcStartTime, System.DateTime? utcEndTime, string? value, string? description, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.RealTimeData.TagValueAnnotation!
+static DataCore.Adapter.RealTimeData.TagValueAnnotationExtended.Create(string! id, DataCore.Adapter.RealTimeData.AnnotationType annotationType, System.DateTime utcStartTime, System.DateTime? utcEndTime, string? value, string? description, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
+static DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult.Create(DataCore.Adapter.Tags.TagIdentifier! tagIdentifier, DataCore.Adapter.RealTimeData.TagValueAnnotationExtended! annotation) -> DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult!
+static DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult.Create(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueAnnotationExtended! annotation) -> DataCore.Adapter.RealTimeData.TagValueAnnotationQueryResult!
+static DataCore.Adapter.RealTimeData.TagValueExtensions.GetValueOrDefault<T>(this DataCore.Adapter.RealTimeData.TagValue! value) -> T?
+static DataCore.Adapter.RealTimeData.TagValueExtensions.GetValueOrDefault<T>(this DataCore.Adapter.RealTimeData.TagValue! value, T? defaultValue) -> T?
+static DataCore.Adapter.RealTimeData.TagValueExtensions.IsNumericType(this DataCore.Adapter.RealTimeData.TagValue! value) -> bool
+static DataCore.Adapter.RealTimeData.TagValueExtensions.TryGetDisplayValue(this DataCore.Adapter.RealTimeData.TagValueExtended! value, out string? displayValue) -> bool
+static DataCore.Adapter.RealTimeData.TagValueQueryResult.Create(DataCore.Adapter.Tags.TagIdentifier! tagIdentifier, DataCore.Adapter.RealTimeData.TagValueExtended! value) -> DataCore.Adapter.RealTimeData.TagValueQueryResult!
+static DataCore.Adapter.RealTimeData.TagValueQueryResult.Create(string! tagId, string! tagName, DataCore.Adapter.RealTimeData.TagValueExtended! value) -> DataCore.Adapter.RealTimeData.TagValueQueryResult!
+static DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult.Create(string! tagId, string! annotationId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.RealTimeData.WriteTagValueAnnotationResult!
+static DataCore.Adapter.RealTimeData.WriteTagValueResult.Create(string? correlationId, string! tagId, DataCore.Adapter.Common.WriteStatus status, string? notes, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.RealTimeData.WriteTagValueResult!
+static DataCore.Adapter.Tags.CreateTagRequest.Create<TBody>(TBody body, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Tags.CreateTagRequest!
+static DataCore.Adapter.Tags.CreateTagRequest.Create<TBody>(TBody body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody>! jsonTypeInfo) -> DataCore.Adapter.Tags.CreateTagRequest!
+static DataCore.Adapter.Tags.DigitalState.Create(string! name, int value) -> DataCore.Adapter.Tags.DigitalState!
+static DataCore.Adapter.Tags.DigitalState.FromExisting(DataCore.Adapter.Tags.DigitalState! state) -> DataCore.Adapter.Tags.DigitalState!
+static DataCore.Adapter.Tags.DigitalStateSet.Create(string! id, string! name, System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.DigitalState!>? states) -> DataCore.Adapter.Tags.DigitalStateSet!
+static DataCore.Adapter.Tags.TagDefinition.FromExisting(DataCore.Adapter.Tags.TagDefinition! tag) -> DataCore.Adapter.Tags.TagDefinition!
+static DataCore.Adapter.Tags.TagDefinitionExtensions.IsDigitalStateTag(this DataCore.Adapter.Tags.TagDefinition! tag) -> bool
+static DataCore.Adapter.Tags.TagIdentifier.Create(string! id, string! name) -> DataCore.Adapter.Tags.TagIdentifier!
+static DataCore.Adapter.Tags.TagIdentifier.FromExisting(DataCore.Adapter.Tags.TagIdentifier! other) -> DataCore.Adapter.Tags.TagIdentifier!
+static DataCore.Adapter.Tags.TagIdentifierComparer.Id.get -> DataCore.Adapter.Tags.TagIdentifierComparer!
+static DataCore.Adapter.Tags.TagIdentifierComparer.IdAndName.get -> DataCore.Adapter.Tags.TagIdentifierComparer!
+static DataCore.Adapter.Tags.TagSummary.Create(string! id, string! name, string? description, string? units, DataCore.Adapter.Common.VariantType dataType) -> DataCore.Adapter.Tags.TagSummary!
+static DataCore.Adapter.Tags.TagSummary.FromExisting(DataCore.Adapter.Tags.TagSummary! other) -> DataCore.Adapter.Tags.TagSummary!
+static DataCore.Adapter.Tags.UpdateTagRequest.Create<TBody>(string! tag, TBody body, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Tags.UpdateTagRequest!
+static DataCore.Adapter.Tags.UpdateTagRequest.Create<TBody>(string! tag, TBody body, System.Text.Json.Serialization.Metadata.JsonTypeInfo<TBody>! jsonTypeInfo) -> DataCore.Adapter.Tags.UpdateTagRequest!
+static DataCore.Adapter.UriExtensions.CreateUriWithTrailingSlash(this string! uriString) -> System.Uri!
+static DataCore.Adapter.UriExtensions.EnsurePathHasTrailingSlash(this System.Uri! uri) -> System.Uri!
+static DataCore.Adapter.UriExtensions.IsChildOf(this System.Uri! uri, string! parentUriString) -> bool
+static DataCore.Adapter.UriExtensions.IsChildOf(this System.Uri! uri, System.Uri! parentUri) -> bool
+static DataCore.Adapter.UriExtensions.TryCreateUriWithTrailingSlash(this string! uriString, out System.Uri? uri) -> bool
+virtual DataCore.Adapter.Common.AdapterRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+virtual DataCore.Adapter.Common.ObjectEncoder.CanDecode(System.Type! type) -> bool
+virtual DataCore.Adapter.Common.ObjectEncoder.CanEncode(System.Type! type) -> bool
+virtual DataCore.Adapter.Extensions.CustomFunctionDescriptor.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+~static DataCore.Adapter.SharedResources.Culture.get -> System.Globalization.CultureInfo
+~static DataCore.Adapter.SharedResources.Culture.set -> void
+~static DataCore.Adapter.SharedResources.Error_AbsoluteUriRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_AbsoluteUriWithSpecificSchemeRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_ArrayDimensionsMustBeSpecified.get -> string
+~static DataCore.Adapter.SharedResources.Error_ArrayElementTypeIsUnsupported.get -> string
+~static DataCore.Adapter.SharedResources.Error_CannotConvertAnArrayVariantToANonArrayType.get -> string
+~static DataCore.Adapter.SharedResources.Error_CannotConvertANonArrayVariantToAnArrayType.get -> string
+~static DataCore.Adapter.SharedResources.Error_CannotDecodeType.get -> string
+~static DataCore.Adapter.SharedResources.Error_CannotEncodeType.get -> string
+~static DataCore.Adapter.SharedResources.Error_ContentTypeIsRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_DataFunctionCannotBeNull.get -> string
+~static DataCore.Adapter.SharedResources.Error_DuplicateSubscriptionTopicsAreNotAllowed.get -> string
+~static DataCore.Adapter.SharedResources.Error_DuplicateTagWriteCollectionsAreNotAllowed.get -> string
+~static DataCore.Adapter.SharedResources.Error_EncodedObjectHasWrongEncoding.get -> string
+~static DataCore.Adapter.SharedResources.Error_EventMessageCannotBeNull.get -> string
+~static DataCore.Adapter.SharedResources.Error_IdIsRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_IntervalCountMustBeGreaterThanZero.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidJsonSchema.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidJsonStructure.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidRequestBody.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidTimeSpan.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidTimeStamp.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidUri.get -> string
+~static DataCore.Adapter.SharedResources.Error_InvalidVariantStructure.get -> string
+~static DataCore.Adapter.SharedResources.Error_ItemTypeCannotBeNull.get -> string
+~static DataCore.Adapter.SharedResources.Error_NameIsRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_NameOrIdCannotBeNull.get -> string
+~static DataCore.Adapter.SharedResources.Error_NodeIdCannotBeNull.get -> string
+~static DataCore.Adapter.SharedResources.Error_NotAJsonArray.get -> string
+~static DataCore.Adapter.SharedResources.Error_NoValidDecodersFound.get -> string
+~static DataCore.Adapter.SharedResources.Error_RelativeUriRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_SampleIntervalMustBeGreaterThanZero.get -> string
+~static DataCore.Adapter.SharedResources.Error_SourceAndDestinationArraysHaveDifferentRanks.get -> string
+~static DataCore.Adapter.SharedResources.Error_StartTimeCannotBeGreaterThanEndTime.get -> string
+~static DataCore.Adapter.SharedResources.Error_StartTimeCannotBeGreaterThanOrEqualToEndTime.get -> string
+~static DataCore.Adapter.SharedResources.Error_SubscriptionTopicsCannotBeNullOrWhiteSpace.get -> string
+~static DataCore.Adapter.SharedResources.Error_TagSearchRequiresAtLeastOneFilter.get -> string
+~static DataCore.Adapter.SharedResources.Error_TypeIdIsUndefined.get -> string
+~static DataCore.Adapter.SharedResources.Error_TypeIsRequired.get -> string
+~static DataCore.Adapter.SharedResources.Error_TypeIsUnsupported.get -> string
+~static DataCore.Adapter.SharedResources.Error_UnableToResolveNameOrId.get -> string
+~static DataCore.Adapter.SharedResources.HostInfo_Unspecified_Description.get -> string
+~static DataCore.Adapter.SharedResources.HostInfo_Unspecified_Name.get -> string
+~static DataCore.Adapter.SharedResources.ResourceManager.get -> System.Resources.ResourceManager
+~static DataCore.Adapter.SharedResources.SnapshotTagValue_Unspecified_ErrorText.get -> string
+~static DataCore.Adapter.SharedResources.SnapshotTagValue_Unspecified_Value.get -> string
+~static DataCore.Adapter.SharedResources.TagValueStatus_Bad.get -> string
+~static DataCore.Adapter.SharedResources.TagValueStatus_Good.get -> string
+~static DataCore.Adapter.SharedResources.TagValueStatus_Uncertain.get -> string
+const DataCore.Adapter.Common.AdapterDescriptor.IdMaxLength = 200 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertiesCount = 20 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertyKeyLength = 50 -> int
+const DataCore.Adapter.Common.AdapterRequest.MaxPropertyValueLength = 100 -> int
+const DataCore.Adapter.WellKnownProperties.TagValue.Stepped = "Stepped" -> string!
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.Page.get -> int
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.Page.set -> void
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.PageSize.get -> int
+DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest.PageSize.set -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Page.get -> int
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.Page.set -> void
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.PageSize.get -> int
+DataCore.Adapter.AssetModel.FindAssetModelNodesRequest.PageSize.set -> void
+DataCore.Adapter.Common.ByteString
+DataCore.Adapter.Common.ByteString.Bytes.get -> System.ReadOnlyMemory<byte>
+DataCore.Adapter.Common.ByteString.ByteString() -> void
+DataCore.Adapter.Common.ByteString.ByteString(byte[]? bytes) -> void
+DataCore.Adapter.Common.ByteString.ByteString(string! base64) -> void
+DataCore.Adapter.Common.ByteString.ByteString(System.ReadOnlyMemory<byte> bytes) -> void
+DataCore.Adapter.Common.ByteString.Equals(DataCore.Adapter.Common.ByteString other) -> bool
+DataCore.Adapter.Common.ByteString.IsEmpty.get -> bool
+DataCore.Adapter.Common.ByteString.Length.get -> int
+DataCore.Adapter.Common.FindAdaptersRequest.Page.get -> int
+DataCore.Adapter.Common.FindAdaptersRequest.Page.set -> void
+DataCore.Adapter.Common.FindAdaptersRequest.PageSize.get -> int
+DataCore.Adapter.Common.FindAdaptersRequest.PageSize.set -> void
+DataCore.Adapter.Common.Variant.Variant(DataCore.Adapter.Common.ByteString value) -> void
+DataCore.Adapter.Common.Variant.Variant(DataCore.Adapter.Common.ByteString[]? value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Text.Json.JsonElement value) -> void
+DataCore.Adapter.Common.Variant.Variant(System.Text.Json.JsonElement[]? value) -> void
+DataCore.Adapter.Common.VariantType.ByteString = 19 -> DataCore.Adapter.Common.VariantType
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute.Length.get -> int
+DataCore.Adapter.DataValidation.MaxUriLengthAttribute.MaxUriLengthAttribute(int length) -> void
+DataCore.Adapter.Events.EventMessage.EventMessage(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? type, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Events.EventMessageBase.EventMessageBase(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? type, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> void
+DataCore.Adapter.Events.EventMessageBase.Type.get -> string?
+DataCore.Adapter.Events.EventMessageWithCursorPosition.EventMessageWithCursorPosition(string! id, string? topic, System.DateTime utcEventTime, DataCore.Adapter.Events.EventPriority priority, string? category, string? type, string? message, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties, string! cursorPosition) -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Page.get -> int
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.Page.set -> void
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.PageSize.get -> int
+DataCore.Adapter.Extensions.GetCustomFunctionsRequest.PageSize.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.Page.get -> int
+DataCore.Adapter.Tags.FindTagsRequest.Page.set -> void
+DataCore.Adapter.Tags.FindTagsRequest.PageSize.get -> int
+DataCore.Adapter.Tags.FindTagsRequest.PageSize.set -> void
+DataCore.Adapter.Tags.GetTagPropertiesRequest.Page.get -> int
+DataCore.Adapter.Tags.GetTagPropertiesRequest.Page.set -> void
+DataCore.Adapter.Tags.GetTagPropertiesRequest.PageSize.get -> int
+DataCore.Adapter.Tags.GetTagPropertiesRequest.PageSize.set -> void
+override DataCore.Adapter.Common.ByteString.Equals(object! obj) -> bool
+override DataCore.Adapter.Common.ByteString.GetHashCode() -> int
+override DataCore.Adapter.Common.ByteString.ToString() -> string!
+override DataCore.Adapter.Common.FindAdaptersRequest.Validate(System.ComponentModel.DataAnnotations.ValidationContext! validationContext) -> System.Collections.Generic.IEnumerable<System.ComponentModel.DataAnnotations.ValidationResult!>!
+override DataCore.Adapter.DataValidation.MaxUriLengthAttribute.FormatErrorMessage(string! name) -> string!
+static DataCore.Adapter.Common.ByteString.Empty.get -> DataCore.Adapter.Common.ByteString
+static DataCore.Adapter.Common.ByteString.implicit operator byte[]!(DataCore.Adapter.Common.ByteString bytes) -> byte[]!
+static DataCore.Adapter.Common.ByteString.implicit operator DataCore.Adapter.Common.ByteString(byte[]? bytes) -> DataCore.Adapter.Common.ByteString
+static DataCore.Adapter.Common.ByteString.implicit operator DataCore.Adapter.Common.ByteString(System.ReadOnlyMemory<byte> bytes) -> DataCore.Adapter.Common.ByteString
+static DataCore.Adapter.Common.ByteString.implicit operator System.ReadOnlyMemory<byte>(DataCore.Adapter.Common.ByteString bytes) -> System.ReadOnlyMemory<byte>
+static DataCore.Adapter.Common.ByteString.operator !=(DataCore.Adapter.Common.ByteString left, DataCore.Adapter.Common.ByteString right) -> bool
+static DataCore.Adapter.Common.ByteString.operator ==(DataCore.Adapter.Common.ByteString left, DataCore.Adapter.Common.ByteString right) -> bool
+static DataCore.Adapter.Common.ByteString.TryParse(string? base64, out DataCore.Adapter.Common.ByteString result) -> bool
+static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.ByteString(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.ByteString
+static DataCore.Adapter.Common.Variant.explicit operator DataCore.Adapter.Common.ByteString[]?(DataCore.Adapter.Common.Variant val) -> DataCore.Adapter.Common.ByteString[]?
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(DataCore.Adapter.Common.ByteString val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.implicit operator DataCore.Adapter.Common.Variant(DataCore.Adapter.Common.ByteString[]? val) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.Variant variant) -> bool
+static DataCore.Adapter.Common.VariantExtensions.IsFloatingPointNumericType(this DataCore.Adapter.Common.VariantType variantType) -> bool
+static DataCore.Adapter.RealTimeData.TagValueExtensions.IsFloatingPointNumericType(this DataCore.Adapter.RealTimeData.TagValue! value) -> bool
+static DataCore.Adapter.RealTimeData.TagValueExtensions.TryGetSteppedFlag(this DataCore.Adapter.RealTimeData.TagValueExtended! value, out bool stepped) -> bool
+~static DataCore.Adapter.SharedResources.Error_CollectionItemIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_DescriptionIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_IdIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_KeyIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_NameIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_TooManyEntries.get -> string
+~static DataCore.Adapter.SharedResources.Error_UnitIsTooLong.get -> string
+~static DataCore.Adapter.SharedResources.Error_ValueIsTooLong.get -> string

@@ -2151,19 +2151,24 @@ namespace DataCore.Adapter {
         ///   The maximum number of items to read from the <see cref="IAsyncEnumerable{T}"/>. 
         ///   Specify less than one to read all items.
         /// </param>
+        /// <param name="expectedItems">
+        ///   The expected number of items that will be read. Specify less than one if this is 
+        ///   unknown.
+        /// </param>
         /// <param name="cancellationToken">
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
         ///   The items that were read.
         /// </returns>
-        public static async Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems, CancellationToken cancellationToken = default) {
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        public static async Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems, int expectedItems, CancellationToken cancellationToken = default) {
             if (enumerable == null) {
                 throw new ArgumentNullException(nameof(enumerable));
             }
-            
-            var result = maxItems > 0
-                ? new List<T>(maxItems)
+
+            var result = expectedItems > 0
+                ? new List<T>(expectedItems)
                 : new List<T>(500);
 
             using (var ctSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)) {
@@ -2181,6 +2186,33 @@ namespace DataCore.Adapter {
             }
 
             return result;
+        }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+
+
+
+        /// <summary>
+        /// Asynchronously reads items from the <see cref="IAsyncEnumerable{T}"/> and returns them 
+        /// as an <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        ///   The item type.
+        /// </typeparam>
+        /// <param name="enumerable">
+        ///   The <see cref="IAsyncEnumerable{T}"/>.
+        /// </param>
+        /// <param name="maxItems">
+        ///   The maximum number of items to read from the <see cref="IAsyncEnumerable{T}"/>. 
+        ///   Specify less than one to read all items.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   The items that were read.
+        /// </returns>
+        public static Task<IEnumerable<T>> ToEnumerable<T>(this IAsyncEnumerable<T> enumerable, int maxItems, CancellationToken cancellationToken = default) {
+            return enumerable.ToEnumerable(maxItems, -1, cancellationToken);
         }
 
 
@@ -2203,6 +2235,7 @@ namespace DataCore.Adapter {
         /// <returns>
         ///   The items that were read.
         /// </returns>
+        [Obsolete("Use ToEnumerable<T>(IAsyncEnumerable<T>,int,CancellationToken) instead.", true)]
         public static async Task<IEnumerable<T>> ToEnumerable<T>(this ChannelReader<T> channel, int maxItems = -1, CancellationToken cancellationToken = default) {
             if (channel == null) {
                 throw new ArgumentNullException(nameof(channel));

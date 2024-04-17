@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 
 using DataCore.Adapter.Common;
@@ -35,6 +36,9 @@ namespace DataCore.Adapter.RealTimeData {
             if (Tags != null) {
                 if (Tags.Any(string.IsNullOrWhiteSpace)) {
                     yield return new ValidationResult(SharedResources.Error_SubscriptionTopicsCannotBeNullOrWhiteSpace, new[] { nameof(Tags) });
+                }
+                if (Tags.Any(x => x?.Length > 500)) {
+                    yield return new ValidationResult(string.Format(CultureInfo.CurrentCulture, SharedResources.Error_CollectionItemIsTooLong, 500), new[] { nameof(Tags) });
                 }
                 if (Tags.GroupBy(x => x).Any(x => x.Count() > 1)) {
                     yield return new ValidationResult(SharedResources.Error_DuplicateSubscriptionTopicsAreNotAllowed, new[] { nameof(Tags) });

@@ -62,6 +62,10 @@ namespace DataCore.Adapter.Tests {
 
             services.AddGrpc();
 
+#if NET7_0_OR_GREATER
+            services.AddDataCoreAdapterApiServices();
+#endif
+
             services.AddMvc()
                 .AddDataCoreAdapterMvc();
 
@@ -86,6 +90,9 @@ namespace DataCore.Adapter.Tests {
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapDataCoreGrpcServices();
+#if NET7_0_OR_GREATER
+                endpoints.MapDataCoreAdapterApiRoutes("/minimal-api/unit-tests");
+#endif
                 endpoints.MapControllers();
                 endpoints.MapDataCoreAdapterHubs();
                 endpoints.MapHealthChecks("/health");

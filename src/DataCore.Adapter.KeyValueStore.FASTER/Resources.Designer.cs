@@ -79,65 +79,11 @@ namespace DataCore.Adapter.KeyValueStore.FASTER {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while compacting the FASTER log..
+        ///   Looks up a localized string similar to Unable to rent memory from the shared buffer..
         /// </summary>
-        internal static string Log_CompactionError {
+        internal static string Error_UnableToRentSharedMemory {
             get {
-                return ResourceManager.GetString("Log_CompactionError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while creating a recovery checkpoint for the FASTER log..
-        /// </summary>
-        internal static string Log_ErrorWhileCreatingCheckpoint {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileCreatingCheckpoint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while recovering the FASTER log from the last checkpoint..
-        /// </summary>
-        internal static string Log_ErrorWhileRecoveringCheckpoint {
-            get {
-                return ResourceManager.GetString("Log_ErrorWhileRecoveringCheckpoint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to FASTER log compacted. Safe read-only region size before: {SizeBefore} bytes. After: {SizeAfter} bytes. Consecutive compactions: {ConsecutiveIterations}..
-        /// </summary>
-        internal static string Log_LogCompacted {
-            get {
-                return ResourceManager.GetString("Log_LogCompacted", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to FASTER log compaction threshold increased. Before: {SizeBefore} bytes. After: {SizeAfter} bytes..
-        /// </summary>
-        internal static string Log_LogCompactionThresholdIncreased {
-            get {
-                return ResourceManager.GetString("Log_LogCompactionThresholdIncreased", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Checkpoint management is disabled; backup and restore of data will not be performed..
-        /// </summary>
-        internal static string Log_NoCheckpointManagerProvided {
-            get {
-                return ResourceManager.GetString("Log_NoCheckpointManagerProvided", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skipping FASTER log compaction. Safe read-only region size: {0} bytes. Threshold: {Size} bytes.
-        /// </summary>
-        internal static string Log_SkippingLogCompaction {
-            get {
-                return ResourceManager.GetString("Log_SkippingLogCompaction", resourceCulture);
+                return ResourceManager.GetString("Error_UnableToRentSharedMemory", resourceCulture);
             }
         }
     }

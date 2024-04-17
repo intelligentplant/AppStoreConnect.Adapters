@@ -13,6 +13,7 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         [Required]
         [MinLength(1)]
+        [MaxLength(10000)]
         public WriteEventMessageItem[] Events { get; set; } = Array.Empty<WriteEventMessageItem>();
 
     }

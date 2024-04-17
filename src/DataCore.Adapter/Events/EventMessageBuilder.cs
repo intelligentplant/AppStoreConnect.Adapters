@@ -36,6 +36,11 @@ namespace DataCore.Adapter.Events {
         private string? _category;
 
         /// <summary>
+        /// The event type.
+        /// </summary>
+        private string? _type;
+
+        /// <summary>
         /// The event message.
         /// </summary>
         private string? _message;
@@ -65,6 +70,7 @@ namespace DataCore.Adapter.Events {
             _utcEventTime = existing.UtcEventTime;
             _priority = existing.Priority;
             _category = existing.Category;
+            _type = existing.Type;
             _message = existing.Message;
             if (existing.Properties != null) {
                 _properties.AddRange(existing.Properties.Where(x => x != null));
@@ -113,7 +119,7 @@ namespace DataCore.Adapter.Events {
         ///   A new <see cref="EventMessage"/> object.
         /// </returns>
         public EventMessage Build() {
-            return EventMessage.Create(_id, _topic, _utcEventTime, _priority, _category, _message, _properties);
+            return new EventMessage(_id, _topic, _utcEventTime, _priority, _category, _type, _message, _properties);
         }
 
 
@@ -131,12 +137,13 @@ namespace DataCore.Adapter.Events {
         ///   <paramref name="cursorPosition"/> is <see langword="null"/>.
         /// </exception>
         public EventMessageWithCursorPosition Build(string cursorPosition) {
-            return EventMessageWithCursorPosition.Create(
+            return new EventMessageWithCursorPosition(
                 _id, 
                 _topic,
                 _utcEventTime, 
                 _priority, 
                 _category, 
+                _type,
                 _message, 
                 _properties, 
                 cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
@@ -219,6 +226,21 @@ namespace DataCore.Adapter.Events {
         /// </returns>
         public EventMessageBuilder WithCategory(string? category) {
             _category = category;
+            return this;
+        }
+
+
+        /// <summary>
+        /// Updates the event type.
+        /// </summary>
+        /// <param name="type">
+        ///   The event type.
+        /// </param>
+        /// <returns>
+        ///   The updated <see cref="EventMessageBuilder"/>.
+        /// </returns>
+        public EventMessageBuilder WithType(string? type) {
+            _type = type;
             return this;
         }
 

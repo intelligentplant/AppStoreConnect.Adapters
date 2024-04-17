@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter {
 
@@ -24,21 +26,96 @@ namespace DataCore.Adapter {
         ///   The cancellation token for the operation.
         /// </param>
         /// <returns>
-        ///   A channel that will return the available adapters.
+        ///   An <see cref="IAsyncEnumerable{T}"/> that will return the available adapters.
         /// </returns>
-        public static IAsyncEnumerable<IAdapter> GetAllAdapters(
+        public static async IAsyncEnumerable<IAdapter> GetAllAdapters(
             this IAdapterAccessor adapterAccessor, 
-            IAdapterCallContext context, 
+            IAdapterCallContext context,
+            [EnumeratorCancellation]
             CancellationToken cancellationToken = default
         ) {
             if (adapterAccessor == null) {
                 throw new ArgumentNullException(nameof(adapterAccessor));
             }
 
-            return adapterAccessor.FindAdapters(context, new Common.FindAdaptersRequest() { 
-                Page = 1,
-                PageSize = int.MaxValue
-            }, cancellationToken);
+            var page = 0;
+
+            while (true) {
+                var @continue = false;
+
+                await foreach (var adapter in adapterAccessor.FindAdapters(context, new FindAdaptersRequest() {
+                    Page = ++page,
+                    PageSize = 500
+                }, cancellationToken).ConfigureAwait(false)) {
+                    yield return adapter;
+                    @continue = true;
+                }
+
+                if (!@continue) {
+                    break;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Gets a <see cref="AdapterDescriptorExtended"/> for the specified adapter that reflects 
+        /// the runtime permissions of the calling <see cref="IAdapterCallContext"/>.
+        /// </summary>
+        /// <param name="adapterAccessor">
+        ///   The <see cref="IAdapterAccessor"/>.
+        /// </param>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the calling user.
+        /// </param>
+        /// <param name="adapterId">
+        ///   The adapter ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="Task{TResult}"/> that will return the requested <see cref="AdapterDescriptorExtended"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterAccessor"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="context"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="adapterId"/> is <see langword="null"/>.
+        /// </exception>
+        public static async Task<AdapterDescriptorExtended?> GetAdapterDescriptorAsync(
+            this IAdapterAccessor adapterAccessor,
+            IAdapterCallContext context,
+            string adapterId,
+            CancellationToken cancellationToken = default
+        ) {
+            if (adapterAccessor == null) {
+                throw new ArgumentNullException(nameof(adapterAccessor));
+            }
+            if (context == null) {
+                throw new ArgumentNullException(nameof(context));
+            }
+            if (adapterId == null) {
+                throw new ArgumentNullException(nameof(adapterId));
+            }
+
+            var adapter = await adapterAccessor.GetAdapter(context, adapterId, cancellationToken).ConfigureAwait(false);
+            if (adapter == null) {
+                return null;
+            }
+
+            var builder = adapter.CreateExtendedAdapterDescriptorBuilder();
+            foreach (var featureUri in adapter.Features.Keys) {
+                var isAuthorized = await adapterAccessor.AuthorizationService.AuthorizeAdapterFeature(adapter, context, featureUri, cancellationToken).ConfigureAwait(false);
+                if (!isAuthorized) {
+                    builder.ClearFeature(featureUri);
+                }
+            }
+
+            return builder.Build();
         }
 
 
@@ -174,7 +251,6 @@ namespace DataCore.Adapter {
         ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
         ///   authorization result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Parameter is not guaranteed to be a URI")]
         public static Task<ResolvedAdapterFeature<IAdapterFeature>> GetAdapterAndFeature(
             this IAdapterAccessor adapterAccessor,
             IAdapterCallContext context,
@@ -214,7 +290,6 @@ namespace DataCore.Adapter {
         ///   A <see cref="ResolvedAdapterFeature{TFeature}"/> describing the adapter, feature, and 
         ///   authorization result.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Parameter is not guaranteed to be a URI")]
         public static Task<ResolvedAdapterFeature<IAdapterFeature>> GetAdapterAndFeature(
             this IAdapterAccessor adapterAccessor, 
             IAdapterCallContext context, 

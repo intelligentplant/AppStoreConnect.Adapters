@@ -18,7 +18,7 @@ namespace DataCore.Adapter.Events {
     /// <summary>
     /// Implements <see cref="IEventMessagePushWithTopics"/>.
     /// </summary>
-    public class EventMessagePushWithTopics : SubscriptionManager<EventMessagePushWithTopicsOptions, string, EventMessage, EventSubscriptionChannel>, IEventMessagePushWithTopics {
+    public partial class EventMessagePushWithTopics : SubscriptionManager<EventMessagePushWithTopicsOptions, string, EventMessage, EventSubscriptionChannel>, IEventMessagePushWithTopics {
 
         /// <summary>
         /// Flags if the object has been disposed.
@@ -65,7 +65,7 @@ namespace DataCore.Adapter.Events {
         /// <param name="logger">
         ///   The logger to use.
         /// </param>
-        public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger? logger)
+        public EventMessagePushWithTopics(EventMessagePushWithTopicsOptions? options, IBackgroundTaskService? backgroundTaskService, ILogger<EventMessagePushWithTopics>? logger)
             : base(options, backgroundTaskService, logger) { 
             BackgroundTaskService.QueueBackgroundWorkItem(
                 ProcessTopicSubscriptionChangesChannel,
@@ -408,6 +408,8 @@ namespace DataCore.Adapter.Events {
         ///   A long-running task.
         /// </returns>
         private async Task ProcessTopicSubscriptionChangesChannel(CancellationToken cancellationToken) {
+            using var loggerScope = BeginLoggerScope();
+
             while (!cancellationToken.IsCancellationRequested) {
                 try {
                     if (!await _topicSubscriptionChangesChannel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)) {
@@ -443,18 +445,15 @@ namespace DataCore.Adapter.Events {
                             change.Processed.TrySetException(e);
                         }
 
-                        Logger.LogError(
-                            e,
-                            Resources.Log_ErrorWhileProcessingSubscriptionTopicChange,
-                            change.Topics.Count,
-                            change.Added
-                                ? SubscriptionUpdateAction.Subscribe
-                                : SubscriptionUpdateAction.Unsubscribe
-                        );
+                        LogSubscriptionChangeError(Logger, e, change.Topics.Count, change.Added ? SubscriptionUpdateAction.Subscribe : SubscriptionUpdateAction.Unsubscribe);
                     }
                 }
             }
         }
+
+
+        [LoggerMessage(10, LogLevel.Error, "Error while processing a subscription change for {count} topics. Action: {action}")]
+        static partial void LogSubscriptionChangeError(ILogger logger, Exception e, int count, SubscriptionUpdateAction action);
 
 
         /// <inheritdoc/>

@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+
+using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.RealTimeData.Utilities {
 
@@ -28,6 +33,9 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// </summary>
         public DateTime UtcQueryEnd { get; }
 
+        /// <summary>
+        /// The raw data samples for the bucket.
+        /// </summary>
         private List<TagValueExtended> _rawSamples = new List<TagValueExtended>();
 
         /// <summary>
@@ -43,12 +51,22 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
         /// <summary>
         /// Holds information about values immediately before the start boundary of the bucket.
         /// </summary>
-        public BoundaryInfo StartBoundary { get; } = new BoundaryInfo();
+        public PreBoundaryInfo BeforeStartBoundary { get; } = new PreBoundaryInfo();
+
+        /// <summary>
+        /// Holds information about values immediately after the start boundary of the bucket.
+        /// </summary>
+        public PostBoundaryInfo AfterStartBoundary { get; } = new PostBoundaryInfo();
 
         /// <summary>
         /// Holds information about values immediately before the end boundary of the bucket.
         /// </summary>
-        public BoundaryInfo EndBoundary { get; } = new BoundaryInfo();
+        public PreBoundaryInfo BeforeEndBoundary { get; } = new PreBoundaryInfo();
+
+        /// <summary>
+        /// Holds information about values immediately after the end boundary of the bucket.
+        /// </summary>
+        public PostBoundaryInfo AfterEndBoundary { get; } = new PostBoundaryInfo();
 
 
         /// <summary>
@@ -75,37 +93,67 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
 
 
         /// <summary>
-        /// Adds a raw sample to the bucket and updates the end boundary value for the bucket if 
-        /// required.
+        /// Adds a raw sample to the bucket.
         /// </summary>
         /// <param name="value">
         ///   The value.
         /// </param>
-        internal void AddRawSample(TagValueExtended value) {
+        internal void AddRawSample(TagValueExtended? value) {
             if (value == null) {
                 return;
             }
 
-            _rawSamples.Add(value);
-            EndBoundary.UpdateValue(value);
+            if (value.UtcSampleTime < UtcBucketStart) {
+                BeforeStartBoundary.UpdateValue(value);
+            }
+            else if (value.UtcSampleTime >= UtcBucketStart && value.UtcSampleTime < UtcBucketEnd) {
+                _rawSamples.Add(value);
+                AfterStartBoundary.UpdateValue(value);
+                BeforeEndBoundary.UpdateValue(value);
+            }
+            else {
+                AfterEndBoundary.UpdateValue(value);
+            }
         }
 
 
         /// <summary>
-        /// Updates the start boundary value for the bucket. Note that updating the start boundary 
-        /// will also update the end boundary, if an end boundary value has not yet been set. 
+        /// Copies boundary samples from the specified bucket into the current bucket.
         /// </summary>
-        /// <param name="value">
-        ///   The value.
+        /// <param name="previousBucket">
+        ///   The bucket to copy the boundary samples from.
         /// </param>
-        internal void UpdateStartBoundaryValue(TagValueExtended value) {
-            if (value == null) {
-                return;
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="previousBucket"/> is <see langword="null"/>.
+        /// </exception>
+        internal void AddBoundarySamples(TagValueBucket previousBucket) {
+            if (previousBucket == null) {
+                throw new ArgumentNullException(nameof(previousBucket));
             }
 
-            StartBoundary.UpdateValue(value);
-            // We may also have to update the end boundary value.
-            EndBoundary.UpdateValue(value);
+            if (previousBucket.BeforeEndBoundary.BoundaryStatus == TagValueStatus.Good) {
+                // Good boundary status means that we have a best-quality value and a closest
+                // value defined, and that these both point to the same sample.
+                AddRawSample(previousBucket.BeforeEndBoundary?.BestQualityValue);
+            }
+            else {
+                // Non-good boundary status means that the best-quality value and the closest
+                // value are different, or that one or both of these values is null.
+                AddRawSample(previousBucket.BeforeEndBoundary?.BestQualityValue);
+                AddRawSample(previousBucket.BeforeEndBoundary?.ClosestValue);
+            }
+
+            if (previousBucket.AfterEndBoundary.BoundaryStatus == TagValueStatus.Good) {
+                // Good boundary status means that we have a best-quality value and a closest
+                // value defined, and that these both point to the same sample.
+                AddRawSample(previousBucket.AfterEndBoundary?.BestQualityValue);
+            }
+            else {
+                // Non-good boundary status means that the best-quality value and the closest
+                // value are different, or that one or both of these values is null.
+                AddRawSample(previousBucket.AfterEndBoundary?.ClosestValue);
+                AddRawSample(previousBucket.AfterEndBoundary?.BestQualityValue);
+            }
         }
 
 

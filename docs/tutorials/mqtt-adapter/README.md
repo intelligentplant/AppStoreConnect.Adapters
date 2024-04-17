@@ -31,7 +31,7 @@ Click `Next` to configure the project settings:
 
 ![Visual Studio template parameters window](../../../src/DataCore.Adapter.Templates/img/template_parameters.png)
 
-You can choose to target .NET 7 or .NET 6 (the latest version and current long-term support version respectively at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
+Choose .NET 8 as the target version (the current long-term support version of .NET at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
 
 Click `Create` to create the project.
 
@@ -59,7 +59,7 @@ Click "Create" to create the data source. You will be taken to the data source's
 
 # Add Required Package References
 
-Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient @ v4.1.4.563](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient/4.1.4.563) to the adapter project.
+Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient @ v4.3.3.952](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient/4.3.3.952) to the adapter project. You can reference a more recent version of this package if preferred, but you may have to tweak some of the remaining steps if a newer version contains any breaking changes.
 
 
 # Update the Adapter Options Class
@@ -135,6 +135,7 @@ using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using MQTTnet;
@@ -156,6 +157,8 @@ namespace MqttAdapter {
 
         private static readonly System.Diagnostics.Metrics.Counter<int> s_messagesReceived = Telemetry.Meter.CreateCounter<int>("mqtt.messages_received", "{messages}", "Count of messages received from the MQTT broker");
 
+        private readonly ILogger<MyAdapter> _logger;
+
         private readonly TagManager _tagManager;
 
         private readonly SnapshotTagValueManager _snapshotManager;
@@ -172,12 +175,14 @@ namespace MqttAdapter {
         public MyAdapter(
             string id,
             IOptionsMonitor<MyAdapterOptions> options,
-            IBackgroundTaskService taskScheduler,
-            ILogger<MyAdapter> logger
-        ) : base(id, options, taskScheduler, logger) {
+            IBackgroundTaskService backgroundTaskService,
+            ILoggerFactory loggerFactory
+        ) : base(id, options, backgroundTaskService, loggerFactory) {
+            _logger = loggerFactory.CreateLogger<MyAdapter>();
+
             _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
                 Id = id
-            }, BackgroundTaskService, Logger);
+            }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
             AddFeatures(_configurationChanges);
 
@@ -189,7 +194,8 @@ namespace MqttAdapter {
                 null,
                 BackgroundTaskService,
                 new[] { s_tagCreatedAtPropertyDefinition },
-                _configurationChanges.NotifyAsync
+                _configurationChanges.NotifyAsync,
+                LoggerFactory.CreateLogger<TagManager>()
             );
 
             AddFeatures(_tagManager);
@@ -197,15 +203,17 @@ namespace MqttAdapter {
             _snapshotManager = new SnapshotTagValueManager(new SnapshotTagValueManagerOptions() {
                 Id = id,
                 TagResolver = SnapshotTagValueManager.CreateTagResolverFromAdapter(this)
-            }, BackgroundTaskService, null, Logger);
+            }, BackgroundTaskService, null, LoggerFactory.CreateLogger<SnapshotTagValueManager>());
 
             AddFeatures(_snapshotManager);
         }
 
 
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            await _tagManager.InitAsync(cancellationToken).ConfigureAwait(false);
-            await InitMqttClientAsync(cancellationToken);
+            using var ctSource = CreateCancellationTokenSource(cancellationToken);
+
+            await _tagManager.InitAsync(ctSource.Token).ConfigureAwait(false);
+            await InitMqttClientAsync(ctSource.Token);
         }
 
 
@@ -264,10 +272,10 @@ namespace MqttAdapter {
             }
 
             if (_mqttClient == null) {
-                Logger.LogWarning("Initialising MQTT client.");
+                LogInitialisingClient();
             }
             else {
-                Logger.LogWarning("Re-initialising MQTT client.");
+                LogReinitialisingClient();
             }
 
             _mqttClient = _factory.CreateManagedMqttClient();
@@ -296,42 +304,49 @@ namespace MqttAdapter {
 
 
         private Task OnConnectedAsync(MqttClientConnectedEventArgs args) {
-            Logger.LogWarning("Connected to MQTT server.");
+            LogOnConnected(Options.Hostname);
             OnHealthStatusChanged();
             return Task.CompletedTask;
         }
 
 
         private Task OnDisconnectedAsync(MqttClientDisconnectedEventArgs args) {
-            Logger.LogWarning("Disconnected from MQTT server.");
+            LogOnDisconnected(Options.Hostname);
             OnHealthStatusChanged();
             return Task.CompletedTask;
         }
 
 
         private async Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs args) {
-            s_messagesReceived.Add(1, new KeyValuePair<string, object?>("adapter_id", Descriptor.Id));
+            try {
+                LogMessageReceived(args.ApplicationMessage.Topic, args.ApplicationMessage.ContentType ?? "(null)", args.ApplicationMessage.PayloadFormatIndicator, args.ApplicationMessage.PayloadSegment.Count);
+            
+                s_messagesReceived.Add(1, new KeyValuePair<string, object?>("adapter_id", Descriptor.Id));
 
-            var topic = args.ApplicationMessage.Topic;
-            var payload = args.ApplicationMessage.ConvertPayloadToString();
+                var topic = args.ApplicationMessage.Topic;
+                var payload = args.ApplicationMessage.ConvertPayloadToString();
 
-            var dataValue = new TagValueBuilder()
-                .WithUtcSampleTime(DateTime.UtcNow)
-                .WithValue(double.TryParse(payload, out var numericValue) ? numericValue : payload)
-                .Build();
-
-            var tag = await _tagManager.GetTagAsync(topic, StopToken);
-            if (tag == null) {
-                tag = new TagDefinitionBuilder(topic)
-                    .WithDataType(dataValue.Value.Type)
-                    .WithSupportsReadSnapshotValues()
-                    .WithSupportsSnapshotValuePush()
-                    .WithProperty(s_tagCreatedAtPropertyDefinition.Name, dataValue.UtcSampleTime)
+                var dataValue = new TagValueBuilder()
+                    .WithUtcSampleTime(DateTime.UtcNow)
+                    .WithValue(double.TryParse(payload, out var numericValue) ? numericValue : payload)
                     .Build();
-                await _tagManager.AddOrUpdateTagAsync(tag, StopToken);
-            }
 
-            await _snapshotManager.ValueReceived(new TagValueQueryResult(tag.Id, tag.Name, dataValue), StopToken);
+                var tag = await _tagManager.GetTagAsync(topic, StopToken);
+                if (tag == null) {
+                    tag = new TagDefinitionBuilder(topic)
+                        .WithDataType(dataValue.Value.Type)
+                        .WithSupportsReadSnapshotValues()
+                        .WithSupportsSnapshotValuePush()
+                        .WithProperty(s_tagCreatedAtPropertyDefinition.Name, dataValue.UtcSampleTime)
+                        .Build();
+                    await _tagManager.AddOrUpdateTagAsync(tag, StopToken);
+                }
+
+                await _snapshotManager.ValueReceived(new TagValueQueryResult(tag.Id, tag.Name, dataValue), StopToken);
+            }
+            catch (Exception e) {
+                LogMessageProcessingError(e, args.ApplicationMessage.Topic);
+            }
         }
 
 
@@ -350,6 +365,25 @@ namespace MqttAdapter {
                 _mqttClient?.Dispose();
             }
         }
+
+
+        [LoggerMessage(1, LogLevel.Information, "Initialising MQTT client.")]
+        partial void LogInitialisingClient();
+
+        [LoggerMessage(2, LogLevel.Information, "Reinitialising MQTT client.")]
+        partial void LogReinitialisingClient();
+
+        [LoggerMessage(3, LogLevel.Information, "Connected to MQTT server {hostname}.")]
+        partial void LogOnConnected(string hostname);
+
+        [LoggerMessage(4, LogLevel.Information, "Disconnected from MQTT server {hostname}.")]
+        partial void LogOnDisconnected(string hostname);
+
+        [LoggerMessage(5, LogLevel.Debug, "Received message for topic '{topic}': ContentType='{contentType}', PayloadFormatIndicator='{payloadFormatIndicator}', Length={payloadLength}")]
+        partial void LogMessageReceived(string topic, string contentType, MqttPayloadFormatIndicator payloadFormatIndicator, int payloadLength);
+
+        [LoggerMessage(6, LogLevel.Error, "Error processing message for topic '{topic}'.")]
+        partial void LogMessageProcessingError(Exception exception, string topic);
 
     }
 }
@@ -399,8 +433,8 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
 }
 
 <form id="settings-form" asp-page="Settings" method="post" class="g-3">
-  <div class="card">
-    <div class="card-header">
+  <div class="card border-success">
+    <div class="card-header border-success text-body-emphasis">
       <i class="fa-solid fa-puzzle-piece fa-fw"></i>
       Adapter Settings
     </div>
@@ -409,7 +443,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
 
     @if (!string.IsNullOrWhiteSpace(Model.Adapter.TypeDescriptor.HelpUrl)) {
       <div class="card-body pb-0">
-        <p class="small text-muted">
+        <p class="small text-body-secondary">
           Click
           <a href="@Model.Adapter.TypeDescriptor.HelpUrl" target="_blank" title="View help documentation for this adapter type">here</a>
           to view help documentation for this adapter type.
@@ -422,7 +456,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Name" class="form-label"></label>
         <input asp-for="Options!.Name" asp-placeholder-for="Options!.Name" class="form-control" />
         <span asp-validation-for="Options!.Name" class="small text-danger"></span>
-        <p asp-description-for="Options!.Name" class="small text-muted"></p>
+        <p asp-description-for="Options!.Name" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -431,7 +465,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Description" class="form-label"></label>
         <textarea asp-for="Options!.Description" asp-placeholder-for="Options!.Description" class="form-control"></textarea>
         <span asp-validation-for="Options!.Description" class="small text-danger"></span>
-        <p asp-description-for="Options!.Description" class="small text-muted"></p>
+        <p asp-description-for="Options!.Description" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -441,7 +475,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
           <input asp-for="Options!.IsEnabled" class="form-check-input" />
           <label asp-for="Options!.IsEnabled" class="form-check-label"></label>
         </div>
-        <p asp-description-for="Options!.IsEnabled" class="small text-muted"></p>
+        <p asp-description-for="Options!.IsEnabled" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -450,7 +484,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Hostname" class="form-label"></label>
         <input asp-for="Options!.Hostname" asp-placeholder-for="Options!.Hostname" class="form-control" />
         <span asp-validation-for="Options!.Hostname" class="small text-danger"></span>
-        <p asp-description-for="Options!.Hostname" class="small text-muted"></p>
+        <p asp-description-for="Options!.Hostname" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -459,7 +493,7 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Port" class="form-label"></label>
         <input asp-for="Options!.Port" asp-placeholder-for="Options!.Port" class="form-control" />
         <span asp-validation-for="Options!.Port" class="small text-danger"></span>
-        <p asp-description-for="Options!.Port" class="small text-muted"></p>
+        <p asp-description-for="Options!.Port" class="small text-body-secondary"></p>
       </div>
     </div>
 
@@ -468,13 +502,13 @@ Replace the contents of `Pages/Settings.cshtml` with the following code to allow
         <label asp-for="Options!.Topics" class="form-label"></label>
         <input asp-for="Options!.Topics" asp-placeholder-for="Options!.Topics" class="form-control" />
         <span asp-validation-for="Options!.Topics" class="small text-danger"></span>
-        <p asp-description-for="Options!.Topics" class="small text-muted"></p>
+        <p asp-description-for="Options!.Topics" class="small text-body-secondary"></p>
       </div>
     </div>
 
     <!-- Add additional controls for other adapter options fields as required. -->
 
-    <div class="card-footer">
+    <div class="card-footer border-success">
       <button type="submit" class="btn btn-sm btn-outline-success" title="Save adapter settings">
         <i class="fa-solid fa-check fa-fw"></i>
         Save Changes
