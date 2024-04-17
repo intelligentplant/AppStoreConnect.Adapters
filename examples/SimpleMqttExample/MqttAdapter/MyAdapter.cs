@@ -146,7 +146,7 @@ namespace MqttAdapter {
                 LogInitialisingClient();
             }
             else {
-                LogReinitialisingClient;
+                LogReinitialisingClient();
             }
 
             _mqttClient = _factory.CreateManagedMqttClient();

@@ -31,7 +31,7 @@ Click `Next` to configure the project settings:
 
 ![Visual Studio template parameters window](../../../src/DataCore.Adapter.Templates/img/template_parameters.png)
 
-You can choose to target .NET 8 or .NET 6 (the current and previous long-term support version respectively at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
+Choose .NET 8 as the target version (the current long-term support version of .NET at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
 
 Click `Create` to create the project.
 
@@ -59,7 +59,7 @@ Click "Create" to create the data source. You will be taken to the data source's
 
 # Add Required Package References
 
-Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient @ v4.1.4.563](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient/4.1.4.563) to the adapter project. You can reference a more recent version of this package if preferred, but you may have to tweak some of the remaining steps if a newer version contains any breaking changes.
+Add a NuGet package reference to [MQTTnet.Extensions.ManagedClient @ v4.3.3.952](https://www.nuget.org/packages/MQTTnet.Extensions.ManagedClient/4.3.3.952) to the adapter project. You can reference a more recent version of this package if preferred, but you may have to tweak some of the remaining steps if a newer version contains any breaking changes.
 
 
 # Update the Adapter Options Class
@@ -275,7 +275,7 @@ namespace MqttAdapter {
                 LogInitialisingClient();
             }
             else {
-                LogReinitialisingClient;
+                LogReinitialisingClient();
             }
 
             _mqttClient = _factory.CreateManagedMqttClient();
