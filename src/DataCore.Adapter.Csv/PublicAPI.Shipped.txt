@@ -1,6 +1,9 @@
 ﻿#nullable enable
 const DataCore.Adapter.Csv.CsvAdapterOptions.DefaultSnapshotPushUpdateInterval = 30000 -> int
 DataCore.Adapter.Csv.CsvAdapter
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, DataCore.Adapter.Csv.CsvAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void
+DataCore.Adapter.Csv.CsvAdapter.CsvAdapter(string! id, Microsoft.Extensions.Options.IOptionsMonitor<DataCore.Adapter.Csv.CsvAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService! backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory! logger) -> void
 DataCore.Adapter.Csv.CsvAdapter.AddTags(System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.TagDefinition!>! tags, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 DataCore.Adapter.Csv.CsvAdapter.FindTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.FindTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Csv.CsvAdapter.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!

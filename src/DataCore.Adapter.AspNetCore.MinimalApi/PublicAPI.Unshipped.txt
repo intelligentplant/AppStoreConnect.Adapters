@@ -1,3 +1,1 @@
 ﻿#nullable enable
-static Microsoft.AspNetCore.Builder.AdapterMinimalApiEndpointRouteBuilderExtensions.MapDataCoreAdapterApiRoutes(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! builder, Microsoft.AspNetCore.Http.PathString? prefix) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
-static Microsoft.Extensions.DependencyInjection.AdapterMinimalApiConfigurationExtensions.AddDataCoreAdapterApiServices(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!

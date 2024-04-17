@@ -1,2 +1,1 @@
 ﻿#nullable enable
-static Microsoft.Extensions.DependencyInjection.AdapterConfigurationBuilderExtensions.AddAdapterOptions<TOptions>(this DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder! builder, System.Action<Microsoft.Extensions.Options.OptionsBuilder<TOptions!>!>? configure = null) -> DataCore.Adapter.DependencyInjection.IAdapterConfigurationBuilder!

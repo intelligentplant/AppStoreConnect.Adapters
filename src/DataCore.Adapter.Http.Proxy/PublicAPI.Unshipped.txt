@@ -1,2 +1,1 @@
 ﻿#nullable enable
-DataCore.Adapter.Http.Proxy.HttpAdapterProxy.HttpAdapterProxy(string! id, DataCore.Adapter.Http.Client.AdapterHttpClient! client, DataCore.Adapter.Http.Proxy.HttpAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? taskScheduler, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void

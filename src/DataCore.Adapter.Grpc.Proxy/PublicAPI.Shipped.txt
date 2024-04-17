@@ -4,6 +4,7 @@ DataCore.Adapter.Grpc.Proxy.Extensions.AdapterExtensionFeatureImpl.AdapterExtens
 DataCore.Adapter.Grpc.Proxy.GetGrpcCallCredentials
 DataCore.Adapter.Grpc.Proxy.GetGrpcClientInterceptors
 DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy
+DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.GrpcAdapterProxy(string! id, Grpc.Net.Client.GrpcChannel! channel, DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? taskScheduler, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
 DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.CreateClient<TClient>() -> TClient!
 DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.GetCallCredentials(DataCore.Adapter.IAdapterCallContext! context) -> Grpc.Core.CallCredentials?
 DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.RemoteDescriptor.get -> DataCore.Adapter.Common.AdapterDescriptorExtended!

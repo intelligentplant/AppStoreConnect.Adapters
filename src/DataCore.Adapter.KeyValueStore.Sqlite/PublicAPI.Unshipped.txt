@@ -1,19 +1,1 @@
 ﻿#nullable enable
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.Dispose() -> void
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.FlushAsync() -> System.Threading.Tasks.ValueTask
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.SqliteKeyValueStore(DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? logger = null) -> void
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.get -> bool
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.EnableRawWrites.set -> void
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.WriteBuffer.get -> DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreWriteBufferOptions!
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreOptions.WriteBuffer.set -> void
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreWriteBufferOptions
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreWriteBufferOptions.Enabled.get -> bool
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreWriteBufferOptions.Enabled.set -> void
-DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStoreWriteBufferOptions.SqliteKeyValueStoreWriteBufferOptions() -> void
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.AllowRawWrites.get -> bool
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ExistsAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
-override DataCore.Adapter.KeyValueStore.Sqlite.SqliteKeyValueStore.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask

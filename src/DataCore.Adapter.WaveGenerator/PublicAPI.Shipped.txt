@@ -1,6 +1,8 @@
 ﻿#nullable enable
 DataCore.Adapter.WaveGenerator.Resources
 DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
+DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.WaveGeneratorAdapter(string! id, Microsoft.Extensions.Options.IOptions<DataCore.Adapter.WaveGenerator.WaveGeneratorAdapterOptions!>! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
 DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.FindTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.FindTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.GetTagProperties(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagPropertiesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
 DataCore.Adapter.WaveGenerator.WaveGeneratorAdapter.GetTags(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.GetTagsRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagDefinition!>!
