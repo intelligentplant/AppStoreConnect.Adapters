@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData.Utilities;
 
 namespace DataCore.Adapter.RealTimeData {
 
