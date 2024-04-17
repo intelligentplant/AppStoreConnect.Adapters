@@ -12,7 +12,7 @@
         ///   The adapter ID is used in all API calls made to the adapter host. If you change the 
         ///   value here, remember to change it in App Store Connect as well!
         /// </remarks>
-        public const string AdapterId = "3a7a9d24-8211-45bc-8241-45472dcaca95";
+        public const string AdapterId = "$default";
 
         /// <summary>
         /// The path to the adapter settings JSON file.

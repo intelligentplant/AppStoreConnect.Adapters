@@ -489,3 +489,124 @@ virtual DataCore.Adapter.AdapterCore.ValidateInvocationParameter(object! paramet
 ~static DataCore.Adapter.AbstractionsResources.Error_ValueStopwatch_NotInitialised.get -> string
 ~static DataCore.Adapter.AbstractionsResources.LocalizableString_LocalizationFailed.get -> string
 ~static DataCore.Adapter.AbstractionsResources.ResourceManager.get -> System.Resources.ResourceManager
+abstract DataCore.Adapter.Services.KeyValueStore.ExistsAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+abstract DataCore.Adapter.Services.KeyValueStore.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+abstract DataCore.Adapter.Services.KeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+abstract DataCore.Adapter.Services.KeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.AllowRawWrites.get -> bool
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
+abstract DataCore.Adapter.Services.RawKeyValueStore<TOptions>.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.AdapterCore.AdapterCore(DataCore.Adapter.Common.AdapterDescriptor! descriptor, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void
+DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger) -> System.IDisposable?
+DataCore.Adapter.AdapterCore.LoggerFactory.get -> Microsoft.Extensions.Logging.ILoggerFactory!
+DataCore.Adapter.Common.AdapterDescriptorBuilder
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptor! descriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id, string! name) -> void
+DataCore.Adapter.Common.AdapterDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearProperties() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params System.Uri![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<string!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<System.Uri!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithId(string! id) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithName(string! name) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithTypeDescriptor(DataCore.Adapter.Common.AdapterTypeDescriptor? typeDescriptor) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(DataCore.Adapter.Common.AdapterTypeDescriptor! descriptor) -> void
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(System.Uri! id) -> void
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(string? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(System.Uri? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithId(System.Uri! id) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithName(string? name) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
+DataCore.Adapter.Common.HostInfoBuilder
+DataCore.Adapter.Common.HostInfoBuilder.Build() -> DataCore.Adapter.Common.HostInfo!
+DataCore.Adapter.Common.HostInfoBuilder.ClearProperties() -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder() -> void
+DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder(DataCore.Adapter.Common.HostInfo! hostInfo) -> void
+DataCore.Adapter.Common.HostInfoBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithName(string? name) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.Common.HostInfoBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.HostInfoBuilder!
+DataCore.Adapter.IAdapterCallContext.Services.get -> System.IServiceProvider!
+DataCore.Adapter.Services.IKeyValueStore.ExistsAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<bool>
+DataCore.Adapter.Services.IKeyValueStore.ReadAsync<T>(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.IKeyValueStore.WriteAsync<T>(DataCore.Adapter.Services.KVKey key, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.IKeyValueStoreSerializer
+DataCore.Adapter.Services.IKeyValueStoreSerializer.DeserializeAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.IKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.InMemoryKeyValueStore.InMemoryKeyValueStore() -> void
+DataCore.Adapter.Services.IRawKeyValueStore
+DataCore.Adapter.Services.IRawKeyValueStore.ReadRawAsync(DataCore.Adapter.Services.KVKey key) -> System.Threading.Tasks.ValueTask<byte[]?>
+DataCore.Adapter.Services.IRawKeyValueStore.WriteRawAsync(DataCore.Adapter.Services.KVKey key, byte[]! value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.DeserializeAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.JsonKeyValueStoreSerializer(System.Text.Json.JsonSerializerOptions? jsonOptions) -> void
+DataCore.Adapter.Services.JsonKeyValueStoreSerializer.SerializeAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromBytesAsync<T>(byte[]! data) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamCoreAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+DataCore.Adapter.Services.KeyValueStore.SerializeToBytesAsync<T>(T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+DataCore.Adapter.Services.KeyValueStore.SerializeToStreamCoreAsync<T>(System.IO.Stream! stream, T value) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer?
+DataCore.Adapter.Services.KeyValueStoreOptions.Serializer.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.DeleteAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.Dispose() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.FlushAsync() -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.KeyValueStoreWriteBuffer(DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions! options, System.Func<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<DataCore.Adapter.Services.KVKey, byte[]?>>!, System.Threading.Tasks.Task!>! callback, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Services.KeyValueStoreWriteBuffer!>? logger = null) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadAsync(DataCore.Adapter.Services.KVKey key, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult>
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Found.get -> bool
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.ReadResult(bool found, byte[]? value) -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.ReadResult.Value.get -> byte[]?
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBuffer.WriteAsync(DataCore.Adapter.Services.KVKey key, byte[]! value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.get -> System.TimeSpan
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.FlushInterval.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyLimit.set -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.KeyValueStoreWriteBufferOptions() -> void
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.get -> int
+DataCore.Adapter.Services.KeyValueStoreWriteBufferOptions.SizeLimit.set -> void
+DataCore.Adapter.Services.RawKeyValueStore<TOptions>
+DataCore.Adapter.Services.RawKeyValueStore<TOptions>.RawKeyValueStore(TOptions? options, Microsoft.Extensions.Logging.ILogger? logger = null) -> void
+override DataCore.Adapter.Services.KVKey.ToString() -> string!
+override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetCompressionLevel() -> System.IO.Compression.CompressionLevel
+override sealed DataCore.Adapter.Services.KeyValueStore<TOptions>.GetSerializer() -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.AdapterCore.BeginLoggerScope(Microsoft.Extensions.Logging.ILogger! logger, string! adapterId) -> System.IDisposable?
+static DataCore.Adapter.AdapterExtensions.CreateExtendedAdapterDescriptorBuilder(this DataCore.Adapter.IAdapter! adapter) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+static DataCore.Adapter.Services.JsonKeyValueStoreSerializer.Default.get -> DataCore.Adapter.Services.IKeyValueStoreSerializer!
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.IO.Stream! stream) -> bool
+static DataCore.Adapter.Services.KeyValueStore.IsGzipped(System.Span<byte> data) -> bool
+static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.BulkCopyToAsync(this DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.KVKey? keyPrefix = null, bool overwrite = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyFromAsync(this DataCore.Adapter.Services.IRawKeyValueStore! destination, DataCore.Adapter.Services.IRawKeyValueStore! source, System.Collections.Generic.IEnumerable<DataCore.Adapter.Services.KVKey>! keys, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.CopyToAsync(this DataCore.Adapter.Services.IRawKeyValueStore! source, DataCore.Adapter.Services.IRawKeyValueStore! destination, System.Collections.Generic.IEnumerable<DataCore.Adapter.Services.KVKey>! keys, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KeyValueStoreExtensions.GetKeysAsStringsAsync(this DataCore.Adapter.Services.IKeyValueStore! store, DataCore.Adapter.Services.KVKey? prefix) -> System.Collections.Generic.IAsyncEnumerable<string!>!
+static DataCore.Adapter.Services.KVKey.implicit operator string?(DataCore.Adapter.Services.KVKey value) -> string?
+virtual DataCore.Adapter.AdapterCore.GetAdapterTypeDescriptor() -> DataCore.Adapter.Common.AdapterTypeDescriptor?
+virtual DataCore.Adapter.Services.KeyValueStore.DeserializeFromStreamAsync<T>(System.IO.Stream! stream) -> System.Threading.Tasks.ValueTask<T?>
+virtual DataCore.Adapter.Services.KeyValueStore.SerializeToStreamAsync<T>(System.IO.Stream! stream, T value, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.CompressRawBytesAsync(byte[]! data, System.IO.Compression.CompressionLevel? compressionLevel = null) -> System.Threading.Tasks.ValueTask<byte[]!>
+virtual DataCore.Adapter.Services.RawKeyValueStore<TOptions>.DecompressRawBytesAsync(byte[]! data) -> System.Threading.Tasks.ValueTask<byte[]!>
+~static DataCore.Adapter.AbstractionsResources.Error_KeyValueStore_RawWritesDisabled.get -> string

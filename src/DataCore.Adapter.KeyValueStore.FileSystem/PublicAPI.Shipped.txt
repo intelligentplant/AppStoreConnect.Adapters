@@ -2,10 +2,19 @@
 const DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.DefaultHashBuckets = 20 -> int
 const DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.DefaultPath = "./KeyValueStore" -> string!
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.FileSystemKeyValueStore(DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? logger = null) -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.FlushAsync() -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.Dispose() -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStore.WaitForNextFlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.FileSystemKeyValueStoreOptions() -> void
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.HashBuckets.get -> int
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.HashBuckets.set -> void
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.Path.get -> string!
 DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.Path.set -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.WriteBuffer.get -> DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions!
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreOptions.WriteBuffer.set -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.Enabled.get -> bool
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.Enabled.set -> void
+DataCore.Adapter.KeyValueStore.FileSystem.FileSystemKeyValueStoreWriteBufferOptions.FileSystemKeyValueStoreWriteBufferOptions() -> void

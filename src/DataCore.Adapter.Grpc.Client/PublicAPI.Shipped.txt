@@ -102,6 +102,7 @@ const DataCore.Adapter.Grpc.EventMessage.MessageFieldNumber = 5 -> int
 const DataCore.Adapter.Grpc.EventMessage.PriorityFieldNumber = 3 -> int
 const DataCore.Adapter.Grpc.EventMessage.PropertiesFieldNumber = 6 -> int
 const DataCore.Adapter.Grpc.EventMessage.TopicFieldNumber = 7 -> int
+const DataCore.Adapter.Grpc.EventMessage.TypeFieldNumber = 8 -> int
 const DataCore.Adapter.Grpc.EventMessage.UtcEventTimeFieldNumber = 2 -> int
 const DataCore.Adapter.Grpc.EventMessageWithCursorPosition.CursorPositionFieldNumber = 1 -> int
 const DataCore.Adapter.Grpc.EventMessageWithCursorPosition.EventMessageFieldNumber = 2 -> int
@@ -1448,6 +1449,8 @@ static DataCore.Adapter.GrpcExtensions.ToProtoValue(this System.Text.Json.JsonEl
 ~DataCore.Adapter.Grpc.EventMessage.Properties.get -> Google.Protobuf.Collections.RepeatedField<DataCore.Adapter.Grpc.AdapterProperty>
 ~DataCore.Adapter.Grpc.EventMessage.Topic.get -> string
 ~DataCore.Adapter.Grpc.EventMessage.Topic.set -> void
+~DataCore.Adapter.Grpc.EventMessage.Type.get -> string
+~DataCore.Adapter.Grpc.EventMessage.Type.set -> void
 ~DataCore.Adapter.Grpc.EventMessage.UtcEventTime.get -> Google.Protobuf.WellKnownTypes.Timestamp
 ~DataCore.Adapter.Grpc.EventMessage.UtcEventTime.set -> void
 ~DataCore.Adapter.Grpc.EventMessage.WriteTo(Google.Protobuf.CodedOutputStream output) -> void

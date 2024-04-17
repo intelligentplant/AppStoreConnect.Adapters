@@ -1,2 +1,1 @@
 ﻿#nullable enable
-DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.GrpcAdapterProxy(string! id, Grpc.Net.Client.GrpcChannel! channel, DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxyOptions! options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? taskScheduler, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.IObjectEncoder!>! encoders, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory) -> void

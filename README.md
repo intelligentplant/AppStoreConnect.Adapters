@@ -2,7 +2,7 @@
 
 Industrial processes generate a variety of different types of data, such as real-time instrument readings, messages from alarm & event systems, and so on. Real-time data typically needs to be archived to a time-based data store for long-term storage, from where it can be visualized, aggregated, and monitored to ensure that the process remains healthy.
 
-Intelligent Plant's [Industrial App Store](https://appstore.intelligentplant.com) securely connects your industrial plant historian and alarm & event systems to apps using [App Store Connect](https://appstore.intelligentplant.com/Welcome/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5). App Store Connect comes with built-in drivers for many 3rd party systems (including OSIsoft PI and Asset Framework, OPC DA/HDA/AE, MQTT, and more). App Store Connect can also integrate with 3rd party systems using an adapter.
+Intelligent Plant's [Industrial App Store](https://appstore.intelligentplant.com) securely connects your industrial plant historian and alarm & event systems to apps using [App Store Connect](https://appstore.intelligentplant.com/Welcome/AppProfile?appId=a73c453df5f447a6aa8a08d2019037a5). App Store Connect comes with built-in drivers for many 3rd party systems (including AVEVA OSIsoft PI and Asset Framework, AVEVA Wonderware, Microsoft Azure IoT Hubs/Event Hubs, Modbus, MQTT, OPC UA, OPC Classic DA/HDA/AE, and more). App Store Connect can also integrate with 3rd party systems using an adapter.
 
 ## What is an Adapter?
 
