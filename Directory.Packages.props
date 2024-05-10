@@ -6,17 +6,17 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Castle.Core" Version="5.1.1" />
-    <PackageVersion Include="CsvHelper" Version="31.0.3" />
+    <PackageVersion Include="CsvHelper" Version="32.0.2" />
     <PackageVersion Include="Google.Protobuf" Version="3.26.1" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.62.0" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.62.0" />
-    <PackageVersion Include="Grpc.Tools" Version="2.62.0" />
-    <PackageVersion Include="IntelligentPlant.BackgroundTasks" Version="11.0.0" />
-    <PackageVersion Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="11.0.0" />
-    <PackageVersion Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="11.0.0" />
+    <PackageVersion Include="Grpc.Tools" Version="2.63.0" />
+    <PackageVersion Include="IntelligentPlant.BackgroundTasks" Version="12.0.0" />
+    <PackageVersion Include="IntelligentPlant.BackgroundTasks.AspNetCore" Version="12.0.0" />
+    <PackageVersion Include="IntelligentPlant.BackgroundTasks.DependencyInjection" Version="12.0.0" />
     <PackageVersion Include="Jaahas.HttpRequestTransformer" Version="2.2.0" />
-    <PackageVersion Include="JsonSchema.Net" Version="6.0.7" />
-    <PackageVersion Include="JsonSchema.Net.Generation" Version="4.3.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="7.0.1" />
+    <PackageVersion Include="JsonSchema.Net.Generation" Version="4.3.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.4" />
@@ -28,23 +28,23 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.FASTER.Core" Version="2.6.3" />
+    <PackageVersion Include="Microsoft.FASTER.Core" Version="2.6.5" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
-    <PackageVersion Include="MiniValidation" Version="0.9.0" />
+    <PackageVersion Include="MiniValidation" Version="0.9.1" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.3.1" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.3.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
     <PackageVersion Include="NSwag.AspNetCore" Version="13.20.0" />
-    <PackageVersion Include="OpenTelemetry" Version="1.8.0" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.8.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.8.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.0" />
+    <PackageVersion Include="OpenTelemetry" Version="1.8.1" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.8.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.8.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.8.0-rc.1" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.8.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.8.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.8.0-beta.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.8.1" />
