@@ -1038,3 +1038,11 @@ static DataCore.Adapter.RealTimeData.TagValueExtensions.TryGetSteppedFlag(this D
 ~static DataCore.Adapter.SharedResources.Error_TooManyEntries.get -> string
 ~static DataCore.Adapter.SharedResources.Error_UnitIsTooLong.get -> string
 ~static DataCore.Adapter.SharedResources.Error_ValueIsTooLong.get -> string
+DataCore.Adapter.Json.NullableUtcDateTimeConverter
+DataCore.Adapter.Json.NullableUtcDateTimeConverter.NullableUtcDateTimeConverter() -> void
+DataCore.Adapter.Json.UtcDateTimeConverter
+DataCore.Adapter.Json.UtcDateTimeConverter.UtcDateTimeConverter() -> void
+override DataCore.Adapter.Json.NullableUtcDateTimeConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.DateTime?
+override DataCore.Adapter.Json.NullableUtcDateTimeConverter.Write(System.Text.Json.Utf8JsonWriter! writer, System.DateTime? value, System.Text.Json.JsonSerializerOptions! options) -> void
+override DataCore.Adapter.Json.UtcDateTimeConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.DateTime
+override DataCore.Adapter.Json.UtcDateTimeConverter.Write(System.Text.Json.Utf8JsonWriter! writer, System.DateTime value, System.Text.Json.JsonSerializerOptions! options) -> void
