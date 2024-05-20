@@ -33,7 +33,7 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
                 AdapterId = AdapterId
             };
             grpcRequest.Tags.AddRange(request.Tags);
-            grpcRequest.UtcSampleTimes.AddRange(request.UtcSampleTimes.Select(x => Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(x)));
+            grpcRequest.UtcSampleTimes.AddRange(request.UtcSampleTimes.Select(x => Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(x.ToUniversalTime())));
             if (request.Properties != null) {
                 foreach (var prop in request.Properties) {
                     grpcRequest.Properties.Add(prop.Key, prop.Value ?? string.Empty);

@@ -30,6 +30,10 @@ namespace DataCore.Adapter.Json {
             options.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
             //options.AddContext<AdapterJsonContext>();
 
+            // Ensure that DateTime values are always serialized/deserialized in UTC.
+            options.Converters.Add(new UtcDateTimeConverter());
+            options.Converters.Add(new NullableUtcDateTimeConverter());
+
             return options;
         }
 

@@ -50,7 +50,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </param>
         [JsonConstructor]
         public TagValue(DateTime utcSampleTime, Variant value, TagValueStatus status, string? units) {
-            UtcSampleTime = utcSampleTime;
+            UtcSampleTime = utcSampleTime.ToUniversalTime();
             Value = value;
             Status = status;
             Units = units;

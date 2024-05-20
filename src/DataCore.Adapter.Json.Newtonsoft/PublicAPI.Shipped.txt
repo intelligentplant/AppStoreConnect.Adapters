@@ -22,3 +22,5 @@ static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataC
 static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this System.Collections.Generic.ICollection<Newtonsoft.Json.JsonConverter!>! converters) -> void
 static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this Newtonsoft.Json.JsonSerializerSettings! settings, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
 static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.AddDataCoreAdapterConverters(this System.Collections.Generic.ICollection<Newtonsoft.Json.JsonConverter!>! converters, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
+static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.UseDataCoreAdapterDefaults(this Newtonsoft.Json.JsonSerializerSettings! settings) -> void
+static DataCore.Adapter.NewtonsoftJson.JsonSerializerSettingsExtensions.UseDataCoreAdapterDefaults(this Newtonsoft.Json.JsonSerializerSettings! settings, System.Text.Json.JsonSerializerOptions? jsonElementConverterOptions) -> void
