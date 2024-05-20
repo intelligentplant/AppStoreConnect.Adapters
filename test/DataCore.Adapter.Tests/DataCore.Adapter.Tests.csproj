@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.FASTER\DataCore.Adapter.KeyValueStore.FASTER.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.FileSystem\DataCore.Adapter.KeyValueStore.FileSystem.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.Sqlite\DataCore.Adapter.KeyValueStore.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\DataCore.Adapter.Json.Newtonsoft\DataCore.Adapter.Json.Newtonsoft.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.Tests.Helpers\DataCore.Adapter.Tests.Helpers.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter.WaveGenerator\DataCore.Adapter.WaveGenerator.csproj" />
     <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
