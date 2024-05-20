@@ -88,7 +88,7 @@ namespace DataCore.Adapter.Events {
         protected EventMessageBase(string id, string? topic, DateTime utcEventTime, EventPriority priority, string? category, string? type, string? message, IEnumerable<AdapterProperty>? properties) {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Topic = topic;
-            UtcEventTime = utcEventTime;
+            UtcEventTime = utcEventTime.ToUniversalTime();
             Priority = priority;
             Category = category;
             Type = type;
