@@ -58,8 +58,8 @@ namespace DataCore.Adapter.Grpc.Proxy.RealTimeData.Features {
             var client = CreateClient<TagValuesService.TagValuesServiceClient>();
             var grpcRequest = new ReadProcessedTagValuesRequest() {
                 AdapterId = AdapterId,
-                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime),
-                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime),
+                UtcStartTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcStartTime.ToUniversalTime()),
+                UtcEndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(request.UtcEndTime.ToUniversalTime()),
                 SampleInterval = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(request.SampleInterval)
             };
             grpcRequest.Tags.AddRange(request.Tags);
