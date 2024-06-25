@@ -33,6 +33,7 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
         public static TBuilder WithProperty<TBuilder>(this TBuilder builder, AdapterProperty property, bool replaceExisting = true) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
@@ -51,6 +52,7 @@ namespace DataCore.Adapter {
 
             return builder;
         }
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
 
         /// <summary>
@@ -76,7 +78,8 @@ namespace DataCore.Adapter {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
-        public static TBuilder WithProperties<TBuilder>(this TBuilder builder, IEnumerable<AdapterProperty> properties, bool replaceExisting) where TBuilder : AdapterEntityBuilder {
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+        public static TBuilder WithProperties<TBuilder>(this TBuilder builder, IEnumerable<AdapterProperty> properties, bool replaceExisting = true) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
@@ -94,6 +97,7 @@ namespace DataCore.Adapter {
 
             return builder;
         }
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
 
         /// <summary>
