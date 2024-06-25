@@ -1,11 +1,4 @@
 ﻿#nullable enable
-abstract DataCore.Adapter.AdapterEntityBuilder<T>.Build() -> T!
-DataCore.Adapter.AdapterEntityBuilder
-DataCore.Adapter.AdapterEntityBuilder.AdapterEntityBuilder() -> void
-DataCore.Adapter.AdapterEntityBuilder.GetProperties() -> System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>!
-DataCore.Adapter.AdapterEntityBuilder<T>
-DataCore.Adapter.AdapterEntityBuilder<T>.AdapterEntityBuilder() -> void
-DataCore.Adapter.AdapterEntityBuilderExtensions
 DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder() -> void
 DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder(DataCore.Adapter.Events.EventMessage! existing) -> void
 override DataCore.Adapter.AssetModel.AssetModelNodeBuilder.Build() -> DataCore.Adapter.AssetModel.AssetModelNode!
@@ -13,11 +6,3 @@ override DataCore.Adapter.Events.EventMessageBuilder.Build() -> DataCore.Adapter
 override DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
 override DataCore.Adapter.RealTimeData.TagValueBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueExtended!
 override DataCore.Adapter.Tags.TagDefinitionBuilder.Build() -> DataCore.Adapter.Tags.TagDefinition!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.ClearProperties<TBuilder>(this TBuilder! builder) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.RemoveProperty<TBuilder>(this TBuilder! builder, string! name) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperties<TBuilder>(this TBuilder! builder, bool replaceExisting, params DataCore.Adapter.Common.AdapterProperty![]! properties) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperties<TBuilder>(this TBuilder! builder, params DataCore.Adapter.Common.AdapterProperty![]! properties) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperties<TBuilder>(this TBuilder! builder, System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties, bool replaceExisting = true) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder, TValue>(this TBuilder! builder, string! name, TValue value, string? description = null, bool replaceExisting = true) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder>(this TBuilder! builder, DataCore.Adapter.Common.AdapterProperty! property, bool replaceExisting = true) -> TBuilder!
-static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder>(this TBuilder! builder, string! name, DataCore.Adapter.Common.Variant value, string? description = null, bool replaceExisting = true) -> TBuilder!
