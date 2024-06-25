@@ -59,6 +59,44 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
+        /// Adds a property to the builder if it is not already present.
+        /// </summary>
+        /// <param name="property">
+        ///   The property to add.
+        /// </param>
+        internal void TryAddPropertyCore(AdapterProperty property) {
+            if (property == null) {
+                return;
+            }
+
+#if NETSTANDARD2_1_OR_GREATER
+            _properties.TryAdd(property.Name, property);
+#else
+            if (!_properties.ContainsKey(property.Name)) {
+                _properties.Add(property.Name, property);
+            }
+#endif
+        }
+
+
+        /// <summary>
+        /// Adds a collection properties to the builder if they do not already exist.
+        /// </summary>
+        /// <param name="properties">
+        ///   The properties to add.
+        /// </param>
+        internal void TryAddPropertiesCore(IEnumerable<AdapterProperty> properties) {
+            if (properties == null) {
+                return;
+            }
+
+            foreach (var property in properties) {
+                TryAddPropertyCore(property);
+            }
+        }
+
+
+        /// <summary>
         /// Removes a property from the builder.
         /// </summary>
         /// <param name="name">

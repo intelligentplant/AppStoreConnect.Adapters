@@ -22,13 +22,18 @@ namespace DataCore.Adapter {
         /// <param name="property">
         ///   The property to add.
         /// </param>
+        /// <param name="replaceExisting">
+        ///   If the <paramref name="property"/> already exists in the builder, specify 
+        ///   <see langword="true"/> to drop the existing property or <see langword="false"/> to 
+        ///   drop the incoming <paramref name="property"/>.
+        /// </param>
         /// <returns>
         ///   The updated builder.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
-        public static TBuilder WithProperty<TBuilder>(this TBuilder builder, AdapterProperty property) where TBuilder : AdapterEntityBuilder {
+        public static TBuilder WithProperty<TBuilder>(this TBuilder builder, AdapterProperty property, bool replaceExisting = true) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
@@ -37,7 +42,13 @@ namespace DataCore.Adapter {
                 return builder;
             }
 
-            builder.AddPropertyCore(property);
+            if (replaceExisting) {
+                builder.AddPropertyCore(property);
+            }
+            else { 
+                builder.TryAddPropertyCore(property);
+            }
+
             return builder;
         }
 
@@ -54,13 +65,18 @@ namespace DataCore.Adapter {
         /// <param name="properties">
         ///   The properties to add.
         /// </param>
+        /// <param name="replaceExisting">
+        ///   If a property in the specified <paramref name="properties"/> already exists in the 
+        ///   builder, specify <see langword="true"/> to drop the existing property or <see langword="false"/> to 
+        ///   drop the incoming property.
+        /// </param>
         /// <returns>
         ///   The updated builder.
         /// </returns>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
-        public static TBuilder WithProperties<TBuilder>(this TBuilder builder, IEnumerable<AdapterProperty> properties) where TBuilder : AdapterEntityBuilder {
+        public static TBuilder WithProperties<TBuilder>(this TBuilder builder, IEnumerable<AdapterProperty> properties, bool replaceExisting) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
@@ -69,13 +85,20 @@ namespace DataCore.Adapter {
                 return builder;
             }
 
-            builder.AddPropertiesCore(properties);
+            if (replaceExisting) {
+                builder.AddPropertiesCore(properties);
+            }
+            else {
+                builder.TryAddPropertiesCore(properties);
+            }
+
             return builder;
         }
 
 
         /// <summary>
-        /// Adds a collection of properties to the builder.
+        /// Adds a collection of properties to the builder, replacing any existing properties with 
+        /// the same name.
         /// </summary>
         /// <typeparam name="TBuilder">
         ///   The builder type.
@@ -93,7 +116,35 @@ namespace DataCore.Adapter {
         ///   <paramref name="builder"/> is <see langword="null"/>.
         /// </exception>
         public static TBuilder WithProperties<TBuilder>(this TBuilder builder, params AdapterProperty[] properties) where TBuilder : AdapterEntityBuilder {
-            return builder.WithProperties((IEnumerable<AdapterProperty>) properties);
+            return builder.WithProperties(properties, true);
+        }
+
+
+        /// <summary>
+        /// Adds a collection of properties to the builder.
+        /// </summary>
+        /// <typeparam name="TBuilder">
+        ///   The builder type.
+        /// </typeparam>
+        /// <param name="builder">
+        ///   The builder.
+        /// </param>
+        /// <param name="replaceExisting">
+        ///   If a property in the specified <paramref name="properties"/> already exists in the 
+        ///   builder, specify <see langword="true"/> to drop the existing property or <see langword="false"/> to 
+        ///   drop the incoming property.
+        /// </param>
+        /// <param name="properties">
+        ///   The properties to add.
+        /// </param>
+        /// <returns>
+        ///   The updated builder.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="builder"/> is <see langword="null"/>.
+        /// </exception>
+        public static TBuilder WithProperties<TBuilder>(this TBuilder builder, bool replaceExisting, params AdapterProperty[] properties) where TBuilder : AdapterEntityBuilder {
+            return builder.WithProperties(properties, replaceExisting);
         }
 
 
@@ -115,6 +166,11 @@ namespace DataCore.Adapter {
         /// <param name="description">
         ///   The property description.
         /// </param>
+        /// <param name="replaceExisting">
+        ///   If the property already exists in the builder, specify <see langword="true"/> to 
+        ///   drop the existing property or <see langword="false"/> to drop the incoming 
+        ///   property.
+        /// </param>
         /// <returns>
         ///   The updated builder.
         /// </returns>
@@ -125,7 +181,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        public static TBuilder WithProperty<TBuilder>(this TBuilder builder, string name, Variant value, string? description = null) where TBuilder : AdapterEntityBuilder {
+        public static TBuilder WithProperty<TBuilder>(this TBuilder builder, string name, Variant value, string? description = null, bool replaceExisting = true) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
@@ -134,7 +190,7 @@ namespace DataCore.Adapter {
                 return builder;
             }
 
-            return builder.WithProperty(new AdapterProperty(name, value, description));
+            return builder.WithProperty(new AdapterProperty(name, value, description), replaceExisting);
         }
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
@@ -160,6 +216,11 @@ namespace DataCore.Adapter {
         /// <param name="description">
         ///   The property description.
         /// </param>
+        /// <param name="replaceExisting">
+        ///   If the property already exists in the builder, specify <see langword="true"/> to 
+        ///   drop the existing property or <see langword="false"/> to drop the incoming 
+        ///   property.
+        /// </param>
         /// <returns>
         ///   The updated builder.
         /// </returns>
@@ -170,7 +231,7 @@ namespace DataCore.Adapter {
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-        public static TBuilder WithProperty<TBuilder, TValue>(this TBuilder builder, string name, TValue value, string? description = null) where TBuilder : AdapterEntityBuilder {
+        public static TBuilder WithProperty<TBuilder, TValue>(this TBuilder builder, string name, TValue value, string? description = null, bool replaceExisting = true) where TBuilder : AdapterEntityBuilder {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
@@ -179,7 +240,7 @@ namespace DataCore.Adapter {
                 return builder;
             }
 
-            return builder.WithProperty(new AdapterProperty(name, Variant.FromValue(value), description));
+            return builder.WithProperty(new AdapterProperty(name, Variant.FromValue(value), description), replaceExisting);
         }
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 
