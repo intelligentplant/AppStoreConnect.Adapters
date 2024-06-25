@@ -131,7 +131,7 @@ namespace DataCore.Adapter.Tags {
                 return TagDefinition.FromExisting(tag);
             }
 
-            var builder = TagDefinitionBuilder.CreateFromExisting(tag);
+            var builder = new TagDefinitionBuilder(tag);
             if (!fields.HasFlag(TagDefinitionFields.DigitalStates)) {
                 builder.ClearDigitalStates();
             }
