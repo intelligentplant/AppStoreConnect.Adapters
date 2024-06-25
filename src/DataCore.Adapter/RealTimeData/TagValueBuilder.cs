@@ -41,11 +41,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private string? _error;
 
-        /// <summary>
-        /// Bespoke tag value properties.
-        /// </summary>
-        private readonly Dictionary<string, AdapterProperty> _properties = new Dictionary<string, AdapterProperty>(StringComparer.OrdinalIgnoreCase);
-
 
         /// <summary>
         /// Creates a new <see cref="TagValueBuilder"/> object.
@@ -137,7 +132,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
         public override TagValueExtended Build() {
-            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, _properties.Values.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase));
+            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, GetProperties());
         }
 
 
@@ -172,7 +167,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithValue(Variant value, string? displayValue = null) {
             _value = value;
-            _properties.Remove(WellKnownProperties.TagValue.DisplayValue);
+            this.RemoveProperty(WellKnownProperties.TagValue.DisplayValue);
             if (displayValue != null) {
                 return this.WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
             }
