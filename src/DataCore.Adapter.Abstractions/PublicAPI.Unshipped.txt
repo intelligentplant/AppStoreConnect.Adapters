@@ -6,6 +6,9 @@ DataCore.Adapter.AdapterEntityBuilder.GetProperties() -> System.Collections.Gene
 DataCore.Adapter.AdapterEntityBuilder<T>
 DataCore.Adapter.AdapterEntityBuilder<T>.AdapterEntityBuilder() -> void
 DataCore.Adapter.AdapterEntityBuilderExtensions
+override DataCore.Adapter.Common.AdapterDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterDescriptorExtended!
+override DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterTypeDescriptor!
+override DataCore.Adapter.Common.HostInfoBuilder.Build() -> DataCore.Adapter.Common.HostInfo!
 static DataCore.Adapter.AdapterEntityBuilderExtensions.ClearProperties<TBuilder>(this TBuilder! builder) -> TBuilder!
 static DataCore.Adapter.AdapterEntityBuilderExtensions.RemoveProperty<TBuilder>(this TBuilder! builder, string! name) -> TBuilder!
 static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperties<TBuilder>(this TBuilder! builder, bool replaceExisting, params DataCore.Adapter.Common.AdapterProperty![]! properties) -> TBuilder!
