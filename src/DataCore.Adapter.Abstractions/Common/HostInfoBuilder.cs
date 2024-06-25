@@ -6,7 +6,7 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Builder for constructing <see cref="HostInfo"/> instances.
     /// </summary>
-    public sealed class HostInfoBuilder {
+    public sealed class HostInfoBuilder : AdapterEntityBuilder<HostInfo> {
 
         /// <summary>
         /// The application name.
@@ -27,11 +27,6 @@ namespace DataCore.Adapter.Common {
         /// The application vendor information.
         /// </summary>
         private VendorInfo? _vendor;
-
-        /// <summary>
-        /// Bespoke host properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
 
 
         /// <summary>
@@ -55,11 +50,11 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(hostInfo));
             }
 
-            _name = hostInfo.Name;
-            _description = hostInfo.Description;
-            _version = hostInfo.Version;
-            _vendor = hostInfo.Vendor;
-            _properties.AddRange(hostInfo.Properties);
+            WithName(hostInfo.Name);
+            WithDescription(hostInfo.Description);
+            WithVersion(hostInfo.Version);
+            WithVendor(hostInfo.Vendor);
+            this.WithProperties(hostInfo.Properties);
         }
 
 
@@ -124,81 +119,12 @@ namespace DataCore.Adapter.Common {
 
 
         /// <summary>
-        /// Clears the list of custom properties.
-        /// </summary>
-        /// <returns>
-        ///   The <see cref="HostInfoBuilder"/>.
-        /// </returns>
-        public HostInfoBuilder ClearProperties() {
-            _properties.Clear();
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds the specified custom property.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="HostInfoBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public HostInfoBuilder WithProperty(string name, Variant value) => WithProperties(new AdapterProperty(name, value));
-
-
-        /// <summary>
-        /// Adds the specified custom properties.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="HostInfoBuilder"/>.
-        /// </returns>
-        public HostInfoBuilder WithProperties(params AdapterProperty[] properties) => WithProperties((IEnumerable<AdapterProperty>) properties);
-
-
-        /// <summary>
-        /// Adds the specified custom properties.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="HostInfoBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="properties"/> is <see langword="null"/>.
-        /// </exception>
-        public HostInfoBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties == null) {
-                throw new ArgumentNullException(nameof(properties));
-            }
-
-            foreach (var item in properties) {
-                if (item == null) {
-                    continue;
-                }
-                _properties.Add(item);
-            }
-            return this;
-        }
-
-
-        /// <summary>
         /// Builds a new <see cref="HostInfo"/> instance using the configured options.
         /// </summary>
         /// <returns>
         ///   A new <see cref="HostInfo"/> instance.
         /// </returns>
-        public HostInfo Build() => new HostInfo(_name, _description, _version, _vendor, _properties);
+        public override HostInfo Build() => new HostInfo(_name, _description, _version, _vendor, GetProperties());
 
     }
 }
