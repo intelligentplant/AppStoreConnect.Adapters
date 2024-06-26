@@ -197,22 +197,22 @@ namespace DataCore.Adapter.Common {
 
 
         private void AddStandardFeature(string feature) {
-            _adapterFeatures.Add(feature);
+            _adapterFeatures.Add(feature.InternToStringCache());
         }
 
 
         private void AddExtensionFeature(string feature) {
-            _adapterExtensionFeatures.Add(feature);
+            _adapterExtensionFeatures.Add(feature.InternToStringCache());
         }
 
 
         private void RemoveStandardFeature(string feature) {
-            _adapterFeatures.Remove(feature);
+            _adapterFeatures.Remove(feature.InternToStringCache());
         }
 
 
         private void RemoveExtensionFeature(string feature) {
-            _adapterExtensionFeatures.Remove(feature);
+            _adapterExtensionFeatures.Remove(feature.InternToStringCache());
         }
 
 

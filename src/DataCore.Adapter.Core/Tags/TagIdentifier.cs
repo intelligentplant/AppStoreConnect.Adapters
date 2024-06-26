@@ -47,8 +47,8 @@ namespace DataCore.Adapter.Tags {
                 throw new ArgumentNullException(nameof(name));
             }
 
-            Id = string.Intern(id);
-            Name = string.Intern(name);
+            Id = id.InternToStringCache();
+            Name = name.InternToStringCache();
         }
 
 

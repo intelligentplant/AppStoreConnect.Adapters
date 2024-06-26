@@ -169,7 +169,7 @@ namespace DataCore.Adapter.RealTimeData {
             _value = value;
             this.RemoveProperty(WellKnownProperties.TagValue.DisplayValue);
             if (displayValue != null) {
-                return this.WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
+                return this.WithProperty(WellKnownProperties.TagValue.DisplayValue.InternToStringCache(), displayValue);
             }
             return this;
         }
@@ -223,7 +223,7 @@ namespace DataCore.Adapter.RealTimeData {
         public TagValueBuilder WithUnits(string? units) {
             _units = string.IsNullOrWhiteSpace(units)
                 ? units
-                : string.Intern(units);
+                : units!.InternToStringCache();
             return this;
         }
 

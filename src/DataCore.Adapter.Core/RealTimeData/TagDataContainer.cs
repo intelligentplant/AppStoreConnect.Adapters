@@ -44,8 +44,8 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(tagName));
             }
 
-            TagId = string.Intern(tagId);
-            TagName = string.Intern(tagName);
+            TagId = tagId.InternToStringCache();
+            TagName = tagName.InternToStringCache();
         }
 
     }
