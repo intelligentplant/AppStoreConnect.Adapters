@@ -504,12 +504,10 @@ DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCo
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(DataCore.Adapter.Common.AdapterDescriptorExtended! descriptor) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id) -> void
 DataCore.Adapter.Common.AdapterDescriptorBuilder.AdapterDescriptorBuilder(string! id, string! name) -> void
-DataCore.Adapter.Common.AdapterDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterDescriptorExtended!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearFeatures() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.ClearProperties() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature<TFeature>() -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(params string![]! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
@@ -518,14 +516,10 @@ DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeatures(System.Collections.Generic.IEnumerable<System.Uri!>! features) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithId(string! id) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithName(string! name) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
-DataCore.Adapter.Common.AdapterDescriptorBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterDescriptorBuilder.WithTypeDescriptor(DataCore.Adapter.Common.AdapterTypeDescriptor? typeDescriptor) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(DataCore.Adapter.Common.AdapterTypeDescriptor! descriptor) -> void
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.AdapterTypeDescriptorBuilder(System.Uri! id) -> void
-DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.Build() -> DataCore.Adapter.Common.AdapterTypeDescriptor!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(string? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithHelpUrl(System.Uri? helpUrl) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
@@ -534,15 +528,10 @@ DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithName(string? name) -> D
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.AdapterTypeDescriptorBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.AdapterTypeDescriptorBuilder!
 DataCore.Adapter.Common.HostInfoBuilder
-DataCore.Adapter.Common.HostInfoBuilder.Build() -> DataCore.Adapter.Common.HostInfo!
-DataCore.Adapter.Common.HostInfoBuilder.ClearProperties() -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder() -> void
 DataCore.Adapter.Common.HostInfoBuilder.HostInfoBuilder(DataCore.Adapter.Common.HostInfo! hostInfo) -> void
 DataCore.Adapter.Common.HostInfoBuilder.WithDescription(string? description) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.WithName(string? name) -> DataCore.Adapter.Common.HostInfoBuilder!
-DataCore.Adapter.Common.HostInfoBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
-DataCore.Adapter.Common.HostInfoBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Common.HostInfoBuilder!
-DataCore.Adapter.Common.HostInfoBuilder.WithProperty(string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.WithVendor(DataCore.Adapter.Common.VendorInfo? vendor) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.Common.HostInfoBuilder.WithVersion(string? version) -> DataCore.Adapter.Common.HostInfoBuilder!
 DataCore.Adapter.IAdapterCallContext.Services.get -> System.IServiceProvider!

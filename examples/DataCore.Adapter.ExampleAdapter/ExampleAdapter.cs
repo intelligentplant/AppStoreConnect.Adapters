@@ -72,8 +72,7 @@ namespace DataCore.Adapter.Example {
             while (!cancellationToken.IsCancellationRequested) {
                 var evtManager = (InMemoryEventMessageStore) Features.Get<IWriteEventMessages>().Unwrap();
                 await evtManager.WriteEventMessages(
-                    EventMessageBuilder
-                        .Create()
+                    new EventMessageBuilder()
                         .WithPriority(EventPriority.Low)
                         .WithCategory("System Messages")
                         .WithMessage($"Uptime: {(DateTime.UtcNow - startup)}")

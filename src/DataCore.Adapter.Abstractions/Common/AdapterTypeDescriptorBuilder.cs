@@ -5,7 +5,11 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Builder for constructing <see cref="AdapterTypeDescriptor"/> instances.
     /// </summary>
-    public sealed class AdapterTypeDescriptorBuilder {
+    /// <remarks>
+    ///   Note that <see cref="AdapterTypeDescriptorBuilder"/> ignores all custom properties 
+    ///   registered with the builder.
+    /// </remarks>
+    public sealed class AdapterTypeDescriptorBuilder : AdapterEntityBuilder<AdapterTypeDescriptor> {
 
         /// <summary>
         /// The adapter type ID.
@@ -51,13 +55,7 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="id"/> is not an absolute URI.
         /// </exception>
         public AdapterTypeDescriptorBuilder(Uri id) {
-            if (id == null) {
-                throw new ArgumentNullException(nameof(id));
-            }
-            if (!id.IsAbsoluteUri) {
-                throw new ArgumentOutOfRangeException(nameof(id), SharedResources.Error_AbsoluteUriRequired);
-            }
-            _id = id;
+            WithId(id);
         }
 
 
@@ -76,14 +74,12 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            _id = descriptor.Id;
-            _name = descriptor.Name;
-            _description = descriptor.Description;
-            _version = descriptor.Version;
-            _vendor = descriptor.Vendor;
-            _helpUrl = descriptor.HelpUrl != null && Uri.TryCreate(descriptor.HelpUrl, UriKind.Absolute, out var url)
-                ? url
-                : null;
+            WithId(descriptor.Id);
+            WithName(descriptor.Name);
+            WithDescription(descriptor.Description);
+            WithVersion(descriptor.Version);
+            WithVendor(descriptor.Vendor);
+            WithHelpUrl(descriptor.HelpUrl);
         }
 
 
@@ -230,7 +226,7 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   A new <see cref="AdapterTypeDescriptor"/> instance.
         /// </returns>
-        public AdapterTypeDescriptor Build() {
+        public override AdapterTypeDescriptor Build() {
             return new AdapterTypeDescriptor(_id, _name, _description, _version, _vendor, _helpUrl?.ToString());
         }
 

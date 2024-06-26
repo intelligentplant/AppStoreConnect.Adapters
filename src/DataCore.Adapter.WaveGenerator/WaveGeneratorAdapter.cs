@@ -325,8 +325,7 @@ namespace DataCore.Adapter.WaveGenerator {
         ///   A new <see cref="TagDefinition"/> object.
         /// </returns>
         private TagDefinition ToTagDefinition(string name, WaveGeneratorOptions options, TagDefinitionFields fields) {
-            var result = TagDefinitionBuilder
-                .Create(name, name)
+            var result = new TagDefinitionBuilder(name, name)
                 .WithDescription(options.Description)
                 .WithSupportedFeatures(this, ReadHistoricalTagValues.GetDefaultDataFunctions())
                 .WithDataType(VariantType.Double)

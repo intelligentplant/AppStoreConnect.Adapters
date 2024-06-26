@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.RealTimeData {
 
     /// <summary>
     /// Helper class for constructing <see cref="TagValueAnnotationExtended"/> objects using a fluent interface.
     /// </summary>
-    public class TagValueAnnotationBuilder {
+    public sealed class TagValueAnnotationBuilder : AdapterEntityBuilder<TagValueAnnotationExtended> {
 
         /// <summary>
         /// The annotation ID.
@@ -41,11 +38,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// </summary>
         private string? _description;
 
-        /// <summary>
-        /// Additional annotation properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
-
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
@@ -64,7 +56,7 @@ namespace DataCore.Adapter.RealTimeData {
         ///   <paramref name="existing"/> is <see langword="null"/>.
         /// </exception>
         public TagValueAnnotationBuilder(TagValueAnnotationExtended existing) : this((TagValueAnnotation) existing) {
-            _id = existing.Id;
+            WithId(existing.Id);
         }
 
 
@@ -83,20 +75,19 @@ namespace DataCore.Adapter.RealTimeData {
                 throw new ArgumentNullException(nameof(existing));
             }
 
-            _annotationType = existing.AnnotationType;
-            _utcStartTime = existing.UtcStartTime;
-            _utcEndTime = existing.UtcEndTime;
-            _value = existing.Value;
-            _description = existing.Description;
-            if (existing.Properties != null) {
-                _properties.AddRange(existing.Properties.Where(x => x != null));
-            }
+            WithType(existing.AnnotationType);
+            WithUtcStartTime(existing.UtcStartTime);
+            WithUtcEndTime(existing.UtcEndTime);
+            WithValue(existing.Value);
+            WithDescription(existing.Description);
+            this.WithProperties(existing.Properties);
         }
 
 
         /// <summary>
         /// Creates a new <see cref="TagValueAnnotationBuilder"/> object.
         /// </summary>
+        [Obsolete("This method will be removed in a future release. Use TagValueAnnotationBuilder() instead.", false)]
         public static TagValueAnnotationBuilder Create() {
             return new TagValueAnnotationBuilder();
         }
@@ -115,6 +106,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use TagValueAnnotationBuilder(TagValueAnnotationExtended) instead.", false)]
         public static TagValueAnnotationBuilder CreateFromExisting(TagValueAnnotationExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -130,8 +122,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagValueAnnotationExtended"/> object.
         /// </returns>
-        public TagValueAnnotationExtended Build() {
-            return TagValueAnnotationExtended.Create(_id!, _annotationType, _utcStartTime, _utcEndTime, _value, _description, _properties);
+        public override TagValueAnnotationExtended Build() {
+            return TagValueAnnotationExtended.Create(_id!, _annotationType, _utcStartTime, _utcEndTime, _value, _description, GetProperties());
         }
 
 
@@ -221,57 +213,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueAnnotationBuilder WithDescription(string? description) {
             _description = description;
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a property to the annotation.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueAnnotationBuilder"/>.
-        /// </returns>
-        public TagValueAnnotationBuilder WithProperty(string name, object value) {
-            if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value));
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the annotation.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueAnnotationBuilder"/>.
-        /// </returns>
-        public TagValueAnnotationBuilder WithProperties(params AdapterProperty[] properties) {
-            return WithProperties((IEnumerable<AdapterProperty>) properties);
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the annotation.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueAnnotationBuilder"/>.
-        /// </returns>
-        public TagValueAnnotationBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties != null) {
-                _properties.AddRange(properties.Where(x => x != null));
-            }
             return this;
         }
 

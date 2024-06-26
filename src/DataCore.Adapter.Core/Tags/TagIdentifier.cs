@@ -193,9 +193,14 @@ namespace DataCore.Adapter.Tags {
         ///   The hash code for the instance.
         /// </returns>
         public int GetHashCode(TagIdentifier obj) {
-            return _compareIdOnly
-                ? HashCode.Combine(obj?.Id?.ToUpperInvariant())
-                : HashCode.Combine(obj?.Id?.ToUpperInvariant(), obj?.Name?.ToUpperInvariant());
+            unchecked {
+                var hash = 17;
+                hash = hash * 23 + (obj?.Id == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Id));
+                if (!_compareIdOnly) {
+                    hash = hash * 23 + (obj?.Name == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Name));
+                }
+                return hash;
+            }
         }
     }
 
