@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DataCore.Adapter.Common;
 
 namespace DataCore.Adapter.Events {
 
     /// <summary>
     /// Helper class for constructing <see cref="EventMessage"/> objects using a fluent interface.
     /// </summary>
-    public class EventMessageBuilder {
+    public sealed class EventMessageBuilder : AdapterEntityBuilder<EventMessage> {
 
         /// <summary>
         /// The event ID.
@@ -45,16 +42,11 @@ namespace DataCore.Adapter.Events {
         /// </summary>
         private string? _message;
 
-        /// <summary>
-        /// Additional event properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
-
 
         /// <summary>
         /// Creates a new <see cref="EventMessageBuilder"/> object.
         /// </summary>
-        private EventMessageBuilder() { }
+        public EventMessageBuilder() { }
 
 
         /// <summary>
@@ -64,17 +56,22 @@ namespace DataCore.Adapter.Events {
         /// <param name="existing">
         ///   The existing value.
         /// </param>
-        private EventMessageBuilder(EventMessage existing) {
-            _id = existing.Id;
-            _topic = existing.Topic;
-            _utcEventTime = existing.UtcEventTime;
-            _priority = existing.Priority;
-            _category = existing.Category;
-            _type = existing.Type;
-            _message = existing.Message;
-            if (existing.Properties != null) {
-                _properties.AddRange(existing.Properties.Where(x => x != null));
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="existing"/> is <see langword="null"/>.
+        /// </exception>
+        public EventMessageBuilder(EventMessage existing) {
+            if (existing == null) {
+                throw new ArgumentNullException(nameof(existing));
             }
+
+            WithId(existing.Id);
+            WithTopic(existing.Topic);
+            WithUtcEventTime(existing.UtcEventTime);
+            WithPriority(existing.Priority);
+            WithCategory(existing.Category);
+            WithType(existing.Type);
+            WithMessage(existing.Message);
+            this.WithProperties(existing.Properties);
         }
 
 
@@ -85,6 +82,7 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A new <see cref="EventMessageBuilder"/> object.
         /// </returns>
+        [Obsolete("This method will be removed in a future release. Use EventMessageBuilder() instead.", false)]
         public static EventMessageBuilder Create() {
             return new EventMessageBuilder();
         }
@@ -103,6 +101,7 @@ namespace DataCore.Adapter.Events {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use EventMessageBuilder(EventMessage) instead.", false)]
         public static EventMessageBuilder CreateFromExisting(EventMessage other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -118,8 +117,8 @@ namespace DataCore.Adapter.Events {
         /// <returns>
         ///   A new <see cref="EventMessage"/> object.
         /// </returns>
-        public EventMessage Build() {
-            return new EventMessage(_id, _topic, _utcEventTime, _priority, _category, _type, _message, _properties);
+        public override EventMessage Build() {
+            return new EventMessage(_id, _topic, _utcEventTime, _priority, _category, _type, _message, GetProperties());
         }
 
 
@@ -145,7 +144,7 @@ namespace DataCore.Adapter.Events {
                 _category, 
                 _type,
                 _message, 
-                _properties, 
+                GetProperties(), 
                 cursorPosition ?? throw new ArgumentNullException(nameof(cursorPosition))
             );
         }
@@ -256,58 +255,6 @@ namespace DataCore.Adapter.Events {
         /// </returns>
         public EventMessageBuilder WithMessage(string? message) {
             _message = message;
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a property to the event.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="EventMessageBuilder"/>.
-        /// </returns>
-        public EventMessageBuilder WithProperty(string name, object value) {
-            if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value));
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the event.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="EventMessageBuilder"/>.
-        /// </returns>
-        public EventMessageBuilder WithProperties(params AdapterProperty[] properties) {
-            return WithProperties((IEnumerable<AdapterProperty>) properties);
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the event.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="EventMessageBuilder"/>.
-        /// </returns>
-        public EventMessageBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties != null) {
-                _properties.AddRange(properties.Where(x => x != null));
-            }
-            
             return this;
         }
 

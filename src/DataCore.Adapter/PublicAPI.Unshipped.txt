@@ -1,1 +1,8 @@
 ﻿#nullable enable
+DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder() -> void
+DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder(DataCore.Adapter.Events.EventMessage! existing) -> void
+override DataCore.Adapter.AssetModel.AssetModelNodeBuilder.Build() -> DataCore.Adapter.AssetModel.AssetModelNode!
+override DataCore.Adapter.Events.EventMessageBuilder.Build() -> DataCore.Adapter.Events.EventMessage!
+override DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
+override DataCore.Adapter.RealTimeData.TagValueBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueExtended!
+override DataCore.Adapter.Tags.TagDefinitionBuilder.Build() -> DataCore.Adapter.Tags.TagDefinition!

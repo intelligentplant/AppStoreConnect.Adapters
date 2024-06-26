@@ -9,7 +9,7 @@ namespace DataCore.Adapter.Tags {
     /// <summary>
     /// Helper class for constructing <see cref="TagDefinition"/> objects using a fluent interface.
     /// </summary>
-    public class TagDefinitionBuilder {
+    public sealed class TagDefinitionBuilder : AdapterEntityBuilder<TagDefinition> {
 
         /// <summary>
         /// The tag ID.
@@ -45,11 +45,6 @@ namespace DataCore.Adapter.Tags {
         /// The adapter features that can be used to read from or write to the tag.
         /// </summary>
         private readonly HashSet<Uri> _supportedFeatures = new HashSet<Uri>(new UriComparer());
-
-        /// <summary>
-        /// The bespoke tag properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
 
         /// <summary>
         /// The tag labels.
@@ -130,7 +125,7 @@ namespace DataCore.Adapter.Tags {
             WithDataType(existing.DataType);
             WithDigitalStates(existing.States);
             WithSupportedFeatures(existing.SupportedFeatures);
-            WithProperties(existing.Properties);
+            this.WithProperties(existing.Properties);
             WithLabels(existing.Labels);
         }
 
@@ -142,6 +137,7 @@ namespace DataCore.Adapter.Tags {
         /// <returns>
         ///   A new <see cref="TagDefinitionBuilder"/> object.
         /// </returns>
+        [Obsolete("This method will be removed in a future release. Use TagDefinitionBuilder() instead.", false)]
         public static TagDefinitionBuilder Create() {
             return new TagDefinitionBuilder();
         }
@@ -166,6 +162,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="name"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use TagDefinitionBuilder(string, string) instead.", false)]
         public static TagDefinitionBuilder Create(string id, string name) {
             return new TagDefinitionBuilder()
                 .WithId(id)
@@ -186,6 +183,7 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="existing"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use TagDefinitionBuilder(TagDefinition) instead.", false)]
         public static TagDefinitionBuilder CreateFromExisting(TagDefinition existing) {
             if (existing == null) {
                 throw new ArgumentNullException(nameof(existing));
@@ -207,8 +205,8 @@ namespace DataCore.Adapter.Tags {
         /// <exception cref="ArgumentNullException">
         ///   The tag name has not yet been set.
         /// </exception>
-        public TagDefinition Build() {
-            return new TagDefinition(_id!, _name!, _description, _units, _dataType, _states, _supportedFeatures, _properties, _labels);
+        public override TagDefinition Build() {
+            return new TagDefinition(_id!, _name!, _description, _units, _dataType, _states, _supportedFeatures, GetProperties(), _labels);
         }
 
 
@@ -762,76 +760,6 @@ namespace DataCore.Adapter.Tags {
         /// </returns>
         public TagDefinitionBuilder ClearSupportedFeatures() {
             _supportedFeatures.Clear();
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds bespoke properties to the tag.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagDefinitionBuilder"/>.
-        /// </returns>
-        public TagDefinitionBuilder WithProperties(params AdapterProperty[] properties) {
-            return WithProperties((IEnumerable<AdapterProperty>) properties);
-        }
-
-
-        /// <summary>
-        /// Adds bespoke properties to the tag.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagDefinitionBuilder"/>.
-        /// </returns>
-        public TagDefinitionBuilder WithProperties(IEnumerable<AdapterProperty>? properties) {
-            if (properties != null) {
-                _properties.AddRange(properties.Where(x => x != null).Select(x => new AdapterProperty(x.Name, x.Value, x.Description)));
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a bespoke property to the tag.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <param name="description">
-        ///   The property description.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagDefinitionBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public TagDefinitionBuilder WithProperty(string name, object? value, string? description = null) {
-            if (name == null) {
-                throw new ArgumentNullException(nameof(name));
-            }
-            _properties.Add(AdapterProperty.Create(name, value!, description));
-            return this;
-        }
-
-
-        /// <summary>
-        /// Removes all bespoke properties from the tag.
-        /// </summary>
-        /// <returns>
-        ///   The updated <see cref="TagDefinitionBuilder"/>.
-        /// </returns>
-        public TagDefinitionBuilder ClearProperties() {
-            _properties.Clear();
             return this;
         }
 
