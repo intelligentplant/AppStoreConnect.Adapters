@@ -73,7 +73,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
-            return builder.WithProperty(string.Intern(WellKnownProperties.TagValue.Stepped), stepped);
+            return builder.WithProperty(WellKnownProperties.TagValue.Stepped.InternToStringCache(), stepped);
         }
 
 
@@ -92,8 +92,8 @@ namespace DataCore.Adapter.RealTimeData {
         internal static TagValueBuilder WithBucketProperties(this TagValueBuilder builder, TagValueBucket bucket) {
             if (bucket != null) {
                 return builder.WithProperties(
-                    new AdapterProperty(string.Intern(CommonTagValuePropertyNames.BucketStart), bucket.UtcBucketStart),
-                    new AdapterProperty(string.Intern(CommonTagValuePropertyNames.BucketEnd), bucket.UtcBucketEnd)
+                    new AdapterProperty(CommonTagValuePropertyNames.BucketStart.InternToStringCache(), bucket.UtcBucketStart),
+                    new AdapterProperty(CommonTagValuePropertyNames.BucketEnd.InternToStringCache(), bucket.UtcBucketEnd)
                 );
             }
 
