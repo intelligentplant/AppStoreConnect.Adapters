@@ -71,7 +71,33 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Interns the specified string.
+        /// The number of strings in the cache.
+        /// </summary>
+        /// <remarks>
+        ///   <see cref="Count"/> will always return -1 if native interning is enabled.
+        /// </remarks>
+        public static int Count => NativeInternEnabled
+            ? -1
+            : s_strings.Count;
+
+        /// <summary>
+        /// The total size of all cached strings, in bytes.
+        /// </summary>
+        private static long s_size;
+
+        /// <summary>
+        /// The total size of all cached strings, in bytes.
+        /// </summary>
+        /// <remarks>
+        ///   <see cref="Size"/> will always return -1 if native interning is enabled.
+        /// </remarks>
+        public static long Size => NativeInternEnabled
+            ? -1
+            : s_size;
+
+
+        /// <summary>
+        /// Retrieves the interned reference to the specified string.
         /// </summary>
         /// <param name="str">
         ///   The string to intern.
@@ -86,7 +112,22 @@ namespace DataCore.Adapter {
 
             return NativeInternEnabled
                 ? string.Intern(str)
-                : s_strings.GetOrAdd(str, str);
+                : s_strings.GetOrAdd(str, OnAddToCache);
+        }
+
+
+        /// <summary>
+        /// Updates the recorded size of the cache to include the specified string.
+        /// </summary>
+        /// <param name="str">
+        ///   The string being added to the cache.
+        /// </param>
+        /// <returns>
+        ///   The string being added to the cache.
+        /// </returns>
+        private static string OnAddToCache(string str) {
+            s_size += (str.Length * sizeof(char));
+            return str;
         }
 
 
@@ -125,6 +166,7 @@ namespace DataCore.Adapter {
             }
 
             s_strings.Clear();
+            s_size = 0;
         }
 
     }
