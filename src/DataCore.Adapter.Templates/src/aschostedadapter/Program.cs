@@ -2,11 +2,10 @@
 
 using ExampleHostedAdapter;
 
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-
-using Serilog;
 
 // The [VendorInfo] attribute is used to add vendor information to the adapters in this assembly,
 // as well as the host information for the application.
@@ -16,16 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Our adapter settings are stored in adaptersettings.json.
 builder.Configuration.AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
-
-// Configure logging using Serilog. Additional logging destinations such as files can be added
-// using appsettings.json. See https://github.com/serilog/serilog-settings-configuration for more
-// information.
-builder.Host.UseSerilog((context, services, configuration) => {
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext();
-});
 
 // Parent PID. If specified, we will gracefully shut down if the parent process exits.
 var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
@@ -111,6 +100,10 @@ builder.Services.AddHealthChecks()
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resourceBuilder => resourceBuilder.AddDataCoreAdapterApiService(instanceId))
+    // Export telemetry signals using OTLP (OpenTelemetry Protocol). Exporter settings can be
+    // configured in appsettings.json. See https://github.com/wazzamatazz/opentelemetry-extensions#configuring-a-multi-signal-opentelemetry-protocol-otlp-exporter 
+    // for more information on configuring the OTLP exporter.
+    .AddOtlpExporter(builder.Configuration)
     .WithTracing(otel => otel
         // Records incoming HTTP requests made to the adapter host.
         .AddAspNetCoreInstrumentation()
@@ -121,9 +114,7 @@ builder.Services
         // Records queries made by System.Data.SqlClient and Microsoft.Data.SqlClient.
         .AddSqlClientInstrumentation()
         // Records activities created by adapters and adapter hosting packages.
-        .AddDataCoreAdapterInstrumentation()
-        // Exports traces in OTLP format using default settings (i.e. http://localhost:4317 using OTLP/gRPC format).
-        .AddOtlpExporter())
+        .AddDataCoreAdapterInstrumentation())
     .WithMetrics(otel => otel
         // Observe instrumentation for the .NET runtime.
         .AddRuntimeInstrumentation()
