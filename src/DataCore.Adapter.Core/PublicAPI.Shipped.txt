@@ -1046,3 +1046,14 @@ override DataCore.Adapter.Json.NullableUtcDateTimeConverter.Read(ref System.Text
 override DataCore.Adapter.Json.NullableUtcDateTimeConverter.Write(System.Text.Json.Utf8JsonWriter! writer, System.DateTime? value, System.Text.Json.JsonSerializerOptions! options) -> void
 override DataCore.Adapter.Json.UtcDateTimeConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.DateTime
 override DataCore.Adapter.Json.UtcDateTimeConverter.Write(System.Text.Json.Utf8JsonWriter! writer, System.DateTime value, System.Text.Json.JsonSerializerOptions! options) -> void
+const DataCore.Adapter.StringCache.UseNativeInternSwitchName = "Switch.DataCore.Adapter.StringCache.UseNativeIntern" -> string!
+DataCore.Adapter.StringCache
+static DataCore.Adapter.StringCache.Clear() -> void
+static DataCore.Adapter.StringCache.Count.get -> int
+static DataCore.Adapter.StringCache.Get(string? str) -> string?
+static DataCore.Adapter.StringCache.Intern(string? str) -> string?
+static DataCore.Adapter.StringCache.NativeInternEnabled.get -> bool
+static DataCore.Adapter.StringCache.Size.get -> long
+static System.DCAStringExtensions.GetFromStringCache(this string! str) -> string!
+static System.DCAStringExtensions.InternToStringCache(this string! str) -> string!
+System.DCAStringExtensions
