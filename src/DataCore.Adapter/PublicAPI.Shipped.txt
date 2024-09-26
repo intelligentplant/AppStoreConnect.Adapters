@@ -79,7 +79,6 @@ DataCore.Adapter.AssetModel.AssetModelManager.MoveNodeAsync(string! nodeId, stri
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.AssetModelNodeBuilder() -> void
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.AssetModelNodeBuilder(DataCore.Adapter.AssetModel.AssetModelNode! existing) -> void
-DataCore.Adapter.AssetModel.AssetModelNodeBuilder.Build() -> DataCore.Adapter.AssetModel.AssetModelNode!
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithChildren(bool hasChildren) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithDataReference(DataCore.Adapter.AssetModel.DataReference! dataReference) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithDataReference(string! adapterId, DataCore.Adapter.Tags.TagSummary! tag, string? name = null) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
@@ -91,9 +90,6 @@ DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithId(string! id) -> DataCore
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithName(string! name) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithNodeType(DataCore.Adapter.AssetModel.NodeType type, string? subType = null) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
 DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithParent(string? parentId) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
-DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
-DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
-DataCore.Adapter.AssetModel.AssetModelNodeBuilder.WithProperty(string! name, object! value) -> DataCore.Adapter.AssetModel.AssetModelNodeBuilder!
 DataCore.Adapter.AssetModel.AssetModelNodeExtensions
 DataCore.Adapter.AutomaticFeatureRegistrationAttribute
 DataCore.Adapter.AutomaticFeatureRegistrationAttribute.AutomaticFeatureRegistrationAttribute(bool enabled = true) -> void
@@ -127,15 +123,11 @@ DataCore.Adapter.Diagnostics.IFeatureHealthCheck
 DataCore.Adapter.Diagnostics.IFeatureHealthCheck.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.Events.EventFeatureExtensions
 DataCore.Adapter.Events.EventMessageBuilder
-DataCore.Adapter.Events.EventMessageBuilder.Build() -> DataCore.Adapter.Events.EventMessage!
 DataCore.Adapter.Events.EventMessageBuilder.Build(string! cursorPosition) -> DataCore.Adapter.Events.EventMessageWithCursorPosition!
 DataCore.Adapter.Events.EventMessageBuilder.WithCategory(string? category) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithId(string! id) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithMessage(string? message) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithPriority(DataCore.Adapter.Events.EventPriority priority) -> DataCore.Adapter.Events.EventMessageBuilder!
-DataCore.Adapter.Events.EventMessageBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Events.EventMessageBuilder!
-DataCore.Adapter.Events.EventMessageBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.Events.EventMessageBuilder!
-DataCore.Adapter.Events.EventMessageBuilder.WithProperty(string! name, object! value) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithTopic(string? topic) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessageBuilder.WithUtcEventTime(System.DateTime utcEventTime) -> DataCore.Adapter.Events.EventMessageBuilder!
 DataCore.Adapter.Events.EventMessagePush
@@ -312,15 +304,11 @@ DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions.SnapshotTagValuePushOp
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions.TagResolver.get -> DataCore.Adapter.Tags.TagResolver?
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions.TagResolver.set -> void
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder
-DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.TagValueAnnotationBuilder() -> void
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.TagValueAnnotationBuilder(DataCore.Adapter.RealTimeData.TagValueAnnotation! existing) -> void
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.TagValueAnnotationBuilder(DataCore.Adapter.RealTimeData.TagValueAnnotationExtended! existing) -> void
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithDescription(string? description) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithId(string! id) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
-DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
-DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
-DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithProperty(string! name, object! value) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithType(DataCore.Adapter.RealTimeData.AnnotationType type) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithUtcEndTime(System.DateTime? utcTime) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
 DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.WithUtcStartTime(System.DateTime utcTime) -> DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder!
@@ -333,14 +321,11 @@ DataCore.Adapter.RealTimeData.TagValueAnnotationManagerOptions.TagResolver.get -
 DataCore.Adapter.RealTimeData.TagValueAnnotationManagerOptions.TagResolver.set -> void
 DataCore.Adapter.RealTimeData.TagValueAnnotationManagerOptions.TagValueAnnotationManagerOptions() -> void
 DataCore.Adapter.RealTimeData.TagValueBuilder
-DataCore.Adapter.RealTimeData.TagValueBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueExtended!
 DataCore.Adapter.RealTimeData.TagValueBuilder.TagValueBuilder() -> void
 DataCore.Adapter.RealTimeData.TagValueBuilder.TagValueBuilder(DataCore.Adapter.RealTimeData.TagValue! existing) -> void
 DataCore.Adapter.RealTimeData.TagValueBuilder.TagValueBuilder(DataCore.Adapter.RealTimeData.TagValueExtended! existing) -> void
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithError(string? error) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithNotes(string? notes) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
-DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
-DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>! properties) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithStatus(DataCore.Adapter.RealTimeData.TagValueStatus status) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithUnits(string? units) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilder.WithUtcSampleTime(System.DateTime utcSampleTime) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
@@ -448,10 +433,8 @@ DataCore.Adapter.Tags.TagConfigurationBase<T>.TagConfigurationBase(IntelligentPl
 DataCore.Adapter.Tags.TagConfigurationBase<T>.TagConfigurationBase(System.Text.Json.JsonElement schema, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, System.Text.Json.JsonSerializerOptions? jsonSerializerOptions = null) -> void
 DataCore.Adapter.Tags.TagConfigurationBase<T>.UpdateTagAsync(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.Tags.UpdateTagRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Tags.TagDefinition!>!
 DataCore.Adapter.Tags.TagDefinitionBuilder
-DataCore.Adapter.Tags.TagDefinitionBuilder.Build() -> DataCore.Adapter.Tags.TagDefinition!
 DataCore.Adapter.Tags.TagDefinitionBuilder.ClearDigitalStates() -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.ClearLabels() -> DataCore.Adapter.Tags.TagDefinitionBuilder!
-DataCore.Adapter.Tags.TagDefinitionBuilder.ClearProperties() -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.ClearSupportedFeatures() -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.TagDefinitionBuilder() -> void
 DataCore.Adapter.Tags.TagDefinitionBuilder.TagDefinitionBuilder(DataCore.Adapter.Tags.TagDefinition! existing) -> void
@@ -466,9 +449,6 @@ DataCore.Adapter.Tags.TagDefinitionBuilder.WithId(string! id) -> DataCore.Adapte
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithLabels(params string![]! labels) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithLabels(System.Collections.Generic.IEnumerable<string!>? labels) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithName(string! name) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
-DataCore.Adapter.Tags.TagDefinitionBuilder.WithProperties(params DataCore.Adapter.Common.AdapterProperty![]! properties) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
-DataCore.Adapter.Tags.TagDefinitionBuilder.WithProperties(System.Collections.Generic.IEnumerable<DataCore.Adapter.Common.AdapterProperty!>? properties) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
-DataCore.Adapter.Tags.TagDefinitionBuilder.WithProperty(string! name, object? value, string? description = null) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithSupportedFeature<TFeature>(string? hashFragment = null) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithSupportedFeatures(DataCore.Adapter.IAdapter! adapter, params DataCore.Adapter.RealTimeData.DataFunctionDescriptor![]! dataFunctions) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
 DataCore.Adapter.Tags.TagDefinitionBuilder.WithSupportedFeatures(DataCore.Adapter.IAdapter! adapter, System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.DataFunctionDescriptor!>? dataFunctions) -> DataCore.Adapter.Tags.TagDefinitionBuilder!
@@ -766,7 +746,6 @@ DataCore.Adapter.RealTimeData.PollingSnapshotTagValuePush.PollingSnapshotTagValu
 DataCore.Adapter.RealTimeData.SnapshotTagValueManager.SnapshotTagValueManager(DataCore.Adapter.RealTimeData.SnapshotTagValueManagerOptions? options = null, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, DataCore.Adapter.Services.IKeyValueStore? keyValueStore = null, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.RealTimeData.SnapshotTagValueManager!>? logger = null) -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValuePush.SnapshotTagValuePush(DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.RealTimeData.SnapshotTagValuePush!>? logger) -> void
 DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.SnapshotTagValuePushBase(DataCore.Adapter.RealTimeData.SnapshotTagValuePushOptions? options, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase!>? logger) -> void
-DataCore.Adapter.RealTimeData.TagValueBuilder.WithProperty(DataCore.Adapter.Common.AdapterProperty! property) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 DataCore.Adapter.RealTimeData.TagValueBuilderExtensions
 DataCore.Adapter.RealTimeData.Utilities.InterpolationCalculationType.StepInterpolate = 1 -> DataCore.Adapter.RealTimeData.Utilities.InterpolationCalculationType
 DataCore.Adapter.RealTimeData.Utilities.PostBoundaryInfo
@@ -803,9 +782,14 @@ static DataCore.Adapter.RealTimeData.DefaultDataFunctions.StepInterpolate.get ->
 static DataCore.Adapter.RealTimeData.DefaultDataFunctions.TimeAverage.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
 static DataCore.Adapter.RealTimeData.DefaultDataFunctions.Variance.get -> DataCore.Adapter.RealTimeData.DataFunctionDescriptor!
 static DataCore.Adapter.RealTimeData.TagValueBuilderExtensions.WithDigitalStateValue(this DataCore.Adapter.RealTimeData.TagValueBuilder! builder, DataCore.Adapter.Tags.DigitalState! state) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
-static DataCore.Adapter.RealTimeData.TagValueBuilderExtensions.WithProperty(this DataCore.Adapter.RealTimeData.TagValueBuilder! builder, string! name, DataCore.Adapter.Common.Variant value) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
-static DataCore.Adapter.RealTimeData.TagValueBuilderExtensions.WithProperty<T>(this DataCore.Adapter.RealTimeData.TagValueBuilder! builder, string! name, T value) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 static DataCore.Adapter.RealTimeData.TagValueBuilderExtensions.WithSteppedTransition(this DataCore.Adapter.RealTimeData.TagValueBuilder! builder, bool stepped) -> DataCore.Adapter.RealTimeData.TagValueBuilder!
 static DataCore.Adapter.RealTimeData.Utilities.InterpolationHelper.GetInterpolatedValueAtSampleTime(DataCore.Adapter.Tags.TagSummary! tag, System.DateTime utcSampleTime, System.Collections.Generic.IEnumerable<DataCore.Adapter.RealTimeData.TagValueExtended!>! values, bool forceStepInterpolation = false) -> DataCore.Adapter.RealTimeData.TagValueExtended?
 static DataCore.Adapter.RealTimeData.Utilities.InterpolationHelper.GetStepInterpolatedValuesAsync(DataCore.Adapter.Tags.TagSummary! tag, System.Collections.Generic.IEnumerable<System.DateTime>! utcSampleTimes, System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>! rawData, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.RealTimeData.TagValueQueryResult!>!
 static DataCore.Adapter.Security.CertificateUtilities.TryLoadCertificateFromStore(string! path, bool requirePrivateKey, bool allowInvalid, out System.Security.Cryptography.X509Certificates.X509Certificate2? certificate) -> bool
+DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder() -> void
+DataCore.Adapter.Events.EventMessageBuilder.EventMessageBuilder(DataCore.Adapter.Events.EventMessage! existing) -> void
+override DataCore.Adapter.AssetModel.AssetModelNodeBuilder.Build() -> DataCore.Adapter.AssetModel.AssetModelNode!
+override DataCore.Adapter.Events.EventMessageBuilder.Build() -> DataCore.Adapter.Events.EventMessage!
+override DataCore.Adapter.RealTimeData.TagValueAnnotationBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueAnnotationExtended!
+override DataCore.Adapter.RealTimeData.TagValueBuilder.Build() -> DataCore.Adapter.RealTimeData.TagValueExtended!
+override DataCore.Adapter.Tags.TagDefinitionBuilder.Build() -> DataCore.Adapter.Tags.TagDefinition!

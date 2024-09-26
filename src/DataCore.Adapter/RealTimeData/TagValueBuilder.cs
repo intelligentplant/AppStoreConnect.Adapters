@@ -9,7 +9,7 @@ namespace DataCore.Adapter.RealTimeData {
     /// <summary>
     /// Helper class for constructing <see cref="TagValueExtended"/> objects using a fluent interface.
     /// </summary>
-    public class TagValueBuilder {
+    public sealed class TagValueBuilder : AdapterEntityBuilder<TagValueExtended> {
 
         /// <summary>
         /// The UTC sample time.
@@ -40,11 +40,6 @@ namespace DataCore.Adapter.RealTimeData {
         /// Error message associated with the value.
         /// </summary>
         private string? _error;
-
-        /// <summary>
-        /// Bespoke tag value properties.
-        /// </summary>
-        private readonly Dictionary<string, AdapterProperty> _properties = new Dictionary<string, AdapterProperty>(StringComparer.OrdinalIgnoreCase);
 
 
         /// <summary>
@@ -101,7 +96,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagValueBuilder"/> object.
         /// </returns>
-        [Obsolete("Use TagValueBuilder() constructor", false)]
+        [Obsolete("This method will be removed in a future release. Use TagValueBuilder() instead.", false)]
         public static TagValueBuilder Create() {
             return new TagValueBuilder();
         }
@@ -120,7 +115,7 @@ namespace DataCore.Adapter.RealTimeData {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
-        [Obsolete("Use TagValueBuilder(TagValueExtended) constructor", false)]
+        [Obsolete("This method will be removed in a future release. Use TagValueBuilder(TagValueExtended) instead.", false)]
         public static TagValueBuilder CreateFromExisting(TagValueExtended other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -136,8 +131,8 @@ namespace DataCore.Adapter.RealTimeData {
         /// <returns>
         ///   A new <see cref="TagValueExtended"/> object.
         /// </returns>
-        public TagValueExtended Build() {
-            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, _properties.Values.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase));
+        public override TagValueExtended Build() {
+            return new TagValueExtended(_utcSampleTime ??= DateTime.UtcNow, _value, _status, _units, _notes, _error, GetProperties());
         }
 
 
@@ -172,9 +167,9 @@ namespace DataCore.Adapter.RealTimeData {
         /// </returns>
         public TagValueBuilder WithValue(Variant value, string? displayValue = null) {
             _value = value;
-            _properties.Remove(WellKnownProperties.TagValue.DisplayValue);
+            this.RemoveProperty(WellKnownProperties.TagValue.DisplayValue);
             if (displayValue != null) {
-                return this.WithProperty(string.Intern(WellKnownProperties.TagValue.DisplayValue), displayValue);
+                return this.WithProperty(WellKnownProperties.TagValue.DisplayValue.InternToStringCache(), displayValue);
             }
             return this;
         }
@@ -228,7 +223,7 @@ namespace DataCore.Adapter.RealTimeData {
         public TagValueBuilder WithUnits(string? units) {
             _units = string.IsNullOrWhiteSpace(units)
                 ? units
-                : string.Intern(units);
+                : units!.InternToStringCache();
             return this;
         }
 
@@ -265,56 +260,6 @@ namespace DataCore.Adapter.RealTimeData {
             _error = error;
             if (!string.IsNullOrWhiteSpace(error)) {
                 _status = TagValueStatus.Bad;
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a property to the tag value.
-        /// </summary>
-        /// <param name="property">
-        ///   The property.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithProperty(AdapterProperty property) {
-            if (property != null) {
-                _properties[property.Name] = property;
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the tag value.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithProperties(params AdapterProperty[] properties) {
-            return WithProperties((IEnumerable<AdapterProperty>) properties);
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the tag value.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public TagValueBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties != null) {
-                foreach (var property in properties) {
-                    WithProperty(property);
-                }
             }
             return this;
         }

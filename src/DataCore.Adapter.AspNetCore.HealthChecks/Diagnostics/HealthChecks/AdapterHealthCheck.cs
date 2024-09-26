@@ -43,7 +43,7 @@ namespace DataCore.Adapter.AspNetCore.Diagnostics.HealthChecks {
 
             await foreach (var item in adapters.ConfigureAwait(false)) {
                 try {
-                    var feature = item.GetFeature<Adapter.Diagnostics.IHealthCheck>(string.Intern(WellKnownFeatures.Diagnostics.HealthCheck));
+                    var feature = item.GetFeature<Adapter.Diagnostics.IHealthCheck>(WellKnownFeatures.Diagnostics.HealthCheck.InternToStringCache());
                     if (feature == null) {
                         healthChecks[item.Descriptor.Id] = item.IsRunning
                             ? Adapter.Diagnostics.HealthCheckResult.Healthy(null)

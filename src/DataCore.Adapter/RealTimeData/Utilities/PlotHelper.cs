@@ -494,7 +494,7 @@ namespace DataCore.Adapter.RealTimeData.Utilities {
                     .WithBucketProperties(bucket);
 
                 if (value.Criteria != null) {
-                    builder.WithProperty(string.Intern(CommonTagValuePropertyNames.Criteria), string.Join(", ", value.Criteria));
+                    builder.WithProperty(CommonTagValuePropertyNames.Criteria.InternToStringCache(), string.Join(", ", value.Criteria));
                 }
 
                 builder.WithProperties(AggregationHelper.CreateXPoweredByProperty());

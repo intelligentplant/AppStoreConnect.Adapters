@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-using DataCore.Adapter.Common;
-using DataCore.Adapter.RealTimeData;
 using DataCore.Adapter.Tags;
 
 namespace DataCore.Adapter.AssetModel {
@@ -11,7 +8,7 @@ namespace DataCore.Adapter.AssetModel {
     /// <summary>
     /// Helper class for constructing <see cref="AssetModelNode"/> objects using a fluent interface.
     /// </summary>
-    public class AssetModelNodeBuilder {
+    public sealed class AssetModelNodeBuilder : AdapterEntityBuilder<AssetModelNode> {
 
         /// <summary>
         /// The node ID.
@@ -53,11 +50,6 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         private readonly List<DataReference> _dataReferences = new List<DataReference>();
 
-        /// <summary>
-        /// Bespoke node properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
-
 
         /// <summary>
         /// Creates a new <see cref="AssetModelNodeBuilder"/> object.
@@ -87,17 +79,16 @@ namespace DataCore.Adapter.AssetModel {
             WithParent(existing.Parent);
             WithChildren(existing.HasChildren);
             if (existing.DataReferences != null) {
-                foreach (var item in existing.DataReferences) {
-                    _dataReferences.Add(item);
-                }
+                WithDataReferences(existing.DataReferences);
             }
-            WithProperties(existing.Properties);
+            this.WithProperties(existing.Properties);
         }
 
 
         /// <summary>
         /// Creates a new <see cref="AssetModelNodeBuilder"/> object.
         /// </summary>
+        [Obsolete("This method will be removed in a future release. Use AssetModelNodeBuilder() instead.", false)]
         public static AssetModelNodeBuilder Create() {
             return new AssetModelNodeBuilder();
         }
@@ -113,6 +104,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="other"/> is <see langword="null"/>.
         /// </exception>
+        [Obsolete("This method will be removed in a future release. Use AssetModelNodeBuilder(AssetModelNode) instead.", false)]
         public static AssetModelNodeBuilder CreateFromExisting(AssetModelNode other) {
             if (other == null) {
                 throw new ArgumentNullException(nameof(other));
@@ -128,7 +120,7 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   A new <see cref="AssetModelNode"/> object.
         /// </returns>
-        public AssetModelNode Build() {
+        public override AssetModelNode Build() {
             return new AssetModelNode(
                 _id!, 
                 _name!, 
@@ -140,7 +132,7 @@ namespace DataCore.Adapter.AssetModel {
                 _dataReferences.Count == 0 
                     ? null 
                     : _dataReferences, 
-                _properties
+                GetProperties()
             );
         }
 
@@ -248,9 +240,6 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="dataReferences"/> is <see langword="null"/>.
-        /// </exception>
         public AssetModelNodeBuilder WithDataReferences(params DataReference[] dataReferences) {
             return WithDataReferences((IEnumerable<DataReference>) dataReferences);
         }
@@ -265,18 +254,11 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="dataReferences"/> is <see langword="null"/>.
-        /// </exception>
         public AssetModelNodeBuilder WithDataReferences(IEnumerable<DataReference> dataReferences) {
-            if (dataReferences == null) {
-                throw new ArgumentNullException(nameof(dataReferences));
-            }
-            foreach (var item in dataReferences) {
-                if (item == null) {
-                    continue;
+            if (dataReferences != null) {
+                foreach (var item in dataReferences) {
+                    WithDataReference(item);
                 }
-                WithDataReference(item);
             }
             return this;
         }
@@ -291,11 +273,10 @@ namespace DataCore.Adapter.AssetModel {
         /// <returns>
         ///   The updated <see cref="AssetModelNodeBuilder"/>.
         /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="dataReference"/> is <see langword="null"/>.
-        /// </exception>
         public AssetModelNodeBuilder WithDataReference(DataReference dataReference) {
-            _dataReferences.Add(dataReference ?? throw new ArgumentNullException(nameof(dataReference)));
+            if (dataReference != null) {
+                _dataReferences.Add(dataReference);
+            }
             return this;
         }
 
@@ -354,57 +335,6 @@ namespace DataCore.Adapter.AssetModel {
             string? name = null
         ) {
             _dataReferences.Add(new DataReference(adapterId, tag, name));
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a property to the node.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public AssetModelNodeBuilder WithProperty(string name, object value) {
-            if (name != null) {
-                _properties.Add(AdapterProperty.Create(name, value));
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the node.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public AssetModelNodeBuilder WithProperties(params AdapterProperty[] properties) {
-            return WithProperties((IEnumerable<AdapterProperty>) properties);
-        }
-
-
-        /// <summary>
-        /// Adds a set of properties to the node.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        public AssetModelNodeBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties != null) {
-                _properties.AddRange(properties.Where(x => x != null));
-            }
             return this;
         }
 

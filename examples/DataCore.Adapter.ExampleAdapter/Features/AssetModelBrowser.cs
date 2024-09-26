@@ -40,8 +40,7 @@ namespace DataCore.Adapter.Example.Features {
                 var tags = await dataReferencesChannel.ToEnumerable(cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 _nodes = nodeDefinitions.Select(x => 
-                    AssetModelNodeBuilder
-                        .Create()
+                    new AssetModelNodeBuilder()
                         .WithId(x.Id)
                         .WithName(x.Name)
                         .WithNodeType(x.NodeType)

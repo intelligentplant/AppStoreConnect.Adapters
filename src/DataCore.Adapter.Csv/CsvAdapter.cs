@@ -220,7 +220,7 @@ namespace DataCore.Adapter.Csv {
             if (!definition.StartsWith("[", StringComparison.Ordinal) || !definition.EndsWith("]", StringComparison.Ordinal)) {
                 // Assume that the entire item is the tag name; set the ID to be the same 
                 // as the name.
-                return TagDefinitionBuilder.Create(definition, definition)
+                return new TagDefinitionBuilder(definition, definition)
                     .WithDataType(VariantType.Double)
                     .WithProperty(nameof(definition), definition)
                     .WithLabels("CSV")
@@ -265,7 +265,7 @@ namespace DataCore.Adapter.Csv {
                 }
             }
 
-            return TagDefinitionBuilder.Create()
+            return new TagDefinitionBuilder()
                 .WithId(id ?? name!)
                 .WithName(name ?? id!)
                 .WithDescription(props.TryGetValue(nameof(description), out description!)
@@ -326,7 +326,7 @@ namespace DataCore.Adapter.Csv {
             };
             
             var csvConfig = new CsvHelper.Configuration.CsvConfiguration(cultureInfo) {
-                PrepareHeaderForMatch = args => args.Header?.Trim()?.ToUpperInvariant()
+                PrepareHeaderForMatch = args => args.Header?.Trim()?.ToUpperInvariant()!
             };
 
             var timeStampColumnIndex = options.TimeStampFieldIndex;

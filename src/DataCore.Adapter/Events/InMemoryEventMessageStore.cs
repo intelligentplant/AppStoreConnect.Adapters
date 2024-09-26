@@ -151,7 +151,7 @@ namespace DataCore.Adapter.Events {
 
             _eventMessagesLock.EnterWriteLock();
             try {
-                var msg = EventMessageBuilder.CreateFromExisting(message).Build();
+                var msg = new EventMessageBuilder(message).Build();
                 LogMessageWritten(msg.Id, cursorPosition, msg.UtcEventTime);
                 _eventMessages.Add(cursorPosition, msg);
                 if (_capacity > 0 && _eventMessages.Count > _capacity) {
@@ -292,7 +292,7 @@ namespace DataCore.Adapter.Events {
             }
             
             foreach (var item in messages) {
-                yield return EventMessageBuilder.CreateFromExisting(item).Build();
+                yield return new EventMessageBuilder(item).Build();
             }
         }
 
@@ -343,7 +343,7 @@ namespace DataCore.Adapter.Events {
             }
 
             foreach (var item in messages) {
-                yield return EventMessageBuilder.CreateFromExisting(item.Value).Build(item.Key.ToString());
+                yield return new EventMessageBuilder(item.Value).Build(item.Key.ToString());
             }
         }
 

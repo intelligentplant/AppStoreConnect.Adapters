@@ -7,7 +7,7 @@ namespace DataCore.Adapter.Common {
     /// <summary>
     /// Builder for constructing <see cref="AdapterDescriptorExtended"/> instances.
     /// </summary>
-    public sealed class AdapterDescriptorBuilder {
+    public sealed class AdapterDescriptorBuilder : AdapterEntityBuilder<AdapterDescriptorExtended> {
 
         /// <summary>
         /// The adapter ID.
@@ -39,11 +39,6 @@ namespace DataCore.Adapter.Common {
         /// </summary>
         private readonly HashSet<string> _adapterExtensionFeatures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// The adapter properties.
-        /// </summary>
-        private readonly List<AdapterProperty> _properties = new List<AdapterProperty>();
-
 
         /// <summary>
         /// Creates a new <see cref="AdapterDescriptorBuilder"/> instance.
@@ -73,12 +68,8 @@ namespace DataCore.Adapter.Common {
         ///   <paramref name="name"/> is <see langword="null"/> or white space.
         /// </exception>
         public AdapterDescriptorBuilder(string id, string name) {
-            _id = string.IsNullOrWhiteSpace(id)
-                ? throw new ArgumentOutOfRangeException(nameof(id), SharedResources.Error_IdIsRequired)
-                : id;
-            _name = string.IsNullOrWhiteSpace(name)
-                ? throw new ArgumentOutOfRangeException(nameof(name), SharedResources.Error_NameIsRequired)
-                : name;
+            WithId(id);
+            WithName(name);
         }
 
 
@@ -97,16 +88,20 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            _typeDescriptor = descriptor.TypeDescriptor;
-            foreach (var item in descriptor.Features) {
-                _adapterFeatures.Add(item);
+            WithTypeDescriptor(descriptor.TypeDescriptor);
+            if (descriptor.Features != null) {
+                foreach (var item in descriptor.Features) {
+                    AddStandardFeature(item);
+                }
             }
 #pragma warning disable CS0618 // Type or member is obsolete
-            foreach (var item in descriptor.Extensions) {
-                _adapterExtensionFeatures.Add(item);
+            if (descriptor.Extensions != null) {
+                foreach (var item in descriptor.Extensions) {
+                    AddExtensionFeature(item);
+                }
             }
 #pragma warning restore CS0618 // Type or member is obsolete
-            _properties.AddRange(descriptor.Properties);
+            this.WithProperties(descriptor.Properties);
         }
 
 
@@ -125,9 +120,9 @@ namespace DataCore.Adapter.Common {
                 throw new ArgumentNullException(nameof(descriptor));
             }
 
-            _id = descriptor.Id;
-            _name = descriptor.Name;
-            _description = descriptor.Description;
+            WithId(descriptor.Id);
+            WithName(descriptor.Name);
+            WithDescription(descriptor.Description);
         }
 
 
@@ -201,6 +196,26 @@ namespace DataCore.Adapter.Common {
         }
 
 
+        private void AddStandardFeature(string feature) {
+            _adapterFeatures.Add(feature.InternToStringCache());
+        }
+
+
+        private void AddExtensionFeature(string feature) {
+            _adapterExtensionFeatures.Add(feature.InternToStringCache());
+        }
+
+
+        private void RemoveStandardFeature(string feature) {
+            _adapterFeatures.Remove(feature.InternToStringCache());
+        }
+
+
+        private void RemoveExtensionFeature(string feature) {
+            _adapterExtensionFeatures.Remove(feature.InternToStringCache());
+        }
+
+
         /// <summary>
         /// Clears the list of features supported by the adapter.
         /// </summary>
@@ -225,10 +240,10 @@ namespace DataCore.Adapter.Common {
         /// </returns>
         public AdapterDescriptorBuilder ClearFeature<TFeature>() where TFeature : IAdapterFeature {
             if (typeof(TFeature).IsStandardAdapterFeature()) {
-                _adapterFeatures.Remove(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+                RemoveStandardFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
             else if (typeof(TFeature).IsExtensionAdapterFeature()) {
-                _adapterExtensionFeatures.Remove(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+                RemoveExtensionFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
             return this;
         }
@@ -246,10 +261,10 @@ namespace DataCore.Adapter.Common {
         public AdapterDescriptorBuilder ClearFeature(Uri feature) {
             if (feature != null) {
                 if (feature.IsStandardFeatureUri()) {
-                    _adapterFeatures.Remove(feature.ToString());
+                    RemoveStandardFeature(feature.ToString());
                 }
                 else if (feature.IsExtensionFeatureUri()) {
-                    _adapterExtensionFeatures.Remove(feature.ToString());
+                    RemoveExtensionFeature(feature.ToString());
                 }
             }
             return this;
@@ -317,10 +332,10 @@ namespace DataCore.Adapter.Common {
                 }
 
                 if (feature.IsStandardFeatureUri()) {
-                    _adapterFeatures.Add(feature.ToString());
+                    AddStandardFeature(feature.ToString());
                 }
                 else if (feature.IsExtensionFeatureUri()) {
-                    _adapterExtensionFeatures.Add(feature.ToString());
+                    AddExtensionFeature(feature.ToString());
                 }
             }
 
@@ -370,10 +385,10 @@ namespace DataCore.Adapter.Common {
                 }
 
                 if (feature.IsStandardFeatureUri()) {
-                    _adapterFeatures.Add(feature.ToString());
+                    AddStandardFeature(feature.ToString());
                 }
                 else if (feature.IsExtensionFeatureUri()) {
-                    _adapterExtensionFeatures.Add(feature.ToString());
+                    AddExtensionFeature(feature.ToString());
                 }
             }
 
@@ -392,79 +407,10 @@ namespace DataCore.Adapter.Common {
         /// </returns>
         public AdapterDescriptorBuilder WithFeature<TFeature>() where TFeature : IAdapterFeature {
             if (typeof(TFeature).IsStandardAdapterFeature()) {
-                _adapterFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+                AddStandardFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
             else if (typeof(TFeature).IsExtensionAdapterFeature()) {
-                _adapterExtensionFeatures.Add(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
-            }
-            return this;
-        }
-
-
-        /// <summary>
-        /// Clears the list of custom adapter properties.
-        /// </summary>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        public AdapterDescriptorBuilder ClearProperties() {
-            _properties.Clear();
-            return this;
-        }
-
-
-        /// <summary>
-        /// Adds the specified custom adapter property.
-        /// </summary>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="name"/> is <see langword="null"/>.
-        /// </exception>
-        public AdapterDescriptorBuilder WithProperty(string name, Variant value) => WithProperties(new AdapterProperty(name, value));
-
-
-        /// <summary>
-        /// Adds the specified custom adapter properties.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        public AdapterDescriptorBuilder WithProperties(params AdapterProperty[] properties) => WithProperties((IEnumerable<AdapterProperty>) properties);
-
-
-        /// <summary>
-        /// Adds the specified custom adapter properties.
-        /// </summary>
-        /// <param name="properties">
-        ///   The properties.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="AdapterDescriptorBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="properties"/> is <see langword="null"/>.
-        /// </exception>
-        public AdapterDescriptorBuilder WithProperties(IEnumerable<AdapterProperty> properties) {
-            if (properties == null) {
-                throw new ArgumentNullException(nameof(properties));
-            }
-
-            foreach (var item in properties) {
-                if (item == null) {
-                    continue;
-                }
-                _properties.Add(item);
+                AddExtensionFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
             }
             return this;
         }
@@ -477,8 +423,8 @@ namespace DataCore.Adapter.Common {
         /// <returns>
         ///   A new <see cref="AdapterDescriptorExtended"/> instance.
         /// </returns>
-        public AdapterDescriptorExtended Build() {
-            return new AdapterDescriptorExtended(_id, _name, _description, _adapterFeatures.Select(x => x.ToString()), _adapterExtensionFeatures.Select(x => x.ToString()), _properties, _typeDescriptor);
+        public override AdapterDescriptorExtended Build() {
+            return new AdapterDescriptorExtended(_id, _name, _description, _adapterFeatures.Select(x => x.ToString()), _adapterExtensionFeatures.Select(x => x.ToString()), GetProperties(), _typeDescriptor);
         }
 
 

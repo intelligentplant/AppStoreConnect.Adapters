@@ -11,71 +11,6 @@ namespace DataCore.Adapter.RealTimeData {
     public static class TagValueBuilderExtensions {
 
         /// <summary>
-        /// Adds a property to the tag value.
-        /// </summary>
-        /// <param name="builder">
-        ///   The <see cref="TagValueBuilder"/>.
-        /// </param>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="builder"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueBuilder WithProperty(this TagValueBuilder builder, string name, Variant value) {
-            if (builder == null) {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (name == null) {
-                return builder;
-            }
-
-            return builder.WithProperty(new AdapterProperty(name, value));
-        }
-
-
-        /// <summary>
-        /// Adds a property to the tag value.
-        /// </summary>
-        /// <typeparam name="T">
-        ///   The property value type.
-        /// </typeparam>
-        /// <param name="builder">
-        ///   The <see cref="TagValueBuilder"/>.
-        /// </param>
-        /// <param name="name">
-        ///   The property name.
-        /// </param>
-        /// <param name="value">
-        ///   The property value.
-        /// </param>
-        /// <returns>
-        ///   The updated <see cref="TagValueBuilder"/>.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="builder"/> is <see langword="null"/>.
-        /// </exception>
-        public static TagValueBuilder WithProperty<T>(this TagValueBuilder builder, string name, T value) {
-            if (builder == null) {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (name == null) {
-                return builder;
-            }
-
-            return builder.WithProperty(name, Variant.FromValue(value));
-        }
-
-
-        /// <summary>
         /// Sets the value for the sample using a digital state definition.
         /// </summary>
         /// <param name="builder">
@@ -138,7 +73,7 @@ namespace DataCore.Adapter.RealTimeData {
             if (builder == null) {
                 throw new ArgumentNullException(nameof(builder));
             }
-            return builder.WithProperty(string.Intern(WellKnownProperties.TagValue.Stepped), stepped);
+            return builder.WithProperty(WellKnownProperties.TagValue.Stepped.InternToStringCache(), stepped);
         }
 
 
@@ -157,8 +92,8 @@ namespace DataCore.Adapter.RealTimeData {
         internal static TagValueBuilder WithBucketProperties(this TagValueBuilder builder, TagValueBucket bucket) {
             if (bucket != null) {
                 return builder.WithProperties(
-                    new AdapterProperty(string.Intern(CommonTagValuePropertyNames.BucketStart), bucket.UtcBucketStart),
-                    new AdapterProperty(string.Intern(CommonTagValuePropertyNames.BucketEnd), bucket.UtcBucketEnd)
+                    new AdapterProperty(CommonTagValuePropertyNames.BucketStart.InternToStringCache(), bucket.UtcBucketStart),
+                    new AdapterProperty(CommonTagValuePropertyNames.BucketEnd.InternToStringCache(), bucket.UtcBucketEnd)
                 );
             }
 
