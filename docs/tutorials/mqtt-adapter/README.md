@@ -413,9 +413,11 @@ When an MQTT message is processed, a tag definition will be created if one does 
 
 The adapter constructor accepts an `IOptionsMonitor<MyAdapterOptions>` parameter. Since `IOptionsMonitor<T>` supports change notifications, this allows the adapter's settings in `adaptersettings.json` to be modified at runtime and the adapter will automatically reconfigure itself to use the updated settings. Runtime changes are handled by overriding the `OnOptionsChange` method from the `AdapterBase<TAdapterOptions>` base class.
 
-### Telemetry
+### Telemetry and Observability
 
 The `MyAdapter` class creates a static metric counter that is incremented every time a message is received from the MQTT broker. The counter can be observed via the [dotnet-counters](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-counters) tool (by observing the `IntelligentPlant.AppStoreConnect.Adapter:mqtt.messages_received` counter) or via the adapter host's Prometheus scraping endpoint at `/metrics`.
+
+Additionally, you can export any combination of traces, logs and/or metrics to a compatible OTLP collector. See [here](../../adapter-host-logging.md) for more information.
 
 
 # Update the Adapter Options Editor Form
