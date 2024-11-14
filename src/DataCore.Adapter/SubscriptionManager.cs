@@ -29,9 +29,9 @@ namespace DataCore.Adapter {
     /// <typeparam name="TSubscription">
     ///   The subscription type.
     /// </typeparam>
-    public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
-        : IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable 
-        where TOptions : SubscriptionManagerOptions, new() 
+    public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription>
+        : IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable, IAsyncDisposable
+        where TOptions : SubscriptionManagerOptions, new()
         where TSubscription : SubscriptionChannel<TTopic, TValue> {
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace DataCore.Adapter {
             BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
             BackgroundTaskService.QueueBackgroundWorkItem(
-                PublishToSubscribers, 
+                PublishToSubscribers,
                 _disposedTokenSource.Token
             );
         }
@@ -202,8 +202,8 @@ namespace DataCore.Adapter {
         ///   A new <typeparamref name="TSubscription"/> that will emit values to the subscriber.
         /// </returns>
         protected abstract TSubscription CreateSubscriptionChannel(
-            IAdapterCallContext context, 
-            int id, 
+            IAdapterCallContext context,
+            int id,
             int channelCapacity,
             CancellationToken[] cancellationTokens,
             Func<ValueTask> cleanup,
@@ -266,11 +266,11 @@ namespace DataCore.Adapter {
 
             var subscriptionId = Interlocked.Increment(ref _lastSubscriptionId);
             var subscription = CreateSubscriptionChannel(
-                context, 
+                context,
                 subscriptionId,
                 Options.ChannelCapacity,
-                new[] { DisposedToken, cancellationToken }, 
-                () => OnSubscriptionCancelledInternal(subscriptionId), 
+                new[] { DisposedToken, cancellationToken },
+                () => OnSubscriptionCancelledInternal(subscriptionId),
                 state
             );
             _subscriptions[subscriptionId] = subscription;
@@ -452,11 +452,17 @@ namespace DataCore.Adapter {
         }
 
 
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
+        /// <inheritdoc/>
         public void Dispose() {
             Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        /// <inheritdoc/>
+        public async ValueTask DisposeAsync() {
+            await DisposeAsyncCore().ConfigureAwait(false);
+            Dispose(false);
             GC.SuppressFinalize(this);
         }
 
@@ -470,7 +476,8 @@ namespace DataCore.Adapter {
 
 
         /// <summary>
-        /// Releases managed and unmanaged resources.
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting 
+        /// unmanaged resources.
         /// </summary>
         /// <param name="disposing">
         ///   <see langword="true"/> if the <see cref="SubscriptionManager{TOptions, TTopic, TValue, TSubscription}"/> is being 
@@ -494,6 +501,16 @@ namespace DataCore.Adapter {
             }
 
             _isDisposed = true;
+        }
+
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting 
+        /// unmanaged resources asynchronously.
+        /// </summary>
+        protected virtual ValueTask DisposeAsyncCore() {
+            Dispose(true);
+            return default;
         }
 
 

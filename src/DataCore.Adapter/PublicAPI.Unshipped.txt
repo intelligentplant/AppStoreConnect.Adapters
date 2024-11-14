@@ -1,1 +1,3 @@
 ﻿#nullable enable
+DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
