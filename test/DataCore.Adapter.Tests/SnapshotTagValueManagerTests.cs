@@ -26,7 +26,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() { 
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
@@ -72,7 +72,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
@@ -129,7 +129,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     var valsActual = await stvm.ReadSnapshotTagValues(
                         new DefaultAdapterCallContext(),
@@ -172,7 +172,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val1)}", $"name-{nameof(val1)}", val1));
                     await stvm.ValueReceived(new TagValueQueryResult($"id-{nameof(val2)}", $"name-{nameof(val2)}", val2));
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Tests {
                     CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
                 }))
                 using (var stvm = ActivatorUtilities.CreateInstance<SnapshotTagValueManager>(AssemblyInitializer.ApplicationServices, new SnapshotTagValueManagerOptions() {
-                    AdapterId = TestContext.TestName
+                    Id = TestContext.TestName
                 })) {
                     var valsActual = await stvm.ReadSnapshotTagValues(
                         new DefaultAdapterCallContext(),
