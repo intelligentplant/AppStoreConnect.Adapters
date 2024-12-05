@@ -79,7 +79,7 @@ namespace DataCore.Adapter.Tests {
 
 
         [TestMethod]
-        public async Task ShouldFindTags() {
+        public async Task ShouldFindTagsByName() {
             var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(SnapshotTagValueManagerTests), Guid.NewGuid().ToString()));
             try {
                 var tag1 = new TagDefinitionBuilder().WithId(Guid.NewGuid().ToString()).WithName(TestContext.TestName + "-1").Build();
@@ -106,6 +106,128 @@ namespace DataCore.Adapter.Tests {
                     var tagActual2 = tags.Last();
                     Assert.AreEqual(tag2.Id, tagActual2.Id);
                     Assert.AreEqual(tag2.Name, tagActual2.Name);
+                }
+            }
+            finally {
+                tmpPath.Delete();
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldFindTagsByDescription() {
+            var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(SnapshotTagValueManagerTests), Guid.NewGuid().ToString()));
+            try {
+                var tag1 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-1")
+                    .WithDescription("ABCD")
+                    .Build();
+
+                var tag2 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-2")
+                    .WithDescription("EFGH")
+                    .Build();
+
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                    CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
+                }))
+                using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
+                    await tm.InitAsync();
+                    await tm.AddOrUpdateTagAsync(tag1);
+                    await tm.AddOrUpdateTagAsync(tag2);
+
+                    var tags = await tm.FindTags(new DefaultAdapterCallContext(), new FindTagsRequest() {
+                        Description = "*FG*"
+                    }, default).ToEnumerable();
+
+                    Assert.AreEqual(1, tags.Count());
+
+                    var tagActual = tags.First();
+                    Assert.AreEqual(tag2.Id, tagActual.Id);
+                    Assert.AreEqual(tag2.Name, tagActual.Name);
+                }
+            }
+            finally {
+                tmpPath.Delete();
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldFindTagsByUnit() {
+            var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(SnapshotTagValueManagerTests), Guid.NewGuid().ToString()));
+            try {
+                var tag1 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-1")
+                    .WithUnits("deg C")
+                    .Build();
+
+                var tag2 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-2")
+                    .WithUnits("hPa")
+                    .Build();
+
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                    CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
+                }))
+                using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
+                    await tm.InitAsync();
+                    await tm.AddOrUpdateTagAsync(tag1);
+                    await tm.AddOrUpdateTagAsync(tag2);
+
+                    var tags = await tm.FindTags(new DefaultAdapterCallContext(), new FindTagsRequest() {
+                        Units = "hPa"
+                    }, default).ToEnumerable();
+
+                    Assert.AreEqual(1, tags.Count());
+
+                    var tagActual = tags.First();
+                    Assert.AreEqual(tag2.Id, tagActual.Id);
+                    Assert.AreEqual(tag2.Name, tagActual.Name);
+                }
+            }
+            finally {
+                tmpPath.Delete();
+            }
+        }
+
+
+        [TestMethod]
+        public async Task ShouldFindTagsByLabel() {
+            var tmpPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), nameof(SnapshotTagValueManagerTests), Guid.NewGuid().ToString()));
+            try {
+                var tag1 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-1")
+                    .Build();
+
+                var tag2 = new TagDefinitionBuilder()
+                    .WithId(Guid.NewGuid().ToString())
+                    .WithName(TestContext.TestName + "-2")
+                    .WithLabels(TestContext.TestName)
+                    .Build();
+
+                await using (var store = new FasterKeyValueStore(new FasterKeyValueStoreOptions() {
+                    CheckpointManagerFactory = () => FasterKeyValueStore.CreateLocalStorageCheckpointManager(tmpPath.FullName)
+                }))
+                using (var tm = ActivatorUtilities.CreateInstance<TagManager>(AssemblyInitializer.ApplicationServices, (IEnumerable<AdapterProperty>) Array.Empty<AdapterProperty>())) {
+                    await tm.InitAsync();
+                    await tm.AddOrUpdateTagAsync(tag1);
+                    await tm.AddOrUpdateTagAsync(tag2);
+
+                    var tags = await tm.FindTags(new DefaultAdapterCallContext(), new FindTagsRequest() {
+                        Label = TestContext.TestName
+                    }, default).ToEnumerable();
+
+                    Assert.AreEqual(1, tags.Count());
+
+                    var tagActual = tags.First();
+                    Assert.AreEqual(tag2.Id, tagActual.Id);
+                    Assert.AreEqual(tag2.Name, tagActual.Name);
                 }
             }
             finally {
