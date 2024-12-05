@@ -6,15 +6,13 @@ using GrpcNet = Grpc.Net;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace DataCore.Adapter.Tests {
     internal static class WebHostConfiguration {
 
         public const string DefaultHostName = "localhost";
 
-        public const int DefaultPortNumber = 31415;
+        public static int DefaultPortNumber { get; } = Random.Shared.Next(31415, 31500);
 
         public static string DefaultUrl { get; } = string.Concat("https://", DefaultHostName, ":", DefaultPortNumber);
 
