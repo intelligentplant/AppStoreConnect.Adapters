@@ -52,6 +52,12 @@ namespace DataCore.Adapter.Tags {
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(filter.Label)) {
+                if (!tag.Labels.Any(x => x.Like(filter.Label!))) {
+                    return false;
+                }
+            }
+
             if (filter.Other != null) {
                 foreach (var item in filter.Other) {
                     if (string.IsNullOrWhiteSpace(item.Value)) {
