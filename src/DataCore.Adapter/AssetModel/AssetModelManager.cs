@@ -23,7 +23,7 @@ namespace DataCore.Adapter.AssetModel {
     ///   The <see cref="AssetModelManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public class AssetModelManager : IAssetModelBrowse, IAssetModelSearch, IFeatureHealthCheck, IDisposable {
+    public class AssetModelManager : FeatureBase, IAssetModelBrowse, IAssetModelSearch, IDisposable {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -703,13 +703,12 @@ namespace DataCore.Adapter.AssetModel {
 
 
         /// <inheritdoc/>
-        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var data = new Dictionary<string, string>() {
-                [Resources.HealthChecks_Data_NodeCount] = _nodesById.Count.ToString(context?.CultureInfo)
-            };
+        protected override IEnumerable<KeyValuePair<string, string>> GetFeatureHealthCheckData(IAdapterCallContext context) {
+            foreach (var item in base.GetFeatureHealthCheckData(context)) {
+                yield return item;
+            }
 
-            var result = HealthCheckResult.Healthy(GetType().Name, data: data);
-            return Task.FromResult(result);
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_NodeCount, _nodesById.Count.ToString(context?.CultureInfo));
         }
 
 

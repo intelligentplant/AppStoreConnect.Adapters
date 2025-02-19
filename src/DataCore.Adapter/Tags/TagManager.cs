@@ -24,7 +24,7 @@ namespace DataCore.Adapter.Tags {
     ///   The <see cref="TagManager"/> must be initialised via a call to <see cref="InitAsync"/> 
     ///   before it can be used.
     /// </remarks>
-    public partial class TagManager : ITagSearch, IFeatureHealthCheck, IDisposable {
+    public partial class TagManager : FeatureBase, ITagSearch, IDisposable {
         
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -534,13 +534,12 @@ namespace DataCore.Adapter.Tags {
 
 
         /// <inheritdoc/>
-        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            var data = new Dictionary<string, string>() {
-                [Resources.HealthChecks_Data_TagCount] = _tagsById.Count.ToString(context?.CultureInfo)
-            };
+        protected override IEnumerable<KeyValuePair<string, string>> GetFeatureHealthCheckData(IAdapterCallContext context) {
+            foreach (var item in base.GetFeatureHealthCheckData(context)) {
+                yield return item;
+            }
 
-            var result = HealthCheckResult.Healthy(GetType().Name, data: data);
-            return Task.FromResult(result);
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_TagCount, _tagsById.Count.ToString(context?.CultureInfo));
         }
 
 

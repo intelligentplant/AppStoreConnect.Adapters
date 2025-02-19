@@ -6,8 +6,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-using DataCore.Adapter.Diagnostics;
-
 using IntelligentPlant.BackgroundTasks;
 
 using Microsoft.Extensions.Logging;
@@ -30,7 +28,7 @@ namespace DataCore.Adapter {
     ///   The subscription type.
     /// </typeparam>
     public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
-        : IBackgroundTaskServiceProvider, IFeatureHealthCheck, IDisposable 
+        : FeatureBase, IBackgroundTaskServiceProvider, IDisposable 
         where TOptions : SubscriptionManagerOptions, new() 
         where TSubscription : SubscriptionChannel<TTopic, TValue> {
 
@@ -422,39 +420,18 @@ namespace DataCore.Adapter {
         }
 
 
-        /// <summary>
-        /// Gets the properties to include in a call to <see cref="CheckFeatureHealthAsync"/>.
-        /// </summary>
-        /// <param name="context">
-        ///   The <see cref="IAdapterCallContext"/> for the calling user.
-        /// </param>
-        /// <returns>
-        ///   A dictionary of properties to include in the health check result.
-        /// </returns>
-        protected virtual IDictionary<string, string> GetHealthCheckProperties(IAdapterCallContext context) {
-            var subscriptions = _subscriptions.Values.ToArray();
+        /// <inheritdoc/>
+        protected override IEnumerable<KeyValuePair<string, string>> GetFeatureHealthCheckData(IAdapterCallContext context) {
+            foreach (var item in base.GetFeatureHealthCheckData(context)) {
+                yield return item;
+            }
 
-            return new Dictionary<string, string>() {
-                [Resources.HealthChecks_Data_SubscriberCount] = subscriptions.Length.ToString(context?.CultureInfo)
-            };
+            var subscriptions = _subscriptions.Values.ToArray();
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_SubscriberCount, subscriptions.Length.ToString(context?.CultureInfo));
         }
 
 
         /// <inheritdoc/>
-        public Task<HealthCheckResult> CheckFeatureHealthAsync(IAdapterCallContext context, CancellationToken cancellationToken) {
-            if (context == null) {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            var result = HealthCheckResult.Healthy(GetType().Name, data: GetHealthCheckProperties(context));
-
-            return Task.FromResult(result);
-        }
-
-
-        /// <summary>
-        /// Releases managed and unmanaged resources.
-        /// </summary>
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
