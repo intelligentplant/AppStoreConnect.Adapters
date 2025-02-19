@@ -67,8 +67,7 @@
     </Otherwise>
   </Choose>
 
-  <!-- Minimal API project is only supported on >= net7.0 -->
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' And '$(TargetFramework)' != 'net6.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj" />
   </ItemGroup>
   
