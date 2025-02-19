@@ -1,1 +1,13 @@
 ﻿#nullable enable
+DataCore.Adapter.FeatureBase
+DataCore.Adapter.FeatureBase.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
+DataCore.Adapter.FeatureBase.FeatureBase() -> void
+override DataCore.Adapter.AssetModel.AssetModelManager.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+override DataCore.Adapter.Events.EventMessagePush.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+override DataCore.Adapter.Events.EventMessagePushWithTopics.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+override DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+override DataCore.Adapter.Tags.TagManager.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+virtual DataCore.Adapter.FeatureBase.CheckFeatureHealthCoreAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Diagnostics.HealthCheckResult>!>!
+virtual DataCore.Adapter.FeatureBase.GetFeatureHealthCheckData(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string!>>!
+virtual DataCore.Adapter.FeatureBase.GetFeatureHealthCheckName() -> string!

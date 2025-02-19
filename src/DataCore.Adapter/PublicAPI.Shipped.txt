@@ -68,7 +68,6 @@ DataCore.Adapter.AssetModel.AssetModelManager.AddOrUpdateNodeAsync(DataCore.Adap
 DataCore.Adapter.AssetModel.AssetModelManager.AssetModelManager(DataCore.Adapter.Services.IKeyValueStore? keyValueStore = null, IntelligentPlant.BackgroundTasks.IBackgroundTaskService? backgroundTaskService = null, System.Func<DataCore.Adapter.Diagnostics.ConfigurationChange!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? onConfigurationChange = null, System.Collections.Generic.IComparer<string!>? nodeNameComparer = null) -> void
 DataCore.Adapter.AssetModel.AssetModelManager.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
 DataCore.Adapter.AssetModel.AssetModelManager.BrowseAssetModelNodes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.AssetModel.BrowseAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
-DataCore.Adapter.AssetModel.AssetModelManager.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.AssetModel.AssetModelManager.DeleteNodeAsync(string! nodeId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.AssetModel.AssetModelManager.Dispose() -> void
 DataCore.Adapter.AssetModel.AssetModelManager.FindAssetModelNodes(DataCore.Adapter.IAdapterCallContext! context, DataCore.Adapter.AssetModel.FindAssetModelNodesRequest! request, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.AssetModel.AssetModelNode!>!
@@ -400,7 +399,6 @@ DataCore.Adapter.SubscriptionChannel<TTopic, TValue>.Topics.get -> System.Collec
 DataCore.Adapter.SubscriptionChannel<TTopic, TValue>.~SubscriptionChannel() -> void
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
-DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.CreateSubscriptionAsync(DataCore.Adapter.IAdapterCallContext! context, string? name, object? state, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<TSubscription!>
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.CreateSubscriptionAsync<TFeature>(DataCore.Adapter.IAdapterCallContext! context, string! name, object? state, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<TSubscription!>
 DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.Dispose() -> void
@@ -472,7 +470,6 @@ DataCore.Adapter.Tags.TagDefinitionExtensions
 DataCore.Adapter.Tags.TagManager
 DataCore.Adapter.Tags.TagManager.AddOrUpdateTagAsync(DataCore.Adapter.Tags.TagDefinition! tag, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 DataCore.Adapter.Tags.TagManager.BackgroundTaskService.get -> IntelligentPlant.BackgroundTasks.IBackgroundTaskService!
-DataCore.Adapter.Tags.TagManager.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.Tags.TagManager.Count.get -> int
 DataCore.Adapter.Tags.TagManager.DeleteTagAsync(string! tagNameOrId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 DataCore.Adapter.Tags.TagManager.Dispose() -> void
@@ -490,12 +487,10 @@ override DataCore.Adapter.Diagnostics.ConfigurationChanges.Dispose(bool disposin
 override DataCore.Adapter.Diagnostics.ConfigurationChanges.IsTopicMatch(DataCore.Adapter.Diagnostics.ConfigurationChange! value, System.Collections.Generic.IEnumerable<string!>! topics, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.Events.EventMessagePush.CreateSubscriptionChannel(DataCore.Adapter.IAdapterCallContext! context, int id, int channelCapacity, System.Threading.CancellationToken[]! cancellationTokens, System.Func<System.Threading.Tasks.ValueTask>! cleanup, object? state) -> DataCore.Adapter.Events.EventSubscriptionChannel!
 override DataCore.Adapter.Events.EventMessagePush.Dispose(bool disposing) -> void
-override DataCore.Adapter.Events.EventMessagePush.GetHealthCheckProperties(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IDictionary<string!, string!>!
 override DataCore.Adapter.Events.EventMessagePush.OnSubscriptionAddedAsync(DataCore.Adapter.Events.EventSubscriptionChannel! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.Events.EventMessagePush.OnSubscriptionCancelledAsync(DataCore.Adapter.Events.EventSubscriptionChannel! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.Events.EventMessagePushWithTopics.CreateSubscriptionChannel(DataCore.Adapter.IAdapterCallContext! context, int id, int channelCapacity, System.Threading.CancellationToken[]! cancellationTokens, System.Func<System.Threading.Tasks.ValueTask>! cleanup, object? state) -> DataCore.Adapter.Events.EventSubscriptionChannel!
 override DataCore.Adapter.Events.EventMessagePushWithTopics.Dispose(bool disposing) -> void
-override DataCore.Adapter.Events.EventMessagePushWithTopics.GetHealthCheckProperties(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IDictionary<string!, string!>!
 override DataCore.Adapter.Events.EventMessagePushWithTopics.IsTopicMatch(DataCore.Adapter.Events.EventMessage! value, System.Collections.Generic.IEnumerable<string!>! topics, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.Events.EventMessagePushWithTopics.OnSubscriptionAddedAsync(DataCore.Adapter.Events.EventSubscriptionChannel! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.Events.EventMessagePushWithTopics.OnSubscriptionCancelledAsync(DataCore.Adapter.Events.EventSubscriptionChannel! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
@@ -514,7 +509,6 @@ override DataCore.Adapter.RealTimeData.SnapshotTagValuePush.OnTagsRemoved(System
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePush.RemoveCachedValueAsync(DataCore.Adapter.Tags.TagIdentifier! tag, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.CreateSubscriptionChannel(DataCore.Adapter.IAdapterCallContext! context, int id, int channelCapacity, System.Threading.CancellationToken[]! cancellationTokens, System.Func<System.Threading.Tasks.ValueTask>! cleanup, object? state) -> DataCore.Adapter.RealTimeData.TagValueSubscriptionChannel!
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.Dispose(bool disposing) -> void
-override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.GetHealthCheckProperties(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IDictionary<string!, string!>!
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.IsTopicMatch(DataCore.Adapter.RealTimeData.TagValueQueryResult! value, System.Collections.Generic.IEnumerable<DataCore.Adapter.Tags.TagIdentifier!>! topics, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.OnSubscriptionCancelledAsync(DataCore.Adapter.RealTimeData.TagValueSubscriptionChannel! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.ValueReceived(DataCore.Adapter.RealTimeData.TagValueQueryResult! message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
@@ -695,7 +689,6 @@ virtual DataCore.Adapter.RealTimeData.SnapshotTagValuePushBase.ResolveTags(DataC
 virtual DataCore.Adapter.RealTimeData.TagValueAnnotationManagerBase.ResolveTagsAsync(DataCore.Adapter.IAdapterCallContext! context, System.Collections.Generic.IEnumerable<string!>! tags, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<DataCore.Adapter.Tags.TagIdentifier!>!
 virtual DataCore.Adapter.SubscriptionChannel<TTopic, TValue>.Dispose(bool disposing) -> void
 virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.Dispose(bool disposing) -> void
-virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.GetHealthCheckProperties(DataCore.Adapter.IAdapterCallContext! context) -> System.Collections.Generic.IDictionary<string!, string!>!
 virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.IsTopicMatch(TValue value, System.Collections.Generic.IEnumerable<TTopic>! topics, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.OnSubscriptionAddedAsync(TSubscription! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
 virtual DataCore.Adapter.SubscriptionManager<TOptions, TTopic, TValue, TSubscription>.OnSubscriptionCancelledAsync(TSubscription! subscription, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
