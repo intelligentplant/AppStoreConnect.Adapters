@@ -196,15 +196,15 @@ namespace DataCore.Adapter.Events {
 
 
         /// <inheritdoc/>
-        protected override IDictionary<string, string> GetHealthCheckProperties(IAdapterCallContext context) {
-            var result = base.GetHealthCheckProperties(context);
+        protected override IEnumerable<KeyValuePair<string, string>> GetFeatureHealthCheckData(IAdapterCallContext context) {
+            foreach (var item in base.GetFeatureHealthCheckData(context)) {
+                yield return item;
+            }
 
             var subscriptions = GetSubscriptions();
 
-            result[Resources.HealthChecks_Data_ActiveSubscriberCount] = subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo);
-            result[Resources.HealthChecks_Data_PassiveSubscriberCount] = subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo);
-
-            return result;
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_ActiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Active).ToString(context?.CultureInfo));
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_PassiveSubscriberCount, subscriptions.Count(x => x.SubscriptionType == EventMessageSubscriptionType.Passive).ToString(context?.CultureInfo));
         }
 
 

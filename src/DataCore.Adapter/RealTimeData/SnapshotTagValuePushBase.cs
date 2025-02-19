@@ -378,8 +378,10 @@ namespace DataCore.Adapter.RealTimeData {
 
 
         /// <inheritdoc/>
-        protected override IDictionary<string, string> GetHealthCheckProperties(IAdapterCallContext context) {
-            var result = base.GetHealthCheckProperties(context);
+        protected override IEnumerable<KeyValuePair<string, string>> GetFeatureHealthCheckData(IAdapterCallContext context) {
+            foreach (var item in base.GetFeatureHealthCheckData(context)) {
+                yield return item;
+            }
 
             int subscribedTagCount;
 
@@ -387,9 +389,7 @@ namespace DataCore.Adapter.RealTimeData {
                 subscribedTagCount = _subscriberCount.Count;
             }
 
-            result[Resources.HealthChecks_Data_TagCount] = subscribedTagCount.ToString(context?.CultureInfo);
-
-            return result;
+            yield return new KeyValuePair<string, string>(Resources.HealthChecks_Data_TagCount, subscribedTagCount.ToString(context?.CultureInfo));
         }
 
 
