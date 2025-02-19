@@ -625,7 +625,7 @@ namespace DataCore.Adapter {
 
                 var feature = Features[key];
 
-                if (feature == null || feature == this || !processedFeatures.Add(feature) || !(feature is IFeatureHealthCheck healthCheck)) {
+                if (feature == null || feature == this || !processedFeatures.Add(feature) || !(feature.Unwrap() is IFeatureHealthCheck healthCheck)) {
                     continue;
                 }
 

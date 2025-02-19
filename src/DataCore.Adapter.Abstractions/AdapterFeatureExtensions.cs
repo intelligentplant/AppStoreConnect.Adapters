@@ -42,8 +42,8 @@ namespace DataCore.Adapter {
                 return default;
             }
 
-            if (feature is AdapterFeatureWrapper<TFeature> wrapper) {
-                return wrapper.InnerFeature;
+            if (feature is AdapterFeatureWrapper wrapper && wrapper.InnerFeature is TFeature inner) {
+                return inner;
             }
 
             return feature;
