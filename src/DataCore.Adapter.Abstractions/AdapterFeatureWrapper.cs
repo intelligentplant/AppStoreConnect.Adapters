@@ -1,7 +1,5 @@
 ﻿using System;
 
-using IntelligentPlant.BackgroundTasks;
-
 namespace DataCore.Adapter {
 
     /// <summary>
@@ -22,9 +20,6 @@ namespace DataCore.Adapter {
         /// The feature that is wrapped by the <see cref="AdapterFeatureWrapper"/>.
         /// </summary>
         internal IAdapterFeature InnerFeature { get; }
-
-        /// <inheritdoc/>
-        IBackgroundTaskService IBackgroundTaskServiceProvider.BackgroundTaskService { get { return InnerFeature.BackgroundTaskService; } }
 
 
         /// <summary>
