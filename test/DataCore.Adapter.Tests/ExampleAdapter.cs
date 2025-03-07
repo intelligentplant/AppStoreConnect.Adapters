@@ -36,7 +36,7 @@ namespace DataCore.Adapter.Tests {
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
             _assetModelManager = new AssetModelManager(new InMemoryKeyValueStore());
-            _customFunctions = new CustomFunctions(TypeDescriptor.Id, BackgroundTaskService);
+            _customFunctions = new CustomFunctions(TypeDescriptor.Id);
 
             AddFeatures(this);
             AddFeatures(_snapshotSubscriptionManager);
