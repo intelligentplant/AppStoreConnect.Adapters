@@ -76,9 +76,6 @@ namespace DataCore.Adapter.Tags {
         /// </summary>
         private readonly Func<ConfigurationChange, CancellationToken, ValueTask>? _onConfigurationChange;
 
-        /// <inheritdoc/>
-        public IBackgroundTaskService BackgroundTaskService { get; }
-
         /// <summary>
         /// The number of tag definitions held by the <see cref="TagManager"/>.
         /// </summary>
@@ -92,9 +89,6 @@ namespace DataCore.Adapter.Tags {
         ///   The <see cref="IKeyValueStore"/> where the tag definitions will be persisted to. 
         ///   Specify <see langword="null"/> if persistence of tag definitions is not required.
         /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> for the tag manager.
-        /// </param>
         /// <param name="tagPropertyDefinitions">
         ///   The definitions for the properties that can be defined on tags managed by the 
         ///   <see cref="TagManager"/>.
@@ -106,14 +100,12 @@ namespace DataCore.Adapter.Tags {
         ///   The logger for the tag manager.
         /// </param>
         public TagManager(
-            IKeyValueStore? keyValueStore = null, 
-            IBackgroundTaskService? backgroundTaskService = null, 
+            IKeyValueStore? keyValueStore = null,
             IEnumerable<AdapterProperty>? tagPropertyDefinitions = null,
             Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
             ILogger<TagManager>? logger = null
         ) {
             _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TagManager>.Instance;
-            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
             _keyValueStore = keyValueStore?.CreateScopedStore("tag-manager:");
 
