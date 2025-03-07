@@ -30,13 +30,11 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.2" />
     <PackageVersion Include="Microsoft.FASTER.Core" Version="2.6.5" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
     <PackageVersion Include="MiniValidation" Version="0.9.2" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="3.8.0" />
-    <PackageVersion Include="MSTest.TestFramework" Version="3.8.0" />
+    <PackageVersion Include="MSTest" Version="3.8.2" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
     <PackageVersion Include="NSwag.AspNetCore" Version="13.20.0" />
