@@ -54,7 +54,7 @@ namespace DataCore.Adapter.Example {
             loggerFactory
         ) {
             // Register additional features!
-            _assetModelBrowser = new AssetModelManager(new InMemoryKeyValueStore(), BackgroundTaskService);
+            _assetModelBrowser = new AssetModelManager(new InMemoryKeyValueStore());
 
             AddFeatures(_assetModelBrowser);
             AddFeatures(new InMemoryEventMessageStore(new InMemoryEventMessageStoreOptions() { Capacity = 500 }, backgroundTaskService, LoggerFactory));
