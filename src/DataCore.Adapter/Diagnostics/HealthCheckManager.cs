@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Diagnostics {
     /// <summary>
     /// Default <see cref="IHealthCheck"/> implementation.
     /// </summary>
-    internal partial class HealthCheckManager<TAdapterOptions> : IBackgroundTaskServiceProvider, IHealthCheck, IDisposable where TAdapterOptions : AdapterOptions, new() {
+    internal partial class HealthCheckManager<TAdapterOptions> : IHealthCheck, IDisposable where TAdapterOptions : AdapterOptions, new() {
 
         /// <summary>
         /// Indicates if the object has been disposed.
@@ -64,8 +64,6 @@ namespace DataCore.Adapter.Diagnostics {
             FullMode = BoundedChannelFullMode.DropWrite
         });
 
-        /// <inheritdoc/>
-        public IBackgroundTaskService BackgroundTaskService => _adapter.BackgroundTaskService;
 
 
         /// <summary>

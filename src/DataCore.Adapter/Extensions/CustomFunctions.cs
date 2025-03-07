@@ -5,8 +5,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using IntelligentPlant.BackgroundTasks;
-
 using JsonSchema = Json.Schema;
 
 using Microsoft.Extensions.Logging;
@@ -45,9 +43,6 @@ namespace DataCore.Adapter.Extensions {
         /// </summary>
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _functionsLock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
-        /// <inheritdoc/>
-        public IBackgroundTaskService BackgroundTaskService { get; }
-
 
         /// <summary>
         /// Creates a new <see cref="CustomFunctions"/> instance.
@@ -56,9 +51,6 @@ namespace DataCore.Adapter.Extensions {
         ///   The base URI for custom functions registered with a relative URI. This would usually 
         ///   be the type URI for the adapter associated with the <see cref="CustomFunctions"/> 
         ///   instance.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> to use.
         /// </param>
         /// <param name="jsonOptions">
         ///   The <see cref="JsonSerializerOptions"/> to use.
@@ -72,7 +64,7 @@ namespace DataCore.Adapter.Extensions {
         /// <exception cref="ArgumentOutOfRangeException">
         ///   <paramref name="baseUri"/> is not an absolute URI.
         /// </exception>
-        public CustomFunctions(Uri baseUri, IBackgroundTaskService? backgroundTaskService = null, JsonSerializerOptions? jsonOptions = null, ILogger<CustomFunctions>? logger = null) {
+        public CustomFunctions(Uri baseUri, JsonSerializerOptions? jsonOptions = null, ILogger<CustomFunctions>? logger = null) {
             if (baseUri == null) {
                 throw new ArgumentNullException(nameof(baseUri));
             }
@@ -80,7 +72,6 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentOutOfRangeException(nameof(baseUri), SharedResources.Error_AbsoluteUriRequired);
             }
             BaseUri = new Uri(baseUri.EnsurePathHasTrailingSlash(), "custom-functions/");
-            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _jsonOptions = jsonOptions;
             _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<CustomFunctions>.Instance;
         }

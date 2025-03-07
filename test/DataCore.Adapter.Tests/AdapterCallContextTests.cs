@@ -87,9 +87,6 @@ namespace DataCore.Adapter.Tests {
 
         private class TestFeature : ITestFeature {
 
-            IBackgroundTaskService IBackgroundTaskServiceProvider.BackgroundTaskService { get; }
-
-
             public Task<bool> IsValid(IAdapterCallContext context, TestFeatureRequest request, CancellationToken cancellationToken) {
                 if (request == null) {
                     return Task.FromResult(false);

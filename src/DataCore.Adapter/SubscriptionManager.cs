@@ -28,14 +28,14 @@ namespace DataCore.Adapter {
     ///   The subscription type.
     /// </typeparam>
     public abstract partial class SubscriptionManager<TOptions, TTopic, TValue, TSubscription> 
-        : FeatureBase, IBackgroundTaskServiceProvider, IDisposable 
+        : FeatureBase, IDisposable 
         where TOptions : SubscriptionManagerOptions, new() 
         where TSubscription : SubscriptionChannel<TTopic, TValue> {
 
         /// <summary>
         /// The <see cref="IBackgroundTaskService"/> to use when running background tasks.
         /// </summary>
-        public IBackgroundTaskService BackgroundTaskService { get; }
+        protected IBackgroundTaskService BackgroundTaskService { get; }
 
         /// <summary>
         /// The ID of the subscription manager.

@@ -82,9 +82,6 @@ namespace ExampleHostedAdapter {
                 // If we are not interested in persisting tag definitions, we can pass null
                 // here instead.
                 keyValueStore.CreateScopedStore(id),
-                // TagManager uses an IBackgroundTaskService instance to run background tasks
-                // that have a lifetime matching the adapter and/or the TagManager.
-                BackgroundTaskService,
                 // We need to tell TagManager about the types of bespoke properties that our tags
                 // will define.
                 new[] { s_tagCreatedAtPropertyDefinition },
@@ -121,8 +118,7 @@ namespace ExampleHostedAdapter {
             // The CustomFunctions class implements the ICustomFunctions feature, which allows us
             // to define vendor-specific custom functions that callers can invoke.
             _customFunctions = new CustomFunctions(
-                TypeDescriptor.Id, 
-                BackgroundTaskService, 
+                TypeDescriptor.Id,
                 jsonOptions.Value.SerializerOptions, 
                 LoggerFactory.CreateLogger<CustomFunctions>()
             );

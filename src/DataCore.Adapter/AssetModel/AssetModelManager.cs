@@ -70,9 +70,6 @@ namespace DataCore.Adapter.AssetModel {
         /// </summary>
         private readonly IComparer<string> _nodeNameComparer;
 
-        /// <inheritdoc/>
-        public IBackgroundTaskService BackgroundTaskService { get; }
-
 
         /// <summary>
         /// Creates a new <see cref="AssetModelManager"/> object.
@@ -80,9 +77,6 @@ namespace DataCore.Adapter.AssetModel {
         /// <param name="keyValueStore">
         ///   The <see cref="IKeyValueStore"/> where the nodes will be persisted to. Specify 
         ///   <see langword="null"/> if persistence is not required.
-        /// </param>
-        /// <param name="backgroundTaskService">
-        ///   The <see cref="IBackgroundTaskService"/> for the asset model manager.
         /// </param>
         /// <param name="onConfigurationChange">
         ///   An optional callback that will be invoked when a node is added, updated, or deleted.
@@ -92,11 +86,9 @@ namespace DataCore.Adapter.AssetModel {
         /// </param>
         public AssetModelManager(
             IKeyValueStore? keyValueStore = null,
-            IBackgroundTaskService? backgroundTaskService = null,
             Func<ConfigurationChange, CancellationToken, ValueTask>? onConfigurationChange = null,
             IComparer<string>? nodeNameComparer = null
         ) {
-            BackgroundTaskService = backgroundTaskService ?? IntelligentPlant.BackgroundTasks.BackgroundTaskService.Default;
             _onConfigurationChange = onConfigurationChange;
             _nodeNameComparer = nodeNameComparer ?? StringComparer.OrdinalIgnoreCase;
             _keyValueStore = keyValueStore?.CreateScopedStore("asset-model-manager:");
