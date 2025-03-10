@@ -186,6 +186,10 @@ namespace DataCore.Adapter.Http.Proxy {
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
             _snapshotRefreshInterval = Options?.TagValuePushInterval ?? TimeSpan.FromMinutes(1);
 #pragma warning restore CS0618 // Type or member is obsolete
+
+            // Remove inherited custom functions feature. A proxy for this feature will be re-added
+            // if supported by the remote adapter.
+            RemoveFeature<Adapter.Extensions.ICustomFunctions>();
         }
 
 

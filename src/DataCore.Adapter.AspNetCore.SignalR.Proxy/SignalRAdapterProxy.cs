@@ -167,6 +167,10 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
                 return new AdapterSignalRClient(conn, true, Options!.CompatibilityLevel);
             }, LazyThreadSafetyMode.ExecutionAndPublication);
 #pragma warning restore CS0618 // Type or member is obsolete
+
+            // Remove inherited custom functions feature. A proxy for this feature will be re-added
+            // if supported by the remote adapter.
+            RemoveFeature<Adapter.Extensions.ICustomFunctions>();
         }
 
 
@@ -248,7 +252,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        private async Task Init(CancellationToken cancellationToken = default) {
+        private async Task InitAsync(CancellationToken cancellationToken = default) {
             var client = GetClient();
             RemoteHostInfo = await client.HostInfo.GetHostInfoAsync(cancellationToken).ConfigureAwait(false);
             var descriptor = await client.Adapters.GetAdapterAsync(_remoteAdapterId, cancellationToken).ConfigureAwait(false);
@@ -293,7 +297,7 @@ namespace DataCore.Adapter.AspNetCore.SignalR.Proxy {
 
         /// <inheritdoc/>
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            await Init(cancellationToken).ConfigureAwait(false);
+            await InitAsync(cancellationToken).ConfigureAwait(false);
         }
 
 

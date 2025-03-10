@@ -185,6 +185,10 @@ namespace DataCore.Adapter.Grpc.Proxy {
             _extensionFeatureFactory = Options?.ExtensionFeatureFactory;
 #pragma warning restore CS0618 // Type or member is obsolete
             _closeChannelOnDispose = Options?.CloseChannelOnDispose ?? false;
+
+            // Remove inherited custom functions feature. A proxy for this feature will be re-added
+            // if supported by the remote adapter.
+            RemoveFeature<Adapter.Extensions.ICustomFunctions>();
         }
 
 
@@ -216,7 +220,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
         /// <returns>
         ///   A task that will perform the initialisation.
         /// </returns>
-        private async Task Init(CancellationToken cancellationToken) {
+        private async Task InitAsync(CancellationToken cancellationToken) {
             var callOptions = new GrpcCore.CallOptions(
                 cancellationToken: cancellationToken,
                 credentials: GetCallCredentials(new DefaultAdapterCallContext())
@@ -282,7 +286,7 @@ namespace DataCore.Adapter.Grpc.Proxy {
 
         /// <inheritdoc/>
         protected override async Task StartAsync(CancellationToken cancellationToken) {
-            await Init(cancellationToken).ConfigureAwait(false);
+            await InitAsync(cancellationToken).ConfigureAwait(false);
         }
 
 
