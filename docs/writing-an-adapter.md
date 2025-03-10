@@ -230,23 +230,13 @@ If your source implements some of these capabilities but not others, you can use
 
 An adapter can expose non-standard or vendor-specific functionality via custom functions. Custom functions can be discovered and invoked if an adapter implements the [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) feature.
 
-The simplest way to implement [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFunctions.cs) is to create an instance of the [CustomFunctions](../src/DataCore.Adapter/Extensions/CustomFunctions.cs) helper class and have your adapter register the instance as a feature provider:
+The [CustomFunctions](../src/DataCore.Adapter/Extensions/CustomFunctions.cs) class provides an implementation of this feature that can be used to manage custom function registrations. The simpliest way to use the `CustomFunctions` class is to derive your adapter from the `AdapterBase<TAdapterOptions>` base class. The base class exposes a `CustomFunctions` property that can be used to access the custom functions manager for the adapter.
 
-```csharp
-var customFunctions = new CustomFunctions(TypeDescriptor.Id);
-AddFeatures(customFunctions);
-```
-
-You can then use the `RegisterFunctionAsync` method to register your functions:
+You can then use the `RegisterFunctionAsync` method on the `CustomFunctions` property to register your functions:
 
 ```csharp
 private async Task AddFunctionsAsync() {
-    var feature = Features.Get<ICustomFunctions>().Unwrap() as CustomFunctions;
-    if (feature == null) {
-        return;
-    }
-
-    await feature.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
+    await CustomFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
         "Greet",
         "Replies to requests with a greeting message.",
         (context, request, ct) => Task.FromResult(new GreeterResponse() { 
@@ -272,7 +262,7 @@ public class GreeterResponse {
 
 Each registered function has a unique URI identifier. The URI does not have to support dereferencing (i.e. it does not have to be a URL that can be accessed via an HTTP request). 
 
-In the example above, the URI will be derived from the base URI specified when creating the `CustomFunctions` instance (the URI type identifier for the adapter in the above example), and the name of the function. 
+If a relative URI is specified when registering a function, it will be made absolute using the base URI for the custom functions manager (i.e. the adapter's type descriptor ID). In the example above, the URI will be derived from the base URI and the name of the function. 
 
 Each custom function definition also contains JSON schemas describing valid request and response messages. In the example above, the schemas are automatically generated from the `GreeterRequest` and `GreeterResponse` types. 
 
