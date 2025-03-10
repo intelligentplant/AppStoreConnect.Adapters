@@ -43,8 +43,6 @@ namespace ExampleHostedAdapter {
 
         private readonly PollingSnapshotTagValuePush _snapshotPush;
 
-        private readonly CustomFunctions _customFunctions;
-
 
         public MyAdapter(
             string id, 
@@ -144,7 +142,7 @@ namespace ExampleHostedAdapter {
             //
             // Note that, if we wanted to apply authorization to the function, we could also
             // specify an authorization delegate below.
-            await _customFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>( 
+            await CustomFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>( 
                 "Greet",
                 "Replies to requests with a greeting message.",
                 (context, request, ct) => {
