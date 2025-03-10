@@ -336,6 +336,7 @@ namespace DataCore.Adapter {
 
             Options = default!;
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
+            CustomFunctions = new CustomFunctions(TypeDescriptor.Id, logger: LoggerFactory.CreateLogger<CustomFunctions>());
 
             // Register default features.
             AddDefaultFeatures();
