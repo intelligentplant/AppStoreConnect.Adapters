@@ -115,17 +115,7 @@ namespace ExampleHostedAdapter {
             // implemented by the PollingSnapshotTagValuePush object.
             AddFeatures(_snapshotPush);
 
-            // The CustomFunctions class implements the ICustomFunctions feature, which allows us
-            // to define vendor-specific custom functions that callers can invoke.
-            _customFunctions = new CustomFunctions(
-                TypeDescriptor.Id,
-                jsonOptions.Value.SerializerOptions, 
-                LoggerFactory.CreateLogger<CustomFunctions>()
-            );
-
-            // Tell the adapter to advertise that it supports all of the adapter features
-            // implemented by the CustomFunctions object.
-            AddFeatures(_customFunctions);
+            CustomFunctions.JsonOptions = jsonOptions.Value.SerializerOptions;
         }
 
 
