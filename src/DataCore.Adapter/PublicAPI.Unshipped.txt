@@ -1,6 +1,11 @@
 ﻿#nullable enable
+DataCore.Adapter.AdapterBase<TAdapterOptions>.CustomFunctions.get -> DataCore.Adapter.Extensions.CustomFunctions!
 DataCore.Adapter.AssetModel.AssetModelManager.AssetModelManager(DataCore.Adapter.Services.IKeyValueStore? keyValueStore = null, System.Func<DataCore.Adapter.Diagnostics.ConfigurationChange!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? onConfigurationChange = null, System.Collections.Generic.IComparer<string!>? nodeNameComparer = null) -> void
 DataCore.Adapter.Extensions.CustomFunctions.CustomFunctions(System.Uri! baseUri, System.Text.Json.JsonSerializerOptions? jsonOptions = null, Microsoft.Extensions.Logging.ILogger<DataCore.Adapter.Extensions.CustomFunctions!>? logger = null) -> void
+DataCore.Adapter.Extensions.CustomFunctions.DefaultAuthorizeHandler.get -> DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler?
+DataCore.Adapter.Extensions.CustomFunctions.DefaultAuthorizeHandler.set -> void
+DataCore.Adapter.Extensions.CustomFunctions.JsonOptions.get -> System.Text.Json.JsonSerializerOptions?
+DataCore.Adapter.Extensions.CustomFunctions.JsonOptions.set -> void
 DataCore.Adapter.FeatureBase
 DataCore.Adapter.FeatureBase.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.FeatureBase.FeatureBase() -> void
