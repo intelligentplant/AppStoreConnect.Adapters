@@ -6,6 +6,11 @@ DataCore.Adapter.Extensions.CustomFunctions.DefaultAuthorizeHandler.get -> DataC
 DataCore.Adapter.Extensions.CustomFunctions.DefaultAuthorizeHandler.set -> void
 DataCore.Adapter.Extensions.CustomFunctions.JsonOptions.get -> System.Text.Json.JsonSerializerOptions?
 DataCore.Adapter.Extensions.CustomFunctions.JsonOptions.set -> void
+DataCore.Adapter.Extensions.CustomFunctions.RegisterFunction(DataCore.Adapter.Extensions.CustomFunctionDescriptorExtended! descriptor, DataCore.Adapter.Extensions.CustomFunctionHandler! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> bool
+DataCore.Adapter.Extensions.CustomFunctions.RegisterFunction<TRequest, TResponse>(string! name, string? description, DataCore.Adapter.Extensions.CustomFunctionHandler<TRequest, TResponse>! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> bool
+DataCore.Adapter.Extensions.CustomFunctions.RegisterFunction<TRequest, TResponse>(System.Uri! id, string! name, string? description, DataCore.Adapter.Extensions.CustomFunctionHandler<TRequest, TResponse>! handler, DataCore.Adapter.Extensions.CustomFunctionAuthorizeHandler? authorizeHandler = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> bool
+DataCore.Adapter.Extensions.CustomFunctions.UnregisterFunction(System.Uri! id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> bool
+DataCore.Adapter.Extensions.CustomFunctions.UnregisterFunctionAsync(System.Uri! id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
 DataCore.Adapter.FeatureBase
 DataCore.Adapter.FeatureBase.CheckFeatureHealthAsync(DataCore.Adapter.IAdapterCallContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<DataCore.Adapter.Diagnostics.HealthCheckResult>!
 DataCore.Adapter.FeatureBase.FeatureBase() -> void
