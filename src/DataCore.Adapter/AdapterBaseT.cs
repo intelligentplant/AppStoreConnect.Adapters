@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using DataCore.Adapter.Common;
 using DataCore.Adapter.Diagnostics;
+using DataCore.Adapter.Extensions;
 
 using IntelligentPlant.BackgroundTasks;
 
@@ -48,6 +49,11 @@ namespace DataCore.Adapter {
         /// The <see cref="HealthCheckManager{TAdapterOptions}"/> that provides the <see cref="IHealthCheck"/> feature.
         /// </summary>
         private readonly HealthCheckManager<TAdapterOptions> _healthCheckManager;
+
+        /// <summary>
+        /// The <see cref="Extensions.CustomFunctions"/> that provides the <see cref="ICustomFunctions"/> feature.
+        /// </summary>
+        protected internal CustomFunctions CustomFunctions { get; }
 
         #endregion
 
@@ -92,6 +98,7 @@ namespace DataCore.Adapter {
 
             Options = default!;
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
+            CustomFunctions = new CustomFunctions(TypeDescriptor.Id, logger: LoggerFactory.CreateLogger<CustomFunctions>());
 
             // Register default features.
             AddDefaultFeatures();
