@@ -29,9 +29,10 @@ namespace DataCore.Adapter.Extensions {
         private readonly ILogger<CustomFunctions> _logger;
 
         /// <summary>
-        /// JSON options to use when serializing/deserializing.
+        /// JSON options to use when serializing/deserializing custom function request and 
+        /// response bodies.
         /// </summary>
-        private readonly JsonSerializerOptions? _jsonOptions;
+        public JsonSerializerOptions? JsonOptions { get; set; }
 
         /// <summary>
         /// The registered functions.
@@ -42,6 +43,12 @@ namespace DataCore.Adapter.Extensions {
         /// Lock for accessing <see cref="_functions"/>.
         /// </summary>
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _functionsLock = new Nito.AsyncEx.AsyncReaderWriterLock();
+
+        /// <summary>
+        /// The default authorisation handler to use if a custom function registration does not 
+        /// specify its own authorisation handler.
+        /// </summary>
+        public CustomFunctionAuthorizeHandler? DefaultAuthorizeHandler { get; set; }
 
 
         /// <summary>
@@ -72,7 +79,7 @@ namespace DataCore.Adapter.Extensions {
                 throw new ArgumentOutOfRangeException(nameof(baseUri), SharedResources.Error_AbsoluteUriRequired);
             }
             BaseUri = new Uri(baseUri.EnsurePathHasTrailingSlash(), "custom-functions/");
-            _jsonOptions = jsonOptions;
+            JsonOptions = jsonOptions;
             _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<CustomFunctions>.Instance;
         }
 
@@ -93,8 +100,9 @@ namespace DataCore.Adapter.Extensions {
         ///   A <see cref="ValueTask{TResult}"/> that will return <see langword="true"/> if the 
         ///   caller is authorised or <see langword="false"/> otherwise.
         /// </returns>
-        private static async ValueTask<bool> IsAuthorizedAsync(IAdapterCallContext context, CustomFunctionRegistration registration, CancellationToken cancellationToken) {
-            return registration.Authorize == null || await registration.Authorize.Invoke(context, cancellationToken).ConfigureAwait(false);
+        private async ValueTask<bool> IsAuthorizedAsync(IAdapterCallContext context, CustomFunctionRegistration registration, CancellationToken cancellationToken) {
+            var handler = registration.Authorize ?? DefaultAuthorizeHandler;
+            return handler == null || await handler.Invoke(context, registration.Descriptor.Id, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -240,7 +248,7 @@ namespace DataCore.Adapter.Extensions {
 
             return await RegisterFunctionAsync(
                 descriptor,
-                CreateHandler(handler, _jsonOptions),
+                CreateHandler(handler, JsonOptions),
                 authorizeHandler,
                 cancellationToken
             ).ConfigureAwait(false);
@@ -509,7 +517,7 @@ namespace DataCore.Adapter.Extensions {
         /// 
         /// </remarks>
         public JsonElement CreateJsonSchema<T>() {
-            return Json.Schema.JsonSchemaUtility.CreateJsonSchema<T>(_jsonOptions);
+            return Json.Schema.JsonSchemaUtility.CreateJsonSchema<T>(JsonOptions);
         }
 
 
