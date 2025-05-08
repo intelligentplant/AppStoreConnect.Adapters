@@ -239,13 +239,13 @@ namespace DataCore.Adapter.Common {
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
         public AdapterDescriptorBuilder ClearFeature<TFeature>() where TFeature : IAdapterFeature {
-            if (typeof(TFeature).IsStandardAdapterFeature()) {
-                RemoveStandardFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            var featureUri = typeof(TFeature).GetAdapterFeatureUri();
+
+            if (featureUri == null) {
+                return this;
             }
-            else if (typeof(TFeature).IsExtensionAdapterFeature()) {
-                RemoveExtensionFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
-            }
-            return this;
+
+            return ClearFeature(featureUri);
         }
 
 
@@ -260,12 +260,9 @@ namespace DataCore.Adapter.Common {
         /// </returns>
         public AdapterDescriptorBuilder ClearFeature(Uri feature) {
             if (feature != null) {
-                if (feature.IsStandardFeatureUri()) {
-                    RemoveStandardFeature(feature.ToString());
-                }
-                else if (feature.IsExtensionFeatureUri()) {
-                    RemoveExtensionFeature(feature.ToString());
-                }
+                var featureString = feature.ToString();
+                RemoveStandardFeature(featureString);
+                RemoveExtensionFeature(featureString);
             }
             return this;
         }
@@ -331,12 +328,12 @@ namespace DataCore.Adapter.Common {
                     continue;
                 }
 
-                if (feature.IsStandardFeatureUri()) {
-                    AddStandardFeature(feature.ToString());
-                }
-                else if (feature.IsExtensionFeatureUri()) {
+                if (feature.IsExtensionFeatureUri()) {
                     AddExtensionFeature(feature.ToString());
+                    continue;
                 }
+
+                AddStandardFeature(feature.ToString());
             }
 
             return this;
@@ -384,12 +381,12 @@ namespace DataCore.Adapter.Common {
                     continue;
                 }
 
-                if (feature.IsStandardFeatureUri()) {
-                    AddStandardFeature(feature.ToString());
-                }
-                else if (feature.IsExtensionFeatureUri()) {
+                if (feature.IsExtensionFeatureUri()) {
                     AddExtensionFeature(feature.ToString());
+                    continue;
                 }
+
+                AddStandardFeature(feature.ToString());
             }
 
             return this;
@@ -406,11 +403,14 @@ namespace DataCore.Adapter.Common {
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
         public AdapterDescriptorBuilder WithFeature<TFeature>() where TFeature : IAdapterFeature {
-            if (typeof(TFeature).IsStandardAdapterFeature()) {
-                AddStandardFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
-            }
-            else if (typeof(TFeature).IsExtensionAdapterFeature()) {
+            if (typeof(TFeature).IsExtensionAdapterFeature()) {
                 AddExtensionFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            }
+            else {
+                var featureUri = typeof(TFeature).GetAdapterFeatureUri();
+                if (featureUri != null) {
+                    AddStandardFeature(featureUri.ToString());
+                }
             }
             return this;
         }
