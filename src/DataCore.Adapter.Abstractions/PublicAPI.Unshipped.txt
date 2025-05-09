@@ -1,1 +1,3 @@
 ﻿#nullable enable
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!

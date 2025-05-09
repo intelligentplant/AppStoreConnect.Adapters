@@ -324,16 +324,11 @@ namespace DataCore.Adapter.Common {
             }
 
             foreach (var feature in features) {
-                if (feature == null) {
+                if (feature == null || !feature.IsAbsoluteUri) {
                     continue;
                 }
 
-                if (feature.IsExtensionFeatureUri()) {
-                    AddExtensionFeature(feature.ToString());
-                    continue;
-                }
-
-                AddStandardFeature(feature.ToString());
+                WithFeature(feature);
             }
 
             return this;
@@ -381,11 +376,68 @@ namespace DataCore.Adapter.Common {
                     continue;
                 }
 
-                if (feature.IsExtensionFeatureUri()) {
-                    AddExtensionFeature(feature.ToString());
-                    continue;
-                }
+                WithFeature(feature);
+            }
 
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds the specified feature to the descriptor.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="feature"/> is not a valid absolute URI.
+        /// </exception>
+        public AdapterDescriptorBuilder WithFeature(string feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+
+            if (!Uri.TryCreate(feature, UriKind.Absolute, out var featureUri)) {
+                throw new ArgumentOutOfRangeException(nameof(feature), SharedResources.Error_AbsoluteUriRequired);
+            }
+
+            return WithFeature(featureUri);
+        }
+
+
+        /// <summary>
+        /// Adds the specified feature to the descriptor.
+        /// </summary>
+        /// <param name="feature">
+        ///   The feature URI.
+        /// </param>
+        /// <returns>
+        ///   The <see cref="AdapterDescriptorBuilder"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="feature"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///   <paramref name="feature"/> is not a valid absolute URI.
+        /// </exception>
+        public AdapterDescriptorBuilder WithFeature(Uri feature) {
+            if (feature == null) {
+                throw new ArgumentNullException(nameof(feature));
+            }
+            if (!feature.IsAbsoluteUri) {
+                throw new ArgumentOutOfRangeException(nameof(feature), SharedResources.Error_AbsoluteUriRequired);
+            }
+
+            if (feature.IsExtensionFeatureUri()) {
+                AddExtensionFeature(feature.ToString());
+            }
+            else {
                 AddStandardFeature(feature.ToString());
             }
 
@@ -403,16 +455,12 @@ namespace DataCore.Adapter.Common {
         ///   The <see cref="AdapterDescriptorBuilder"/>.
         /// </returns>
         public AdapterDescriptorBuilder WithFeature<TFeature>() where TFeature : IAdapterFeature {
-            if (typeof(TFeature).IsExtensionAdapterFeature()) {
-                AddExtensionFeature(typeof(TFeature).GetAdapterFeatureUri()!.ToString());
+            var featureUri = typeof(TFeature).GetAdapterFeatureUri();
+            if (featureUri == null) {
+                throw new InvalidOperationException(nameof(TFeature));
             }
-            else {
-                var featureUri = typeof(TFeature).GetAdapterFeatureUri();
-                if (featureUri != null) {
-                    AddStandardFeature(featureUri.ToString());
-                }
-            }
-            return this;
+
+            return WithFeature(featureUri);
         }
 
 
