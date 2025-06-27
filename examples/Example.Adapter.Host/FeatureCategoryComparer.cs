@@ -1,4 +1,4 @@
-﻿namespace ExampleHostedAdapter {
+﻿namespace Example.Adapter.Host {
 
     /// <summary>
     /// <see cref="StringComparer"/> implementation that is used to sort adapter feature 

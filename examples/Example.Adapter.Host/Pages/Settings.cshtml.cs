@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 
-namespace ExampleHostedAdapter.Pages {
+namespace Example.Adapter.Host.Pages {
 
     [ValidateAntiForgeryToken]
     public class SettingsModel : PageModel {
@@ -16,11 +16,11 @@ namespace ExampleHostedAdapter.Pages {
         public IAdapter Adapter { get; }
 
         [BindProperty]
-        public MyAdapterOptions? Options { get; set; }
+        public RngAdapterOptions? Options { get; set; }
 
-        private readonly IOptionsMonitor<MyAdapterOptions> _optionsMonitor;
+        private readonly IOptionsMonitor<RngAdapterOptions> _optionsMonitor;
 
-        public SettingsModel(IAdapter adapter, IOptionsMonitor<MyAdapterOptions> optionsMonitor) {
+        public SettingsModel(IAdapter adapter, IOptionsMonitor<RngAdapterOptions> optionsMonitor) {
             Adapter = adapter;
             _optionsMonitor = optionsMonitor;
         }

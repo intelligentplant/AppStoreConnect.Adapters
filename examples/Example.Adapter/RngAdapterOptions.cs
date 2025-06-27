@@ -2,13 +2,11 @@
 
 using DataCore.Adapter;
 
-#nullable disable warnings
-
-namespace ExampleHostedAdapter {
+namespace Example.Adapter {
 
     // This class defines the runtime options used to configure your adapter.
 
-    public class MyAdapterOptions : AdapterOptions {
+    public class RngAdapterOptions : AdapterOptions {
 
         // Add properties required to configure your adapter e.g. connection endpoints, 
         // credentials, etc. The Program.cs file is configured to bind adapter options
@@ -23,4 +21,5 @@ namespace ExampleHostedAdapter {
         public int Seed { get; set; }
 
     }
+
 }

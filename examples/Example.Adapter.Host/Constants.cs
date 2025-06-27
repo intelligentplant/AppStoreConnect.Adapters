@@ -1,4 +1,4 @@
-﻿namespace ExampleHostedAdapter {
+﻿namespace Example.Adapter.Host {
 
     /// <summary>
     /// Global application constants.
