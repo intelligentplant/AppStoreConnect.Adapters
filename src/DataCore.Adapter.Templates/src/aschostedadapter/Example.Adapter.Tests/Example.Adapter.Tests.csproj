@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.DependencyInjection" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.Tests.Helpers" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Example.Adapter.Host\Example.Adapter.Host.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="DataCore.Adapter.Tests" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+</Project>

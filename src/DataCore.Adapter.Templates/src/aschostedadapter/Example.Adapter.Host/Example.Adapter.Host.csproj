@@ -7,14 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.HealthChecks" />
-    <!--#if (UseMinimalApi) -->
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.MinimalApi" />
-    <!--#else -->
-    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Mvc" />
-    <!--#endif -->
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite" />
     <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry" />
@@ -31,6 +26,10 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Example.Adapter\Example.Adapter.csproj"/>
   </ItemGroup>
 
 </Project>
