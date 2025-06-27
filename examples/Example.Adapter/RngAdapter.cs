@@ -1,5 +1,6 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using DataCore.Adapter;
 using DataCore.Adapter.Common;
@@ -11,11 +12,11 @@ using DataCore.Adapter.Tags;
 
 using IntelligentPlant.BackgroundTasks;
 
-using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 
-namespace ExampleHostedAdapter {
+namespace Example.Adapter {
 
     // This is your adapter class. For information about how to add features to your adapter (such 
     // as tag browsing, or real-time data queries), visit https://github.com/intelligentplant/AppStoreConnect.Adapters.
@@ -33,7 +34,9 @@ namespace ExampleHostedAdapter {
         // You can optionally specify a help URL for the adapter type.
         HelpUrl = "https://my-company.com/app-store-connect/adapters/my-adapter/help"
     )]
-    public partial class MyAdapter : AdapterBase<MyAdapterOptions> {
+    // The [VendorInfo] attribute is used to provide vendor information for the adapter type.
+    [VendorInfo("My Company", "https://my-company.com")]
+    public partial class RngAdapter : AdapterBase<RngAdapterOptions>, IReadSnapshotTagValues {
 
         private static readonly AdapterProperty s_tagCreatedAtPropertyDefinition = new AdapterProperty("UTC Created At", DateTime.MinValue, "The UTC creation time for the tag");
 
@@ -44,18 +47,18 @@ namespace ExampleHostedAdapter {
         private readonly PollingSnapshotTagValuePush _snapshotPush;
 
 
-        public MyAdapter(
-            string id, 
-            IOptionsMonitor<MyAdapterOptions> options,
-            IOptions<JsonOptions> jsonOptions,
+        public RngAdapter(
+            string id,
+            IOptionsMonitor<RngAdapterOptions> options,
             IKeyValueStore keyValueStore,
             IBackgroundTaskService backgroundTaskService,
-            ILoggerFactory loggerFactory
+            ILoggerFactory loggerFactory,
+            JsonSerializerOptions? jsonSerializerOptions = null 
         ) : base(id, options, backgroundTaskService, loggerFactory) {
             // The ConfigurationChanges class implements the IConfigurationChanges adapter feature
             // on behalf of our adapter. IConfigurationChanges allows subscribers to be notified
             // when e.g. tags or asset model nodes are created by our adapter.
-            _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() { 
+            _configurationChanges = new ConfigurationChanges(new ConfigurationChangesOptions() {
                 Id = Descriptor.Id
             }, BackgroundTaskService, LoggerFactory.CreateLogger<ConfigurationChanges>());
 
@@ -82,7 +85,7 @@ namespace ExampleHostedAdapter {
                 keyValueStore.CreateScopedStore(id),
                 // We need to tell TagManager about the types of bespoke properties that our tags
                 // will define.
-                new[] { s_tagCreatedAtPropertyDefinition },
+                [s_tagCreatedAtPropertyDefinition],
                 // When tags are created, updated or deleted, we will notify interested parties
                 // via the ConfigurationChanges object we created above.
                 _configurationChanges.NotifyAsync,
@@ -103,7 +106,7 @@ namespace ExampleHostedAdapter {
             // arrive.
             //
             // See https://github.com/intelligentplant/AppStoreConnect.Adapters for more details.
-            _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() { 
+            _snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagValuePushOptions() {
                 Id = Descriptor.Id,
                 PollingInterval = TimeSpan.FromSeconds(5),
                 TagResolver = PollingSnapshotTagValuePush.CreateTagResolverFromAdapter(this)
@@ -113,7 +116,7 @@ namespace ExampleHostedAdapter {
             // implemented by the PollingSnapshotTagValuePush object.
             AddFeatures(_snapshotPush);
 
-            CustomFunctions.JsonOptions = jsonOptions.Value.SerializerOptions;
+            CustomFunctions.JsonOptions = jsonSerializerOptions;
         }
 
 
@@ -142,14 +145,14 @@ namespace ExampleHostedAdapter {
             //
             // Note that, if we wanted to apply authorization to the function, we could also
             // specify an authorization delegate below.
-            await CustomFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>( 
+            await CustomFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
                 "Greet",
                 "Replies to requests with a greeting message.",
                 (context, request, ct) => {
-                    return Task.FromResult(new GreeterResponse() { 
+                    return Task.FromResult(new GreeterResponse() {
                         Message = $"Hello, {request.Name}!"
                     });
-                }, 
+                },
                 authorizeHandler: null,
                 cancellationToken: cancellationToken
             ).ConfigureAwait(false);
@@ -169,7 +172,7 @@ namespace ExampleHostedAdapter {
         // options at runtime. You can use this method to trigger any runtime changes required.
         // You can test this functionality by running the application and then changing the
         // adapter name or description in appsettings.json at runtime.
-        protected override void OnOptionsChange(MyAdapterOptions options) {
+        protected override void OnOptionsChange(RngAdapterOptions options) {
             base.OnOptionsChange(options);
         }
 
@@ -181,7 +184,7 @@ namespace ExampleHostedAdapter {
         // class that the overall health status must be recalculated by calling the 
         // OnHealthStatusChanged method.
         protected override async Task<IEnumerable<HealthCheckResult>> CheckHealthAsync(
-            IAdapterCallContext context, 
+            IAdapterCallContext context,
             CancellationToken cancellationToken
         ) {
             var result = new List<HealthCheckResult>();
@@ -196,6 +199,40 @@ namespace ExampleHostedAdapter {
             // Add custom health check results to the list.
 
             return result;
+        }
+
+
+        // IReadSnapshotTagValues allows our adapter to be polled for current values.
+        async IAsyncEnumerable<TagValueQueryResult> IReadSnapshotTagValues.ReadSnapshotTagValues(
+            IAdapterCallContext context,
+            ReadSnapshotTagValuesRequest request,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken
+        ) {
+            await Task.Yield();
+            var now = DateTime.UtcNow;
+
+            Random GetRng(string tagId) {
+                return new Random((tagId.GetHashCode() + now.GetHashCode() + Options.Seed).GetHashCode());
+            }
+
+            using var ctSource = CreateCancellationTokenSource(cancellationToken);
+
+            foreach (var tag in request.Tags) {
+                if (ctSource.IsCancellationRequested) {
+                    break;
+                }
+
+                var tagDef = await _tagManager.GetTagAsync(tag, ctSource.Token).ConfigureAwait(false);
+                if (tagDef == null) {
+                    continue;
+                }
+
+                var rnd = GetRng(tagDef.Id);
+
+                var value = new TagValueBuilder().WithUtcSampleTime(now).WithValue(rnd.NextDouble() * 100).Build();
+                yield return new TagValueQueryResult(tagDef.Id, tagDef.Name, value);
+            }
         }
 
 

@@ -28,18 +28,21 @@
       <!-- Delete all files from the template's content folder except for the template 
            configuration. -->
       <_FilesToDelete Include="templates\aschostedadapter\**" Exclude="templates\aschostedadapter\.template.config\**" />
-      <!-- Copy files from the ExampleHostedAdapter project. -->
-      <_FilesToCopy Include="..\..\examples\ExampleHostedAdapter\**\*" Exclude="..\..\examples\ExampleHostedAdapter\.gitignore;..\..\examples\ExampleHostedAdapter\README.md;..\..\examples\ExampleHostedAdapter\wwwroot\lib\**;..\..\examples\ExampleHostedAdapter\**\bin\**;..\..\examples\ExampleHostedAdapter\**\obj\**" />
+      <!-- Copy files from the example projects. -->
+      <_FilesToCopy Include="..\..\examples\Example.Adapter\**" OutDir="Example.Adapter" Exclude="..\..\examples\**\.gitignore;..\..\examples\**\README.md;..\..\examples\**\wwwroot\lib\**;..\..\examples\**\bin\**;..\..\examples\**\obj\**" />
+      <_FilesToCopy Include="..\..\examples\Example.Adapter.Host\**" OutDir="Example.Adapter.Host" Exclude="..\..\examples\**\.gitignore;..\..\examples\**\README.md;..\..\examples\**\wwwroot\lib\**;..\..\examples\**\bin\**;..\..\examples\**\obj\**" />
       <!-- Copy files from the src folder in this project. Note that some of these files 
-           overwrite equivalent files included from the ExampleHostedAdapter project. -->
-      <_FilesToCopy Include=".\src\aschostedadapter\**" />
+           overwrite equivalent files included from the example projects. -->
+      <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter\**" OutDir="Example.Adapter" />
+      <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter.Host\**" OutDir="Example.Adapter.Host" />
+      <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter.Tests\**" OutDir="Example.Adapter.Tests" />
     </ItemGroup>
     
     <!-- Delete existing files from the template's content folder. -->
     <Delete Files="@(_FilesToDelete)" />
     
     <!-- Copy files to the template's content folder. -->
-    <Copy SkipUnchangedFiles="false" SourceFiles="@(_FilesToCopy)" DestinationFiles="@(_FilesToCopy->'templates\aschostedadapter\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SkipUnchangedFiles="false" SourceFiles="@(_FilesToCopy)" DestinationFiles="@(_FilesToCopy->'templates\aschostedadapter\%(OutDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
   
   <Target Name="ReplacePackageVersions" BeforeTargets="Build" AfterTargets="CopyAscHostedAdapterTemplateFiles">
@@ -57,13 +60,15 @@
     
     <PropertyGroup>
       <_PowerShellScriptPath>$([System.IO.Path]::GetFullPath($(MSBuildProjectDirectory)/Insert-PackageVersions.ps1))</_PowerShellScriptPath>
-      <_ProjectFilePath>$([System.IO.Path]::GetFullPath($(MSBuildProjectDirectory)/templates/aschostedadapter/ExampleHostedAdapter.csproj))</_ProjectFilePath>
       <_PackageVersionsFile>$([MSBuild]::GetPathOfFileAbove('Directory.Packages.props', '$(MSBuildThisFileDirectory)../'))</_PackageVersionsFile>
       <_DefaultPackageVersion>$(Version)</_DefaultPackageVersion>
     </PropertyGroup>
 
-    <!-- Ensure that the example hosted adapter project specifies the package versions defined by Central Package Management. -->
-    <Exec Command="$(_PowerShellExe) -NoLogo -NonInteractive $(_ExecutionPolicy) -File &quot;$(_PowerShellScriptPath)&quot; -ProjectFile &quot;$(_ProjectFilePath)&quot; -PackageVersionsFile &quot;$(_PackageVersionsFile)&quot; -DefaultPackageVersion &quot;$(_DefaultPackageVersion)&quot;" />
+    <ItemGroup>
+      <_TemplatedProjectFiles Include="templates/aschostedadapter/*/*.csproj"/>
+    </ItemGroup>
+
+    <Exec Command="$(_PowerShellExe) -NoLogo -NonInteractive $(_ExecutionPolicy) -File &quot;$(_PowerShellScriptPath)&quot; -ProjectFile &quot;%(_TemplatedProjectFiles.Identity)&quot; -PackageVersionsFile &quot;$(_PackageVersionsFile)&quot; -DefaultPackageVersion &quot;$(_DefaultPackageVersion)&quot;" />
   </Target>
 
   <ItemGroup>

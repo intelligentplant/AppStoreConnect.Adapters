@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 
-namespace ExampleHostedAdapter.TagHelpers {
+namespace Example.Adapter.Host.TagHelpers {
 
     /// <summary>
     /// Modifies &lt;input&gt; and &lt;textarea&gt; elements with an <c>asp-placeholder-for</c> 

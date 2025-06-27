@@ -1,21 +1,20 @@
 ﻿using DataCore.Adapter.KeyValueStore.Sqlite;
 
-using ExampleHostedAdapter;
+using Example.Adapter;
+using Example.Adapter.Host;
 
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-// The [VendorInfo] attribute is used to add vendor information to the adapters in this assembly,
-// as well as the host information for the application.
+// The [VendorInfo] attribute is used to add vendor information to the host information for the application.
 [assembly: DataCore.Adapter.VendorInfo("My Company", "https://my-company.com")]
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Our adapter settings are stored in adaptersettings.json.
-builder.Configuration
-    .AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
+builder.Configuration.AddJsonFile(Constants.AdapterSettingsFilePath, false, true);
 
 // Parent PID. If specified, we will gracefully shut down if the parent process exits.
 var pid = builder.Configuration.GetValue<int>("AppStoreConnect:Adapter:Host:ParentPid");
@@ -26,14 +25,17 @@ if (pid > 0) {
 // Host instance ID.
 var instanceId = builder.Configuration.GetValue<string>("AppStoreConnect:Adapter:Host:InstanceId");
 if (string.IsNullOrWhiteSpace(instanceId)) {
-    instanceId = Guid.NewGuid().ToString();
+    instanceId = System.Net.Dns.GetHostName();
 }
 
-builder.Services
-    .AddLocalization();
+builder.Services.AddLocalization();
+
+// Allows failed requests to generate RFC 7807 responses.
+builder.Services.AddProblemDetails();
 
 builder.Services
     .AddDataCoreAdapterAspNetCoreServices()
+    .AddDataCoreAdapterApiServices()
     .AddHostInfo(hostInfo => hostInfo
         .WithName("My Adapter Host")
         .WithDescription("App Store Connect adapter host for My Adapter")
@@ -52,7 +54,7 @@ builder.Services
         return ActivatorUtilities.CreateInstance<SqliteKeyValueStore>(sp, options);
     })
     // Register the adapter options
-    .AddAdapterOptions<MyAdapterOptions>(
+    .AddAdapterOptions<RngAdapterOptions>(
         // The adapter will look for an instance of the options with a name that matches its ID.
         Constants.AdapterId,
         // Bind the adapter options against the application configuration and ensure that they are
@@ -63,27 +65,22 @@ builder.Services
             .ValidateOnStart())
     // Register the adapter. We specify the adapter ID as an additional constructor parameter
     // since this will not be supplied by the service provider.
-    .AddAdapter<MyAdapter>(Constants.AdapterId);
-
-// Register adapter MVC controllers.
-builder.Services
-    .AddMvc()
-    .AddDataCoreAdapterMvc();
+    .AddAdapter<RngAdapter>(Constants.AdapterId);
 
 // Register adapter SignalR hub.
-builder.Services
-    .AddSignalR()
+builder.Services.AddSignalR()
     .AddDataCoreAdapterSignalR();
 
 // Register adapter gRPC services.
-builder.Services
-    .AddGrpc()
+builder.Services.AddGrpc()
     .AddDataCoreAdapterGrpc();
+
+// Register the Razor Pages services used by the UI.
+builder.Services.AddRazorPages();
 
 // Register adapter health checks. See https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks
 // for more information about ASP.NET Core health checks.
-builder.Services
-    .AddHealthChecks()
+builder.Services.AddHealthChecks()
     .AddAdapterHealthChecks();
 
 // Register OpenTelemetry services. This can be safely removed if not required.
@@ -121,6 +118,9 @@ builder.Services
 // Build the app and the request pipeline.
 var app = builder.Build();
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();
 }
@@ -136,7 +136,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapDataCoreAdapterApiRoutes();
 app.MapDataCoreAdapterHubs();
 app.MapDataCoreGrpcServices();
 app.MapHealthChecks("/health");

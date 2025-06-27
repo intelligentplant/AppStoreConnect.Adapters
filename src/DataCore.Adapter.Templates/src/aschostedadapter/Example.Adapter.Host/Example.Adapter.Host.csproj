@@ -7,13 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DataCore.Adapter\DataCore.Adapter.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Grpc\DataCore.Adapter.AspNetCore.Grpc.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.HealthChecks\DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.Mvc\DataCore.Adapter.AspNetCore.Mvc.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.SignalR\DataCore.Adapter.AspNetCore.SignalR.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.KeyValueStore.Sqlite\DataCore.Adapter.KeyValueStore.Sqlite.csproj" />
-    <ProjectReference Include="..\..\src\DataCore.Adapter.OpenTelemetry\DataCore.Adapter.OpenTelemetry.csproj" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.Grpc" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.HealthChecks" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.MinimalApi" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.AspNetCore.SignalR" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.KeyValueStore.Sqlite" />
+    <PackageReference Include="IntelligentPlant.AppStoreConnect.Adapter.OpenTelemetry" />
     <PackageReference Include="Jaahas.OpenTelemetry.Extensions" />
     <PackageReference Include="Microsoft.Web.LibraryManager.Build" />
     <PackageReference Include="OpenTelemetry" />
@@ -27,6 +26,10 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Example.Adapter\Example.Adapter.csproj"/>
   </ItemGroup>
 
 </Project>

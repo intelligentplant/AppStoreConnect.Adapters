@@ -1,5 +1,5 @@
 ﻿@using DataCore.Adapter;
-@model ExampleHostedAdapter.Pages.IndexModel
+@model Example.Adapter.Host.Pages.IndexModel
 
 @{
   string cardColourModifier;
@@ -7,22 +7,22 @@
   string statusText;
 
   switch (Model.State) {
-    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Disabled:
+    case Example.Adapter.Host.Pages.IndexModel.AdapterState.Disabled:
       cardColourModifier = "danger";
       statusIcon = "fa-circle-stop";
       statusText = "Disabled";
       break;
-    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Enabled:
+    case Example.Adapter.Host.Pages.IndexModel.AdapterState.Enabled:
       cardColourModifier = "warning";
       statusIcon = "fa-circle-half-stroke";
       statusText = "Enabled";
       break;
-    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.Running:
+    case Example.Adapter.Host.Pages.IndexModel.AdapterState.Running:
       cardColourModifier = "success";
       statusIcon = "fa-circle-play";
       statusText = "Running";
       break;
-    case ExampleHostedAdapter.Pages.IndexModel.AdapterState.RunningWithWarning:
+    case Example.Adapter.Host.Pages.IndexModel.AdapterState.RunningWithWarning:
       cardColourModifier = "warning";
       statusIcon = "fa-circle-exclamation";
       statusText = "Running (Unhealthy)";
@@ -175,7 +175,7 @@
             </div>
             <div class="col">
               <div class="pb-1">
-                @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), ExampleHostedAdapter.FeatureCategoryComparer.Instance).ThenBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
+                @foreach (var featureGroup in Model.Adapter.Features.Keys.Select(x => WellKnownFeatures.TryGetFeatureDescriptor(x, out var descriptor) ? descriptor : Model.Adapter.Features[x]!.GetType().CreateFeatureDescriptor()).OrderBy(x => GetFeatureCategory(x!), Example.Adapter.Host.FeatureCategoryComparer.Instance).ThenBy(x => x!.DisplayName, StringComparer.OrdinalIgnoreCase).ToLookup(x => GetFeatureCategory(x!), StringComparer.OrdinalIgnoreCase)) {
                   <div class="pb-2 adapter-status-heading">
                     <i class="fa-solid @GetFeatureIcon(featureGroup.First()!) fa-fw" title="Adapter features: @featureGroup.Key"></i>
                     <span class="d-lg-none">Features: </span>
