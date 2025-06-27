@@ -9,7 +9,7 @@ This project is a .NET class library that implements your adapter. The adapter i
 
 The `RngAdapter` and `RngAdapterOptions` classes define the data adapter and its runtime options respectively. You can change the names of these classes as you wish. The adapter implements snapshot tag value polling, and uses helper classes from the data adapter toolkit to implement tag search and snapshot tag value subscription features.
 
-For information about how to implement adapter features, as well as example projects, please visit the [App Store Connect adapters GitHub repository](https://github.com/intelligentplant/AppStoreConnect.Adapters).
+For information about how to implement adapter features, as well as example projects, please visit the [Industrial App Store data adapters repository on GitHub](https://github.com/intelligentplant/AppStoreConnect.Adapters).
 
 
 # Unit Tests
