@@ -32,7 +32,7 @@
       <_FilesToCopy Include="..\..\examples\Example.Adapter\**" OutDir="Example.Adapter" Exclude="..\..\examples\**\.gitignore;..\..\examples\**\README.md;..\..\examples\**\wwwroot\lib\**;..\..\examples\**\bin\**;..\..\examples\**\obj\**" />
       <_FilesToCopy Include="..\..\examples\Example.Adapter.Host\**" OutDir="Example.Adapter.Host" Exclude="..\..\examples\**\.gitignore;..\..\examples\**\README.md;..\..\examples\**\wwwroot\lib\**;..\..\examples\**\bin\**;..\..\examples\**\obj\**" />
       <!-- Copy files from the src folder in this project. Note that some of these files 
-           overwrite equivalent files included from the ExampleHostedAdapter project. -->
+           overwrite equivalent files included from the example projects. -->
       <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter\**" OutDir="Example.Adapter" />
       <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter.Host\**" OutDir="Example.Adapter.Host" />
       <_FilesToCopy Include=".\src\aschostedadapter\Example.Adapter.Tests\**" OutDir="Example.Adapter.Tests" />
