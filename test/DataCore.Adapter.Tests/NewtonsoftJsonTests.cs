@@ -19,7 +19,7 @@ namespace DataCore.Adapter.Tests {
 
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(@"""2024-05-18T06:00:00.0000000Z""", "2024-05-18T06:00:00.0000000Z")]
         [DataRow(@"""2024-05-18T06:00:00.1234567+05:30""", "2024-05-18T00:30:00.1234567Z")]
         [DataRow(@"""2024-05-18T19:45:27.7654321-09:00""", "2024-05-19T04:45:27.7654321Z")]
@@ -35,7 +35,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Utc)]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Local)]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Unspecified)]

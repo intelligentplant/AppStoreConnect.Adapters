@@ -150,7 +150,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(WaveType.Sinusoid)]
         [DataRow(WaveType.Sawtooth)]
         [DataRow(WaveType.Square)]
@@ -183,7 +183,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(WaveType.Sinusoid)]
         [DataRow(WaveType.Sawtooth)]
         [DataRow(WaveType.Square)]
@@ -216,7 +216,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(WaveType.Sinusoid)]
         [DataRow(WaveType.Sawtooth)]
         [DataRow(WaveType.Square)]
@@ -249,7 +249,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(WaveType.Sinusoid)]
         [DataRow(WaveType.Sawtooth)]
         [DataRow(WaveType.Square)]

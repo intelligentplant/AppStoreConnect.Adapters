@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net48</TargetFrameworks>
+    <TargetFrameworks>net8.0;net481</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +33,7 @@
   -->
   <Choose>
     <!-- .NET/.NET Core references -->
-    <When Condition=" '$(TargetFramework)' != 'net48' ">
+    <When Condition=" '$(TargetFramework)' != 'net481' ">
       <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
       </ItemGroup>
@@ -65,7 +65,7 @@
     </Otherwise>
   </Choose>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net481' ">
     <ProjectReference Include="..\..\src\DataCore.Adapter.AspNetCore.MinimalApi\DataCore.Adapter.AspNetCore.MinimalApi.csproj" />
   </ItemGroup>
   

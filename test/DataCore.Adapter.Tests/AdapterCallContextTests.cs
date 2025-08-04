@@ -4,8 +4,6 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
-using IntelligentPlant.BackgroundTasks;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataCore.Adapter.Tests {
@@ -19,7 +17,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(null, false)]
         [DataRow("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false)]
         [DataRow("Hello", true)]
@@ -42,7 +40,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(null, false)]
         [DataRow("ABCDEFGHIJKLMNOPQRSTUVWXYZ", false)]
         [DataRow("Hello", true)]
@@ -63,7 +61,7 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(await feature.IsValid(context, request, default).ConfigureAwait(false));
             }
             else {
-                await Assert.ThrowsExceptionAsync<ValidationException>(() => feature.IsValid(context, request, default)).ConfigureAwait(false);
+                await Assert.ThrowsExactlyAsync<ValidationException>(() => feature.IsValid(context, request, default)).ConfigureAwait(false);
             }
         }
 

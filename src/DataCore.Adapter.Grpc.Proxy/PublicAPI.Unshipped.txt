@@ -1,1 +1,3 @@
 ﻿#nullable enable
+virtual DataCore.Adapter.Grpc.Proxy.GetGrpcCallCredentials.Invoke(DataCore.Adapter.IAdapterCallContext! context) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Grpc.Client.Authentication.IClientCallCredentials!>!>!
+virtual DataCore.Adapter.Grpc.Proxy.GetGrpcClientInterceptors.Invoke() -> System.Collections.Generic.IEnumerable<Grpc.Core.Interceptors.Interceptor!>!

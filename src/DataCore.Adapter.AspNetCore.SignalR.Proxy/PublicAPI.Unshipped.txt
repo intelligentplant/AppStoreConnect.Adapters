@@ -1,1 +1,2 @@
 ﻿#nullable enable
+virtual DataCore.Adapter.AspNetCore.SignalR.Proxy.ConnectionFactory.Invoke(string? key = null) -> Microsoft.AspNetCore.SignalR.Client.HubConnection!
