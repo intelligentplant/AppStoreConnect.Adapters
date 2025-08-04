@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Jaahas.StringCache" />
     <PackageReference Include="Microsoft.Bcl.HashCode" />
     <PackageReference Include="Semver" />
     <PackageReference Include="System.ComponentModel.Annotations" />
