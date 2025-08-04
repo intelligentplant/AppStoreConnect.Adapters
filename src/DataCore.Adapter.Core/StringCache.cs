@@ -13,29 +13,27 @@ namespace DataCore.Adapter {
     /// </para>
     /// 
     /// <para>
-    ///   <see cref="StringCache"/> can cache strings in two ways:
+    ///   <see cref="StringCache"/> uses <see cref="Jaahas.StringCache"/> under the hood. String 
+    ///   values are interned using one of the following mechanisms:
     /// </para>
     /// 
     /// <list type="number">
-    ///   <item>Using <see cref="string.Intern(string)"/>.</item>
-    ///   <item>Using an internal <see cref="ConcurrentDictionary{TKey, TValue}"/> to hold the cached string values.</item>
+    ///   <item>Using <see cref="Jaahas.StringCache.Native"/> (a wrapper around <see cref="string.Intern(string)"/>).</item>
+    ///   <item>Using <see cref="Jaahas.StringCache.Shared"/> (uses a <see cref="ConcurrentDictionary{TKey, TValue}"/> to provide thread-safe lookup of interned strings).</item>
     /// </list>
     /// 
     /// <para>
-    ///   The behaviour is configured using the <see cref="UseNativeInternSwitchName"/> <see cref="AppContext"/> 
-    ///   switch. The default behaviour is to use an internal cache instead of <see cref="string.Intern(string)"/> 
+    ///   The dictionary-based cache can significantly improve lookup performance for frequently-used 
+    ///   strings compared to native interning. The interning behaviour is configured using the <see cref="UseNativeInternSwitchName"/> 
+    ///   <see cref="AppContext"/> switch. The default behaviour is to use <see cref="Jaahas.StringCache.Shared"/> 
     ///   (i.e. the switch is treated as <see langword="false"/> if it is not defined).
     /// </para>
     /// 
     /// <para>
-    ///   When using an internal dictionary, the cache can be cleared using the <see cref="Clear"/> 
+    ///   When using <see cref="Jaahas.StringCache.Shared"/>, the cache can be cleared using the <see cref="Clear"/> 
     ///   method.
     /// </para>
-    /// 
-    /// <para>
-    ///   The concept for this cache is taken from https://sergeyteplyakov.github.io/Blog/benchmarking/2023/12/10/Intern_or_Not_Intern.html
-    /// </para>
-    /// 
+    ///
     /// </remarks>
     public static class StringCache {
 
@@ -44,11 +42,6 @@ namespace DataCore.Adapter {
         /// native interning.
         /// </summary>
         public const string UseNativeInternSwitchName = "Switch.DataCore.Adapter.StringCache.UseNativeIntern";
-
-        /// <summary>
-        /// The internal cache of strings when native interning is disabled.
-        /// </summary>
-        private static readonly ConcurrentDictionary<string, string> s_strings = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
 
         /// <summary>
         /// Specifies whether native interning is enabled.
@@ -77,23 +70,8 @@ namespace DataCore.Adapter {
         ///   <see cref="Count"/> will always return -1 if native interning is enabled.
         /// </remarks>
         public static int Count => NativeInternEnabled
-            ? -1
-            : s_strings.Count;
-
-        /// <summary>
-        /// The total size of all cached strings, in bytes.
-        /// </summary>
-        private static long s_size;
-
-        /// <summary>
-        /// The total size of all cached strings, in bytes.
-        /// </summary>
-        /// <remarks>
-        ///   <see cref="Size"/> will always return -1 if native interning is enabled.
-        /// </remarks>
-        public static long Size => NativeInternEnabled
-            ? -1
-            : s_size;
+            ? Jaahas.StringCache.Native.Count
+            : Jaahas.StringCache.Shared.Count;
 
 
         /// <summary>
@@ -106,28 +84,9 @@ namespace DataCore.Adapter {
         ///   The interned string.
         /// </returns>
         public static string? Intern(string? str) {
-            if (str == null) {
-                return null;
-            }
-
             return NativeInternEnabled
-                ? string.Intern(str)
-                : s_strings.GetOrAdd(str, OnAddToCache);
-        }
-
-
-        /// <summary>
-        /// Updates the recorded size of the cache to include the specified string.
-        /// </summary>
-        /// <param name="str">
-        ///   The string being added to the cache.
-        /// </param>
-        /// <returns>
-        ///   The string being added to the cache.
-        /// </returns>
-        private static string OnAddToCache(string str) {
-            s_size += (str.Length * sizeof(char));
-            return str;
+                ? Jaahas.StringCache.Native.Intern(str!)
+                : Jaahas.StringCache.Shared.Intern(str!);
         }
 
 
@@ -147,10 +106,24 @@ namespace DataCore.Adapter {
             }
 
             return NativeInternEnabled
-                ? string.IsInterned(str)
-                : s_strings.TryGetValue(str, out var val)
-                    ? val
-                    : null;
+                ? Jaahas.StringCache.Native.Get(str)
+                : Jaahas.StringCache.Shared.Get(str);
+        }
+
+
+        /// <summary>
+        /// Calculates the total size of the interned strings in bytes.
+        /// </summary>
+        /// <returns>
+        ///   The total size of the cached strings in bytes. Returns -1 when native interning is enabled.
+        /// </returns>
+        /// <remarks>
+        ///   This method calculates the size based on UTF-16 encoding (2 bytes per character).
+        /// </remarks>
+        public static long CalculateSize() {
+            return NativeInternEnabled
+                ? Jaahas.StringCache.Native.CalculateSize()
+                : Jaahas.StringCache.Shared.CalculateSize();
         }
 
 
@@ -165,8 +138,7 @@ namespace DataCore.Adapter {
                 return;
             }
 
-            s_strings.Clear();
-            s_size = 0;
+            Jaahas.StringCache.Shared.Clear();
         }
 
     }

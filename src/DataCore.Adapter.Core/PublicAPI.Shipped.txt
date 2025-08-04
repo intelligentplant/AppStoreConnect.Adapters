@@ -1053,7 +1053,6 @@ static DataCore.Adapter.StringCache.Count.get -> int
 static DataCore.Adapter.StringCache.Get(string? str) -> string?
 static DataCore.Adapter.StringCache.Intern(string? str) -> string?
 static DataCore.Adapter.StringCache.NativeInternEnabled.get -> bool
-static DataCore.Adapter.StringCache.Size.get -> long
 static System.DCAStringExtensions.GetFromStringCache(this string! str) -> string!
 static System.DCAStringExtensions.InternToStringCache(this string! str) -> string!
 System.DCAStringExtensions
