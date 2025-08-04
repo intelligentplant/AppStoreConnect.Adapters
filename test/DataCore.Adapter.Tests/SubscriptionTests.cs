@@ -329,7 +329,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 });
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 
@@ -557,7 +557,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 });
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 
@@ -985,7 +985,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 });
 
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => tcs2.Task);
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => tcs2.Task);
             }
         }
 

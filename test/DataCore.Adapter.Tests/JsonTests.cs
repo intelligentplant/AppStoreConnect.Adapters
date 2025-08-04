@@ -71,7 +71,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
         [DataRow(true, false)]
@@ -86,7 +86,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(byte.MinValue)]
         [DataRow(byte.MaxValue)]
         [DataRow(byte.MinValue, byte.MaxValue)]
@@ -101,7 +101,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(false, byte.MinValue)]
         [DataRow(false, byte.MaxValue)]
         [DataRow(false, byte.MinValue, byte.MaxValue)]
@@ -125,7 +125,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(double.MinValue)]
         [DataRow(double.MaxValue)]
         [DataRow(double.NaN)]
@@ -143,7 +143,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(float.MinValue)]
         [DataRow(float.MaxValue)]
         [DataRow(float.NaN)]
@@ -161,7 +161,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(short.MinValue)]
         [DataRow(short.MaxValue)]
         [DataRow(short.MinValue, short.MaxValue)]
@@ -176,7 +176,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(int.MinValue)]
         [DataRow(int.MaxValue)]
         [DataRow(int.MinValue, int.MaxValue)]
@@ -191,7 +191,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(long.MinValue)]
         [DataRow(long.MaxValue)]
         [DataRow(long.MinValue, long.MaxValue)]
@@ -206,7 +206,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(@"{ ""prop1"": ""val1"", ""prop2"": 100, ""prop3"": true, ""prop4"": { ""subprop1"": ""subval1"" } }")]
         [DataRow("true")]
         [DataRow("100")]
@@ -227,7 +227,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(sbyte.MinValue)]
         [DataRow(sbyte.MaxValue)]
         [DataRow(sbyte.MinValue, sbyte.MaxValue)]
@@ -242,7 +242,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("")]
         [DataRow(" ")]
         [DataRow("TEST")]
@@ -269,7 +269,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(ushort.MinValue)]
         [DataRow(ushort.MaxValue)]
         [DataRow(ushort.MinValue, ushort.MaxValue)]
@@ -284,7 +284,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(uint.MinValue)]
         [DataRow(uint.MaxValue)]
         [DataRow(uint.MinValue, uint.MaxValue)]
@@ -299,7 +299,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(ulong.MinValue)]
         [DataRow(ulong.MaxValue)]
         [DataRow(ulong.MinValue, ulong.MaxValue)]
@@ -314,7 +314,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("https://appstore.intelligentplant.com")]
         [DataRow("https://github.com/intelligentplant/AppStoreConnect.Adapters")]
         [DataRow("https://appstore.intelligentplant.com", "https://github.com/intelligentplant/AppStoreConnect.Adapters")]
@@ -1453,7 +1453,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(@"""2024-05-18T06:00:00.0000000Z""", "2024-05-18T06:00:00.0000000Z")]
         [DataRow(@"""2024-05-18T06:00:00.1234567+05:30""", "2024-05-18T00:30:00.1234567Z")]
         [DataRow(@"""2024-05-18T19:45:27.7654321-09:00""", "2024-05-19T04:45:27.7654321Z")]
@@ -1469,7 +1469,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Utc)]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Local)]
         [DataRow("2024-05-18T19:45:27.1234567", DateTimeKind.Unspecified)]

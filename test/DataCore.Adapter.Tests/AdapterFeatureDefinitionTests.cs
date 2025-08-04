@@ -46,7 +46,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/")]
         [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/invoke/")]
         [DataRow(WellKnownFeatures.Extensions.BaseUri + "unit-tests/GetDescriptor")]

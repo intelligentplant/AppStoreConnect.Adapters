@@ -13,7 +13,7 @@ namespace DataCore.Adapter.Tests {
     [TestClass]
     public class VariantTests : TestsBase {
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(typeof(bool), typeof(bool[]), typeof(bool[,]), typeof(bool[,,]))]
         [DataRow(typeof(byte), typeof(byte[]), typeof(byte[,]), typeof(byte[,,]))]
         [DataRow(typeof(ByteString), typeof(ByteString[]), typeof(ByteString[,]), typeof(ByteString[,,]))]
@@ -715,7 +715,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(VariantType.Boolean, true)]
         [DataRow(VariantType.Boolean, false)]
         [DataRow(VariantType.Byte, (byte) 0)]
@@ -869,13 +869,13 @@ namespace DataCore.Adapter.Tests {
 
         [TestMethod]
         public void VariantShouldNotAllowCreationWithUnsupportedValueType() {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Variant(new System.Drawing.Point(500, 300)));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Variant(new System.Drawing.Point(500, 300)));
         }
 
 
         [TestMethod]
         public void VariantShouldNotAllowCreationWithUnsupportedArrayType() {
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Variant(new[] { new System.Drawing.Point(500, 300) }));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Variant(new[] { new System.Drawing.Point(500, 300) }));
         }
 
     }

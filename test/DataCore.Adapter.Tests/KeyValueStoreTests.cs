@@ -16,7 +16,7 @@ namespace DataCore.Adapter.Tests {
         protected abstract T CreateStore(CompressionLevel compressionLevel, bool enableRawWrites = false);
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -41,7 +41,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -90,7 +90,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -118,7 +118,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -152,7 +152,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -186,7 +186,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -221,7 +221,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -251,7 +251,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -294,7 +294,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -328,7 +328,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]
@@ -374,7 +374,7 @@ namespace DataCore.Adapter.Tests {
 
             try {
                 var raw = JsonSerializer.SerializeToUtf8Bytes(now);
-                await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await rawStore.WriteRawAsync(TestContext.TestName, raw));
+                await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () => await rawStore.WriteRawAsync(TestContext.TestName, raw));
             }
             finally {
                 if (store is IAsyncDisposable asyncDisposable) {

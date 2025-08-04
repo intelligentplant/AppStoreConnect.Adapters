@@ -58,7 +58,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(CompressionLevel.NoCompression)]
         [DataRow(CompressionLevel.Fastest)]
         [DataRow(CompressionLevel.Optimal)]

@@ -253,7 +253,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
@@ -323,7 +323,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
@@ -395,7 +395,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, nameof(CalculateExpectedAvgValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinValue), nameof(CalculateExpectedMinTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxValue), nameof(CalculateExpectedMaxTimestamp))]
@@ -460,7 +460,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdAverage, null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMinimum, nameof(CalculateExpectedMinTimestamp))]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdMaximum, nameof(CalculateExpectedMaxTimestamp))]
@@ -523,7 +523,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
         public async Task DefaultDataFunctionShouldStillReturnGoodStatusWhenSomeNonGoodInputValuesAreProvided(
@@ -582,7 +582,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentGood, nameof(CalculateExpectedPercentGoodValue), null)]
         [DataRow(DefaultDataFunctions.Constants.FunctionIdPercentBad, nameof(CalculateExpectedPercentBadValue), null)]
         public async Task DefaultDataFunctionShouldStillCalculateWhenNoGoodInputValuesAreProvided(
