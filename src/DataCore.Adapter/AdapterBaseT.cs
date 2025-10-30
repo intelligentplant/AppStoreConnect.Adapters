@@ -554,6 +554,7 @@ namespace DataCore.Adapter {
         /// </summary>
         private void AddDefaultFeatures() {
             AddFeature<IHealthCheck>(_healthCheckManager);
+            AddFeature<ICustomFunctions>(CustomFunctions);
         }
 
 
