@@ -142,18 +142,15 @@ namespace Example.Adapter {
             //
             // See the documentation for CustomFunctions.CreateJsonSchema<T>() for more information
             // about schema generation.
-            //
-            // Note that, if we wanted to apply authorization to the function, we could also
-            // specify an authorization delegate below.
             await CustomFunctions.RegisterFunctionAsync<GreeterRequest, GreeterResponse>(
                 "Greet",
                 "Replies to requests with a greeting message.",
-                (context, request, ct) => {
+                handler: (context, request, ct) => {
                     return Task.FromResult(new GreeterResponse() {
                         Message = $"Hello, {request.Name}!"
                     });
                 },
-                authorizeHandler: null,
+                authorizeHandler: (context, functionId, ct) => ValueTask.FromResult(true),
                 cancellationToken: cancellationToken
             ).ConfigureAwait(false);
         }
