@@ -114,10 +114,9 @@ namespace DataCore.Adapter.Tests {
                         })    
                     );
 
-                    // Add custom functions.
-                    adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<Extensions.CustomFunctions>(sp, adapter.TypeDescriptor.Id, sp.GetService<ILogger<Extensions.CustomFunctions>>())
-                    );
+                    // Configure custom functions handler.
+                    var customFunctions = (Extensions.CustomFunctions) adapter.GetFeature<Extensions.ICustomFunctions>().Unwrap();
+                    customFunctions.DefaultAuthorizeHandler = null; // Authorization not required for tests
 
                     // Add ping-pong extension
                     adapter.AddExtensionFeatures(new PingPongExtension(adapter.BackgroundTaskService, sp.GetServices<Common.IObjectEncoder>()));

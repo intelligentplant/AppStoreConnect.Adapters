@@ -53,6 +53,10 @@ namespace DataCore.Adapter {
         /// <summary>
         /// The <see cref="Extensions.CustomFunctions"/> that provides the <see cref="ICustomFunctions"/> feature.
         /// </summary>
+        /// <remarks>
+        ///   <see cref="CustomFunctions"/> is <see langword="null"/> for all adapters that 
+        ///   implement <see cref="IAdapterProxy"/>.
+        /// </remarks>
         protected internal CustomFunctions CustomFunctions { get; }
 
         #endregion
@@ -98,7 +102,9 @@ namespace DataCore.Adapter {
 
             Options = default!;
             _healthCheckManager = new HealthCheckManager<TAdapterOptions>(this);
-            CustomFunctions = new CustomFunctions(TypeDescriptor.Id, logger: LoggerFactory.CreateLogger<CustomFunctions>());
+            CustomFunctions = this is IAdapterProxy
+                ? null!
+                : new CustomFunctions(TypeDescriptor.Id, logger: LoggerFactory.CreateLogger<CustomFunctions>());
 
             // Register default features.
             AddDefaultFeatures();
@@ -554,7 +560,9 @@ namespace DataCore.Adapter {
         /// </summary>
         private void AddDefaultFeatures() {
             AddFeature<IHealthCheck>(_healthCheckManager);
-            AddFeature<ICustomFunctions>(CustomFunctions);
+            if (CustomFunctions != null) {
+                AddFeature<ICustomFunctions>(CustomFunctions);
+            }
         }
 
 
