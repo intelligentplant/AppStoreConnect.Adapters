@@ -36,7 +36,12 @@ namespace DataCore.Adapter.Tests {
             _eventSubscriptionManager = new EventSubscriptionManager();
             _eventTopicSubscriptionManager = new EventTopicSubscriptionManager();
             _assetModelManager = new AssetModelManager(new InMemoryKeyValueStore());
-            _customFunctions = new CustomFunctions(TypeDescriptor.Id);
+            _customFunctions = new CustomFunctions(TypeDescriptor.Id) {
+                // Default behaviour is to deny all custom function invocations unless the function
+                // provides its own authorization handler. By setting DefaultAuthorizeHandler to
+                // null, we allow all invocations by default.
+                DefaultAuthorizeHandler = null
+            };
 
             AddFeatures(this);
             AddFeatures(_snapshotSubscriptionManager);
