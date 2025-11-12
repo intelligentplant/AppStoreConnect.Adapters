@@ -45,10 +45,34 @@ namespace DataCore.Adapter.Extensions {
         private readonly Nito.AsyncEx.AsyncReaderWriterLock _functionsLock = new Nito.AsyncEx.AsyncReaderWriterLock();
 
         /// <summary>
-        /// The default authorisation handler to use if a custom function registration does not 
+        /// The fallback authorisation handler to use if a custom function registration does not 
         /// specify its own authorisation handler.
         /// </summary>
-        public CustomFunctionAuthorizeHandler? DefaultAuthorizeHandler { get; set; }
+        /// <remarks>
+        ///   
+        /// <para>
+        ///   For security reasons, the default value of this property denies all authorisation 
+        ///   requests. Custom function authorisation can be granted using the following approaches:
+        /// </para>
+        /// 
+        /// <list type="bullet">
+        ///   <item>
+        ///     Set <see cref="DefaultAuthorizeHandler"/> to <see langword="null"/> to allow all 
+        ///     custom function invocations by default. Authorisation handlers for individual 
+        ///     function registrations take precedence over this default.
+        ///   </item>
+        ///   <item>
+        ///     Set <see cref="DefaultAuthorizeHandler"/> to a custom handler that implements your 
+        ///     required authorisation criteria.
+        ///   </item>
+        ///   <item>
+        ///     Specify an authorisation handler when registering a function to implement custom 
+        ///     authorisation for that function only.
+        ///   </item>
+        /// </list>
+        /// 
+        /// </remarks>
+        public CustomFunctionAuthorizeHandler? DefaultAuthorizeHandler { get; set; } = AlwaysDenyAuthorizeHandlerAsync;
 
 
         /// <summary>
@@ -644,6 +668,27 @@ namespace DataCore.Adapter.Extensions {
             using (_functionsLock.WriterLock(cancellationToken)) {
                 return UnregisterFunctionCore(id);
             }
+        }
+
+
+        /// <summary>
+        /// Default handler assigned to <see cref="DefaultAuthorizeHandler"/> that always denies 
+        /// authorisation.
+        /// </summary>
+        /// <param name="context">
+        ///   The <see cref="IAdapterCallContext"/> for the caller.
+        /// </param>
+        /// <param name="functionId">
+        ///   The custom function ID.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   The cancellation token for the operation.
+        /// </param>
+        /// <returns>
+        ///   A <see cref="ValueTask{TResult}"/> that will always return <see langword="false"/>.
+        /// </returns>
+        private static ValueTask<bool> AlwaysDenyAuthorizeHandlerAsync(IAdapterCallContext context, Uri functionId, CancellationToken cancellationToken) {
+            return new ValueTask<bool>(false);
         }
 
 
