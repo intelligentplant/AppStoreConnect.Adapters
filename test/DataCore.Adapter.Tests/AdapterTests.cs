@@ -699,7 +699,7 @@ namespace DataCore.Adapter.Tests {
 
                 var pongMessages = await feature.Invoke<PingMessage[], PongMessage[]>(context, operationId, pingMessages, ct).ConfigureAwait(false);
 
-                Assert.AreEqual(pingMessages.Length, pongMessages.Length);
+                Assert.HasCount(pongMessages.Length, pingMessages);
 
                 for (var i = 0; i < pingMessages.Length; i++) {
                     var ping = pingMessages[i];

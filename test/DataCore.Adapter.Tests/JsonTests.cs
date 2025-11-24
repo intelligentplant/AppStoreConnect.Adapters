@@ -60,7 +60,7 @@ namespace DataCore.Adapter.Tests {
 
                 var expectedItems = expectedItemsArr.Cast<object>().ToArray();
                 var actualItems = actualItemsArr.Cast<object>().ToArray();
-                Assert.AreEqual(expectedItems.Length, actualItems.Length);
+                Assert.HasCount(expectedItems.Length, actualItems);
                 for (var i = 0; i < expectedItems.Length; i++) {
                     VariantRoundTripTestCompare<T>(expectedItems[i], actualItems[i], options, $"Items at position {i} are different. Expected value has type {expectedItems[i]?.GetType()?.Name ?? "<Unknown>"}, actual value has type {actualItems[i]?.GetType()?.Name ?? "<Unknown>"}");
                 }
@@ -550,15 +550,15 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual("Id", actual.Id);
             Assert.AreEqual("Name", actual.Name);
             Assert.AreEqual(NodeType.Variable, actual.NodeType);
-            Assert.AreEqual(null, actual.NodeSubType);
+            Assert.IsNull(actual.NodeSubType);
             Assert.AreEqual("Description", actual.Description);
             Assert.AreEqual("Parent", actual.Parent);
-            Assert.AreEqual(true, actual.HasChildren);
+            Assert.IsTrue(actual.HasChildren);
 
             Assert.IsNotNull(actual.DataReference);
             Assert.AreEqual("AdapterId1", actual.DataReference.AdapterId);
             Assert.AreEqual("Id1", actual.DataReference.Tag);
-            Assert.AreEqual(null, actual.DataReference.Name);
+            Assert.IsNull(actual.DataReference.Name);
 
             Assert.AreEqual(0, actual.Properties.Count());
         }
@@ -768,7 +768,7 @@ namespace DataCore.Adapter.Tests {
             Assert.AreEqual(expected.Description, actual.Description);
             Assert.AreEqual(expected.Error, actual.Error);
 
-            Assert.AreEqual(expected.Data.Count, actual.Data.Count);
+            Assert.HasCount(expected.Data.Count, actual.Data);
             foreach (var item in expected.Data) {
                 Assert.IsTrue(actual.Data.TryGetValue(item.Key, out var val));
                 Assert.AreEqual(item.Value, val);
@@ -784,7 +784,7 @@ namespace DataCore.Adapter.Tests {
                 Assert.AreEqual(expectedValue.Description, actualValue.Description);
                 Assert.AreEqual(expectedValue.Error, actualValue.Error);
 
-                Assert.AreEqual(expectedValue.Data.Count, actualValue.Data.Count);
+                Assert.HasCount(expectedValue.Data.Count, actualValue.Data);
                 foreach (var item in expectedValue.Data) {
                     Assert.IsTrue(actualValue.Data.TryGetValue(item.Key, out var val));
                     Assert.AreEqual(item.Value, val);

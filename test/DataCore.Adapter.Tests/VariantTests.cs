@@ -52,7 +52,9 @@ namespace DataCore.Adapter.Tests {
             }
             else if (expectedValue is Array arr) {
                 Assert.IsTrue(expectedArrayDimensions.SequenceEqual(variant.ArrayDimensions));
+#pragma warning disable MSTEST0037 // Use proper 'Assert' methods
                 Assert.AreEqual(arr.Rank, variant.ArrayDimensions!.Length);
+#pragma warning restore MSTEST0037 // Use proper 'Assert' methods
 
                 for (var i = 0; i < arr.Rank; i++) {
                     var length = arr.GetLength(i);
