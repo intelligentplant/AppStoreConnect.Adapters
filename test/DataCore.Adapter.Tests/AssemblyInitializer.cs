@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 #if NETCOREAPP
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 #endif
 using Microsoft.Extensions.DependencyInjection;
@@ -25,44 +26,41 @@ namespace DataCore.Adapter.Tests {
 
 #if NETCOREAPP
 
-        private static readonly CancellationTokenSource s_cleanupTokenSource = new CancellationTokenSource();
-
-        private static IDisposable s_webHost;
-
-        private static Task s_webHostTask;
+        private static WebApplication s_webHost;
 
 
         [AssemblyInitialize]
-        public static void Init(TestContext testContext) {
+        public static async Task Init(TestContext testContext) {
             if (s_webHost != null) {
                 return;
             }
 
-            var webHost = Microsoft.AspNetCore.WebHost.CreateDefaultBuilder<WebHostStartup>(Array.Empty<string>())
-                .UseUrls(WebHostConfiguration.DefaultUrl)
-                .UseKestrel(options => {
-                    options.ConfigureEndpointDefaults(listen => listen.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2);
-                })
-                .ConfigureServices(services => AddAdapterServices(services))
-                .Build();
-            ApplicationServices = webHost.Services;
-            webHost.Start();
-            s_webHostTask = webHost.WaitForShutdownAsync(s_cleanupTokenSource.Token);
-            s_webHost = webHost;
+            var builder = WebApplication.CreateBuilder();
+
+            builder.WebHost.UseUrls(WebHostConfiguration.DefaultUrl);
+            builder.WebHost.ConfigureKestrel(options => {
+                options.ConfigureEndpointDefaults(listen => listen.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2);
+            });
+
+            AddAdapterServices(builder.Services);
+            WebHostStartup.ConfigureServices(builder.Services);
+
+            var app = builder.Build();
+            WebHostStartup.Configure(app, app.Environment);
+
+            ApplicationServices = app.Services;
+            await app.StartAsync();
+            s_webHost = app;
         }
 
 
         [AssemblyCleanup]
         public static async Task Cleanup() {
-            s_cleanupTokenSource.Cancel();
-            if (s_webHost is Process p) {
-                p.Kill();
+            if (s_webHost is null) {
+                return;
             }
 
-            if (s_webHostTask != null) {
-                await s_webHostTask.ConfigureAwait(false);
-            }
-            s_webHost?.Dispose();
+            await s_webHost.DisposeAsync().ConfigureAwait(false);
         }
 
 #else
@@ -109,9 +107,9 @@ namespace DataCore.Adapter.Tests {
 
                     // Add tag annotations.
                     adapter.AddStandardFeatures(
-                        ActivatorUtilities.CreateInstance<RealTimeData.InMemoryTagValueAnnotationManager>(sp, new RealTimeData.TagValueAnnotationManagerOptions() { 
+                        ActivatorUtilities.CreateInstance<RealTimeData.InMemoryTagValueAnnotationManager>(sp, new RealTimeData.TagValueAnnotationManagerOptions() {
                             TagResolver = RealTimeData.InMemoryTagValueAnnotationManager.CreateTagResolverFromAdapter(adapter)
-                        })    
+                        })
                     );
 
                     // Configure custom functions handler.
@@ -160,13 +158,13 @@ namespace DataCore.Adapter.Tests {
             var annotationManager = adapter.GetFeature<RealTimeData.IReadTagValueAnnotations>().Unwrap() as RealTimeData.InMemoryTagValueAnnotationManager;
             if (annotationManager != null) {
                 await annotationManager.CreateOrUpdateAnnotationAsync(
-                    TestTagId, 
+                    TestTagId,
                     new RealTimeData.TagValueAnnotationBuilder()
                         .WithId(TestAnnotationId)
                         .WithValue("This is a test")
                         .WithUtcStartTime(DateTime.UtcNow.AddMinutes(-30))
                         .WithType(RealTimeData.AnnotationType.Instantaneous)
-                        .Build(), 
+                        .Build(),
                     default
                 ).ConfigureAwait(false);
             }

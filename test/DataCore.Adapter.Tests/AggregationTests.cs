@@ -1514,7 +1514,7 @@ namespace DataCore.Adapter.Tests {
                 (now.AddSeconds(-15), 0),
             };
 
-            Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
+            Assert.HasCount(expectedResults.Length, aggValues, "Unexpected sample count.");
 
             for (var i = 0; i < expectedResults.Length; i++) {
                 var sample = aggValues[i];
@@ -1599,7 +1599,7 @@ namespace DataCore.Adapter.Tests {
                 (now.AddSeconds(-15), 0),
             };
 
-            Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
+            Assert.HasCount(expectedResults.Length, aggValues, "Unexpected sample count.");
 
             for (var i = 0; i < expectedResults.Length; i++) {
                 var sample = aggValues[i];
@@ -1689,7 +1689,7 @@ namespace DataCore.Adapter.Tests {
                 (now.AddSeconds(-15), 0),
             };
 
-            Assert.AreEqual(expectedResults.Length, aggValues.Length, "Unexpected sample count.");
+            Assert.HasCount(expectedResults.Length, aggValues, "Unexpected sample count.");
 
             for (var i = 0; i < expectedResults.Length; i++) {
                 var sample = aggValues[i];
@@ -1759,7 +1759,7 @@ namespace DataCore.Adapter.Tests {
 
             // We expect 12 samples in total: the 11 samples marked above, plus an additional sample
             // interpolated exactly on the end boundary for the query.
-            Assert.AreEqual(12, plotValues.Count);
+            Assert.HasCount(12, plotValues);
         }
 
 
@@ -1806,7 +1806,7 @@ namespace DataCore.Adapter.Tests {
             
             // We expect 9 samples in total: the 8 samples marked above, plus an additional sample
             // interpolated exactly on the end boundary for the query.
-            Assert.AreEqual(9, plotValues.Count);
+            Assert.HasCount(9, plotValues);
         }
 
     }

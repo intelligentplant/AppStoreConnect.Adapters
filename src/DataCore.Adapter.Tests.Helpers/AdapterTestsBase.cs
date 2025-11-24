@@ -450,7 +450,7 @@ namespace DataCore.Adapter.Tests {
                     return;
                 }
 
-                Assert.AreEqual(0, remainingTypes.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
+                Assert.IsEmpty(remainingTypes, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTypes)));
             });
         }
 
@@ -527,7 +527,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var funcs = await feature.GetFunctionsAsync(context, request, ct).ConfigureAwait(false);
-                Assert.IsTrue(funcs.Count() > 0, Resources.GetCustomFunctionsDidNotReturnResults);
+                Assert.IsGreaterThan(0, funcs.Count(), Resources.GetCustomFunctionsDidNotReturnResults);
             });
         }
 
@@ -730,7 +730,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var props = await feature.GetTagProperties(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
-                Assert.IsTrue(props.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, props.Count(), request.PageSize));
+                Assert.IsLessThanOrEqualTo(request.PageSize, props.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, props.Count(), request.PageSize));
 
                 if (props.Any()) {
                     Assert.IsTrue(props.All(x => x != null), Resources.AdaptersShouldNotReturnNullProperties);
@@ -782,7 +782,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -829,7 +829,7 @@ namespace DataCore.Adapter.Tests {
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
-                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, tags.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
                     Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
@@ -876,7 +876,7 @@ namespace DataCore.Adapter.Tests {
                 request.ResultFields = TagDefinitionFields.BasicInformation;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
-                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, tags.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
                     Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
@@ -935,7 +935,7 @@ namespace DataCore.Adapter.Tests {
                 request.ResultFields = TagDefinitionFields.All;
                 var tags = await feature.FindTags(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
                 Assert.IsTrue(tags.Any(), Resources.TagSearchReturnedZeroResults);
-                Assert.IsTrue(tags.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, tags.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, tags.Count()));
 
                 foreach (var tag in tags) {
                     Assert.IsNotNull(tag, FormatMessage(Resources.ValueShouldNotBeNull, nameof(TagDefinition)));
@@ -1004,7 +1004,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(remainingTags.Remove(value.TagId) || remainingTags.Remove(value.TagName), FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1111,7 +1111,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1186,7 +1186,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1253,7 +1253,7 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 foreach (var valuesForTag in values.ToLookup(x => x.TagId)) {
                     if (request.BoundaryType == RawDataBoundaryType.Inside) {
@@ -1268,7 +1268,7 @@ namespace DataCore.Adapter.Tests {
                     }
 
                     if (request.SampleCount > 0) {
-                        Assert.IsTrue(valuesForTag.Count() <= request.SampleCount, FormatMessage(Resources.TooManyResultsReturnedForTag, request.SampleCount, valuesForTag.Key, valuesForTag.Count()));
+                        Assert.IsLessThanOrEqualTo(request.SampleCount, valuesForTag.Count(), FormatMessage(Resources.TooManyResultsReturnedForTag, request.SampleCount, valuesForTag.Key, valuesForTag.Count()));
                     }
                 }
             });
@@ -1340,7 +1340,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1421,7 +1421,7 @@ namespace DataCore.Adapter.Tests {
                 foreach (var value in values) {
                     Assert.IsNotNull(value, FormatMessage(Resources.ValueShouldNotBeNull, nameof(ProcessedTagValueQueryResult)));
 
-                    Assert.IsTrue(dataFunctions.Contains(value.DataFunction), FormatMessage(Resources.UnexpectedDataFunction, value.DataFunction));
+                    Assert.Contains(value.DataFunction, dataFunctions, FormatMessage(Resources.UnexpectedDataFunction, value.DataFunction));
 
                     if (allTags.Contains(value.TagId)) {
                         remainingTags.Remove(value.TagId);
@@ -1437,7 +1437,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(value.Value.UtcSampleTime <= request.UtcEndTime, FormatMessage(Resources.QueryReturnedResultAfterEndTime, request.UtcEndTime, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
             });
         }
 
@@ -1504,17 +1504,17 @@ namespace DataCore.Adapter.Tests {
                         Assert.Fail(FormatMessage(Resources.UnexpectedTagValueReceived, value.TagName, value.TagId));
                     }
 
-                    Assert.IsTrue(allTimestamps.Contains(value.Value.UtcSampleTime), FormatMessage(Resources.UnexpectedTimestamp, value.Value.UtcSampleTime));
+                    Assert.Contains(value.Value.UtcSampleTime, allTimestamps, FormatMessage(Resources.UnexpectedTimestamp, value.Value.UtcSampleTime));
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 foreach (var valuesForTag in values.ToLookup(x => x.TagId)) {
                     var remainingTimestamps = new HashSet<DateTime>(request.UtcSampleTimes);
                     foreach (var value in valuesForTag) {
                         Assert.IsTrue(remainingTimestamps.Remove(value.Value.UtcSampleTime), FormatMessage(Resources.TimestampWasReceivedMultipleTimes, value.Value.UtcSampleTime, value.TagName));
                     }
-                    Assert.AreEqual(0, remainingTimestamps.Count, FormatMessage(Resources.ValuesWereNotReceivedForExpectedTimestamps, valuesForTag.Key, string.Join(", ", remainingTimestamps.Select(x => x.ToString("dd-MMM-yyyy HH:mm:ss.fffffffZ")))));
+                    Assert.IsEmpty(remainingTimestamps, FormatMessage(Resources.ValuesWereNotReceivedForExpectedTimestamps, valuesForTag.Key, string.Join(", ", remainingTimestamps.Select(x => x.ToString("dd-MMM-yyyy HH:mm:ss.fffffffZ")))));
                 }
             });
         }
@@ -1635,11 +1635,11 @@ namespace DataCore.Adapter.Tests {
                     }
                 }
 
-                Assert.AreEqual(0, remainingTags.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
+                Assert.IsEmpty(remainingTags, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingTags)));
 
                 if (request.AnnotationCount > 0) {
                     foreach (var valuesForTag in annotations.ToLookup(x => x.TagId)) {
-                        Assert.IsTrue(valuesForTag.Count() <= request.AnnotationCount, FormatMessage(Resources.TooManyResultsReturnedForTag, request.AnnotationCount, valuesForTag.Key, valuesForTag.Count()));
+                        Assert.IsLessThanOrEqualTo(request.AnnotationCount, valuesForTag.Count(), FormatMessage(Resources.TooManyResultsReturnedForTag, request.AnnotationCount, valuesForTag.Key, valuesForTag.Count()));
                     }
                 }
             });
@@ -1875,7 +1875,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
+                Assert.IsEmpty(expectedCorrelationIds, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -1941,7 +1941,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
+                Assert.IsEmpty(expectedCorrelationIds, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -2213,7 +2213,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var events = await feature.ReadEventMessagesForTimeRange(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
-                Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, events.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {
                     Assert.IsNotNull(evt, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessage)));
@@ -2266,7 +2266,7 @@ namespace DataCore.Adapter.Tests {
                 }
 
                 var events = await feature.ReadEventMessagesUsingCursor(context, request, ct).ToEnumerable(-1, ct).ConfigureAwait(false);
-                Assert.IsTrue(events.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, events.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, events.Count()));
 
                 foreach (var evt in events) {
                     Assert.IsNotNull(evt, FormatMessage(Resources.ValueShouldNotBeNull, nameof(EventMessageWithCursorPosition)));
@@ -2335,7 +2335,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.AreNotEqual(WriteStatus.Fail, writeResult.Status, Resources.WriteStatusIndicatesFailure);
                 }
 
-                Assert.AreEqual(0, expectedCorrelationIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
+                Assert.IsEmpty(expectedCorrelationIds, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", expectedCorrelationIds)));
             });
         }
 
@@ -2399,7 +2399,7 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
-                Assert.IsTrue(nodes.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, nodes.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
             });
         }
 
@@ -2436,7 +2436,7 @@ namespace DataCore.Adapter.Tests {
                     Assert.IsTrue(remainingNodeIds.Remove(node.Id), FormatMessage(Resources.UnexpectedItemReceived, nameof(AssetModelNode), node.Id));
                 }
 
-                Assert.AreEqual(0, remainingNodeIds.Count, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingNodeIds)));
+                Assert.IsEmpty(remainingNodeIds, FormatMessage(Resources.ExpectedItemsWereNotReceived, string.Join(", ", remainingNodeIds)));
             });
         }
 
@@ -2485,7 +2485,7 @@ namespace DataCore.Adapter.Tests {
                 Assert.IsTrue(nodes.Any(), FormatMessage(Resources.NotEnoughResultsReturned, 1, nameof(AssetModelNode), 0));
                 Assert.IsTrue(nodes.All(x => x != null), FormatMessage(Resources.ValueShouldNotBeNull, nameof(AssetModelNode)));
 
-                Assert.IsTrue(nodes.Count() <= request.PageSize, FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
+                Assert.IsLessThanOrEqualTo(request.PageSize, nodes.Count(), FormatMessage(Resources.ItemCountIsGreaterThanPageSize, request.PageSize, nodes.Count()));
             });
         }
 

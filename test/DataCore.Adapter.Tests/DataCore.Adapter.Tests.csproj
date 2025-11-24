@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net481</TargetFrameworks>
+    <TargetFrameworks>net10.0;net481</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,8 +59,12 @@
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
         <!-- Explicit Sqlite reference required on .NET Framework because the package reference 
              from Microsoft.Data.Sqlite on the Sqlite key-value store project seems to not be 
-             transitive, so tests fail. This does not happen against .NET for some reason... -->
+             transitive, so tests fail. This does not happen against .NET for some reason. -->
         <PackageReference Include="SQLitePCLRaw.bundle_green" />
+        <!-- SQLitePCLRaw.bundle_green @ 2.1.11 references an older version of SQLitePCLRaw.lib.e_sqlite3 
+             that does not work with 64-bit ARM versions of Windows. To fix this, we add an 
+             explicit reference to a newer version of SQLitePCLRaw.lib.e_sqlite3. -->
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
       </ItemGroup>
     </Otherwise>
   </Choose>

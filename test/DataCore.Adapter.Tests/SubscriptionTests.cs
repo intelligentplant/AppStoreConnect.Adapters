@@ -278,7 +278,7 @@ namespace DataCore.Adapter.Tests {
                 catch (OperationCanceledException) { }
             }
 
-            Assert.IsTrue(valueCount <= (publishInterval.TotalSeconds * 2), "Received value count should not be more than 2x publish interval.");
+            Assert.IsLessThanOrEqualTo(publishInterval.TotalSeconds * 2, valueCount, "Received value count should not be more than 2x publish interval.");
         }
 
 
