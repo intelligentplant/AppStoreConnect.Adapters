@@ -1,29 +1,19 @@
 ﻿#if NETCOREAPP
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 using DataCore.Adapter.AspNetCore;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace DataCore.Adapter.Tests {
     internal class WebHostStartup {
 
-        public IConfiguration Configuration { get; }
 
-
-        public WebHostStartup(IConfiguration configuration) {
-            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-
-        public void ConfigureServices(IServiceCollection services) {
+        public static void ConfigureServices(IServiceCollection services) {
             WebHostConfiguration.ConfigureDefaultServices(services);
 
             services.AddLocalization();
@@ -35,17 +25,17 @@ namespace DataCore.Adapter.Tests {
                 .AddHostInfo(
                     "Unit Test Standalone Host",
                     "Unit Test App Store Connect Adapters host running on ASP.NET Core",
-                    GetType().Assembly.GetName().Version.ToString(),
+                    typeof(WebHostStartup).Assembly.GetName().Version.ToString(),
                     Common.VendorInfo.Create("Intelligent Plant", "https://appstore.intelligentplant.com"),
                     true,
                     true,
-                    new[] {
+                    [
                         Common.AdapterProperty.Create(
                             "Project URL",
                             new Uri("https://github.com/intelligentplant/AppStoreConnect.Adapters"),
                             "GitHub repository URL for the project"
                         )
-                    }
+                    ]
                 );
 
             services.AddSingleton<IAdapterLifetime>(new AdapterLifetime(async (adapter, ct) => {
@@ -79,7 +69,7 @@ namespace DataCore.Adapter.Tests {
         }
 
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
+        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
