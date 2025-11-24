@@ -5,7 +5,7 @@
     <PackageId>$(PackagePrefix).Adapter.Templates</PackageId>
     <PackageType>Template</PackageType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <DefaultNetCoreTargetFramework>net6.0</DefaultNetCoreTargetFramework>
+    <DefaultNetCoreTargetFramework>net10.0</DefaultNetCoreTargetFramework>
     <Title>App Store Connect Adapter Templates</Title>
     <Description>Templates to use when creating an adapter for Intelligent Plant App Store Connect.</Description>
     <PackageTags>$(PackageTags);dotnet-new;templates</PackageTags>
