@@ -13,6 +13,18 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.FASTER.Core" />
     <PackageReference Include="System.Threading.Channels" />
+    <!-- 
+    System.Linq.Async is a dependency of FASTER but is deprecated following the release of the 
+    System.Linq.AsyncEnumerable package with .NET 10. To prevent the reference to System.Linq.Async 
+    from leaking into our own dependencies, we add an explicit reference here but do not link to 
+    the assembly at compile time. 
+    
+    See https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/10.0/asyncenumerable 
+    for more details.
+    -->
+    <PackageReference Include="System.Linq.Async">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
