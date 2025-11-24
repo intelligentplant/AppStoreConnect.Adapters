@@ -1,0 +1,65 @@
+<Solution>
+  <Folder Name="/build/">
+    <File Path="build/NetFX.targets" />
+    <File Path="build/version.json" />
+  </Folder>
+  <Folder Name="/common/">
+    <File Path="build.cake" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/examples/">
+    <File Path="examples/Directory.Build.props" />
+    <Project Path="examples/Example.Adapter.Host/Example.Adapter.Host.csproj" />
+    <Project Path="examples/Example.Adapter/Example.Adapter.csproj" />
+    <Project Path="examples/MinimalApiExample/MinimalApiExample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.targets" />
+  </Folder>
+  <Folder Name="/src/Adapters/">
+    <Project Path="src/DataCore.Adapter.AspNetCore.SignalR.Proxy/DataCore.Adapter.AspNetCore.SignalR.Proxy.csproj" />
+    <Project Path="src/DataCore.Adapter.Csv/DataCore.Adapter.Csv.csproj" />
+    <Project Path="src/DataCore.Adapter.Grpc.Proxy/DataCore.Adapter.Grpc.Proxy.csproj" />
+    <Project Path="src/DataCore.Adapter.Http.Proxy/DataCore.Adapter.Http.Proxy.csproj" />
+    <Project Path="src/DataCore.Adapter.Proxy/DataCore.Adapter.Proxy.csproj" />
+    <Project Path="src/DataCore.Adapter.WaveGenerator/DataCore.Adapter.WaveGenerator.csproj" />
+  </Folder>
+  <Folder Name="/src/Clients/">
+    <Project Path="src/DataCore.Adapter.AspNetCore.SignalR.Client/DataCore.Adapter.AspNetCore.SignalR.Client.csproj" />
+    <Project Path="src/DataCore.Adapter.Grpc.Client/DataCore.Adapter.Grpc.Client.csproj" />
+    <Project Path="src/DataCore.Adapter.Http.Client/DataCore.Adapter.Http.Client.csproj" />
+  </Folder>
+  <Folder Name="/src/Core/">
+    <Project Path="src/DataCore.Adapter.Abstractions/DataCore.Adapter.Abstractions.csproj" />
+    <Project Path="src/DataCore.Adapter.Compatibility/DataCore.Adapter.Compatibility.csproj" />
+    <Project Path="src/DataCore.Adapter.Core/DataCore.Adapter.Core.csproj" />
+    <Project Path="src/DataCore.Adapter.DependencyInjection/DataCore.Adapter.DependencyInjection.csproj" />
+    <Project Path="src/DataCore.Adapter.Json.Newtonsoft/DataCore.Adapter.Json.Newtonsoft.csproj" />
+    <Project Path="src/DataCore.Adapter.KeyValueStore.FASTER/DataCore.Adapter.KeyValueStore.FASTER.csproj" />
+    <Project Path="src/DataCore.Adapter.KeyValueStore.FileSystem/DataCore.Adapter.KeyValueStore.FileSystem.csproj" />
+    <Project Path="src/DataCore.Adapter.KeyValueStore.Sqlite/DataCore.Adapter.KeyValueStore.Sqlite.csproj" />
+    <Project Path="src/DataCore.Adapter/DataCore.Adapter.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosting/">
+    <Project Path="src/DataCore.Adapter.AspNetCore.Common/DataCore.Adapter.AspNetCore.Common.csproj" />
+    <Project Path="src/DataCore.Adapter.AspNetCore.Grpc/DataCore.Adapter.AspNetCore.Grpc.csproj" />
+    <Project Path="src/DataCore.Adapter.AspNetCore.HealthChecks/DataCore.Adapter.AspNetCore.HealthChecks.csproj" />
+    <Project Path="src/DataCore.Adapter.AspNetCore.MinimalApi/DataCore.Adapter.AspNetCore.MinimalApi.csproj" />
+    <Project Path="src/DataCore.Adapter.AspNetCore.Mvc/DataCore.Adapter.AspNetCore.Mvc.csproj" />
+    <Project Path="src/DataCore.Adapter.AspNetCore.SignalR/DataCore.Adapter.AspNetCore.SignalR.csproj" />
+    <Project Path="src/DataCore.Adapter.OpenTelemetry/DataCore.Adapter.OpenTelemetry.csproj" />
+  </Folder>
+  <Folder Name="/src/Templates/">
+    <Project Path="src/DataCore.Adapter.Templates/DataCore.Adapter.Templates.csproj" />
+  </Folder>
+  <Folder Name="/src/Testing/">
+    <Project Path="src/DataCore.Adapter.Tests.Helpers/DataCore.Adapter.Tests.Helpers.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <File Path="test/Directory.Build.props" />
+    <Project Path="test/DataCore.Adapter.Tests/DataCore.Adapter.Tests.csproj" />
+  </Folder>
+</Solution>

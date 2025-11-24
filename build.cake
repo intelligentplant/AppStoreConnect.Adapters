@@ -2,7 +2,7 @@
 // Use build.ps1 or build.sh to run the build script. Command line arguments are documented below.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-const string DefaultSolutionFile = "./DataCore.Adapter.sln";
+const string DefaultSolutionFile = "./DataCore.Adapter.slnx";
 const string VersionFile = "./build/version.json";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
