@@ -82,4 +82,5 @@ To generate a Software Bill of Materials (SBOM) for the repository in [CycloneDX
 
 The resulting SBOM is written to the `artifacts/bom` folder.
 
+> [!TIP]
 > The CycloneDX tool makes calls to GitHub's API to retrieve licence information for referenced packages. GitHub enforces strict [rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting) on unauthenticated requests. To make authenticated API requests using a GitHub username and personal access token, specify the `--github-username` and `--github-token` parameters when running the `BillOfMaterials` target.
