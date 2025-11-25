@@ -1056,3 +1056,6 @@ static DataCore.Adapter.StringCache.NativeInternEnabled.get -> bool
 static System.DCAStringExtensions.GetFromStringCache(this string! str) -> string!
 static System.DCAStringExtensions.InternToStringCache(this string! str) -> string!
 System.DCAStringExtensions
+static DataCore.Adapter.Common.Variant.FromJsonValue<T>(T value, System.Text.Json.JsonSerializerOptions? options = null) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.Common.Variant.FromJsonValue<T>(T value, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>! jsonTypeInfo) -> DataCore.Adapter.Common.Variant
+static DataCore.Adapter.StringCache.CalculateSize() -> long

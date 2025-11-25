@@ -1,3 +1,1 @@
 ﻿#nullable enable
-virtual DataCore.Adapter.Http.Proxy.ConnectionFactory.Invoke(System.Uri! url, DataCore.Adapter.IAdapterCallContext? context) -> Microsoft.AspNetCore.SignalR.Client.HubConnection!
-virtual DataCore.Adapter.Http.Proxy.ConnectionIdentityFactory.Invoke(DataCore.Adapter.IAdapterCallContext! callContext) -> System.Collections.Generic.IEnumerable<string!>!

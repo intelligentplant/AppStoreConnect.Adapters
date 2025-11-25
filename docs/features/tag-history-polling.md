@@ -16,6 +16,7 @@ Industrial data sources such as OPC UA servers usually implement an equivalent o
 
 When connecting to a system that only supports the retrieval of raw historical values (i.e. the adapter implements the `IReadRawTagValues` feature), the [ReadHistoricalTagValues](../../src/DataCore.Adapter/RealTimeData/ReadHistoricalTagValues.cs) helper class can be used create shim implementations of the other historical polling features. An example of where this might be used is in an adapter that reads its raw data from a CSV file, or from a SQL database.
 
+> [!TIP]
 > For performance reasons, native implementations of historical polling features should always be used if possible. In order to function, `ReadHistoricalTagValues` must always retrieve raw history and then perform in-memory aggregation or filtering.  
 
 `ReadHistoricalTagValues` require an `IReadRawTagValues` and an `ITagInfo` feature to be provided by the adapter. The easiest way to create a `ReadHistoricalTagValues` instance is to use the static `ReadHistoricalTagValues.ForAdapter(IAdapter)` method:

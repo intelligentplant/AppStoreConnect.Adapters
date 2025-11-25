@@ -1,5 +1,6 @@
 # Writing an Adapter
 
+> [!IMPORTANT]
 > We __strongly__ recommend that you create self-hosted adapters using the provided template for Visual Studio and `dotnet new`. See [here](../src/DataCore.Adapter.Templates) for more information.
 
 An adapter is a component that exposes real-time process data and/or alarm & event data to [Intelligent Plant](https://www.intelligentplant.com) App Store Connect. This data can then be used by apps on the [Industrial App Store](https://appstore.intelligentplant.com) such as [Gestalt Trend](https://appstore.intelligentplant.com/Home/AppProfile?appId=3fbd54df59964243aa9cf4b3f04823f6) and [Alarm Analysis](https://appstore.intelligentplant.com/Home/AppProfile?appId=d2322b59ff334c97b49760e40000d28e).
@@ -8,6 +9,7 @@ You can find a tutorial for writing a simple MQTT adapter [here](./tutorials/mqt
 
 All adapters implement the [IAdapter](../src/DataCore.Adapter.Abstractions/IAdapter.cs) interface. Each adapter implements a set of *features*, which are exposed via an [IAdapterFeaturesCollection](../src/DataCore.Adapter.Abstractions/IAdapterFeaturesCollection.cs). Individual features are defined as interfaces, and inherit from [IAdapterFeature](../src/DataCore.Adapter.Abstractions/IAdapterFeature.cs).
 
+> [!TIP]
 > Note that adapters do not have to directly implement the feature interfaces themselves. Instead, the adapter can delegate the feature implementation to a helper class. This is described in more detail [below](#delegating-feature-implementations-to-external-providers).
 
 Adapter implementations should inherit from the abstract [AdapterCore](../src/DataCore.Adapter.Abstractions/AdapterCore.cs), [AdapterBase&lt;TAdapterOptions&gt;](../src/DataCore.Adapter/AdapterBaseT.cs) or [AdapterBase](../src/DataCore.Adapter/AdapterBase.cs) classes. Inheriting from `AdapterBase<TAdapterOptions>` or `AdapterBase` is recommended.
@@ -82,6 +84,7 @@ The [ICustomFunctions](../src/DataCore.Adapter.Abstractions/Extensions/ICustomFu
 
 Adapter features make extensive use of the `IAsyncEnumerable<T>` type, to allow query results to be streamed back to the caller asynchronously. For .NET Framework and .NET Standard 2.0 targets, the [Microsoft.Bcl.AsyncInterfaces](https://www.nuget.org/packages/Microsoft.Bcl.AsyncInterfaces/) NuGet package is used to define the type.
 
+> [!TIP]
 > In order to produce `IAsyncEnumerable<T>` instances from iterator methods, or to consume `IAsyncEnumerator<T>` instances using `await foreach` loops, your project must use C# 8.0 or higher.
 
 In most cases, it is advisable to declare a feature method using the `async` keyword, and to use `yield return` statements to emit values as they occur. For example:
@@ -168,6 +171,7 @@ var snapshotPush = new PollingSnapshotTagValuePush(this, new PollingSnapshotTagV
 AddFeatures(snapshotPush);
 ```
 
+> [!TIP]
 > Any features that are added to the adapter from an external provider that implement `IDisposable` or `IAsyncDisposable` will be disposed when the adapter is disposed.
 
 
@@ -223,6 +227,7 @@ If your underlying source does not natively support aggregated, values-at-times,
 
 If your source implements some of these capabilities but not others, you can use the classes in the `DataCore.Adapter.RealTimeData.Utilities` namespace to assist with the implementation of the missing functionality if desired.
 
+> [!TIP]
 > Note that using `ReadHistoricalTagValues` or the associated utility classes will almost certainly perform worse than a native implementation; native implementations are always encouraged where available.
 
 
@@ -359,6 +364,7 @@ public class MyAdapter : AdapterBase<MyAdapterOptions> {
 }
 ```
 
+> [!TIP]
 > The `IHealthCheck` feature supplied by `AdapterBase<TAdapterOptions>` will always be registered, even if automatic feature registration is disabled.
 
 If automatic feature registration is disabled, you must manually register any features that are directly implemented by the adapter class:
@@ -385,6 +391,8 @@ In general, is is not desirable to disable automatic feature registration. Howev
 # Persisting State
 
 The [IKeyValueStore](../src/DataCore.Adapter.Abstractions/Services/IKeyValueStore.cs) service can be injected into an adapter constructor to provide a service for storing arbitrary key-value pairs that can be persisted and restored when an adapter or host application is restarted. 
+
+> [!TIP]
 > The default [in-memory implementation](../src/DataCore.Adapter.Abstractions/Services/InMemoryKeyValueStore.cs) does not persist state between restarts of the host application. If you require such durability, you can use one of the implementations listed below or write your own implementation.
 
 The following `IKeyValueStore` implementations support persistence:

@@ -9,6 +9,7 @@ In this tutorial, we will create a simple MQTT adapter that performs the followi
 
 The tutorial also explains how to connect App Store Connect to the adapter, and how to record values received by the MQTT broker to App Store Connect's Edge Historian.
 
+> [!TIP]
 > The full source code for this tutorial is available [here](../../../examples/SimpleMqttExample/).
 
 
@@ -31,7 +32,7 @@ Click `Next` to configure the project settings:
 
 ![Visual Studio template parameters window](../../../src/DataCore.Adapter.Templates/img/template_parameters.png)
 
-Choose .NET 8 as the target version (the current long-term support version of .NET at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
+Choose .NET 10 as the target version (the current long-term support version of .NET at time of writing). You can accept the default values for the other settings; they can be changed in code later if desired.
 
 Click `Create` to create the project.
 

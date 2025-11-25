@@ -51,6 +51,8 @@ override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.DisposeAsyncCore() -> Syst
 override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 override DataCore.Adapter.Http.Proxy.HttpAdapterProxy.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static DataCore.Adapter.Http.Proxy.AdapterCallContextExtensions.ToRequestMetadata(this DataCore.Adapter.IAdapterCallContext? context) -> DataCore.Adapter.Http.Client.RequestMetadata!
+virtual DataCore.Adapter.Http.Proxy.ConnectionFactory.Invoke(System.Uri! url, DataCore.Adapter.IAdapterCallContext? context) -> Microsoft.AspNetCore.SignalR.Client.HubConnection!
+virtual DataCore.Adapter.Http.Proxy.ConnectionIdentityFactory.Invoke(DataCore.Adapter.IAdapterCallContext! callContext) -> System.Collections.Generic.IEnumerable<string!>!
 ~static DataCore.Adapter.Http.Proxy.Resources.AdapterMetadata_Description.get -> string
 ~static DataCore.Adapter.Http.Proxy.Resources.AdapterMetadata_DisplayName.get -> string
 ~static DataCore.Adapter.Http.Proxy.Resources.Culture.get -> System.Globalization.CultureInfo

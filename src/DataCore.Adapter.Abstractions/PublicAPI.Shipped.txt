@@ -617,3 +617,6 @@ static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperties<TBuilder>(
 static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder, TValue>(this TBuilder! builder, string! name, TValue value, string? description = null, bool replaceExisting = true) -> TBuilder!
 static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder>(this TBuilder! builder, DataCore.Adapter.Common.AdapterProperty! property, bool replaceExisting = true) -> TBuilder!
 static DataCore.Adapter.AdapterEntityBuilderExtensions.WithProperty<TBuilder>(this TBuilder! builder, string! name, DataCore.Adapter.Common.Variant value, string? description = null, bool replaceExisting = true) -> TBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature(string! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+DataCore.Adapter.Common.AdapterDescriptorBuilder.WithFeature(System.Uri! feature) -> DataCore.Adapter.Common.AdapterDescriptorBuilder!
+virtual DataCore.Adapter.Extensions.PartialOperationDescriptorFactory.Invoke() -> DataCore.Adapter.Extensions.ExtensionFeatureOperationDescriptorPartial!

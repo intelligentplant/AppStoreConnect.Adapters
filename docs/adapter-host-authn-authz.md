@@ -1,6 +1,7 @@
 # Adapter Host Authentication and Authorization
 
-> Note: this document assumes that you have used the project template for Visual Studio and `dotnet new` to create an adapter host. See [here](../src/DataCore.Adapter.Templates) for more information.
+> [!IMPORTANT]
+> This document assumes that you have used the project template for Visual Studio and `dotnet new` to create an adapter host. See [here](../src/DataCore.Adapter.Templates) for more information.
 
 By default, adapter hosts created using the project template for Visual Studio and `dotnet new` do not enforce any kind of authentication or authorization on adapter APIs. 
 
@@ -19,6 +20,7 @@ In scenarios where you require authentication on your adapter host, App Store Co
 
 ## X.509 Client Certificate Authentication
 
+> [!TIP]
 > When using X.509 certificate authentication, the certificate represents App Store Connect itself rather than the calling user.
 
 To enable X.509 client certificate authentication (including receiving certificates via HTTP request headers instead of at the TLS level), follow Microsoft's documentation [here](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/certauth).
@@ -26,6 +28,7 @@ To enable X.509 client certificate authentication (including receiving certifica
 
 ## Windows Authentication Authentication
 
+> [!TIP]
 > When using Windows Authentication, App Store Connect will always authenticate using the indentity of the App Store Connect service rather than the identity of the calling user.
 
 To enable Windows Authentication, follow Microsoft's documentation [here](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/windowsauth). 
@@ -33,6 +36,7 @@ To enable Windows Authentication, follow Microsoft's documentation [here](https:
 
 ## Azure AD Bearer Token Authentication
 
+> [!TIP]
 > App Store Connect requests bearer tokens from Azure AD using client credentials that represent the App Store Connect itself rather than the calling user.
 
 To use Azure AD bearer token authentication, you must perform the following pre-requisite steps:
@@ -74,6 +78,7 @@ To enable Azure AD bearer token authentication in the adapter host:
 
 ## App Store Connect Bearer Token Authentication
 
+> [!TIP]
 > Bearer tokens issued by App Store Connect can represent either the calling Industrial App Store user or the App Store Connect itself, depending on whether the request was initiated by a user or by the system.
 
 App Store Connect can be configured to issue per-call JWT bearer tokens that represent the identity of the calling Industrial App Store user. A shared secret key is used by App Store Connect to sign the tokens, and by the adapter host when validating tokens.
