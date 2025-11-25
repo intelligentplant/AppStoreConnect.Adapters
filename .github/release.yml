@@ -32,7 +32,7 @@ changelog:
 
     - title: ":wrench: Maintenance and Testing"
       labels:
-        - "maintentance"
+        - "maintenance"
         - "testing:mstest" 
 
     - title: ":books: Documentation"
