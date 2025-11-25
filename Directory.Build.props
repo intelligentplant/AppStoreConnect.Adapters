@@ -43,6 +43,11 @@
     </Otherwise>
   </Choose>
 
+  <PropertyGroup>
+    <!-- NU5104 warns about referencing a pre-release package version from a stable package. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+  </PropertyGroup>
+  
   <!-- In a CI build, make sure we've not left any compiled warnings unhandled. -->
   <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
