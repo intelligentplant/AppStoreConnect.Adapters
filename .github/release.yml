@@ -1,0 +1,44 @@
+changelog:
+    exclude:
+        labels:
+            - ignore-for-release
+    categories:
+
+    - title: ":warning: Breaking Changes"
+      labels:
+        - breaking-change
+
+    - title: ":lock: Security"
+      labels:
+        - security
+
+    - title: ":star: Core Libraries"
+      labels:
+        - "adapters:core"
+        - "adapters:kv-store"
+        - "adapters:proxies"
+
+    - title: ":zap: Hosting"
+      labels:
+        - "hosting:general"
+        - "hosting:minimal-api"
+        - "hosting:mvc"
+        - "hosting:signalr"
+        - "hosting:grpc" 
+
+    - title: ":rocket: Developer Tooling"
+      labels:
+        - "templates:dotnet"
+
+    - title: ":wrench: Maintenance and Testing"
+      labels:
+        - "maintentance"
+        - "testing:mstest" 
+
+    - title: ":books: Documentation"
+      labels:
+        - "documentation" 
+    
+    - title: ":paperclip: Miscellaneous Changes"
+      labels:
+        - "*" 
