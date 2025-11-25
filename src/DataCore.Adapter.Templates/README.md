@@ -1,8 +1,6 @@
 ﻿# DataCore.Adapter.Templates
 
-This project defines templates for creating App Store Connect adapters for Visual Studio 2022, Visual Studio 2019, and the [dotnet new](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new) command.
-
-> Templates installed using the `dotnet new` command can be used in Visual Studio 2022 and Visual Studio 2019 (v16.9 or later).
+This project defines templates for creating App Store Connect adapters for Microsoft Visual Studio and the [`dotnet new`](https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-new) command.
 
 
 # Installing Templates
@@ -15,12 +13,13 @@ You can install the [App Store Connect adapter templates](https://www.nuget.org/
 dotnet new install IntelligentPlant.AppStoreConnect.Adapter.Templates
 ```
 
+> [!TIP]
 > To install a pre-release version, follow the *Specific Version* instructions below.
 
 **Specific Version:**
 
 ```
-dotnet new install IntelligentPlant.AppStoreConnect.Adapter.Templates::1.2.3
+dotnet new install IntelligentPlant.AppStoreConnect.Adapter.Templates@1.2.3
 ```
 
 **From Source:**
