@@ -42,6 +42,8 @@ override DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.Dispose(bool disposing) ->
 override DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 override DataCore.Adapter.Grpc.Proxy.GrpcAdapterProxy.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.Grpc.Proxy.GetGrpcCallCredentials.Invoke(DataCore.Adapter.IAdapterCallContext! context) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<DataCore.Adapter.Grpc.Client.Authentication.IClientCallCredentials!>!>!
+virtual DataCore.Adapter.Grpc.Proxy.GetGrpcClientInterceptors.Invoke() -> System.Collections.Generic.IEnumerable<Grpc.Core.Interceptors.Interceptor!>!
 ~static DataCore.Adapter.Grpc.Proxy.Resources.AdapterMetadata_Description.get -> string
 ~static DataCore.Adapter.Grpc.Proxy.Resources.AdapterMetadata_DisplayName.get -> string
 ~static DataCore.Adapter.Grpc.Proxy.Resources.Culture.get -> System.Globalization.CultureInfo

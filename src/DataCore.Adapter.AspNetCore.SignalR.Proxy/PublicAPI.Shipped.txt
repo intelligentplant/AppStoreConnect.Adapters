@@ -36,6 +36,7 @@ override DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.Dispose(b
 override DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
 override DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.StartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 override DataCore.Adapter.AspNetCore.SignalR.Proxy.SignalRAdapterProxy.StopAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+virtual DataCore.Adapter.AspNetCore.SignalR.Proxy.ConnectionFactory.Invoke(string? key = null) -> Microsoft.AspNetCore.SignalR.Client.HubConnection!
 ~static DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources.AdapterMetadata_Description.get -> string
 ~static DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources.AdapterMetadata_DisplayName.get -> string
 ~static DataCore.Adapter.AspNetCore.SignalR.Proxy.Resources.Culture.get -> System.Globalization.CultureInfo

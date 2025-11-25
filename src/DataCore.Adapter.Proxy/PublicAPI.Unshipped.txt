@@ -1,2 +1,1 @@
 ﻿#nullable enable
-virtual DataCore.Adapter.Proxy.ExtensionFeatureFactory<TProxy>.Invoke(string! featureUriOrName, TProxy! proxy) -> object!
